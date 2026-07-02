@@ -1,0 +1,18 @@
+# Mubin Attar — AI / ML Engineer
+
+> Solo GenAI/ML engineer who ships real, live AI products. Signature principle: every number a user sees is genuinely computed — never faked.
+
+## About
+AI/ML Engineer based in Ahmedabad, India, with 3+ years building and shipping production AI end-to-end: GenAI/LLM applications, agentic & RAG systems, predictive ML models, and healthcare-AI automation. Core stack: FastAPI, Next.js, PostgreSQL, Docker — with auth, CI/CD, and security hardening baked in.
+
+## Live Projects (all multi-user, open-source)
+- DBWhisper — natural-language-to-SQL agent: LangGraph pipeline, schema-aware pgvector retrieval, multi-LLM fallback, fail-closed read-only safety. https://dbwhisper.vercel.app
+- LLM Studio — multi-user, ChatGPT-style AI SaaS: per-user tenancy, token streaming, multi-LLM routing, daily quotas. https://heisenbergblue-llm-studio.hf.space
+- TradePulse — honest event-driven backtesting platform + AI copilot: look-ahead-free engine, costs modeled by default. https://tradepulse.vercel.app
+- CrownWager — +EV sports-betting analytics: validated XGBoost model (65% CV), fair-odds edge, verifiable model track-record. https://crownwager.vercel.app
+
+## Links
+- GitHub: https://github.com/mubin-attar-007
+- Hugging Face: https://huggingface.co/heisenbergblue
+- LinkedIn: https://www.linkedin.com/in/mubin-attar-53223716a
+- Email: sk.mubinattar@gmail.com
