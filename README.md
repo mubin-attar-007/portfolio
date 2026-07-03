@@ -1,36 +1,57 @@
-This is a [Next.js](https://nextjs.org) project bootstrapped with [`create-next-app`](https://nextjs.org/docs/app/api-reference/cli/create-next-app).
+# Portfolio — Mubin Attar
 
-## Getting Started
+The personal portfolio of **Mubin Attar**, AI / ML Engineer. A single, fast page
+that shows four production AI products and the engineering behind them.
 
-First, run the development server:
+Live: **[mubin-attar.vercel.app](https://mubin-attar.vercel.app)**
 
-```bash
-npm run dev
-# or
-yarn dev
-# or
-pnpm dev
-# or
-bun dev
+## The thesis: every number is real
+
+The site has one rule that runs through the work it showcases — **every number a
+user sees is genuinely computed, never faked**. The products linked here ship with
+honest metrics: validated model accuracy, cost-and-slippage-aware backtests,
+graded prediction track-records. This repo holds no mock data; all content lives
+in one typed source of truth (`lib/content.ts`) so nothing drifts.
+
+## Stack
+
+- **[Next.js 16](https://nextjs.org)** (App Router) + **React 19**
+- **TypeScript**
+- **Tailwind CSS v4**
+- **Framer Motion** for motion, **lucide-react** for icons
+- SEO built in: `opengraph-image`, `sitemap`, `robots`, favicon
+- Deployed on **Vercel**
+
+## Project structure
+
+```
+app/         routes, layout, and SEO (og image, sitemap, robots)
+components/   page sections (hero, projects, about, contact, …)
+lib/          content.ts — the single source of truth for all copy & links
+public/       static assets (resume, images)
+test/         node:test guards for lib/content.ts
 ```
 
-Open [http://localhost:3000](http://localhost:3000) with your browser to see the result.
+## Local development
 
-You can start editing the page by modifying `app/page.tsx`. The page auto-updates as you edit the file.
+Requires **Node 24+** (the test runner uses native TypeScript stripping).
 
-This project uses [`next/font`](https://nextjs.org/docs/app/building-your-application/optimizing/fonts) to automatically optimize and load [Geist](https://vercel.com/font), a new font family for Vercel.
+```bash
+npm install
+npm run dev      # http://localhost:3000
+```
 
-## Learn More
+Other scripts:
 
-To learn more about Next.js, take a look at the following resources:
+```bash
+npm run build    # production build
+npm run lint     # eslint
+npm test         # node:test — validates lib/content.ts
+```
 
-- [Next.js Documentation](https://nextjs.org/docs) - learn about Next.js features and API.
-- [Learn Next.js](https://nextjs.org/learn) - an interactive Next.js tutorial.
+## Deploy
 
-You can check out [the Next.js GitHub repository](https://github.com/vercel/next.js) - your feedback and contributions are welcome!
-
-## Deploy on Vercel
-
-The easiest way to deploy your Next.js app is to use the [Vercel Platform](https://vercel.com/new?utm_medium=default-template&filter=next.js&utm_source=create-next-app&utm_campaign=create-next-app-readme) from the creators of Next.js.
-
-Check out our [Next.js deployment documentation](https://nextjs.org/docs/app/building-your-application/deploying) for more details.
+Pushes to `main` are built and deployed automatically by **Vercel**. CI
+(`.github/workflows/ci.yml`) runs install → lint → build → test on every push
+and pull request, so a broken build or a dead project link never reaches
+production.
