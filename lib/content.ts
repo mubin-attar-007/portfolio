@@ -85,7 +85,7 @@ export const projects: Project[] = [
       "Grounded AI copilot (NL → strategy)",
     ],
     stack: ["FastAPI", "Next.js", "TimescaleDB", "Redis"],
-    live: "https://tradepulse-ai.vercel.app",
+    live: "https://github.com/mubin-attar-007/tradepulse",
     github: "https://github.com/mubin-attar-007/tradepulse",
     accent: "#3b82f6",
   },
