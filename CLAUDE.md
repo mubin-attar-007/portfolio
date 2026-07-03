@@ -12,8 +12,11 @@ product site, not a resume. Audiences: recruiters (30-second scan), hiring manag
 - Framer Motion for animation (respect `prefers-reduced-motion` EVERYWHERE)
 - Content: MDX + typed JSON in `/content` — the single source of truth for all
   projects, resume, skills, faq. **NEVER hardcode content in components.** `lib/content.ts` re-exports/loads from `/content`.
-- AI chatbot: **Anthropic API** via a Next.js route handler (server-side key only —
-  `ANTHROPIC_API_KEY`, provided from the owner's other projects), streaming responses, RAG over `/content`.
+- AI chatbot: **Google Gemini API** via a Next.js route handler (server-side key only —
+  `GEMINI_API_KEY`; the only real key available — Anthropic vars were empty placeholders).
+  **Retrieval-first:** local retrieval over `/content` (no embedding API) → Gemini streams a
+  grounded synthesis → graceful fallback to the top-matched grounded FAQ answer + citation when
+  the LLM is quota-limited/errors. Stays useful and honest at zero LLM quota.
 - Deployment target: Vercel (live at `mubin-attar.vercel.app`, repo `mubin-attar-007/portfolio`).
 
 ## Design Direction (LOCKED — Direction B: "Live Systems, backed by receipts")
