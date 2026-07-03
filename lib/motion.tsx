@@ -73,7 +73,13 @@ export function Reveal({
 
   const motionProps =
     trigger === "view"
-      ? { whileInView: "show" as const, viewport: { once: true, amount: 0.35 } }
+      ? {
+          whileInView: "show" as const,
+          // A small amount (not 0.35) so blocks taller than a short viewport —
+          // e.g. the experience timeline on a 320px screen — still reliably
+          // reveal instead of getting stuck hidden.
+          viewport: { once: true, amount: 0.15, margin: "0px 0px -12% 0px" },
+        }
       : { animate: "show" as const };
 
   return (
@@ -96,9 +102,17 @@ type StaggerProps = ComponentPropsWithoutRef<typeof motion.div> & {
   step?: number;
   /** seconds before the first child */
   delay?: number;
+  /** orchestrate on mount ("load") or when scrolled into view ("view") */
+  trigger?: "load" | "view";
 };
 
-export function Stagger({ children, step = 0.08, delay = 0.05, ...rest }: StaggerProps) {
+export function Stagger({
+  children,
+  step = 0.08,
+  delay = 0.05,
+  trigger = "load",
+  ...rest
+}: StaggerProps) {
   const reduce = useReducedMotion();
 
   if (reduce) return <div {...(rest as ComponentPropsWithoutRef<"div">)}>{children}</div>;
@@ -108,8 +122,16 @@ export function Stagger({ children, step = 0.08, delay = 0.05, ...rest }: Stagge
     show: { transition: { staggerChildren: step, delayChildren: delay } },
   };
 
+  const motionProps =
+    trigger === "view"
+      ? {
+          whileInView: "show" as const,
+          viewport: { once: true, amount: 0.15, margin: "0px 0px -12% 0px" },
+        }
+      : { animate: "show" as const };
+
   return (
-    <motion.div variants={container} initial="hidden" animate="show" {...rest}>
+    <motion.div variants={container} initial="hidden" {...motionProps} {...rest}>
       {children}
     </motion.div>
   );

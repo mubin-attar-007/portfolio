@@ -1,5 +1,5 @@
 import { profile } from "@/lib/content";
-import { Reveal } from "./reveal";
+import { Reveal } from "@/lib/motion";
 
 /**
  * Positioning + proof strip — the first thing after the hero in a 30-second
@@ -11,13 +11,13 @@ export function ProofStrip() {
   return (
     <section aria-label="At a glance" className="relative px-5 py-14 sm:px-8">
       <div className="mx-auto max-w-5xl">
-        <Reveal>
+        <Reveal trigger="view">
           <p className="mono mx-auto max-w-2xl text-center text-[13.5px] leading-relaxed text-muted">
             <span className="text-ink">{profile.role}</span> — {profile.tagline}
           </p>
         </Reveal>
 
-        <Reveal delay={0.06}>
+        <Reveal trigger="view" delay={0.06}>
           <dl className="mt-8 grid grid-cols-3 divide-x divide-line rounded-2xl border border-line bg-elev/40 py-6 text-center">
             {profile.stats.map((s) => (
               <div key={s.label} className="px-3 sm:px-6">

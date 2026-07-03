@@ -86,7 +86,30 @@ export function Nav() {
     const prev = document.body.style.overflow;
     document.body.style.overflow = "hidden";
     const onKey = (e: KeyboardEvent) => {
-      if (e.key === "Escape") setOpen(false);
+      if (e.key === "Escape") {
+        setOpen(false);
+        return;
+      }
+      // Focus trap: keep Tab cycling inside the modal slide-over so focus can't
+      // reach the page or the chat FAB sitting behind the scrim.
+      if (e.key === "Tab" && panelRef.current) {
+        const items = Array.from(
+          panelRef.current.querySelectorAll<HTMLElement>(
+            'a[href], button:not([disabled]), [tabindex]:not([tabindex="-1"])',
+          ),
+        ).filter((el) => el.offsetParent !== null);
+        if (items.length === 0) return;
+        const firstEl = items[0];
+        const lastEl = items[items.length - 1];
+        const activeEl = document.activeElement as HTMLElement | null;
+        if (e.shiftKey && activeEl === firstEl) {
+          e.preventDefault();
+          lastEl.focus();
+        } else if (!e.shiftKey && activeEl === lastEl) {
+          e.preventDefault();
+          firstEl.focus();
+        }
+      }
     };
     document.addEventListener("keydown", onKey);
     // focus the first link in the slide-over
@@ -158,7 +181,7 @@ export function Nav() {
             aria-expanded={open}
             aria-controls="mobile-menu"
             onClick={() => setOpen((v) => !v)}
-            className="grid h-9 w-9 place-items-center rounded-full border border-line2 text-ink transition hover:border-accent hover:text-accent sm:hidden"
+            className="grid h-11 w-11 place-items-center rounded-full border border-line2 text-ink transition hover:border-accent hover:text-accent sm:hidden"
           >
             <Burger open={open} />
           </button>
@@ -169,7 +192,7 @@ export function Nav() {
       <AnimatePresence>
         {open && (
           <motion.div
-            className="fixed inset-0 z-40 sm:hidden"
+            className="fixed inset-0 z-[82] sm:hidden"
             initial={reduce ? false : { opacity: 0 }}
             animate={{ opacity: 1 }}
             exit={reduce ? { opacity: 0 } : { opacity: 0 }}

@@ -13,7 +13,7 @@ import { GitHubIcon } from "@/components/brand-icons";
 import { ArchitectureDiagram } from "@/components/architecture-diagram";
 import { CaseStudyToc } from "@/components/case-study-toc";
 import { Nav } from "@/components/nav";
-import { Reveal } from "@/components/reveal";
+import { Reveal } from "@/lib/motion";
 
 const SITE = "https://mubin-attar.vercel.app";
 
@@ -86,8 +86,16 @@ export default async function CaseStudyPage({
         <div className="aurora" aria-hidden />
 
         <article className="relative z-10 mx-auto w-full max-w-6xl">
+          {/* top accent line — kept outside the clip-path reveals so the wipe
+              never clips it (it anchors to the article, not the header) */}
+          <span
+            className="pointer-events-none absolute left-0 top-0 h-px w-full opacity-70"
+            style={{ background: `linear-gradient(90deg, transparent, ${fm.accent}, transparent)` }}
+            aria-hidden
+          />
+
           {/* breadcrumb */}
-          <Reveal>
+          <Reveal trigger="load">
             <nav aria-label="Breadcrumb" className="mono text-[12px] text-dim">
               <Link href="/work" className="inline-flex items-center gap-1 transition hover:text-accent">
                 <ArrowLeft size={13} /> Work
@@ -98,13 +106,8 @@ export default async function CaseStudyPage({
           </Reveal>
 
           {/* header */}
-          <Reveal delay={0.04}>
+          <Reveal trigger="load" delay={0.06}>
             <header className="mt-6">
-              <span
-                className="absolute left-0 top-0 h-px w-full max-w-6xl opacity-70"
-                style={{ background: `linear-gradient(90deg, transparent, ${fm.accent}, transparent)` }}
-                aria-hidden
-              />
               <div className="flex flex-wrap items-center gap-3">
                 <span className="badge-live inline-flex items-center gap-1.5">
                   <span className="h-1.5 w-1.5 rounded-full bg-accent" /> LIVE
@@ -147,7 +150,7 @@ export default async function CaseStudyPage({
 
           {/* interactive architecture diagram — CTO-at-a-glance */}
           {diagram && (
-            <Reveal delay={0.06}>
+            <Reveal trigger="view" delay={0.04}>
               <section className="mt-12" aria-label="System architecture">
                 <span className="eyebrow">System at a glance</span>
                 <h2 className="mt-2 font-display text-xl font-semibold tracking-tight text-ink sm:text-2xl">

@@ -2,7 +2,7 @@ import Link from "next/link";
 import { ArrowRight, ArrowUpRight } from "lucide-react";
 import { projects, type Project } from "@/lib/content";
 import { GitHubIcon } from "./brand-icons";
-import { Reveal } from "./reveal";
+import { Reveal, Stagger, StaggerItem } from "@/lib/motion";
 
 const CATEGORY: Record<string, string> = {
   dbwhisper: "01 · NL→SQL AGENT",
@@ -85,7 +85,7 @@ export function Projects() {
   return (
     <section id="work" className="relative px-5 py-24 sm:px-8">
       <div className="mx-auto max-w-6xl">
-        <Reveal>
+        <Reveal trigger="view">
           <p className="eyebrow">Shipped · live · verifiable</p>
           <h2 className="mt-3 text-3xl font-semibold tracking-tight sm:text-4xl">
             Four products. All running <span className="gradient-text">right now.</span>
@@ -96,26 +96,31 @@ export function Projects() {
           </p>
           <Link
             href="/work"
-            className="mono mt-4 inline-flex items-center gap-1.5 text-[13px] font-medium text-accent transition hover:gap-2 hover:text-accent2"
+            className="mono mt-4 inline-flex items-center gap-1.5 rounded text-[13px] font-medium text-accent transition hover:gap-2 hover:text-accent2"
           >
             View all case studies <ArrowRight size={15} />
           </Link>
         </Reveal>
 
-        <div className="mt-10 grid grid-cols-1 gap-4 md:grid-cols-3 md:[grid-auto-rows:1fr]">
-          <Reveal className="md:col-span-2 md:row-span-2">
+        <Stagger
+          trigger="view"
+          step={0.08}
+          delay={0.08}
+          className="mt-10 grid grid-cols-1 gap-4 md:grid-cols-3 md:[grid-auto-rows:1fr]"
+        >
+          <StaggerItem className="md:col-span-2 md:row-span-2">
             <Card p={bySlug("dbwhisper")} featured />
-          </Reveal>
-          <Reveal delay={0.05}>
+          </StaggerItem>
+          <StaggerItem>
             <Card p={bySlug("llm-studio")} />
-          </Reveal>
-          <Reveal delay={0.1}>
+          </StaggerItem>
+          <StaggerItem>
             <Card p={bySlug("tradepulse")} />
-          </Reveal>
-          <Reveal delay={0.05} className="md:col-span-3">
+          </StaggerItem>
+          <StaggerItem className="md:col-span-3">
             <Card p={bySlug("crownwager")} />
-          </Reveal>
-        </div>
+          </StaggerItem>
+        </Stagger>
       </div>
     </section>
   );

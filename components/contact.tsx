@@ -1,7 +1,7 @@
 import { Mail } from "lucide-react";
 import { profile } from "@/lib/content";
 import { GitHubIcon, HuggingFaceIcon, LeetCodeIcon, LinkedInIcon } from "./brand-icons";
-import { Reveal } from "./reveal";
+import { Reveal } from "@/lib/motion";
 
 const SOCIALS = [
   { label: "GitHub", href: profile.socials.github, icon: GitHubIcon },
@@ -18,7 +18,7 @@ export function Contact() {
         <span className="d" />
       </div>
       <div className="relative z-10 mx-auto max-w-3xl text-center">
-        <Reveal>
+        <Reveal trigger="view">
           <p className="eyebrow">Contact</p>
           <h2 className="mt-4 text-3xl font-semibold leading-tight tracking-tight sm:text-5xl">
             Building something that needs

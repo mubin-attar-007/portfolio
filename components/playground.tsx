@@ -1,11 +1,11 @@
 import { PyPlayground } from "./py-playground";
-import { Reveal } from "./reveal";
+import { Reveal } from "@/lib/motion";
 
 export function Playground() {
   return (
     <section id="playground" className="relative px-5 py-24 sm:px-8">
       <div className="mx-auto max-w-5xl">
-        <Reveal>
+        <Reveal trigger="view">
           <p className="eyebrow">Proof, not promises</p>
           <h2 className="mt-3 text-3xl font-semibold tracking-tight sm:text-4xl">
             Don&apos;t take my word for it — <span className="gradient-text">run it.</span>
@@ -16,7 +16,7 @@ export function Playground() {
             first Run.)
           </p>
         </Reveal>
-        <Reveal delay={0.08} className="mt-8">
+        <Reveal trigger="view" delay={0.1} className="mt-8">
           <PyPlayground />
         </Reveal>
       </div>

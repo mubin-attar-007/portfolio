@@ -1,5 +1,5 @@
 import { LineChart, ShieldCheck, Gauge } from "lucide-react";
-import { Reveal } from "./reveal";
+import { Reveal, Stagger, StaggerItem } from "@/lib/motion";
 
 const PILLARS = [
   {
@@ -23,7 +23,7 @@ export function HowIBuild() {
   return (
     <section id="build" className="dotgrid relative border-y border-line px-5 py-24 sm:px-8">
       <div className="mx-auto max-w-6xl">
-        <Reveal>
+        <Reveal trigger="view">
           <p className="eyebrow">The hidden 90%</p>
           <h2 className="mt-3 max-w-2xl text-3xl font-semibold tracking-tight sm:text-4xl">
             Anyone can wire an API to a demo.
@@ -33,19 +33,19 @@ export function HowIBuild() {
           </p>
         </Reveal>
 
-        <div className="mt-12 grid gap-4 md:grid-cols-3">
-          {PILLARS.map((p, i) => (
-            <Reveal key={p.title} delay={i * 0.08}>
-              <div className="card h-full p-6">
-                <div className="flex h-10 w-10 items-center justify-center rounded-xl border border-line bg-elev text-accent">
+        <Stagger trigger="view" step={0.09} delay={0.1} className="mt-12 grid gap-4 md:grid-cols-3">
+          {PILLARS.map((p) => (
+            <StaggerItem key={p.title}>
+              <div className="card lift group h-full p-6">
+                <div className="flex h-10 w-10 items-center justify-center rounded-xl border border-line bg-elev text-accent transition-colors duration-300 group-hover:border-accent/50">
                   <p.icon size={18} />
                 </div>
                 <h3 className="mono mt-4 text-sm uppercase tracking-wider text-ink">{p.title}</h3>
                 <p className="mt-2 text-[14.5px] leading-relaxed text-muted">{p.body}</p>
               </div>
-            </Reveal>
+            </StaggerItem>
           ))}
-        </div>
+        </Stagger>
       </div>
     </section>
   );

@@ -4,7 +4,7 @@ import { ArrowRight, ArrowUpRight } from "lucide-react";
 import { projectMeta, type ProjectMeta } from "@/lib/content";
 import { GitHubIcon } from "@/components/brand-icons";
 import { Nav } from "@/components/nav";
-import { Reveal } from "@/components/reveal";
+import { Reveal, Stagger, StaggerItem } from "@/lib/motion";
 
 const SITE = "https://mubin-attar.vercel.app";
 
@@ -100,7 +100,7 @@ export default function WorkIndex() {
       <main className="relative min-h-screen px-5 pb-28 pt-28 sm:px-8 md:pt-32">
         <div className="aurora" aria-hidden />
         <div className="relative z-10 mx-auto w-full max-w-5xl">
-          <Reveal>
+          <Reveal trigger="load">
             <p className="eyebrow">Case studies · shipped · verifiable</p>
             <h1 className="mt-3 max-w-3xl font-display text-4xl font-medium leading-[1.02] tracking-[-0.02em] sm:text-5xl md:text-[3.4rem]">
               Four systems, taken apart <span className="gradient-text">at the seams.</span>
@@ -112,15 +112,20 @@ export default function WorkIndex() {
             </p>
           </Reveal>
 
-          <div className="mt-12 grid grid-cols-1 gap-4 md:grid-cols-2">
-            {items.map((p, i) => (
-              <Reveal key={p.slug} delay={i * 0.06}>
+          <Stagger
+            trigger="view"
+            step={0.08}
+            delay={0.1}
+            className="mt-12 grid grid-cols-1 gap-4 md:grid-cols-2"
+          >
+            {items.map((p) => (
+              <StaggerItem key={p.slug}>
                 <CaseStudyCard p={p} />
-              </Reveal>
+              </StaggerItem>
             ))}
-          </div>
+          </Stagger>
 
-          <Reveal delay={0.1}>
+          <Reveal trigger="view" delay={0.1}>
             <div className="mono mt-12 flex flex-wrap items-center justify-between gap-3 border-t border-line-soft/60 pt-5 text-[12px] text-dim">
               <span>
                 <span className="text-muted">4 systems live</span> · 0 faked metrics

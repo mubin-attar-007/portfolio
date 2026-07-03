@@ -1,6 +1,6 @@
 import Image from "next/image";
 import { profile, experience, skills, education } from "@/lib/content";
-import { Reveal } from "./reveal";
+import { Reveal } from "@/lib/motion";
 
 const FACTS: [string, string, string?][] = [
   ["location", profile.location],
@@ -16,7 +16,7 @@ export function About() {
       <div className="mx-auto grid max-w-6xl gap-12 lg:grid-cols-[1.1fr_0.9fr]">
         {/* Left — narrative */}
         <div>
-          <Reveal>
+          <Reveal trigger="view">
             <p className="eyebrow">About</p>
             <h2 className="mt-3 text-3xl font-semibold tracking-tight sm:text-4xl">
               Solo engineer. Real products.
@@ -37,7 +37,7 @@ export function About() {
           </Reveal>
 
           {/* Experience timeline */}
-          <Reveal delay={0.1}>
+          <Reveal trigger="view" delay={0.1}>
             <div className="mt-10">
               <p className="eyebrow mb-5">Experience</p>
               <div className="space-y-6 border-l border-line pl-5">
@@ -69,7 +69,7 @@ export function About() {
 
         {/* Right — portrait + facts + stack + education */}
         <div className="lg:pt-2">
-          <Reveal>
+          <Reveal trigger="view">
             <div className="relative mb-4 aspect-square overflow-hidden rounded-2xl border border-line">
               <Image
                 src={profile.headshot}
@@ -91,7 +91,7 @@ export function About() {
               </a>
             </div>
           </Reveal>
-          <Reveal delay={0.05}>
+          <Reveal trigger="view" delay={0.05}>
             <div className="card p-6">
               <p className="mono text-xs uppercase tracking-wider text-dim">{"// facts"}</p>
               <dl className="mono mt-4 space-y-2.5 text-[13px]">
@@ -113,7 +113,7 @@ export function About() {
             </div>
           </Reveal>
 
-          <Reveal delay={0.12}>
+          <Reveal trigger="view" delay={0.12}>
             <div className="mt-4 card p-6">
               <p className="mono text-xs uppercase tracking-wider text-dim">{"// stack"}</p>
               <div className="mt-4 space-y-3">
@@ -133,7 +133,7 @@ export function About() {
             </div>
           </Reveal>
 
-          <Reveal delay={0.18}>
+          <Reveal trigger="view" delay={0.18}>
             <div className="mt-4 card p-6">
               <p className="mono text-xs uppercase tracking-wider text-dim">{"// education"}</p>
               <p className="mt-3 text-[14.5px] font-medium text-ink">{education.degree}</p>
