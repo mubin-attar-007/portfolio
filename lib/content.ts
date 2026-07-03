@@ -12,10 +12,13 @@ export const profile = {
     "Every number a user sees is genuinely computed — never faked. Real products, honest metrics, shipped.",
   summary:
     "AI/ML Engineer with 3+ years building and shipping production AI products end-to-end — GenAI/LLM applications, agentic & RAG systems, predictive ML, and healthcare-AI automation. Fluent across the stack (FastAPI, Next.js, PostgreSQL, Docker) with auth, CI/CD, and security hardening baked in. I turn ideas into deployed, maintainable software.",
+  resume: "/Mubin_Attar_Resume.pdf",
+  headshot: "/mubin.png",
   socials: {
     github: "https://github.com/mubin-attar-007",
     linkedin: "https://www.linkedin.com/in/mubin-attar-53223716a",
     huggingface: "https://huggingface.co/heisenbergblue",
+    leetcode: "https://leetcode.com/u/mubin-attar/",
     email: "mailto:sk.mubinattar@gmail.com",
   },
   stats: [

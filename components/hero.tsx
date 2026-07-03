@@ -1,7 +1,7 @@
 "use client";
 
 import { motion, useMotionValue, useReducedMotion, useSpring } from "framer-motion";
-import { ArrowRight } from "lucide-react";
+import { ArrowRight, FileText } from "lucide-react";
 import type { ReactNode } from "react";
 import { GitHubIcon } from "./brand-icons";
 import { HonestConsole } from "./honest-console";
@@ -116,6 +116,9 @@ export function Hero() {
             </MagneticCTA>
             <a href={profile.socials.github} target="_blank" rel="noopener noreferrer" className="btn btn-ghost">
               <GitHubIcon size={15} /> GitHub
+            </a>
+            <a href={profile.resume} target="_blank" rel="noopener noreferrer" className="btn btn-ghost">
+              <FileText size={15} /> Résumé
             </a>
           </motion.div>
 

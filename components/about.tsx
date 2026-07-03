@@ -1,3 +1,4 @@
+import Image from "next/image";
 import { profile, experience, skills, education } from "@/lib/content";
 import { Reveal } from "./reveal";
 
@@ -66,8 +67,30 @@ export function About() {
           </Reveal>
         </div>
 
-        {/* Right — facts + stack + education */}
+        {/* Right — portrait + facts + stack + education */}
         <div className="lg:pt-2">
+          <Reveal>
+            <div className="relative mb-4 aspect-square overflow-hidden rounded-2xl border border-line">
+              <Image
+                src={profile.headshot}
+                alt={`${profile.name}, AI/ML engineer`}
+                width={720}
+                height={720}
+                priority
+                className="h-full w-full object-cover"
+              />
+              <div className="pointer-events-none absolute inset-0 rounded-2xl ring-1 ring-inset ring-accent/15" />
+              <div className="pointer-events-none absolute inset-x-0 bottom-0 h-24 bg-gradient-to-t from-bg/80 to-transparent" />
+              <a
+                href={profile.resume}
+                target="_blank"
+                rel="noopener noreferrer"
+                className="mono absolute bottom-3 left-3 rounded-full border border-line2 bg-bg/70 px-3 py-1.5 text-xs text-ink backdrop-blur transition hover:border-accent hover:text-accent"
+              >
+                Résumé ↗
+              </a>
+            </div>
+          </Reveal>
           <Reveal delay={0.05}>
             <div className="card p-6">
               <p className="mono text-xs uppercase tracking-wider text-dim">{"// facts"}</p>

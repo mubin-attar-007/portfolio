@@ -1,12 +1,13 @@
 import { Mail } from "lucide-react";
 import { profile } from "@/lib/content";
-import { GitHubIcon, HuggingFaceIcon, LinkedInIcon } from "./brand-icons";
+import { GitHubIcon, HuggingFaceIcon, LeetCodeIcon, LinkedInIcon } from "./brand-icons";
 import { Reveal } from "./reveal";
 
 const SOCIALS = [
   { label: "GitHub", href: profile.socials.github, icon: GitHubIcon },
   { label: "LinkedIn", href: profile.socials.linkedin, icon: LinkedInIcon },
   { label: "Hugging Face", href: profile.socials.huggingface, icon: HuggingFaceIcon },
+  { label: "LeetCode", href: profile.socials.leetcode, icon: LeetCodeIcon },
 ];
 
 export function Contact() {

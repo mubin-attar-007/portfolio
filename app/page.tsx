@@ -3,6 +3,7 @@ import { Hero } from "@/components/hero";
 import { Marquee } from "@/components/marquee";
 import { Projects } from "@/components/projects";
 import { HowIBuild } from "@/components/how-i-build";
+import { Playground } from "@/components/playground";
 import { About } from "@/components/about";
 import { Contact } from "@/components/contact";
 
@@ -15,6 +16,7 @@ export default function Home() {
         <Marquee />
         <Projects />
         <HowIBuild />
+        <Playground />
         <About />
         <Contact />
       </main>
