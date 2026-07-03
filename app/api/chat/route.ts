@@ -21,7 +21,11 @@ import {
   looksLikeInjection,
   INJECTION_REFUSAL,
 } from "@/lib/ai/guard";
-import { checkRateLimit, clientKeyFromHeaders } from "@/lib/ai/rate-limit";
+import {
+  checkRateLimit,
+  clientKeyFromHeaders,
+  consumeGeminiBudget,
+} from "@/lib/ai/rate-limit";
 
 // This route is inherently dynamic (reads the body + per-request headers) and
 // must run on Node (uses fs at retrieval import). Never cache.
@@ -109,8 +113,16 @@ export async function POST(request: Request): Promise<Response> {
 
   const { messages, latestUser } = sanitized;
 
-  // 3) Prompt-injection screen — refuse without calling the model.
-  if (looksLikeInjection(latestUser)) {
+  // 3) Prompt-injection screen — refuse without calling the model. We screen
+  // the latest turn AND the concatenation of recent user turns, so an attacker
+  // can't split a pattern (e.g. "ignore all previous" / "instructions") across
+  // two messages to slip past the single-message regex. Best-effort only — the
+  // system prompt remains the real defense.
+  const recentUserText = messages
+    .filter((m) => m.role === "user")
+    .map((m) => m.content)
+    .join(" ");
+  if (looksLikeInjection(latestUser) || looksLikeInjection(recentUserText)) {
     return sseResponse(
       staticStream({
         text: INJECTION_REFUSAL,
@@ -125,6 +137,38 @@ export async function POST(request: Request): Promise<Response> {
   const passages = retrieve(latestUser, { k: 4 });
   const citations: Citation[] = passages.map((p) => ({ source: p.source }));
   const systemInstruction = buildSystemInstruction(passages);
+
+  // 4b) Global daily cost cap. If the shared-with-dbwhisper Gemini budget is
+  // exhausted for the day, skip the model entirely and serve the grounded
+  // retrieval fallback (still cited, never a 500). This is a real ceiling on
+  // spend and isolates dbwhisper's quota from any burst here. Consuming a unit
+  // here (rather than just peeking) also counts this served turn against the
+  // budget so the cap can't be nibbled around by rapid retries.
+  if (!consumeGeminiBudget()) {
+    const fb = fallbackAnswer(latestUser);
+    if (fb) {
+      return sseResponse(
+        staticStream({
+          text:
+            "*(High demand right now — here's the most relevant answer from Mubin's own content.)*\n\n" +
+            fb.answer,
+          citations: [{ source: fb.citation }],
+          mode: "fallback",
+          note: "daily-budget-reached",
+        }),
+      );
+    }
+    return sseResponse(
+      staticStream({
+        text:
+          "I'm at my usage cap for the moment and couldn't find a matching answer on the site. " +
+          "Try asking about what Mubin has shipped in production, the DBWhisper architecture, or his healthcare-AI experience.",
+        citations: [],
+        mode: "fallback",
+        note: "daily-budget-reached",
+      }),
+    );
+  }
 
   // 5) Stream Gemini; fall back to the best FAQ answer on any error/quota.
   const stream = new ReadableStream<Uint8Array>({

@@ -251,20 +251,39 @@ function idf(term: string): number {
 // Public API
 // ---------------------------------------------------------------------------
 
+/**
+ * Empirically-tuned BM25 relevance floor. A passage must clear this score to be
+ * considered a real match; below it the query is treated as off-topic and we
+ * return [] so the route can honestly say "that's not on the site" instead of
+ * streaming a weakly-related FAQ.
+ *
+ * Tuned against the grounding proof set (lib/ai/test-questions.ts): every one of
+ * the 10 on-topic questions still clears this floor (the weakest — the education
+ * question — scores ~4.9), while clearly off-topic queries (salary, security
+ * clearance, weather, visa/relocation, …) all fall below it and return []. See
+ * test/retrieval.test.mts for the on-topic-pass / off-topic-refuse assertions.
+ */
+export const RELEVANCE_MIN_SCORE = 4.5;
+
 export type RetrieveOptions = {
   /** how many passages to return (default 4) */
   k?: number;
-  /** minimum score to include a passage (default 0 — return best-effort) */
+  /**
+   * Minimum BM25 score to include a passage. Defaults to RELEVANCE_MIN_SCORE so
+   * off-topic queries return [] rather than a weakly-related best-effort hit.
+   * Pass 0 explicitly to disable the floor (e.g. diagnostics).
+   */
   minScore?: number;
 };
 
 /**
  * Retrieve the top-k real passages for a query, ranked by BM25.
- * Deterministic and network-free. Returns [] only when the corpus is empty.
+ * Deterministic and network-free. Returns [] when the corpus is empty OR when
+ * nothing clears the relevance floor (an off-topic query).
  */
 export function retrieve(query: string, opts: RetrieveOptions = {}): RetrievedPassage[] {
   const k = opts.k ?? 4;
-  const minScore = opts.minScore ?? 0;
+  const minScore = opts.minScore ?? RELEVANCE_MIN_SCORE;
 
   const qTerms = tokenize(query);
   if (qTerms.length === 0 || INDEX.N === 0) return [];
@@ -301,9 +320,14 @@ export function retrieveBest(query: string): RetrievedPassage | null {
   return retrieve(query, { k: 1 })[0] ?? null;
 }
 
-/** The best-matching FAQ passage specifically — the fallback prefers a real FAQ answer. */
+/**
+ * The best-matching FAQ passage specifically — the fallback prefers a real FAQ
+ * answer. Applies the SAME relevance floor as retrieve(), so an off-topic query
+ * yields null here too and the fallback refuses cleanly instead of emitting a
+ * weakly-related FAQ.
+ */
 export function retrieveBestFaq(query: string): RetrievedPassage | null {
-  const hits = retrieve(query, { k: 8 });
+  const hits = retrieve(query, { k: 8, minScore: RELEVANCE_MIN_SCORE });
   return hits.find((h) => h.kind === "faq") ?? hits[0] ?? null;
 }
 

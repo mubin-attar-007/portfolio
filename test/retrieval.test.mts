@@ -8,8 +8,18 @@
 import test from "node:test";
 import assert from "node:assert/strict";
 
-import { retrieve, corpusSize } from "../lib/ai/retrieval.ts";
+import { retrieve, retrieveBestFaq, corpusSize } from "../lib/ai/retrieval.ts";
 import { TEST_QUESTIONS } from "../lib/ai/test-questions.ts";
+
+// Clearly off-topic queries. With the tuned relevance floor these must retrieve
+// NOTHING, so the route hits the honest "not on the site" branch and the
+// fallback refuses cleanly instead of streaming a weakly-related FAQ.
+const OFF_TOPIC_QUESTIONS: string[] = [
+  "What's Mubin's salary expectation?",
+  "Does he have a security clearance?",
+  "What's the weather?",
+  "Will he relocate to Berlin and what visa does he hold?",
+];
 
 test("corpus ingested a non-trivial number of passages", () => {
   assert.ok(corpusSize() >= 25, `expected >= 25 passages, got ${corpusSize()}`);
@@ -46,5 +56,37 @@ test("every test question retrieves the expected source + required terms", () =>
     failures.length,
     0,
     `\n  ${failures.join("\n  ")}\n(${TEST_QUESTIONS.length - failures.length}/${TEST_QUESTIONS.length} clean)`,
+  );
+});
+
+test("off-topic queries retrieve nothing (relevance floor holds)", () => {
+  const leaks: string[] = [];
+  for (const q of OFF_TOPIC_QUESTIONS) {
+    const hits = retrieve(q, { k: 4 });
+    if (hits.length > 0) {
+      leaks.push(
+        `"${q}" → leaked ${hits.length} passage(s), top "${hits[0].source}" @ ${hits[0].score.toFixed(2)}`,
+      );
+    }
+  }
+  assert.equal(
+    leaks.length,
+    0,
+    `\n  ${leaks.join("\n  ")}\n(${OFF_TOPIC_QUESTIONS.length - leaks.length}/${OFF_TOPIC_QUESTIONS.length} correctly refused)`,
+  );
+});
+
+test("off-topic queries yield no fallback FAQ (fallback refuses cleanly)", () => {
+  const leaks: string[] = [];
+  for (const q of OFF_TOPIC_QUESTIONS) {
+    const best = retrieveBestFaq(q);
+    if (best !== null) {
+      leaks.push(`"${q}" → fallback returned "${best.source}" @ ${best.score.toFixed(2)}`);
+    }
+  }
+  assert.equal(
+    leaks.length,
+    0,
+    `\n  ${leaks.join("\n  ")}\n(${OFF_TOPIC_QUESTIONS.length - leaks.length}/${OFF_TOPIC_QUESTIONS.length} refused)`,
   );
 });

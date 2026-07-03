@@ -27,6 +27,11 @@ export function sanitizeMessages(input: unknown): SanitizeResult {
   const raw = (input as { messages: unknown }).messages;
   if (!Array.isArray(raw)) return { ok: false, reason: "malformed" };
 
+  // Track the normalized (whitespace-collapsed) length of the latest user turn
+  // so the too-long check measures the SAME string we forward — a message that
+  // only exceeds the cap because of runs of whitespace shouldn't be rejected.
+  let latestUserNormalizedLen = 0;
+
   const cleaned: ChatMessage[] = [];
   for (const m of raw) {
     if (!m || typeof m !== "object") continue;
@@ -36,6 +41,7 @@ export function sanitizeMessages(input: unknown): SanitizeResult {
     if (typeof content !== "string") continue;
     const trimmed = content.replace(/\s+/g, " ").trim();
     if (!trimmed) continue;
+    if (role === "user") latestUserNormalizedLen = trimmed.length;
     cleaned.push({ role, content: trimmed.slice(0, MAX_MESSAGE_CHARS) });
   }
 
@@ -48,12 +54,10 @@ export function sanitizeMessages(input: unknown): SanitizeResult {
   const last = bounded[bounded.length - 1];
   if (last.role !== "user") return { ok: false, reason: "malformed" };
 
-  // Reject an over-long raw latest message (before we trimmed to the cap the
-  // original was longer). We detect this from the ORIGINAL content length.
-  const lastRaw = [...raw].reverse().find(
-    (m) => m && typeof m === "object" && (m as { role?: unknown }).role === "user",
-  ) as { content?: unknown } | undefined;
-  if (lastRaw && typeof lastRaw.content === "string" && lastRaw.content.length > MAX_MESSAGE_CHARS) {
+  // Reject a genuinely over-long latest user message. Measure the NORMALIZED
+  // (whitespace-collapsed) length — the same string we forward — so a message
+  // that fits once redundant whitespace is collapsed isn't wrongly rejected.
+  if (latestUserNormalizedLen > MAX_MESSAGE_CHARS) {
     return { ok: false, reason: "too-long" };
   }
 
