@@ -7,7 +7,7 @@
     "build": "next build",
     "start": "next start",
     "lint": "eslint",
-    "test": "node --disable-warning=MODULE_TYPELESS_PACKAGE_JSON --test \"test/**/*.test.mts\""
+    "test": "node --disable-warning=MODULE_TYPELESS_PACKAGE_JSON --import ./test/alias-loader.mjs --test \"test/**/*.test.mts\""
   },
   "dependencies": {
     "framer-motion": "^12.42.2",

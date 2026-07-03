@@ -2,6 +2,7 @@ import type { Metadata } from "next";
 import { Fraunces, Instrument_Sans, Geist_Mono } from "next/font/google";
 import "./globals.css";
 import { profile, projects } from "@/lib/content";
+import { Assistant } from "@/components/chat/assistant";
 
 // Display / headings — Fraunces (variable, with true italic for the accent).
 const fraunces = Fraunces({
@@ -83,6 +84,7 @@ export default function RootLayout({ children }: Readonly<{ children: React.Reac
           Skip to content
         </a>
         {children}
+        <Assistant />
         <div className="grain" aria-hidden />
       </body>
     </html>
