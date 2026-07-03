@@ -1,0 +1,74 @@
+{
+  "faq": [
+    {
+      "question": "What has Mubin actually shipped in production?",
+      "answer": "Four live AI products, each multi-user and running right now on a free-tier stack, plus production healthcare-AI systems at his day job. The four public products are: DBWhisper (a natural-language-to-SQL agent), LLM Studio (a multi-user ChatGPT-style chat SaaS), TradePulse (an honest quant backtesting platform), and CrownWager (an ML-driven sports-analytics platform). At Sevina Technologies he builds and ships production AI and automation systems for healthcare — data-extraction pipelines, a clinical decision-support platform, and GenAI document-analysis assistants. These aren't demos or screenshots; each public product links to the real deployed app and its source.",
+      "source": "profile · projects (all four) · Sevina Technologies role"
+    },
+    {
+      "question": "Explain the DBWhisper RAG / agent architecture.",
+      "answer": "DBWhisper is a LangGraph agent that turns plain English into safe, read-only SQL. When a database is enrolled, its schema is introspected, AI-documented into structured sections (summary, columns, relationships, stats), and embedded into pgvector. At query time the agent runs a tightly-scoped tool loop: semantic-search the schema to find candidate tables, fetch only the sections it needs (keeping the prompt small), look for a human-approved verified question-to-SQL example to adapt, generate dialect-correct SQL, and then pass it through a fail-closed read-only validator before executing. It's RAG over a schema rather than stuffing the whole schema into the prompt, which is what makes it work on real databases with many tables. Conversation memory is persisted to Postgres via a LangGraph checkpoint so follow-ups have context.",
+      "source": "DBWhisper — app/agent/chain.py, app/agent/tools.py"
+    },
+    {
+      "question": "How does DBWhisper stop the LLM from running dangerous SQL?",
+      "answer": "It never trusts the model — it gates it. Every generated statement passes app/core/sql_validator.py, which uses sqlparse (not just regex) to require the query start with SELECT or WITH, reject any DML/DDL/EXEC keyword, reject multiple statements and SELECT INTO, and block access to system schemas. Critically it's fail-closed: when a database is specified it also checks every referenced table against that database's enrolled schema index, and if no schema index exists it refuses rather than allowing the query through. Below the validator sit more layers — read-only DB users, query timeout and row caps, and log sanitization that masks passwords and API keys. The read-only guarantee is structural, not dependent on the model behaving.",
+      "source": "DBWhisper — app/core/sql_validator.py, SECURITY.md"
+    },
+    {
+      "question": "How does he make sure the metrics his products show are real, not faked?",
+      "answer": "It's the single rule running through everything he builds: every number a user sees is genuinely computed. TradePulse is the clearest example — its backtester is structurally look-ahead-free (decisions read only closed bars; orders fill on the next bar's open), models commission and slippage on every fill by default, always shows drawdown, and states its risk-free-rate-of-zero assumption wherever Sharpe appears. Its correctness test suite even perturbs future bars and proves past equity is unchanged. CrownWager reports model accuracy from 5-fold cross-validation (not a lucky single split) and grades every published pick against the real final score, flagging the record as insufficient below 20 settled picks. Both projects also publish what they deliberately do NOT claim.",
+      "source": "TradePulse — backtesting engine + tests; CrownWager — grading + track-record; profile ethos"
+    },
+    {
+      "question": "Why the free-tier / $0 infrastructure stack?",
+      "answer": "Partly because he's a solo builder self-funding these products, but mostly because the constraint forces discipline. Running on Hugging Face Spaces, Vercel, and Neon with $0 infra means no waste is possible: lean Docker images, small prompts via section-scoped retrieval, bounded agent loops, quota checks before spending a shared API key, and multi-provider fallback chains that keep a free tier alive when one provider is exhausted. The free-tier limits shaped the engineering from the start rather than being optimized in later — and it proves he can ship a full multi-user SaaS shape without hiding behind an expensive managed stack.",
+      "source": "profile stats · about narrative · DBWhisper/LLM Studio deployment"
+    },
+    {
+      "question": "What's his healthcare-AI experience?",
+      "answer": "It's his current full-time work at Sevina Technologies (2024–present). He builds and ships production AI and automation systems for healthcare: end-to-end pipelines in Python with Playwright and Selenium that extract, validate, and sync clinical, resident, and demographic data into SQL Server, with logging, reconciliation, and error recovery. He developed an AI clinical decision-support platform that turns CMS MDS assessments into dashboards, compliance findings, and reimbursement insights (HIPPS/PDPM) via automated PDF extraction and guideline-aligned rules. He also built GenAI document-analysis assistants with multi-provider routing, RAG, and validated structured output, plus a FastAPI eligibility-verification service with async batching, Docker, and CI/CD.",
+      "source": "Sevina Technologies — AI/ML Engineer role"
+    },
+    {
+      "question": "Can he really do end-to-end, or just the AI/model layer?",
+      "answer": "End-to-end, and the portfolio is the proof. Across the four products he owns the whole loop: LLM agents and RAG retrieval strategies; ML training and validation (XGBoost, cross-validation); FastAPI and Django/DRF backends with async, auth, and tenancy; Next.js and vanilla-JS frontends; Postgres/pgvector/Redis data layers; and the deployment itself — Docker images, HTTPS, CI pipelines, and security hardening. As he puts it, he likes the whole loop from an agent's retrieval strategy down to the Docker image and the auth cookie. His earlier role at Linescripts (2022–2024) was full-stack web delivery (Django/DRF, REST APIs, frontends), so the end-to-end habit predates the AI work.",
+      "source": "projects (all four) · Sevina + Linescripts roles · skills"
+    },
+    {
+      "question": "What's his experience with LLM agents and multi-provider routing?",
+      "answer": "Substantial and hands-on. DBWhisper is a full LangGraph/LangChain agent with a custom toolset and a six-provider fallback chain (OpenAI, OpenRouter, DeepSeek, Groq, Anthropic, Gemini) that always keeps a free-tier provider as a final fallback. LLM Studio routes across many providers behind one OpenAI-compatible client factory, streaming reasoning models' thinking separately. TradePulse's copilot and CrownWager's CrownBot are grounded assistants that refuse to invent numbers. And at Sevina he built GenAI assistants with multi-provider routing across OpenAI, Claude, and Gemini. Multi-provider routing is a recurring pattern in his work — for resilience and to avoid single-vendor lock-in.",
+      "source": "DBWhisper agent · LLM Studio router · TradePulse/CrownWager copilots · Sevina role"
+    },
+    {
+      "question": "How does he keep AI copilots from hallucinating numbers?",
+      "answer": "By grounding them and letting them refuse. TradePulse's copilot generates a validated strategy spec (via a validate-and-repair loop) and never auto-executes it; its narration prompt says to use ONLY the numbers present in the provided data — never invent, estimate, or extrapolate — and to close with a fixed not-financial-advice line. CrownWager's CrownBot is grounded in the current best-bets data injected into the prompt, is told to say plainly when the data doesn't cover something, and is forbidden from promising profit or pushing a specific wager. Both degrade to a deterministic data summary when no API key is present. The design principle: a financial or predictive AI should refuse before it guesses.",
+      "source": "TradePulse — ai/service.py + prompts; CrownWager — assistant/services.py"
+    },
+    {
+      "question": "What's the strongest evidence of his engineering judgment (senior-level thinking)?",
+      "answer": "The trade-offs he makes deliberately, and the things he refuses to fake. DBWhisper fails closed rather than open on SQL safety. TradePulse encodes look-ahead-freedom into a non-Turing-complete strategy spec so the bias is structurally impossible, then proves it with a canary test — and reuses the exact same engine for paper trading, guaranteed by a parity test. CrownWager reports cross-validated accuracy, keeps a shallow model to resist overfitting, and voids unmappable picks instead of fudging its track record. LLM Studio enforces tenancy at a single repository choke point and caught a real 32-bit epoch-overflow bug in production. Across all of them he also documents what he deliberately does NOT claim — which is itself a senior habit.",
+      "source": "DBWhisper validator · TradePulse spec + tests · CrownWager grading · LLM Studio tenancy"
+    },
+    {
+      "question": "Has he found and fixed real production bugs?",
+      "answer": "Yes — the kind that only show up in a real deployment. In LLM Studio, millisecond-epoch timestamp columns were overflowing a 32-bit INT4 in Postgres (around 2.1e9) while SQLite silently tolerated the same values locally. He diagnosed it and moved those columns to BigInteger, and documented it in the repo. It's a good illustration of why he insists on deploying against the actual production database rather than trusting that local tests are representative.",
+      "source": "LLM Studio — database/models.py (BigInteger epoch fix)"
+    },
+    {
+      "question": "What ML / data-science work has he done, beyond LLMs?",
+      "answer": "CrownWager is the clearest case: a real XGBoost classifier for NBA moneyline prediction, trained deterministically on games across 2012–24 with pre-game team features, kept intentionally shallow to resist overfitting, and validated with 5-fold stratified cross-validation rather than a single split. On top of the model he implemented the full analytics layer — implied-probability and edge computation, expected value, fractional (half-)Kelly staking, and a cross-book arbitrage finder — all in Decimal to avoid floating-point drift in money math. His skill set also covers scikit-learn, neural networks, pandas, and NumPy.",
+      "source": "CrownWager — ai/ (XGBoost) + predictions/staking.py · skills"
+    },
+    {
+      "question": "How does he approach security and production hardening?",
+      "answer": "As a default, not an afterthought. Recurring across the products: Argon2id password hashing and DB-backed revocable sessions with HttpOnly SameSite cookies; strict per-user tenancy; a fail-closed read-only SQL validator with read-only DB users and log sanitization; rate limiting; strict Content-Security-Policy, HSTS, and other security headers; upload size/MIME limits; DSN-gated Sentry; and CI gates that run linting, tests, dependency audits (pip-audit/npm audit), and gitleaks secret scanning. CrownWager adds proxy-aware per-IP throttling, constant-time token comparison, and optional admin 2FA. Server-side-only API keys and no-PII logging are standard.",
+      "source": "DBWhisper SECURITY.md · LLM Studio main.py hardening · CrownWager security flags"
+    },
+    {
+      "question": "What's his background and education?",
+      "answer": "He holds a Master of Computer Applications (MCA) from Savitribai Phule University of Pune (2021, CGPA 8.0). He started as a Junior Python Developer at Linescripts Software (2022–2024), delivering end-to-end web applications — including a Hospital Management System and e-commerce platforms — with Python, Django/DRF, and responsive frontends, building REST APIs and integrating third-party services. Since 2024 he's been an AI/ML Engineer at Sevina Technologies focused on production healthcare-AI and GenAI systems. He's based in Ahmedabad, India, with 3+ years of shipping experience.",
+      "source": "education · Linescripts + Sevina roles · profile"
+    }
+  ]
+}

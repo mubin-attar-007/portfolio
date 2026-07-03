@@ -1,0 +1,76 @@
+---
+slug: llm-studio
+name: LLM Studio
+tagline: A multi-user, ChatGPT-style AI platform.
+stack: ["FastAPI", "SQLAlchemy 2.0", "PostgreSQL", "SQLite", "Argon2id", "Docker", "Vanilla JS", "GitHub Actions"]
+live: https://heisenbergblue-llm-studio.hf.space
+github: https://github.com/mubin-attar-007/llm_studio
+accent: "#10a37f"
+order: 2
+---
+
+## Executive Summary
+
+LLM Studio is a production-shaped, multi-user AI chat SaaS — not a toy ChatGPT clone. It has real accounts (Argon2id + DB-backed sessions), strict per-user tenancy, token-by-token SSE streaming, OpenAI-compatible routing across many LLM providers, a shared-key daily quota model, and a hardened FastAPI backend — deployed live on a Hugging Face Docker Space + Neon Postgres. The frontend is dependency-free vanilla JS tuned to pixel-match ChatGPT. It's the full SaaS shape (auth, tenancy, quotas, security headers, CI/CD, a live deployment) proven out on a $0 stack, and it's where I caught a genuine production bug — a 32-bit integer overflow on millisecond-epoch columns — and fixed it properly.
+
+## Problem
+
+"Wrap an LLM API in a chat UI" is a weekend project. Turning that into something multiple people can actually sign into is where the real engineering lives:
+
+1. **Real auth and isolation.** Passwords hashed correctly, sessions that can be revoked, and a hard guarantee that user A can never read or overwrite user B's chats.
+2. **A shared key without abuse.** One model key powers everyone, so you need a fair per-user daily budget that can't be circumvented.
+3. **Streaming that survives proxies.** Token-by-token output through a reverse proxy, without buffering swallowing the stream.
+4. **Provider flexibility.** Not locking the whole product to a single LLM vendor.
+5. **Production hygiene.** CSP, HSTS, rate limits, upload limits, structured logging, CI — the unglamorous layer that separates a demo from a deployment.
+
+## Architecture
+
+A layered FastAPI backend serving a vanilla-JS SPA, shipped as a single Docker container.
+
+```
+Browser (vanilla-JS SPA · auth gate · per-user history)
+     │  HTTPS + HttpOnly session cookie
+     ▼
+FastAPI  ──► Argon2id auth + DB-backed sessions
+     │       Daily quota (shared key) — checked BEFORE the stream starts
+     │
+     │  SSE (text/event-stream, X-Accel-Buffering: no)
+     ├──► LLM router (OpenAI-compatible client_for(model))
+     │        ├─ cloud: Gemini · Cloudflare · Groq · Mistral · Z.ai/GLM · NVIDIA
+     │        └─ local: Ollama (localhost:11434/v1)
+     │
+     └──► Repository layer (tenancy enforced on every query)
+                │
+                ▼
+          Neon Postgres (prod) ⇄ SQLite (local + tests)
+          users · sessions · chats · usage_daily
+```
+
+**Layering is strict:** routes → services (`chat_service`, `quota_service`, `history_service`, `document_service`) → an LLM router → a repository → the database. The frontend is intentionally framework-free (marked + DOMPurify + highlight.js + KaTeX from CDN), which is what makes the container tiny and the ChatGPT pixel-match tractable.
+
+## Key Decisions & Trade-offs
+
+**1. DB-backed sessions over stateless JWTs.** Auth uses **Argon2id** (with rehash-on-login support) and issues an opaque `secrets.token_urlsafe` session token stored server-side, delivered as an **HttpOnly, SameSite=Lax** cookie. Validation is a token lookup → expiry check → active-user check → `last_seen` update. Trade-off: a DB read per authenticated request versus a self-contained JWT — bought back by real **revocation** (logout deletes the row), session tracking, and clean expiry, which matter more than shaving a query for a chat app.
+
+**2. Tenancy enforced at the repository layer, not sprinkled in routes.** Every `/api/*` route requires auth, and ownership is enforced where data is accessed: lists filter `owner_id == owner`, and the chat upsert **silently refuses to touch a chat owned by someone else** (`if existing.owner_id not in (None, owner_id): continue`), as does delete. Trade-off: the "silent skip" is less chatty than a 403, but it's a single, auditable choke point that makes cross-tenant reads/writes structurally impossible.
+
+**3. Quota checked before the stream, not after.** The server holds one shared model key; each user gets a daily message budget keyed by `user_id + YYYYMMDD` in a `usage_daily` table, atomically incremented. The check runs **before** the LLM call so an over-quota user gets a clean 429 (with a "resets at midnight UTC" message) instead of burning an API call. First registered user is admin/unlimited. Trade-off: a coarse per-message budget rather than per-token metering — simpler, predictable, and enough to keep a shared free-tier key alive.
+
+**4. OpenAI-compatible routing over per-vendor SDKs.** One client factory (`client_for(model)`) returns an OpenAI-compatible client plus a `supports_thinking` flag, routing cloud models to their base URL/key and local models to Ollama — reasoning models get their `reasoning_content` streamed separately as `thinking` frames. Retry/backoff lives in the **service layer** (`max_retries=0` on the client) so the app controls error classification. Trade-off: providers must speak the OpenAI protocol, in exchange for adding a model without touching the streaming code. (Note: a side-by-side "compare mode" is on the roadmap; the shipped app streams one model per request.)
+
+**5. SSE tuned for real proxies.** Streaming sends `data: … \n\n` frames as `text/event-stream` with `Cache-Control: no-cache` and `X-Accel-Buffering: no` so a reverse proxy doesn't buffer the token stream. Trade-off: SSE (not WebSockets) — simpler, one-directional, and exactly right for token streaming.
+
+## Metrics / Results
+
+- **Live, multi-user, on a $0 stack** — Hugging Face Docker Space + Neon Postgres, one-command deploy, **31 tests passing** with `pytest` + `ruff` gating CI (plus `pip-audit` + `gitleaks` + Dependabot).
+- **A real production bug, found and fixed.** Millisecond-epoch timestamp columns were overflowing 32-bit `INT4` in Postgres (~2.1e9) while SQLite silently tolerated it — the columns are now correctly `BigInteger`. This is exactly the class of bug that only surfaces in a real deployment against a real database, and it's documented in the repo.
+- **Dual-DB by design:** identical SQLAlchemy 2.0 code path over Postgres (prod, pooled) and SQLite (local + tests), so tests run with zero external services.
+- **Hardened by default:** in-memory sliding-window rate limits on auth/reset/upload routes, a strict CSP (`object-src 'none'`, `frame-ancestors 'none'`), HSTS, `X-Content-Type-Options`, DSN-gated Sentry, and structured per-request logging.
+- **Document grounding:** `.txt/.md/.pdf/.docx` uploads are extension- and size-limited (10 MB), extracted, and truncated to a 200k-char cap before being used as reply context.
+
+## Lessons
+
+- **The hard part of a chat app isn't the chat — it's the tenancy.** Putting the ownership check at the repository layer, once, is worth more than defensive code scattered across routes.
+- **Real databases teach you things SQLite won't.** The `INT4` overflow was invisible locally and obvious in prod; deploying against the actual production database is non-negotiable.
+- **Enforce budgets before you spend them.** Checking quota before the LLM call — not after — is a one-line ordering decision that protects a shared free-tier key from a single heavy user.
+- **An OpenAI-compatible seam buys enormous flexibility.** Normalizing every provider (cloud and local Ollama) to one protocol means the streaming and UI code never has to know which model is answering.

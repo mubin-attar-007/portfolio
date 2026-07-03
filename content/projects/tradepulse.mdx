@@ -1,0 +1,79 @@
+---
+slug: tradepulse
+name: TradePulse
+tagline: An honest quant backtesting platform.
+stack: ["FastAPI", "Pydantic v2", "SQLAlchemy 2.0 async", "PostgreSQL", "TimescaleDB", "Redis", "ARQ", "Next.js", "Docker"]
+live: https://tradepulse-live.vercel.app
+github: https://github.com/mubin-attar-007/tradepulse
+accent: "#3b82f6"
+order: 3
+---
+
+## Executive Summary
+
+TradePulse is a quant backtesting platform whose entire thesis is **honesty over flattering numbers**. Most retail backtesters lie in subtle ways — they let strategies "peek" at the signal bar's close, ignore trading costs, use float money that drifts, and let an AI narrate results it invented. TradePulse is engineered so those lies are *structurally impossible*: an event-driven engine where decisions read only closed bars and orders fill on the **next** bar's open; `Decimal` money end-to-end; commission + slippage modeled on every fill by default; hard risk limits enforced at entry, not reported after the fact; and an AI copilot that is contractually forbidden from inventing figures. Every result is reproducible from a spec hash + engine version + data fingerprint. It runs on a free stack: Next.js + FastAPI + Postgres/TimescaleDB + Redis, with free market data (CCXT + yfinance).
+
+## Problem
+
+A backtest's only job is to tell you the truth about a strategy. The common ways it fails to:
+
+1. **Look-ahead bias.** If a strategy can act on the same bar's close it used to decide, backtested returns are fantasy — you can't trade a price you only knew *after* the bar closed.
+2. **Cost blindness.** Commission and slippage quietly turn many "profitable" strategies into losers. A backtest that ignores them is marketing, not measurement.
+3. **Float money.** Floating-point accounting drifts; P&L stops reconciling.
+4. **Optimistic, entry-only strategies.** Legacy tools let you author a strategy with no exit, no sizing, no risk limits — the shape that always looks good on paper.
+5. **A hallucinating AI layer.** An LLM asked to "explain these results" will happily fabricate a Sharpe ratio.
+
+## Architecture
+
+A modular monolith: FastAPI API + an ARQ worker (live ingestion + paper-trading cron), Postgres/TimescaleDB for time-series bars, Redis for queues/cache, and a Next.js frontend with a generated typed API client.
+
+```
+Next.js (builder UI · typed client)
+     │
+     ▼
+FastAPI  ──►  StrategySpec DSL (canonical, declarative, non-Turing-complete)
+     │            │  shared by builder · engine · paper · AI
+     │            ▼
+     │        Backtest engine (event-driven bar replay)
+     │            decide on CLOSED bar i  ──►  fill on bar i+1 OPEN
+     │            costs + slippage per fill · risk limits at entry
+     │            ▼
+     │        Result: metrics + trades + risk events
+     │            + spec_hash · engine_version · data_fingerprint
+     │
+     ├──►  ARQ worker  ──►  Paper engine (SAME engine, close_at_end=False)
+     │                          snapshot-diff alerts (idempotent)
+     │
+     └──►  AI copilot (Gemini / Ollama): NL → validated spec · grounded narration
+                                          never auto-executes · never invents numbers
+```
+
+**The StrategySpec DSL is the keystone.** A single canonical, declarative, **non-Turing-complete** spec is the source of truth shared by the builder UI, backtest engine, paper trading, and the AI layer. Operands can only reference a *closed catalog* of indicators and price fields evaluated on **closed bars — so look-ahead is structurally impossible, not just discouraged.** Exit logic, position sizing, and risk limits are **mandatory fields**, which makes the legacy "optimistic, entry-only" strategy literally un-authorable.
+
+## Key Decisions & Trade-offs
+
+**1. Look-ahead-free by construction, not by convention.** The engine's contract, verbatim from `backtesting/engine.py`: *"decisions are made on a CLOSED bar i (reading causal indicators at i); market orders fill on the NEXT bar's OPEN (no peeking at the signal bar's close); stop/target/trailing are intrabar (gap-aware: a gap-through fills at the open)."* Indicators warm up with `min_periods` so they emit honest null gaps instead of finite values from bar 0 (MACD even double-warms: the signal EMA warms up over the already-gapped MACD line). Trade-off: a bar of latency between signal and fill, and no convenient "just fill at close" mode outside tests — accepted, because the alternative is measuring a strategy you can't actually trade.
+
+**2. `Decimal` money and costs-on-by-default.** All accounting is `Decimal`, never float. Commission (default **2 bps/side**) and slippage (default **1 bps, adverse**) are applied to every fill; reported returns are net of costs and total commission is shown alongside each result. A frictionless mode exists only for tests. Trade-off: more careful arithmetic and type discipline, bought back by a `test_cash_conservation` check that asserts `initial_cash + Σ trade P&L == final_equity` to within 1e-6.
+
+**3. Risk limits enforced at entry, not tracked after the fact.** Three controls fire *before* a position is taken: a **position-size clamp** (`max_position_pct`, emits a `position_clamped` risk event), a **daily-loss kill-switch** (halts all trading for the rest of that calendar day), and a **consecutive-loss kill-switch** (permanently halts the run). Each is recorded as a `RiskEvent` on the result. Trade-off: strategies can be halted mid-run and "look worse" — which is the point; the limits are real, not cosmetic.
+
+**4. Reproducibility as a first-class output.** Every `BacktestResult` carries a **spec hash** (SHA-256 of canonical, sorted-key JSON), the **engine version**, and a **data fingerprint** (SHA-256 over instrument, timeframe, bar count, first/last timestamps + closes). Any run can be audited and re-derived. Trade-off: a little bookkeeping per run, for durable, defensible results.
+
+**5. A grounded AI copilot over a chatty one.** NL→strategy uses a **validate-and-repair loop** (LLM output → JSON decode → Pydantic validation → ask for correction on failure), returns a *validated* `StrategySpec`, and **never auto-executes it**. Narration runs on a system prompt that says to *"use ONLY the numbers present in the provided data — never invent, estimate, or extrapolate,"* and to close with a fixed not-financial-advice line. Providers are Gemini (default, free tier) or local Ollama, behind a uniform provider contract, with per-user (200K/day) and global (5M/day) token budgets. Trade-off: the copilot sometimes refuses rather than guesses — exactly the behavior you want in a financial tool.
+
+## Metrics / Results
+
+Real, and honest about their assumptions:
+
+- **The correctness suite is the crown jewel.** Hermetic, no-DB tests assert the properties directly: `test_lookahead_canary` perturbs *future* bars 3× and proves equity through the cut bar is byte-identical; `test_cash_conservation`; `test_determinism` (identical runs → identical equity curves); `test_frictionless_beats_or_matches_realistic` (costs can only hurt); `test_stop_loss_fires`; and a paper/backtest **parity** test proving the paper engine reuses the exact backtest engine (`close_at_end=False`).
+- **Metrics are stated with their assumptions.** Sharpe and Sortino are annualized from per-bar returns with a **risk-free rate of 0 (stated wherever shown)**; max drawdown is the canonical peak-to-trough of the equity curve; drawdown is *always* shown.
+- **Honest data provenance.** Prices are polled (~30s) and labeled `DELAYED` — no real-time SIP claim — and every result carries a hypothetical-performance notice.
+- **Deliberately not claimed (roadmap, not faked in the UI):** a real-time consolidated SIP feed, point-in-time survivorship-free fundamentals, automatic in-sample/out-of-sample split, Deflated-Sharpe / multiple-testing correction, a buy-and-hold benchmark overlay. Stating what *isn't* there is part of the honesty contract.
+
+## Lessons
+
+- **Correctness invariants belong in the type system and the test suite, not the docs.** A non-Turing-complete spec that only reads closed bars makes look-ahead unrepresentable; a canary test proves it stayed that way. That's stronger than any warning label.
+- **One engine, reused, beats two that "should match."** Paper trading runs the *same* engine as backtesting with a single flag change, and a parity test guarantees they agree — no drift between "simulated" and "live."
+- **The honest number is the valuable one.** Costs-on-by-default and always-shown drawdown make results less flattering and far more useful. A tool that tells comfortable lies is worthless for real capital.
+- **A financial AI should refuse before it guesses.** Grounding the copilot to provided numbers, and having it decline rather than extrapolate, is the difference between an assistant and a liability.

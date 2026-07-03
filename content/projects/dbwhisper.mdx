@@ -1,0 +1,90 @@
+---
+slug: dbwhisper
+name: DBWhisper
+tagline: Ask your database in plain English.
+stack: ["FastAPI", "LangGraph", "LangChain", "pgvector", "Next.js", "Postgres", "SQLAlchemy 2.0", "Docker"]
+live: https://dbwhisper.vercel.app
+github: https://github.com/mubin-attar-007/dbwhisper
+accent: "#6366f1"
+order: 1
+---
+
+## Executive Summary
+
+DBWhisper turns a plain-English question into **safe, read-only SQL** across PostgreSQL, MySQL, and SQL Server, runs it, and explains the answer. The interesting engineering isn't "call an LLM to write SQL" — anyone can do that. It's the parts that make it *trustworthy in production*: a **LangGraph agent** that retrieves only the relevant slice of a schema via **pgvector** before generating, a **fail-closed read-only validator** that gates every query before it touches a database, a **multi-provider LLM fallback chain** so one outage doesn't take the app down, and a **verified-query flywheel** that makes the agent more accurate on a given database the more it's used. It runs live on a $0 stack: Next.js on Vercel → FastAPI on a Hugging Face Docker Space → Neon Postgres + pgvector.
+
+## Problem
+
+Natural-language-to-SQL has two failure modes that keep it out of production:
+
+1. **Hallucinated / unsafe SQL.** An LLM will happily emit `DROP TABLE`, a multi-statement payload, or a query against a table that doesn't exist. Trusting the model is not a safety model.
+2. **Schema blindness at scale.** Real databases have dozens to hundreds of tables. You can't paste the whole schema into a prompt — it's too large, too noisy, and the model picks the wrong tables. The agent needs to *retrieve* the right tables for each question.
+
+DBWhisper is built around the premise: **it can read your data, never change it** — and it has to figure out *which* tables to read on its own.
+
+## Architecture
+
+Split deploy, three tiers:
+
+```
+Next.js UI (Vercel)
+     │  REST /query
+     ▼
+FastAPI agent  ──────────────► Neon Postgres (conversation memory + LangGraph checkpoints)
+     │
+     ▼
+LangGraph agent loop:
+   search_tables ──► fetch_table_summary / fetch_table_section ──► search_verified_queries
+        │                        (pgvector semantic retrieval)              │
+        └──────────────► SQL generation (multi-LLM) ──► validate_sql (read-only, fail-closed)
+                                                              │
+                                                              ▼
+                                                   Execute (timeout + row cap)
+                                                              │
+                                                              ▼
+                                                   LLM natural-language summary
+     │
+     ▼
+Target DB (Postgres · MySQL · SQL Server) via read-only user
+```
+
+**Enrollment (once per database).** A target DB is introspected, each table is AI-documented into structured sections (summary, columns, relationships, stats), and those chunks are **embedded into pgvector**. This is what makes retrieval possible later — the agent searches *documentation embeddings*, not raw schema.
+
+**The agent loop.** Built on LangChain/LangGraph's `create_agent` with a tightly-scoped toolset (`app/agent/tools.py`):
+
+- `search_tables` — semantic search over table *summaries* to find candidate tables for the question (records which tables it touched).
+- `fetch_table_summary` / `fetch_table_section` — pull only the needed section (`columns`, `relationships`, `stats`) for a table, so the prompt stays small.
+- `search_verified_queries` — retrieves human-approved question→SQL pairs for *this* database; the tool docstring instructs the model to **prefer adapting a close verified example over writing SQL from scratch**.
+- `validate_sql` — runs the read-only validator as a tool the agent must pass through.
+
+Per-run guardrails keep the loop bounded: each tool result is cached per run, and a tool called more than 8 times returns an "abort hint" telling the model to stop looping and produce final output (`_MAX_TOOL_CALLS_PER_TOOL`).
+
+**Dialect-correctness.** Before generation, a `_dialect_directive` injects a hard instruction for the target dialect (e.g. "Use `LIMIT n`, never `TOP`" for Postgres/MySQL; the inverse for T-SQL) — a concrete fix for the model emitting `SELECT TOP n` against Postgres.
+
+**Conversation memory.** A `wrap_model_call` middleware persists a LangGraph checkpoint to Neon Postgres per turn, and prior queries/tables/insights are summarized back into the system prompt so follow-ups have context.
+
+## Key Decisions & Trade-offs
+
+**1. Fail-closed SQL validator over LLM-trust.** `app/core/sql_validator.py` uses `sqlparse` (not a fragile regex-only check) to enforce: statement must start with `SELECT`/`WITH`; no DML/DDL/EXEC keywords (checked on tokenized keywords, skipping strings and comments to avoid false positives); single statement only; no `SELECT … INTO`; no `information_schema` / `sys.` / `pg_catalog.` access. The decisive design choice: when a `db_flag` is supplied, it loads that database's enrolled `schema_index.yaml` and **rejects any query referencing a table not in the enrolled schema — and if no schema index exists, it fails closed rather than open** ("a db_flag must have a readable schema index, otherwise we cannot vouch for the tables it touches"). CTE names defined in the same query are allowed. Trade-off: this rejects some exotic-but-valid queries and adds an enrollment step — deliberately, because a false "safe" is far more expensive than a false "unsafe."
+
+**2. Defense in depth, not a single gate.** The validator is one layer. Below it: **read-only DB users** (a best-effort probe warns if a connection looks writable), a **query timeout + row cap**, and **log sanitization** that masks connection-string passwords, API keys, and SQL literals before anything is written to logs. Any one layer failing doesn't expose the database.
+
+**3. Multi-provider fallback over single-vendor lock-in.** A priority chain (OpenAI → OpenRouter → DeepSeek → Groq → Anthropic → Gemini) picks the first provider with credentials, and **always keeps Gemini's free tier as a final fallback** so the app runs even with zero paid keys. Result summarization retries down the same chain on failure. Trade-off: more provider adapters to maintain, but no single outage or quota exhaustion takes the product down — and it stays free to run.
+
+**4. Retrieval over context-stuffing.** Rather than dump a schema into the prompt, schemas are documented, embedded, and semantically retrieved per question. This is what lets it work on large databases at all, and it keeps token cost (and hallucination surface) low.
+
+## Metrics / Results
+
+Honest, qualitative-where-appropriate — no invented benchmark numbers:
+
+- **Safety is structural, not statistical.** Every generated query is gated by the validator *before* execution; the read-only guarantee doesn't depend on the model behaving. The validator has unit tests (`ruff` + `pytest` gate CI, alongside a `gitleaks` secret scan).
+- **The verified-query flywheel is real and compounding.** Once a question→SQL pair is human-approved for a database, future similar questions retrieve and adapt it — accuracy on a given database improves with curated use, rather than staying static.
+- **Runs on $0 infra.** Live split-deploy (Vercel + Hugging Face Docker Space + Neon Postgres + pgvector) with hosted-Google embeddings by default and a fully-local HuggingFace embedding path available for offline use.
+- **Multi-database, multi-provider by construction** — Postgres, MySQL, and SQL Server via SQLAlchemy 2.0 + ODBC; six LLM providers behind one fallback interface.
+
+## Lessons
+
+- **"Trust the LLM" is not a safety architecture.** The moment SQL can mutate a database, you need a deterministic gate the model cannot talk its way past. Failing *closed* — refusing when you can't prove safety — is the only defensible default.
+- **RAG over a schema beats stuffing a schema.** Documenting + embedding tables and retrieving per-question is what makes NL→SQL viable beyond toy databases.
+- **A feedback loop is worth more than a bigger model.** The verified-query flywheel turns real usage into durable, per-database accuracy gains — cheaper and more reliable than prompt-tuning against a moving target.
+- **Free-tier constraints force good engineering.** Small prompts (section-scoped retrieval), bounded tool loops, and a lean Docker image weren't cost optimizations bolted on later — they shaped the design from the start.

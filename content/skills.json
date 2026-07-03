@@ -1,0 +1,22 @@
+{
+  "skills": [
+    { "group": "Languages", "items": ["Python", "TypeScript / JavaScript", "SQL"] },
+    {
+      "group": "GenAI / LLM",
+      "items": ["LangChain", "LangGraph", "RAG", "pgvector", "Agents", "Multi-provider routing"]
+    },
+    {
+      "group": "Machine Learning",
+      "items": ["scikit-learn", "XGBoost", "Neural Networks", "pandas", "NumPy"]
+    },
+    {
+      "group": "Backend",
+      "items": ["FastAPI", "Django / DRF", "SQLAlchemy", "async", "Argon2 auth"]
+    },
+    { "group": "Frontend", "items": ["Next.js", "React", "TypeScript", "Tailwind CSS"] },
+    {
+      "group": "Data / DevOps",
+      "items": ["PostgreSQL", "Redis", "Docker", "GitHub Actions", "Vercel", "Hugging Face"]
+    }
+  ]
+}

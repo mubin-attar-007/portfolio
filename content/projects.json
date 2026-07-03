@@ -1,0 +1,68 @@
+{
+  "projects": [
+    {
+      "slug": "dbwhisper",
+      "name": "DBWhisper",
+      "tagline": "Ask your database in plain English.",
+      "description": "A natural-language-to-SQL agent: a LangGraph pipeline with schema-aware pgvector retrieval, multi-LLM fallback, and a fail-closed read-only safety layer. A verified-query flywheel makes it smarter with use.",
+      "highlights": [
+        "LangGraph agent + pgvector RAG",
+        "Fail-closed read-only SQL validator",
+        "Verified-query flywheel + schema browser"
+      ],
+      "stack": ["FastAPI", "LangGraph", "pgvector", "Next.js", "Postgres"],
+      "live": "https://dbwhisper.vercel.app",
+      "github": "https://github.com/mubin-attar-007/dbwhisper",
+      "accent": "#6366f1",
+      "order": 1
+    },
+    {
+      "slug": "llm-studio",
+      "name": "LLM Studio",
+      "tagline": "A multi-user, ChatGPT-style AI platform.",
+      "description": "A production AI-chat SaaS: email/session auth, per-user tenancy, token streaming, multi-LLM routing, and daily quotas — Dockerized and CI'd. The full SaaS shape, on a free stack.",
+      "highlights": [
+        "Per-user tenancy + Argon2 auth",
+        "Token streaming + multi-LLM routing",
+        "Daily quotas, Docker, CI"
+      ],
+      "stack": ["FastAPI", "Postgres", "Docker", "Vanilla JS"],
+      "live": "https://heisenbergblue-llm-studio.hf.space",
+      "github": "https://github.com/mubin-attar-007/llm_studio",
+      "accent": "#10a37f",
+      "order": 2
+    },
+    {
+      "slug": "tradepulse",
+      "name": "TradePulse",
+      "tagline": "An honest quant backtesting platform.",
+      "description": "An event-driven backtesting engine that's structurally look-ahead-free, models commission + slippage by default, and enforces hard risk limits — paired with an AI copilot that explains results without inventing numbers.",
+      "highlights": [
+        "Look-ahead-free event-driven engine",
+        "Costs modeled by default; drawdown always shown",
+        "Grounded AI copilot (NL → strategy)"
+      ],
+      "stack": ["FastAPI", "Next.js", "TimescaleDB", "Redis"],
+      "live": "https://tradepulse-live.vercel.app",
+      "github": "https://github.com/mubin-attar-007/tradepulse",
+      "accent": "#3b82f6",
+      "order": 3
+    },
+    {
+      "slug": "crownwager",
+      "name": "CrownWager",
+      "tagline": "+EV sports-betting analytics.",
+      "description": "Sports analytics + ML: a validated XGBoost model (65% CV accuracy) turned into fair-odds edge, EV & Kelly staking, an arbitrage finder, and a verifiable model track-record that grades every published pick against the real final score.",
+      "highlights": [
+        "Validated XGBoost model (65% CV)",
+        "Fair-odds edge + Kelly staking",
+        "Verifiable, graded model track-record"
+      ],
+      "stack": ["Django/DRF", "FastAPI", "XGBoost", "Next.js"],
+      "live": "https://crownwager.vercel.app",
+      "github": "https://github.com/mubin-attar-007/crownwager",
+      "accent": "#f59e0b",
+      "order": 4
+    }
+  ]
+}
