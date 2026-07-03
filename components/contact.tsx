@@ -29,6 +29,14 @@ export function Contact() {
             <a href={profile.socials.email} className="btn btn-accent">
               <Mail size={16} /> {profile.email}
             </a>
+            <a
+              href={profile.resume}
+              target="_blank"
+              rel="noopener noreferrer"
+              className="btn btn-ghost"
+            >
+              Download résumé ↗
+            </a>
           </div>
           <div className="mt-6 flex flex-wrap items-center justify-center gap-x-6 gap-y-2">
             {SOCIALS.map((s) => (

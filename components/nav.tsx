@@ -1,20 +1,76 @@
 "use client";
 
 import { useEffect, useRef, useState } from "react";
+import Link from "next/link";
+import { usePathname } from "next/navigation";
 import { AnimatePresence, motion, useReducedMotion } from "framer-motion";
+import { profile } from "@/lib/content";
 
-const LINKS = [
-  { href: "#work", label: "Work" },
-  { href: "#playground", label: "Playground" },
-  { href: "#about", label: "About" },
+/**
+ * Nav link targets.
+ * - `href` is the canonical destination (route or root-anchored hash so it
+ *   resolves from any page, e.g. from /work back to the home `#about`).
+ * - `section` (when present) is the id we watch on the home page to light the
+ *   active state via a scroll spy.
+ */
+type NavLink = { href: string; label: string; section?: string };
+
+const LINKS: NavLink[] = [
+  { href: "/work", label: "Work", section: "work" },
+  { href: "/#playground", label: "Playground", section: "playground" },
+  { href: "/#about", label: "About", section: "about" },
+  { href: "/#contact", label: "Contact", section: "contact" },
 ];
 
+/** Scroll-spy: returns the id of the section currently in view (home only). */
+function useActiveSection(enabled: boolean): string | null {
+  const [active, setActive] = useState<string | null>(null);
+
+  useEffect(() => {
+    // Only run the scroll spy on the home page. On other routes we skip setup;
+    // callers gate the active state on `isHome`, so a stale value is harmless.
+    if (!enabled) return;
+    const ids = LINKS.map((l) => l.section).filter(Boolean) as string[];
+    const els = ids
+      .map((id) => document.getElementById(id))
+      .filter((el): el is HTMLElement => el !== null);
+    if (els.length === 0) return;
+
+    const observer = new IntersectionObserver(
+      (entries) => {
+        const visible = entries
+          .filter((e) => e.isIntersecting)
+          .sort((a, b) => b.intersectionRatio - a.intersectionRatio);
+        if (visible[0]) setActive(visible[0].target.id);
+      },
+      { rootMargin: "-45% 0px -45% 0px", threshold: [0, 0.25, 0.5, 1] },
+    );
+    els.forEach((el) => observer.observe(el));
+    return () => observer.disconnect();
+  }, [enabled]);
+
+  return active;
+}
+
 export function Nav() {
+  const pathname = usePathname();
+  const isHome = pathname === "/";
+  const onWork = pathname === "/work" || pathname.startsWith("/work/");
+
   const [scrolled, setScrolled] = useState(false);
   const [open, setOpen] = useState(false);
   const reduce = useReducedMotion();
   const panelRef = useRef<HTMLDivElement | null>(null);
   const toggleRef = useRef<HTMLButtonElement | null>(null);
+
+  const activeSection = useActiveSection(isHome);
+
+  /** Is this link the current one? Route links match by path; anchors by spy. */
+  const isActive = (l: NavLink) => {
+    if (l.href === "/work") return onWork;
+    if (isHome && l.section) return activeSection === l.section;
+    return false;
+  };
 
   useEffect(() => {
     const on = () => setScrolled(window.scrollY > 24);
@@ -47,33 +103,52 @@ export function Nav() {
   return (
     <header className="fixed inset-x-0 top-0 z-50 flex justify-center px-4 pt-4">
       <nav
+        aria-label="Primary"
         className={`flex w-full max-w-5xl items-center justify-between rounded-full px-4 py-2 transition-all duration-300 ${
           scrolled
             ? "border border-line bg-[rgba(8,11,15,0.72)] shadow-[0_10px_40px_-24px_rgba(0,0,0,0.9)] backdrop-blur-xl"
             : "border border-transparent"
         }`}
       >
-        <a href="#top" className="mono px-2 text-sm font-semibold tracking-tight">
+        <Link
+          href="/"
+          aria-label="Home"
+          className="mono px-2 text-sm font-semibold tracking-tight"
+        >
           mubin<span className="text-accent">.</span>
-        </a>
+        </Link>
 
         {/* desktop links */}
         <div className="hidden items-center gap-1 sm:flex">
-          {LINKS.map((l) => (
-            <a
-              key={l.href}
-              href={l.href}
-              className="rounded-full px-3 py-1.5 text-sm text-muted transition hover:text-ink"
-            >
-              {l.label}
-            </a>
-          ))}
+          {LINKS.map((l) => {
+            const active = isActive(l);
+            return (
+              <Link
+                key={l.href}
+                href={l.href}
+                aria-current={active ? "page" : undefined}
+                className={`rounded-full px-3 py-1.5 text-sm transition ${
+                  active ? "text-accent" : "text-muted hover:text-ink"
+                }`}
+              >
+                {l.label}
+              </Link>
+            );
+          })}
         </div>
 
         <div className="flex items-center gap-2">
-          <a href="#contact" className="btn btn-ghost !px-4 !py-1.5 max-sm:hidden">
-            Let&apos;s talk
+          <a
+            href={profile.resume}
+            target="_blank"
+            rel="noopener noreferrer"
+            className="btn btn-ghost !px-4 !py-1.5 max-md:hidden"
+          >
+            Résumé ↗
           </a>
+          <Link href="/#contact" className="btn btn-accent !px-4 !py-1.5 max-sm:hidden">
+            Let&apos;s talk
+          </Link>
 
           {/* mobile hamburger */}
           <button
@@ -126,23 +201,38 @@ export function Nav() {
               className="absolute right-0 top-0 flex h-full w-[78%] max-w-xs flex-col gap-1 border-l border-line bg-elev/95 px-5 pb-8 pt-24 backdrop-blur-xl"
             >
               <span className="eyebrow mb-2 px-2">Navigate</span>
-              {LINKS.map((l) => (
-                <a
-                  key={l.href}
-                  href={l.href}
-                  onClick={() => setOpen(false)}
-                  className="rounded-xl px-3 py-3 text-lg text-ink transition hover:bg-[rgba(53,224,192,0.08)] hover:text-accent"
-                >
-                  {l.label}
-                </a>
-              ))}
+              {LINKS.map((l) => {
+                const active = isActive(l);
+                return (
+                  <Link
+                    key={l.href}
+                    href={l.href}
+                    onClick={() => setOpen(false)}
+                    aria-current={active ? "page" : undefined}
+                    className={`rounded-xl px-3 py-3 text-lg transition hover:bg-[rgba(53,224,192,0.08)] ${
+                      active ? "text-accent" : "text-ink hover:text-accent"
+                    }`}
+                  >
+                    {l.label}
+                  </Link>
+                );
+              })}
               <a
-                href="#contact"
+                href={profile.resume}
+                target="_blank"
+                rel="noopener noreferrer"
                 onClick={() => setOpen(false)}
-                className="btn btn-accent mt-4 justify-center"
+                className="mono mt-3 rounded-xl px-3 py-3 text-sm text-muted transition hover:bg-[rgba(53,224,192,0.08)] hover:text-accent"
+              >
+                Résumé ↗
+              </a>
+              <Link
+                href="/#contact"
+                onClick={() => setOpen(false)}
+                className="btn btn-accent mt-2 justify-center"
               >
                 Let&apos;s talk
-              </a>
+              </Link>
             </motion.div>
           </motion.div>
         )}
