@@ -1,30 +1,41 @@
 @import "tailwindcss";
 
 /* ------------------------------------------------------------- tokens
-   Instrument-neutral dark system. Existing token NAMES are preserved and
-   remapped to the new palette so the not-yet-rebuilt sections keep building. */
+   Instrument-neutral dark system, ELEVATED. Existing token NAMES are preserved
+   and remapped to the new, more luminous palette so the not-yet-rebuilt
+   sections keep building on the updated design language. */
 @theme {
-  /* surfaces */
-  --color-bg: #0b0d10;
-  --color-elev: #12161c;   /* panel */
-  --color-elev2: #0e1218;  /* panel-2, deeper wells (SQL, query bar) */
-  --color-line: #212934;
-  --color-line2: #2a333f;
-  --color-line-soft: #19202a;
+  /* surfaces — deeper, cooler blacks with a hint of blue so glows read */
+  --color-bg: #070a0e;
+  --color-elev: #10151c;   /* panel */
+  --color-elev2: #0b1015;  /* panel-2, deeper wells (SQL, query bar) */
+  --color-line: #202a35;
+  --color-line2: #2c3846;
+  --color-line-soft: #171f29;
 
   /* text */
-  --color-ink: #eef1f6;
-  --color-muted: #8a94a4;
-  --color-dim: #5c6675;
+  --color-ink: #eef2f7;
+  --color-muted: #8b96a6;
+  --color-dim: #5b6674;
 
-  /* accents — teal is primary */
-  --color-accent: #42c3ae;   /* idle-teal (primary) */
-  --color-accent2: #5fd8c3;  /* hover/brighter teal */
-  --color-fire: #f4a63c;     /* fire-amber — a node firing */
-  --color-data: #63a8ff;     /* data-blue — data lines / numeric */
-  --color-good: #38d39b;     /* validated / pass */
-  --color-warn: #f2b03d;     /* warning */
-  --color-crit: #ef6b73;     /* critical / fail */
+  /* accents — luminous teal is the signature, amber is energy/active */
+  --color-accent: #35e0c0;   /* signature teal (brightened + glowing) */
+  --color-accent2: #6bf3da;  /* hover / brighter teal */
+  --color-accent-deep: #12a58c; /* teal shadow / low end of gradients */
+  --color-cyan: #3fd0ff;     /* secondary cool accent (teal→cyan gradient) */
+  --color-fire: #f5a63c;     /* fire-amber — a node firing / active energy */
+  --color-ember: #ff8a4c;    /* warm ember (low-left glow, deep amber) */
+  --color-data: #63b0ff;     /* data-blue — data lines / numeric */
+  --color-good: #35e0a0;     /* validated / pass */
+  --color-warn: #f5b53d;     /* warning */
+  --color-crit: #ff6b73;     /* critical / fail */
+
+  /* glow rgb triplets (for rgba() composition) */
+  --rgb-accent: 53, 224, 192;
+  --rgb-cyan: 63, 208, 255;
+  --rgb-fire: 245, 166, 60;
+  --rgb-ember: 255, 138, 76;
+  --rgb-data: 99, 176, 255;
 
   --font-display: var(--font-fraunces), "Iowan Old Style", Palatino, Georgia, serif;
   --font-sans: var(--font-instrument), ui-sans-serif, system-ui, sans-serif;
@@ -48,10 +59,11 @@ body {
   overflow-x: hidden;
 }
 h1, h2, h3, h4 { font-family: var(--font-display); letter-spacing: -0.015em; }
-::selection { background: color-mix(in oklab, var(--color-accent) 35%, transparent); color: #f2fffb; }
+::selection { background: color-mix(in oklab, var(--color-accent) 40%, transparent); color: #eafffb; }
 
 ::-webkit-scrollbar { width: 10px; height: 10px; }
-::-webkit-scrollbar-thumb { background: #23262f; border-radius: 8px; border: 2px solid var(--color-bg); }
+::-webkit-scrollbar-thumb { background: #232d38; border-radius: 8px; border: 2px solid var(--color-bg); }
+::-webkit-scrollbar-thumb:hover { background: #2e3a47; }
 ::-webkit-scrollbar-track { background: transparent; }
 
 a { color: inherit; }
@@ -66,23 +78,45 @@ a { color: inherit; }
   color: var(--color-accent);
 }
 .mono { font-family: var(--font-mono); }
+
+/* luminous headline clip — neutral ink drifting into glowing teal→cyan */
 .gradient-text {
-  background: linear-gradient(100deg, #eef1f6 10%, #a9e8dc 55%, var(--color-accent));
+  background: linear-gradient(100deg, #eef2f7 8%, #a9e8dc 48%, var(--color-accent) 78%, var(--color-cyan));
   -webkit-background-clip: text;
   background-clip: text;
   color: transparent;
 }
+/* the accent line — a bright teal→cyan gradient with a soft outer glow */
+.accent-gradient {
+  background: linear-gradient(96deg, var(--color-accent) 0%, var(--color-cyan) 95%);
+  -webkit-background-clip: text;
+  background-clip: text;
+  color: transparent;
+  /* subtle bloom behind the glyphs */
+  filter: drop-shadow(0 0 22px rgba(var(--rgb-accent), 0.35));
+}
+
+/* surfaces get depth: a top-lit gradient, a hairline gradient border, soft shadow */
 .card {
-  background: linear-gradient(180deg, rgba(255, 255, 255, 0.035), rgba(255, 255, 255, 0.008));
+  position: relative;
+  background:
+    linear-gradient(180deg, rgba(255, 255, 255, 0.045), rgba(255, 255, 255, 0.006) 42%),
+    var(--color-elev);
   border: 1px solid var(--color-line);
   border-radius: var(--radius);
+  box-shadow:
+    0 1px 0 0 rgba(255, 255, 255, 0.03) inset,
+    0 20px 50px -34px rgba(0, 0, 0, 0.8);
   transition: border-color 0.35s ease, transform 0.35s cubic-bezier(0.2, 0.7, 0.2, 1), box-shadow 0.35s ease;
 }
 @media (hover: hover) {
   .card.lift:hover {
-    border-color: var(--color-line2);
+    border-color: color-mix(in oklab, var(--color-accent) 40%, var(--color-line2));
     transform: translateY(-4px);
-    box-shadow: 0 22px 60px -30px var(--color-accent), 0 0 0 1px rgba(66, 195, 174, 0.08) inset;
+    box-shadow:
+      0 0 0 1px rgba(var(--rgb-accent), 0.12) inset,
+      0 30px 70px -32px rgba(var(--rgb-accent), 0.28),
+      0 20px 50px -34px rgba(0, 0, 0, 0.8);
   }
 }
 .chip {
@@ -93,26 +127,38 @@ a { color: inherit; }
   border-radius: 999px;
   padding: 3px 9px;
   background: rgba(255, 255, 255, 0.015);
+  transition: color 0.2s, border-color 0.2s, background 0.2s;
+}
+@media (hover: hover) {
+  .chip:hover { color: var(--color-ink); border-color: var(--color-line2); }
 }
 .badge-live {
   font-family: var(--font-mono);
   font-size: 11px;
   letter-spacing: 0.08em;
   color: var(--color-accent);
-  border: 1px solid color-mix(in oklab, var(--color-accent) 30%, transparent);
-  background: color-mix(in oklab, var(--color-accent) 10%, transparent);
+  border: 1px solid color-mix(in oklab, var(--color-accent) 35%, transparent);
+  background: color-mix(in oklab, var(--color-accent) 12%, transparent);
+  box-shadow: 0 0 18px -6px rgba(var(--rgb-accent), 0.5);
   border-radius: 999px;
   padding: 3px 9px;
 }
 .btn {
   display: inline-flex; align-items: center; gap: 8px;
   border-radius: 999px; padding: 11px 20px; font-weight: 600; font-size: 15px;
-  transition: transform 0.2s ease, background 0.2s ease, border-color 0.2s ease, color 0.2s ease;
+  transition: transform 0.2s ease, background 0.2s ease, border-color 0.2s ease, color 0.2s ease, box-shadow 0.2s ease;
 }
-.btn-accent { background: var(--color-accent); color: #08130f; }
-.btn-accent:hover { background: var(--color-accent2); }
+.btn-accent {
+  background: linear-gradient(96deg, var(--color-accent), var(--color-accent2));
+  color: #04120e;
+  box-shadow: 0 10px 30px -12px rgba(var(--rgb-accent), 0.6), 0 0 0 1px rgba(var(--rgb-accent), 0.2) inset;
+}
+.btn-accent:hover {
+  filter: brightness(1.05);
+  box-shadow: 0 14px 40px -12px rgba(var(--rgb-accent), 0.75), 0 0 0 1px rgba(var(--rgb-accent), 0.3) inset;
+}
 .btn-ghost { border: 1px solid var(--color-line2); color: var(--color-ink); font-family: var(--font-mono); font-size: 13.5px; }
-.btn-ghost:hover { border-color: var(--color-accent); color: var(--color-accent); }
+.btn-ghost:hover { border-color: var(--color-accent); color: var(--color-accent); box-shadow: 0 0 24px -10px rgba(var(--rgb-accent), 0.5); }
 
 .hairline { height: 1px; background: linear-gradient(90deg, transparent, var(--color-line2), transparent); }
 
@@ -122,21 +168,59 @@ a { color: inherit; }
   background-size: 22px 22px;
 }
 
-/* ------------------------------------------------------------- glow + grain
-   Tightened: no animated blobs — a single subtle, static instrument glow. */
+/* ------------------------------------------------------------- atmosphere
+   A composed, layered field: three large soft radial glows (dominant teal
+   top-right, cooler cyan secondary, warm amber ember low-left) over a faint
+   technical grid that is masked so it fades toward the edges. Everything stays
+   dark, legible, and cheap to render (static gradients; only the glow layer
+   floats, and only when motion is allowed). */
 .aurora {
   position: absolute;
   inset: 0;
   z-index: 0;
   pointer-events: none;
+  overflow: hidden;
+}
+/* radial glow field */
+.aurora::before {
+  content: "";
+  position: absolute;
+  inset: -20%;
   background:
-    radial-gradient(760px 340px at 82% -6%, rgba(66, 195, 174, 0.09), transparent 62%),
-    radial-gradient(680px 380px at 2% 4%, rgba(99, 168, 255, 0.05), transparent 58%);
+    radial-gradient(720px 460px at 86% -4%, rgba(var(--rgb-accent), 0.16), transparent 60%),
+    radial-gradient(680px 520px at 68% 8%, rgba(var(--rgb-cyan), 0.08), transparent 62%),
+    radial-gradient(760px 620px at 4% 96%, rgba(var(--rgb-ember), 0.055), transparent 60%),
+    radial-gradient(900px 700px at 50% 120%, rgba(var(--rgb-accent), 0.05), transparent 65%);
+  will-change: transform;
+}
+/* technical grid, masked to fade toward edges + center for a "lit from behind" feel */
+.aurora::after {
+  content: "";
+  position: absolute;
+  inset: 0;
+  background-image:
+    linear-gradient(rgba(140, 170, 200, 0.05) 1px, transparent 1px),
+    linear-gradient(90deg, rgba(140, 170, 200, 0.05) 1px, transparent 1px);
+  background-size: 54px 54px;
+  background-position: center top;
+  -webkit-mask-image: radial-gradient(120% 80% at 72% 0%, #000 0%, transparent 62%);
+  mask-image: radial-gradient(120% 80% at 72% 0%, #000 0%, transparent 62%);
+  opacity: 0.6;
 }
 /* legacy blob spans (if still rendered) are neutralised */
 .aurora span { display: none; }
+
+/* the glow field breathes/floats slowly — only when motion is allowed */
+@media (prefers-reduced-motion: no-preference) {
+  .aurora::before { animation: drift 22s ease-in-out infinite alternate; }
+}
+@keyframes drift {
+  from { transform: translate3d(0, 0, 0) scale(1); }
+  to   { transform: translate3d(-1.6%, 1.8%, 0) scale(1.05); }
+}
+
 .grain {
-  position: fixed; inset: 0; z-index: 60; pointer-events: none; opacity: 0.04; mix-blend-mode: overlay;
+  position: fixed; inset: 0; z-index: 60; pointer-events: none; opacity: 0.035; mix-blend-mode: overlay;
   background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='140' height='140'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.85' numOctaves='3'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)'/%3E%3C/svg%3E");
 }
 
@@ -148,15 +232,31 @@ a { color: inherit; }
 @keyframes blink { 50% { opacity: 0; } }
 
 /* ------------------------------------------------------------- hero pipeline
-   Ports the approved prototype's instrument aesthetic. framer-motion handles the
-   firing choreography; these rules describe node/wire/result appearance. */
+   Ports the approved prototype's instrument aesthetic, elevated: glowing nodes,
+   a pulse that travels the wires as data flows, premium node cards, and a
+   result region that reads like a real terminal readout. framer-motion drives
+   the firing choreography; these rules describe appearance + the pulse. */
 .tnum { font-variant-numeric: tabular-nums; }
 
 .hero-runner {
+  position: relative;
   border: 1px solid var(--color-line);
-  background: var(--color-elev2);
-  border-radius: 14px;
+  background:
+    linear-gradient(180deg, rgba(255, 255, 255, 0.03), rgba(255, 255, 255, 0) 30%),
+    var(--color-elev2);
+  border-radius: 16px;
   overflow: hidden;
+  box-shadow:
+    0 1px 0 0 rgba(255, 255, 255, 0.04) inset,
+    0 30px 80px -40px rgba(0, 0, 0, 0.9),
+    0 0 60px -30px rgba(var(--rgb-accent), 0.18);
+}
+/* a thin luminous top edge — the instrument's "power rail" */
+.hero-runner::before {
+  content: "";
+  position: absolute; inset: 0 0 auto 0; height: 1px;
+  background: linear-gradient(90deg, transparent, rgba(var(--rgb-accent), 0.55), rgba(var(--rgb-cyan), 0.4), transparent);
+  z-index: 2;
 }
 .hero-qbar { border-bottom: 1px solid var(--color-line-soft); }
 .hero-chips { border-bottom: 1px solid var(--color-line-soft); }
@@ -170,10 +270,14 @@ a { color: inherit; }
   border-radius: 999px;
   padding: 6px 11px;
   cursor: pointer;
-  transition: color 0.15s, border-color 0.15s;
+  transition: color 0.15s, border-color 0.15s, box-shadow 0.2s, transform 0.12s;
 }
-.hero-chip:hover { color: var(--color-ink); border-color: var(--color-accent); }
-.hero-chip[data-on="true"] { color: var(--color-accent); border-color: var(--color-accent); }
+.hero-chip:hover { color: var(--color-ink); border-color: var(--color-accent); transform: translateY(-1px); }
+.hero-chip[data-on="true"] {
+  color: var(--color-accent);
+  border-color: color-mix(in oklab, var(--color-accent) 60%, transparent);
+  box-shadow: 0 0 20px -6px rgba(var(--rgb-accent), 0.5), 0 0 0 1px rgba(var(--rgb-accent), 0.12) inset;
+}
 
 .hero-input {
   background: transparent; border: 0; outline: 0;
@@ -184,65 +288,149 @@ a { color: inherit; }
 
 .hero-run {
   font-family: var(--font-mono); font-size: 12px; letter-spacing: 0.04em;
-  text-transform: uppercase; color: var(--color-bg); background: var(--color-accent);
-  border: 0; border-radius: 8px; padding: 8px 14px; cursor: pointer; font-weight: 700;
-  transition: filter 0.15s, transform 0.06s;
+  text-transform: uppercase; color: #04120e;
+  background: linear-gradient(96deg, var(--color-accent), var(--color-accent2));
+  border: 0; border-radius: 9px; padding: 8px 15px; cursor: pointer; font-weight: 700;
+  box-shadow: 0 6px 20px -8px rgba(var(--rgb-accent), 0.7);
+  transition: filter 0.15s, transform 0.06s, box-shadow 0.15s;
 }
-.hero-run:hover { filter: brightness(1.08); }
+.hero-run:hover { filter: brightness(1.06); box-shadow: 0 8px 26px -8px rgba(var(--rgb-accent), 0.85); }
 .hero-run:active { transform: translateY(1px); }
-.hero-run:disabled { opacity: 0.5; cursor: default; }
+.hero-run:disabled { opacity: 0.5; cursor: default; box-shadow: none; }
 
-/* node states */
+/* ------------------------------------------------------ nodes (premium cards) */
 .node {
+  position: relative;
   border: 1px solid var(--color-line);
-  background: var(--color-elev);
-  border-radius: 11px;
-  transition: border-color 0.3s, box-shadow 0.3s, background 0.3s;
+  background:
+    linear-gradient(180deg, rgba(255, 255, 255, 0.035), rgba(255, 255, 255, 0) 60%),
+    var(--color-elev);
+  border-radius: 12px;
+  box-shadow: 0 1px 0 0 rgba(255, 255, 255, 0.03) inset;
+  transition: border-color 0.3s, box-shadow 0.35s, background 0.3s, transform 0.2s;
+}
+@media (hover: hover) {
+  .node:hover { transform: translateY(-2px); border-color: var(--color-line2); }
 }
 .node .nl { font-family: var(--font-mono); font-size: 9.5px; letter-spacing: 0.08em; text-transform: uppercase; color: var(--color-dim); }
 .node .nt { font-size: 13px; font-weight: 620; margin-top: 6px; color: var(--color-muted); transition: color 0.3s; }
 .node .ns { font-family: var(--font-mono); font-size: 10px; margin-top: 7px; color: transparent; transition: color 0.3s; min-height: 12px; }
-.node[data-state="active"] { border-color: var(--color-accent); background: linear-gradient(180deg, rgba(66, 195, 174, 0.06), var(--color-elev)); }
+
+/* active — lit teal with an inner glow + soft bloom */
+.node[data-state="active"] {
+  border-color: color-mix(in oklab, var(--color-accent) 55%, var(--color-line));
+  background: linear-gradient(180deg, rgba(var(--rgb-accent), 0.1), var(--color-elev) 70%);
+  box-shadow:
+    0 0 0 1px rgba(var(--rgb-accent), 0.14) inset,
+    0 0 26px -8px rgba(var(--rgb-accent), 0.45);
+}
 .node[data-state="active"] .nt, .node[data-state="active"] .ns { color: var(--color-accent); }
-.node[data-state="fire"] { border-color: var(--color-fire); box-shadow: 0 0 0 1px rgba(244, 166, 60, 0.25), 0 0 26px rgba(244, 166, 60, 0.1); }
+
+/* firing — amber energy, a real bloom */
+.node[data-state="fire"] {
+  border-color: var(--color-fire);
+  background: linear-gradient(180deg, rgba(var(--rgb-fire), 0.12), var(--color-elev) 70%);
+  box-shadow:
+    0 0 0 1px rgba(var(--rgb-fire), 0.3) inset,
+    0 0 34px -6px rgba(var(--rgb-fire), 0.55);
+}
 .node[data-state="fire"] .nt, .node[data-state="fire"] .ns { color: var(--color-fire); }
-.node[data-state="pass"] { border-color: rgba(56, 211, 155, 0.5); }
+
+/* pass — the guardrail validated (green) */
+.node[data-state="pass"] {
+  border-color: color-mix(in oklab, var(--color-good) 55%, var(--color-line));
+  background: linear-gradient(180deg, rgba(var(--rgb-accent), 0.08), var(--color-elev) 70%);
+  box-shadow: 0 0 0 1px rgba(53, 224, 160, 0.16) inset, 0 0 24px -8px rgba(53, 224, 160, 0.4);
+}
 .node[data-state="pass"] .nt, .node[data-state="pass"] .ns { color: var(--color-good); }
 
-/* wire between nodes */
-.wire { position: relative; height: 2px; background: var(--color-line); align-self: center; }
-.wire i { position: absolute; inset: 0; width: 0; background: linear-gradient(90deg, var(--color-accent), var(--color-fire)); transition: width 0.35s ease; }
+/* ------------------------------------------------------ wires + traveling pulse */
+.wire {
+  position: relative; height: 2px; align-self: center;
+  background: var(--color-line);
+  border-radius: 2px;
+  overflow: hidden;
+}
+/* the "lit" fill — teal→cyan energised track */
+.wire i {
+  position: absolute; inset: 0; width: 0;
+  background: linear-gradient(90deg, var(--color-accent), var(--color-cyan));
+  box-shadow: 0 0 10px rgba(var(--rgb-accent), 0.6);
+  transition: width 0.4s ease;
+}
 .wire[data-lit="true"] i { width: 100%; }
+/* a luminous packet that travels the wire while lit */
+.wire::after {
+  content: "";
+  position: absolute; top: 0; bottom: 0; left: 0; width: 42%;
+  background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.9), transparent);
+  opacity: 0;
+  transform: translateX(-120%);
+}
+.wire[data-lit="true"]::after {
+  opacity: 0.85;
+  animation: pulse-travel 1.15s cubic-bezier(0.4, 0, 0.2, 1) infinite;
+}
+@keyframes pulse-travel {
+  0%   { transform: translateX(-120%); }
+  100% { transform: translateX(320%); }
+}
 @media (max-width: 560px) {
   .wire { width: 2px !important; height: 16px; margin-left: 20px; }
-  .wire i { width: 100% !important; height: 0; transition: height 0.3s; }
+  .wire i { width: 100% !important; height: 0; transition: height 0.35s; }
   .wire[data-lit="true"] i { height: 100%; }
+  .wire::after {
+    left: 0; right: 0; width: auto; top: 0; bottom: auto; height: 42%;
+    background: linear-gradient(180deg, transparent, rgba(255, 255, 255, 0.9), transparent);
+    transform: translateY(-120%);
+  }
+  .wire[data-lit="true"]::after { animation-name: pulse-travel-v; }
+}
+@keyframes pulse-travel-v {
+  0%   { transform: translateY(-120%); }
+  100% { transform: translateY(320%); }
 }
 
-/* result region */
-.hero-sql { background: var(--color-elev2); border: 1px solid var(--color-line); border-radius: 11px; font-family: var(--font-mono); font-size: 12.5px; color: #cdd6e4; overflow-x: auto; line-height: 1.6; }
+/* ------------------------------------------------------ result region (terminal) */
+.hero-sql {
+  background:
+    linear-gradient(180deg, rgba(var(--rgb-accent), 0.03), transparent 40%),
+    var(--color-elev2);
+  border: 1px solid var(--color-line);
+  border-radius: 12px; font-family: var(--font-mono); font-size: 12.5px;
+  color: #cdd6e4; overflow-x: auto; line-height: 1.6;
+  box-shadow: 0 1px 0 0 rgba(255, 255, 255, 0.02) inset;
+}
 .hero-sql .kw { color: var(--color-data); }
 .hero-sql .fn { color: var(--color-accent); }
-.hero-sql .st { color: #c9a879; }
+.hero-sql .st { color: #d0a878; }
 .hero-sql .lbl, .hero-tbl .lbl { display: block; font-family: var(--font-mono); font-size: 9.5px; letter-spacing: 0.1em; text-transform: uppercase; color: var(--color-dim); }
-.hero-tbl { background: var(--color-elev); border: 1px solid var(--color-line); border-radius: 11px; overflow: hidden; }
+.hero-tbl {
+  background: var(--color-elev); border: 1px solid var(--color-line);
+  border-radius: 12px; overflow: hidden;
+  box-shadow: 0 1px 0 0 rgba(255, 255, 255, 0.02) inset;
+}
 .hero-tbl table { width: 100%; border-collapse: collapse; font-family: var(--font-mono); font-size: 12px; }
 .hero-tbl th, .hero-tbl td { text-align: left; padding: 7px 13px; border-top: 1px solid var(--color-line-soft); }
 .hero-tbl th { color: var(--color-muted); font-weight: 500; font-size: 10.5px; letter-spacing: 0.04em; text-transform: uppercase; }
 .hero-tbl td { color: var(--color-ink); }
+.hero-tbl tbody tr:hover td { background: rgba(var(--rgb-accent), 0.03); }
 .hero-tbl td.num { text-align: right; font-variant-numeric: tabular-nums; color: var(--color-data); }
 
-.rct { font-family: var(--font-mono); font-size: 11px; border: 1px solid var(--color-line); border-radius: 999px; padding: 5px 11px; color: var(--color-muted); display: inline-flex; gap: 7px; align-items: baseline; }
+.rct { font-family: var(--font-mono); font-size: 11px; border: 1px solid var(--color-line); border-radius: 999px; padding: 5px 11px; color: var(--color-muted); display: inline-flex; gap: 7px; align-items: baseline; background: rgba(255, 255, 255, 0.012); }
 .rct b { font-weight: 600; }
 .rct .k { color: var(--color-dim); }
-.rct[data-ok="true"] { border-color: rgba(56, 211, 155, 0.35); }
+.rct[data-ok="true"] { border-color: rgba(53, 224, 160, 0.4); box-shadow: 0 0 16px -8px rgba(53, 224, 160, 0.5); }
 .rct[data-ok="true"] b { color: var(--color-good); }
-.rct[data-honest="true"] { color: var(--color-dim); border-style: dashed; }
+.rct[data-honest="true"] { color: var(--color-dim); border-style: dashed; background: transparent; }
 
-/* motion-primitive static fallback: when reduced motion is on, .reveal must be
-   fully visible with no transform — framer-motion handles the animated path. */
+/* ------------------------------------------------------------- reduced motion
+   Real static fallbacks: no drift, no traveling pulse, no wire transitions.
+   Lit wires simply appear filled; glows become static states. */
 @media (prefers-reduced-motion: reduce) {
   html { scroll-behavior: auto; }
   *, *::before, *::after { animation-duration: 0.001ms !important; animation-iteration-count: 1 !important; transition-duration: 0.01ms !important; }
+  .aurora::before { animation: none !important; }
+  .wire::after { display: none !important; }
   .node, .wire i, .hero-run { transition: none !important; }
 }
