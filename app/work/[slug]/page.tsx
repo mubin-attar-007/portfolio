@@ -14,8 +14,7 @@ import { ArchitectureDiagram } from "@/components/architecture-diagram";
 import { CaseStudyToc } from "@/components/case-study-toc";
 import { Nav } from "@/components/nav";
 import { Reveal } from "@/lib/motion";
-
-const SITE = "https://mubin-attar.vercel.app";
+import { SITE } from "@/lib/site";
 
 /** Prerender one route per case study; anything else 404s. */
 export function generateStaticParams() {

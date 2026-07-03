@@ -1,8 +1,10 @@
 import type { MetadataRoute } from "next";
+import { url } from "@/lib/site";
 
 export default function robots(): MetadataRoute.Robots {
   return {
     rules: { userAgent: "*", allow: "/" },
-    sitemap: "https://mubin-attar.vercel.app/sitemap.xml",
+    sitemap: url("/sitemap.xml"),
+    host: url(),
   };
 }

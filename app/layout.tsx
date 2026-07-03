@@ -1,7 +1,8 @@
 import type { Metadata } from "next";
 import { Fraunces, Instrument_Sans, Geist_Mono } from "next/font/google";
 import "./globals.css";
-import { profile, projects } from "@/lib/content";
+import { profile, projects, experience } from "@/lib/content";
+import { SITE } from "@/lib/site";
 import { Assistant } from "@/components/chat/assistant";
 
 // Display / headings — Fraunces (variable, with true italic for the accent).
@@ -25,7 +26,6 @@ const geistMono = Geist_Mono({
   display: "swap",
 });
 
-const SITE = "https://mubin-attar.vercel.app";
 const DESC =
   "Mubin Attar — AI/ML engineer who ships real, live AI products. Four production apps: NL→SQL agents, an AI SaaS platform, honest backtesting, and +EV sports models. No faked demos, no vanity metrics.";
 
@@ -52,20 +52,45 @@ export const metadata: Metadata = {
   alternates: { canonical: SITE },
 };
 
-const jsonLd = {
+// Current employer, straight from resume content (never invented).
+const currentRole = experience[0];
+
+const personLd = {
   "@context": "https://schema.org",
   "@type": "Person",
+  "@id": `${SITE}/#person`,
   name: profile.name,
-  jobTitle: "AI / ML Engineer",
+  jobTitle: profile.role,
+  description: profile.summary,
   email: profile.email,
   url: SITE,
+  image: `${SITE}${profile.headshot}`,
   address: { "@type": "PostalAddress", addressLocality: "Ahmedabad", addressCountry: "IN" },
-  sameAs: [profile.socials.github, profile.socials.linkedin, profile.socials.huggingface],
+  worksFor: currentRole
+    ? { "@type": "Organization", name: currentRole.company }
+    : undefined,
+  sameAs: [
+    profile.socials.github,
+    profile.socials.linkedin,
+    profile.socials.huggingface,
+    profile.socials.leetcode,
+  ],
   knowsAbout: ["Generative AI", "Large Language Models", "RAG", "Agents", "Machine Learning", "MLOps"],
   makesOffer: projects.map((p) => ({
     "@type": "Offer",
     itemOffered: { "@type": "SoftwareApplication", name: p.name, applicationCategory: "WebApplication", url: p.live },
   })),
+};
+
+const websiteLd = {
+  "@context": "https://schema.org",
+  "@type": "WebSite",
+  "@id": `${SITE}/#website`,
+  url: SITE,
+  name: "Mubin Attar — AI/ML Engineer",
+  description: DESC,
+  inLanguage: "en",
+  publisher: { "@id": `${SITE}/#person` },
 };
 
 export default function RootLayout({ children }: Readonly<{ children: React.ReactNode }>) {
@@ -76,7 +101,10 @@ export default function RootLayout({ children }: Readonly<{ children: React.Reac
       suppressHydrationWarning
     >
       <body className="min-h-screen">
-        <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: JSON.stringify(jsonLd) }} />
+        <script
+          type="application/ld+json"
+          dangerouslySetInnerHTML={{ __html: JSON.stringify([personLd, websiteLd]) }}
+        />
         <a
           href="#work"
           className="sr-only focus:not-sr-only focus:fixed focus:left-4 focus:top-4 focus:z-[100] focus:rounded-lg focus:bg-accent focus:px-4 focus:py-2 focus:font-semibold focus:text-bg"

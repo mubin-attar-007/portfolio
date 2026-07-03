@@ -5,8 +5,7 @@ import { projectMeta, type ProjectMeta } from "@/lib/content";
 import { GitHubIcon } from "@/components/brand-icons";
 import { Nav } from "@/components/nav";
 import { Reveal, Stagger, StaggerItem } from "@/lib/motion";
-
-const SITE = "https://mubin-attar.vercel.app";
+import { SITE } from "@/lib/site";
 
 const CATEGORY: Record<string, string> = {
   dbwhisper: "01 · NL→SQL AGENT",
