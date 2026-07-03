@@ -424,6 +424,281 @@ a { color: inherit; }
 .rct[data-ok="true"] b { color: var(--color-good); }
 .rct[data-honest="true"] { color: var(--color-dim); border-style: dashed; background: transparent; }
 
+/* ============================================================= case studies
+   The /work/[slug] reading layout: prose body, sticky TOC, code "wells",
+   callouts, and the interactive architecture diagram. All in the locked
+   instrument language — Fraunces headings, Geist-Mono data, teal accents,
+   real depth on surfaces. */
+
+/* ---- prose body ---- */
+.cs-body { color: var(--color-muted); }
+.cs-body > .cs-h2:first-child,
+.cs-body > h2:first-child { margin-top: 0; }
+.cs-h2 {
+  margin-top: 3rem;
+  padding-top: 1.75rem;
+  border-top: 1px solid var(--color-line-soft);
+}
+.cs-body :is(h2, h3) { position: relative; }
+/* a subtle teal tick before section headings */
+.cs-h2::before {
+  content: "";
+  position: absolute;
+  left: 0; top: 1.75rem;
+  width: 26px; height: 2px;
+  border-radius: 2px;
+  background: linear-gradient(90deg, var(--color-accent), var(--color-cyan));
+  box-shadow: 0 0 12px -2px rgba(var(--rgb-accent), 0.7);
+}
+.cs-h2 { padding-left: 40px; }
+.cs-h2::before { top: calc(1.75rem + 0.55em); }
+
+.cs-code {
+  font-family: var(--font-mono);
+  font-size: 0.86em;
+  color: var(--color-accent2);
+  background: rgba(var(--rgb-accent), 0.08);
+  border: 1px solid color-mix(in oklab, var(--color-accent) 20%, transparent);
+  border-radius: 6px;
+  padding: 1.5px 6px;
+  white-space: nowrap;
+}
+.cs-link:focus-visible { outline-offset: 2px; }
+
+/* ordered / unordered lists with instrument markers */
+.cs-ul { list-style: none; padding: 0; }
+.cs-ul > li { position: relative; padding-left: 1.4rem; }
+.cs-ul > li::before {
+  content: "▸";
+  position: absolute; left: 0; top: 0;
+  color: var(--color-accent);
+  font-size: 0.85em;
+  line-height: 1.9;
+}
+.cs-ol { list-style: none; counter-reset: cs; padding: 0; }
+.cs-ol > li { position: relative; padding-left: 2rem; counter-increment: cs; }
+.cs-ol > li::before {
+  content: counter(cs);
+  position: absolute; left: 0; top: 0.15rem;
+  font-family: var(--font-mono);
+  font-size: 11px;
+  color: var(--color-accent);
+  border: 1px solid color-mix(in oklab, var(--color-accent) 35%, var(--color-line));
+  border-radius: 6px;
+  width: 20px; height: 20px;
+  display: grid; place-items: center;
+  background: rgba(var(--rgb-accent), 0.06);
+}
+
+/* fenced code block → an instrument "well" (ASCII schematics) */
+.cs-pre-wrap { position: relative; }
+.cs-pre-kicker {
+  position: absolute; top: 10px; right: 14px; z-index: 1;
+  font-family: var(--font-mono); font-size: 9.5px; letter-spacing: 0.12em;
+  text-transform: uppercase; color: var(--color-dim);
+  pointer-events: none;
+}
+.cs-pre {
+  position: relative;
+  background:
+    linear-gradient(180deg, rgba(var(--rgb-accent), 0.03), transparent 32%),
+    var(--color-elev2);
+  border: 1px solid var(--color-line);
+  border-radius: 14px;
+  padding: 22px 20px 20px;
+  overflow-x: auto;
+  font-family: var(--font-mono);
+  font-size: 12px;
+  line-height: 1.65;
+  color: #b8c2d2;
+  box-shadow:
+    0 1px 0 0 rgba(255, 255, 255, 0.03) inset,
+    0 24px 60px -40px rgba(0, 0, 0, 0.85);
+}
+.cs-pre::before {
+  content: "";
+  position: absolute; inset: 0 0 auto 0; height: 1px;
+  background: linear-gradient(90deg, transparent, rgba(var(--rgb-accent), 0.5), rgba(var(--rgb-cyan), 0.35), transparent);
+}
+.cs-pre code { font-family: inherit; background: none; border: 0; padding: 0; color: inherit; white-space: pre; }
+
+/* blockquote → teal callout */
+.cs-callout {
+  position: relative;
+  border: 1px solid var(--color-line);
+  border-left: 2px solid var(--color-accent);
+  border-radius: 12px;
+  background: linear-gradient(180deg, rgba(var(--rgb-accent), 0.05), transparent 60%), var(--color-elev);
+  padding: 16px 20px;
+  color: var(--color-muted);
+  box-shadow: 0 0 30px -18px rgba(var(--rgb-accent), 0.4);
+}
+.cs-callout > :first-child { margin-top: 0; }
+
+/* tables */
+.cs-table-wrap { border: 1px solid var(--color-line); border-radius: 12px; }
+.cs-table { width: 100%; border-collapse: collapse; font-size: 14px; }
+.cs-table th, .cs-table td { text-align: left; padding: 10px 14px; border-top: 1px solid var(--color-line-soft); }
+.cs-table th { font-family: var(--font-mono); font-size: 11px; text-transform: uppercase; letter-spacing: 0.05em; color: var(--color-muted); }
+.cs-table td { color: var(--color-ink); }
+.cs-table tr:first-child th { border-top: 0; }
+
+/* ---- sticky mini TOC ---- */
+.cs-toc { font-family: var(--font-mono); }
+.cs-toc-link {
+  display: block;
+  font-size: 12.5px;
+  line-height: 1.35;
+  color: var(--color-dim);
+  padding: 6px 0 6px 14px;
+  border-left: 2px solid var(--color-line);
+  transition: color 0.2s, border-color 0.2s;
+}
+@media (hover: hover) { .cs-toc-link:hover { color: var(--color-muted); border-color: var(--color-line2); } }
+.cs-toc-link[data-active="true"] {
+  color: var(--color-accent);
+  border-color: var(--color-accent);
+  text-shadow: 0 0 18px rgba(var(--rgb-accent), 0.5);
+}
+
+.cs-card-title { color: inherit; }
+@media (hover: hover) { .card.lift:hover .cs-card-title { color: var(--color-accent); } }
+
+/* ============================================================= architecture
+   Data-driven interactive diagram. Nodes are grid-placed HTML cards; edges are
+   an absolutely-positioned SVG overlay measured from the live DOM. */
+.archd { position: relative; }
+.archd-lanes {
+  display: grid;
+  gap: 14px;
+  margin-bottom: 10px;
+  padding: 0 2px;
+}
+.archd-lane-label {
+  font-family: var(--font-mono);
+  font-size: 10px;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  color: var(--color-dim);
+  text-align: center;
+}
+.archd-grid {
+  position: relative;
+  display: grid;
+  gap: 22px 14px;
+  padding: 8px 2px;
+}
+/* narrow: nodes stack in a single readable column */
+@media (max-width: 679px) {
+  .archd-grid { display: flex; flex-direction: column; gap: 26px; }
+}
+.archd-edges {
+  position: absolute;
+  inset: 0;
+  z-index: 0;
+  pointer-events: none;
+  overflow: visible;
+}
+.archd-edge {
+  stroke: var(--color-line2);
+  stroke-width: 1.5;
+  opacity: 0.65;
+  transition: stroke 0.25s ease, opacity 0.25s ease, stroke-width 0.25s ease;
+}
+.archd-edge.is-lit {
+  stroke: var(--color-accent);
+  stroke-width: 2;
+  opacity: 1;
+  filter: drop-shadow(0 0 6px rgba(var(--rgb-accent), 0.6));
+}
+.archd-elabel {
+  position: absolute;
+  z-index: 2;
+  transform: translate(-50%, -50%);
+  font-family: var(--font-mono);
+  font-size: 9.5px;
+  letter-spacing: 0.02em;
+  color: var(--color-dim);
+  background: color-mix(in oklab, var(--color-bg) 82%, transparent);
+  padding: 1px 5px;
+  border-radius: 5px;
+  pointer-events: none;
+  white-space: nowrap;
+  transition: color 0.25s ease;
+}
+.archd-elabel.is-lit { color: var(--color-accent); }
+
+.archd-node {
+  position: relative;
+  z-index: 1;
+  align-self: center;
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  border: 1px solid var(--color-line);
+  border-radius: 12px;
+  padding: 12px 14px;
+  background:
+    linear-gradient(180deg, rgba(255, 255, 255, 0.03), rgba(255, 255, 255, 0) 60%),
+    var(--color-elev);
+  box-shadow: 0 1px 0 0 rgba(255, 255, 255, 0.03) inset, 0 14px 34px -30px rgba(0, 0, 0, 0.9);
+  cursor: default;
+  outline: none;
+  transition: border-color 0.25s ease, box-shadow 0.3s ease, transform 0.2s ease, opacity 0.25s ease;
+}
+@media (hover: hover) { .archd-node:hover { transform: translateY(-2px); } }
+.archd-node:where([data-active], :hover, :focus-visible) {
+  border-color: color-mix(in oklab, var(--nclr) 60%, var(--color-line));
+  box-shadow:
+    0 0 0 1px rgba(var(--nrgb), 0.18) inset,
+    0 0 30px -8px rgba(var(--nrgb), 0.5);
+}
+.archd-node:focus-visible { outline: 2px solid var(--color-accent); outline-offset: 3px; }
+.archd-node[data-dimmed] { opacity: 0.4; }
+
+.archd-node-top { display: flex; align-items: center; gap: 7px; }
+.archd-node-dot {
+  width: 7px; height: 7px; border-radius: 50%;
+  background: var(--nclr);
+  box-shadow: 0 0 9px -1px rgba(var(--nrgb), 0.8);
+  flex: none;
+}
+.archd-node-kicker {
+  font-family: var(--font-mono);
+  font-size: 9px;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: var(--color-dim);
+}
+.archd-node-label { font-size: 13.5px; font-weight: 620; color: var(--color-ink); line-height: 1.2; }
+.archd-node-detail { font-family: var(--font-mono); font-size: 10px; color: var(--color-muted); line-height: 1.3; }
+
+.archd-legend {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px 16px;
+  margin-top: 18px;
+  padding-top: 12px;
+  border-top: 1px solid var(--color-line-soft);
+}
+.archd-legend-item {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  font-family: var(--font-mono);
+  font-size: 10px;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  color: var(--color-dim);
+}
+.archd-dot { width: 8px; height: 8px; border-radius: 50%; flex: none; }
+.archd-caption {
+  margin-top: 12px;
+  font-size: 12.5px;
+  line-height: 1.5;
+  color: var(--color-dim);
+}
+
 /* ------------------------------------------------------------- reduced motion
    Real static fallbacks: no drift, no traveling pulse, no wire transitions.
    Lit wires simply appear filled; glows become static states. */
@@ -433,4 +708,6 @@ a { color: inherit; }
   .aurora::before { animation: none !important; }
   .wire::after { display: none !important; }
   .node, .wire i, .hero-run { transition: none !important; }
+  .archd-node, .archd-edge, .archd-elabel, .cs-toc-link { transition: none !important; }
+  .archd-node:hover { transform: none !important; }
 }

@@ -1,4 +1,5 @@
-import { ArrowUpRight } from "lucide-react";
+import Link from "next/link";
+import { ArrowRight, ArrowUpRight } from "lucide-react";
 import { projects, type Project } from "@/lib/content";
 import { GitHubIcon } from "./brand-icons";
 import { Reveal } from "./reveal";
@@ -51,12 +52,18 @@ function Card({ p, featured }: { p: Project; featured?: boolean }) {
         ))}
       </div>
 
-      <div className="mt-6 flex items-center gap-4 pt-1">
+      <div className="mt-6 flex flex-wrap items-center gap-x-4 gap-y-2 pt-1">
+        <Link
+          href={`/work/${p.slug}`}
+          className="mono relative z-10 inline-flex items-center gap-1 text-[13px] font-medium text-accent transition group-hover:gap-1.5 hover:text-accent2"
+        >
+          Read case study <ArrowRight size={15} />
+        </Link>
         <a
           href={p.live}
           target="_blank"
           rel="noopener noreferrer"
-          className="mono inline-flex items-center gap-1 text-[13px] font-medium text-accent transition group-hover:gap-1.5 hover:text-accent2"
+          className="mono relative z-10 inline-flex items-center gap-1 text-[13px] text-dim transition hover:text-ink"
         >
           Open live <ArrowUpRight size={15} />
         </a>
@@ -64,7 +71,7 @@ function Card({ p, featured }: { p: Project; featured?: boolean }) {
           href={p.github}
           target="_blank"
           rel="noopener noreferrer"
-          className="mono inline-flex items-center gap-1.5 text-[13px] text-dim transition hover:text-ink"
+          className="mono relative z-10 inline-flex items-center gap-1.5 text-[13px] text-dim transition hover:text-ink"
         >
           <GitHubIcon size={14} /> Source
         </a>
@@ -84,9 +91,15 @@ export function Projects() {
             Four products. All running <span className="gradient-text">right now.</span>
           </h2>
           <p className="mt-3 max-w-lg text-muted">
-            Not case-study screenshots — open tabs. Each links to the real, multi-user app and its
-            source.
+            Not case-study screenshots — open tabs. Each links to the real, multi-user app, its
+            source, and a full engineering deep-dive.
           </p>
+          <Link
+            href="/work"
+            className="mono mt-4 inline-flex items-center gap-1.5 text-[13px] font-medium text-accent transition hover:gap-2 hover:text-accent2"
+          >
+            View all case studies <ArrowRight size={15} />
+          </Link>
         </Reveal>
 
         <div className="mt-10 grid grid-cols-1 gap-4 md:grid-cols-3 md:[grid-auto-rows:1fr]">
