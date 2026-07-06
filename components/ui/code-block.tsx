@@ -19,7 +19,9 @@ export async function CodeBlock({
   const source = code.replace(/\n+$/, "");
   const html = await codeToHtml(source, {
     lang,
-    themes: { light: "github-light", dark: "github-dark" },
+    // High-contrast variants: the default github themes ship comment/keyword
+    // tokens below WCAG AA (e.g. #6a737d comments ~3.5:1). These meet 4.5:1.
+    themes: { light: "github-light-high-contrast", dark: "github-dark-high-contrast" },
     defaultColor: "light",
   });
 

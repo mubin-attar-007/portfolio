@@ -37,8 +37,13 @@ h4 {
   text-wrap: balance;
 }
 
-a {
-  color: inherit;
+/* In @layer base so text-color utilities (e.g. text-on-accent, text-accent on a
+   link styled as a button) win — an UNLAYERED `a{color}` would beat every
+   utility and force links to inherit ink. */
+@layer base {
+  a {
+    color: inherit;
+  }
 }
 
 ::selection {

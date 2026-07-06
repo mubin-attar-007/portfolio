@@ -265,7 +265,7 @@ export function AssistantPanel({
           <button
             type="submit"
             disabled={busy || !draft.trim()}
-            className="inline-flex h-9 items-center rounded-[var(--radius-md)] bg-accent px-3 text-sm font-medium text-white transition-colors hover:bg-accent-hover disabled:opacity-50"
+            className="inline-flex h-9 items-center rounded-[var(--radius-md)] bg-accent px-3 text-sm font-medium text-on-accent transition-colors hover:bg-accent-hover disabled:opacity-50"
           >
             Ask
           </button>

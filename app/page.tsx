@@ -45,10 +45,12 @@ export default async function Home() {
       <Section space="sm" tone="subtle" ariaLabel="At a glance">
         <dl className="flex flex-wrap gap-x-16 gap-y-6">
           {home.proof.map((s) => (
-            <div key={s.label} className="max-w-[28ch]">
-              <dd className="font-mono text-2xl tabular-nums text-ink">{s.value}</dd>
-              <dt className="mt-1 text-sm text-ink-secondary">{s.label}</dt>
-              <p className="mt-1 text-xs text-ink-tertiary">{s.method}</p>
+            // DOM order is term-first (dt → dd → dd) for valid <dl> semantics;
+            // `order-*` keeps the value visually on top.
+            <div key={s.label} className="flex max-w-[28ch] flex-col">
+              <dt className="order-2 mt-1 text-sm text-ink-secondary">{s.label}</dt>
+              <dd className="order-1 font-mono text-2xl tabular-nums text-ink">{s.value}</dd>
+              <dd className="order-3 mt-1 text-xs text-ink-tertiary">{s.method}</dd>
             </div>
           ))}
         </dl>

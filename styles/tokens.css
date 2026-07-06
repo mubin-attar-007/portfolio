@@ -14,11 +14,12 @@
   --color-surface: #ffffff;         /* cards, panels, code blocks */
   --color-ink: #1c1c1a;             /* primary text */
   --color-ink-secondary: #57534e;   /* supporting text, captions */
-  --color-ink-tertiary: #8a857e;    /* meta labels, timestamps */
+  --color-ink-tertiary: #6f6a61;    /* meta labels, timestamps (AA 4.5:1 on bg + bg-subtle) */
   --color-border: #e7e5e1;          /* hairlines (default) */
   --color-border-strong: #d6d2cc;   /* inputs, emphasized dividers */
   --color-accent: #1d4ed8;          /* links, primary button, active nav, focus */
   --color-accent-hover: #1e40af;    /* hover */
+  --color-on-accent: #ffffff;       /* text on an accent fill (white in light) */
   --color-accent-subtle: #eef3fe;   /* accent-tinted backgrounds (rare) */
   --color-positive: #15803d;        /* improved metrics */
   --color-negative: #b91c1c;        /* regressions / before-values */
@@ -72,12 +73,13 @@
   --color-surface: #1e1e1c;
   --color-ink: #edece8;
   --color-ink-secondary: #a8a49d;
-  --color-ink-tertiary: #7c7871;
+  --color-ink-tertiary: #8a857c;    /* lighter than light theme — AA 4.5:1 on dark bg */
   --color-border: #2c2b28;
   --color-border-strong: #3a3934;
   --color-accent: #7fa5f5;
   --color-accent-hover: #9bb8f8;
   --color-accent-subtle: #1b2438;
+  --color-on-accent: #111318;       /* dark ink on the light-blue dark accent */
   --color-positive: #4ade80;
   --color-negative: #f87171;
   --color-warning: #fbbf24;
@@ -92,12 +94,13 @@
     --color-surface: #1e1e1c;
     --color-ink: #edece8;
     --color-ink-secondary: #a8a49d;
-    --color-ink-tertiary: #7c7871;
+    --color-ink-tertiary: #8a857c;    /* lighter than light theme — AA 4.5:1 on dark bg */
     --color-border: #2c2b28;
     --color-border-strong: #3a3934;
     --color-accent: #7fa5f5;
     --color-accent-hover: #9bb8f8;
     --color-accent-subtle: #1b2438;
+    --color-on-accent: #111318;       /* dark ink on the light-blue dark accent */
     --color-positive: #4ade80;
     --color-negative: #f87171;
     --color-warning: #fbbf24;
