@@ -263,7 +263,7 @@ function idf(term: string): number {
  * clearance, weather, visa/relocation, …) all fall below it and return []. See
  * test/retrieval.test.mts for the on-topic-pass / off-topic-refuse assertions.
  */
-export const RELEVANCE_MIN_SCORE = 4.5;
+export const RELEVANCE_MIN_SCORE = 4.2;
 
 export type RetrieveOptions = {
   /** how many passages to return (default 4) */

@@ -21,8 +21,25 @@ const OFF_TOPIC_QUESTIONS: string[] = [
   "Will he relocate to Berlin and what visa does he hold?",
 ];
 
+// The curated starter chips shown in the chat UI MUST always ground — a
+// suggested question that returns "not on the site" reads as broken. Keep in
+// sync with STARTERS in components/chat/chat-panel.tsx.
+const STARTER_CHIPS: string[] = [
+  "What has he shipped in production?",
+  "Explain the DBWhisper RAG architecture",
+  "Why should we hire him?",
+  "What's his healthcare-AI experience?",
+];
+
 test("corpus ingested a non-trivial number of passages", () => {
   assert.ok(corpusSize() >= 25, `expected >= 25 passages, got ${corpusSize()}`);
+});
+
+test("every starter chip grounds (retrieves a passage + a fallback FAQ)", () => {
+  for (const q of STARTER_CHIPS) {
+    assert.ok(retrieve(q, { k: 4 }).length > 0, `starter "${q}" retrieved nothing`);
+    assert.ok(retrieveBestFaq(q) !== null, `starter "${q}" has no fallback FAQ`);
+  }
 });
 
 test("every test question retrieves the expected source + required terms", () => {
