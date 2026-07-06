@@ -6,9 +6,10 @@ import type { DiagramSpec } from "./types";
 /**
  * SystemDiagram — an interactive, keyboard-navigable architecture diagram
  * (ADR-005). HTML-in-SVG nodes on a col/row grid + orthogonal connectors,
- * computed from data (no DOM measurement → SSR-safe). Hover/focus a node to
- * reveal its description; arrow keys move between nodes. A visually-hidden
- * narration list is the text alternative for screen readers and no-JS.
+ * computed from data (no DOM measurement → SSR-safe). Hover/focus previews a
+ * node; click/Enter PINS it so its real engineering decision (why / instead-of
+ * / tradeoff) stays open — this is what makes it explorable on touch too.
+ * A visually-hidden narration list is the text alternative for SRs and no-JS.
  * Looks like technical documentation, not a product demo (DESIGN §3).
  */
 
@@ -31,8 +32,12 @@ export function SystemDiagram({ spec, caption }: { spec: DiagramSpec; caption?: 
     () => Object.fromEntries(spec.nodes.map((n) => [n.id, n])),
     [spec.nodes],
   );
-  const [active, setActive] = useState<string | null>(null);
-  const activeNode = active ? byId[active] : null;
+  const [hover, setHover] = useState<string | null>(null);
+  const [pinned, setPinned] = useState<string | null>(null);
+  const active = hover ?? pinned; // what lights the graph
+  const shownId = pinned ?? hover; // what the panel shows
+  const shown = shownId ? byId[shownId] : null;
+  const hasDecisions = spec.nodes.some((n) => n.decision);
   const refs = useRef<(SVGGElement | null)[]>([]);
 
   const topLeft = (id: string) => {
@@ -52,6 +57,11 @@ export function SystemDiagram({ spec, caption }: { spec: DiagramSpec; caption?: 
     } else if (e.key === "ArrowLeft" || e.key === "ArrowUp") {
       e.preventDefault();
       refs.current[(i - 1 + n) % n]?.focus();
+    } else if (e.key === "Enter" || e.key === " ") {
+      e.preventDefault();
+      setPinned((p) => (p === spec.nodes[i].id ? null : spec.nodes[i].id));
+    } else if (e.key === "Escape") {
+      setPinned(null);
     }
   }
 
@@ -100,6 +110,7 @@ export function SystemDiagram({ spec, caption }: { spec: DiagramSpec; caption?: 
           {spec.nodes.map((n, i) => {
             const p = topLeft(n.id);
             const on = active === n.id;
+            const isPinned = pinned === n.id;
             return (
               <g
                 key={n.id}
@@ -108,13 +119,19 @@ export function SystemDiagram({ spec, caption }: { spec: DiagramSpec; caption?: 
                 }}
                 tabIndex={0}
                 role="button"
-                aria-label={`${n.label}${n.sublabel ? `, ${n.sublabel}` : ""}. ${n.description}`}
-                onMouseEnter={() => setActive(n.id)}
-                onMouseLeave={() => setActive((a) => (a === n.id ? null : a))}
-                onFocus={() => setActive(n.id)}
-                onBlur={() => setActive((a) => (a === n.id ? null : a))}
+                aria-pressed={n.decision ? isPinned : undefined}
+                aria-label={`${n.label}${n.sublabel ? `, ${n.sublabel}` : ""}. ${n.description}${
+                  n.decision?.why ? ` Why: ${n.decision.why}` : ""
+                }`}
+                onMouseEnter={() => setHover(n.id)}
+                onMouseLeave={() => setHover((h) => (h === n.id ? null : h))}
+                onFocus={() => setHover(n.id)}
+                onBlur={() => setHover((h) => (h === n.id ? null : h))}
+                onClick={() => n.decision && setPinned((pv) => (pv === n.id ? null : n.id))}
                 onKeyDown={(e) => onKey(e, i)}
-                className="cursor-default outline-none [&:focus-visible>rect]:stroke-[var(--color-accent)]"
+                className={`outline-none [&:focus-visible>rect]:stroke-[var(--color-accent)] ${
+                  n.decision ? "cursor-pointer" : "cursor-default"
+                }`}
               >
                 <rect
                   x={p.x}
@@ -122,7 +139,7 @@ export function SystemDiagram({ spec, caption }: { spec: DiagramSpec; caption?: 
                   width={NODE_W}
                   height={NODE_H}
                   rx="8"
-                  fill="var(--color-surface)"
+                  fill={isPinned ? "var(--color-accent-subtle)" : "var(--color-surface)"}
                   stroke={on ? "var(--color-accent)" : "var(--color-border)"}
                   strokeWidth={on ? 1.5 : 1}
                 />
@@ -146,24 +163,78 @@ export function SystemDiagram({ spec, caption }: { spec: DiagramSpec; caption?: 
                     {n.sublabel}
                   </text>
                 ) : null}
+                {/* affordance: a small accent tick marks an explorable node */}
+                {n.decision ? (
+                  <circle
+                    cx={p.x + NODE_W - 13}
+                    cy={p.y + 13}
+                    r="3"
+                    fill={on ? "var(--color-accent)" : "var(--color-border-strong)"}
+                  />
+                ) : null}
               </g>
             );
           })}
         </svg>
       </div>
 
+      {hasDecisions ? (
+        <p className="mt-3 font-mono text-xs text-ink-tertiary">
+          Hover a node to preview · click one to see the decision behind it
+        </p>
+      ) : null}
+
       <div
-        className="mt-3 min-h-12 rounded-[var(--radius-md)] border border-border bg-bg-subtle px-4 py-3 text-sm"
+        className="mt-2 min-h-[7rem] rounded-[var(--radius-md)] border border-border bg-bg-subtle px-4 py-3 text-sm"
         aria-live="polite"
       >
-        {activeNode ? (
-          <>
-            <span className="font-medium text-ink">{activeNode.label}</span>
-            <span className="text-ink-secondary"> — {activeNode.description}</span>
-          </>
+        {shown ? (
+          <div>
+            <div className="flex items-baseline justify-between gap-3">
+              <span className="font-medium text-ink">{shown.label}</span>
+              {shown.decision ? (
+                pinned === shown.id ? (
+                  <button
+                    type="button"
+                    onClick={() => setPinned(null)}
+                    className="shrink-0 font-mono text-xs text-ink-tertiary hover:text-ink"
+                  >
+                    release ✕
+                  </button>
+                ) : (
+                  <span className="shrink-0 font-mono text-xs text-ink-tertiary">click to pin</span>
+                )
+              ) : null}
+            </div>
+            <p className="mt-1 text-ink-secondary">{shown.description}</p>
+            {shown.decision ? (
+              <dl className="mt-3 flex flex-col gap-2 border-t border-border pt-3">
+                {shown.decision.rejected ? (
+                  <div className="grid gap-0.5 sm:grid-cols-[6.5rem_1fr] sm:gap-3">
+                    <dt className="font-mono text-xs text-ink-tertiary">Instead of</dt>
+                    <dd className="text-ink-secondary">{shown.decision.rejected}</dd>
+                  </div>
+                ) : null}
+                {shown.decision.why ? (
+                  <div className="grid gap-0.5 sm:grid-cols-[6.5rem_1fr] sm:gap-3">
+                    <dt className="font-mono text-xs text-ink-tertiary">Why</dt>
+                    <dd className="text-ink-secondary">{shown.decision.why}</dd>
+                  </div>
+                ) : null}
+                {shown.decision.tradeoff ? (
+                  <div className="grid gap-0.5 sm:grid-cols-[6.5rem_1fr] sm:gap-3">
+                    <dt className="font-mono text-xs text-ink-tertiary">Tradeoff</dt>
+                    <dd className="text-ink-secondary">{shown.decision.tradeoff}</dd>
+                  </div>
+                ) : null}
+              </dl>
+            ) : null}
+          </div>
         ) : (
           <span className="text-ink-tertiary">
-            Hover or focus a node to trace how the system fits together.
+            {hasDecisions
+              ? "Hover or focus a node to trace the system — click one to read the decision behind it."
+              : "Hover or focus a node to trace how the system fits together."}
           </span>
         )}
       </div>
@@ -173,6 +244,9 @@ export function SystemDiagram({ spec, caption }: { spec: DiagramSpec; caption?: 
         {spec.nodes.map((n) => (
           <li key={n.id}>
             {n.label}: {n.description}
+            {n.decision?.why ? ` Why: ${n.decision.why}` : ""}
+            {n.decision?.rejected ? ` Instead of: ${n.decision.rejected}.` : ""}
+            {n.decision?.tradeoff ? ` Tradeoff: ${n.decision.tradeoff}` : ""}
           </li>
         ))}
       </ul>

@@ -41,6 +41,7 @@
   --text-4xl: 2.25rem;     --text-4xl--line-height: 1.2;  --text-4xl--letter-spacing: -0.022em;
   --text-5xl: 3rem;        --text-5xl--line-height: 1.1;  --text-5xl--letter-spacing: -0.025em;
   --text-6xl: 3.75rem;     --text-6xl--line-height: 1.05; --text-6xl--letter-spacing: -0.028em;
+  --text-7xl: 4.75rem;     --text-7xl--line-height: 1.0;  --text-7xl--letter-spacing: -0.032em;
 
   /* ---- spacing: section rhythm (fluid, mobile→desktop per §1.4) ---- */
   --space-section-sm: clamp(4rem, 8vw, 6rem);      /* 64 → 96 */

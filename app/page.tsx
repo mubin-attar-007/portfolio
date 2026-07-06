@@ -13,72 +13,111 @@ import { allWriting } from "@/lib/writing";
 import { formatDate } from "@/lib/format";
 
 /**
- * Home — DESIGN §4 tempo: hero → proof strip → flagship feature → secondary
- * projects (rows) → principles → contact. Adjacent sections differ in tone or
- * density (never two card-grids). Accent budget ≤ 2 per viewport.
+ * Home — reimagined for rhythm (DESIGN §4). Each section does a distinct job and
+ * differs in scale/density/background: hero (inspire) → interactive architecture
+ * (prove/explore) → field notes (teach) → other systems (survey) → writing →
+ * contact (resolve). One accent budget ≤2 per viewport; hierarchy via size and
+ * space, never decoration.
  */
 export default async function Home() {
   const flagship = featuredProject;
   const diagram = flagship.diagram ? diagrams[flagship.diagram] : undefined;
   const posts = (await allWriting()).slice(0, 3);
+  const [headLead, headTail] = home.headline.split(" — ");
 
   return (
     <>
+      {/* Beat 1 — Hero: big, confident, airy */}
       <Section space="lg">
-        <p className="font-mono text-xs uppercase text-ink-tertiary">{home.metaLine}</p>
-        <h1 className="mt-6 max-w-[18ch] text-4xl text-ink sm:text-5xl">{home.headline}</h1>
-        <p className="mt-6 max-w-[var(--width-prose)] text-lg text-ink-secondary">{home.lede}</p>
-        <p className="mt-4 font-mono text-xs text-ink-tertiary">{home.availability}</p>
+        <p className="font-mono text-xs uppercase tracking-[0.04em] text-ink-tertiary">
+          {home.metaLine}
+        </p>
+        <h1 className="mt-8 max-w-[19ch] text-4xl leading-[1.04] tracking-[-0.02em] text-ink sm:text-6xl lg:text-7xl">
+          {headLead}
+          {headTail ? <span className="text-ink-tertiary"> — {headTail}</span> : null}
+        </h1>
+        <p className="mt-8 max-w-[56ch] text-lg text-ink-secondary sm:text-xl">{home.lede}</p>
         <div className="mt-8 flex flex-wrap items-center gap-5">
           <Link href={`/work/${flagship.slug}`} className={buttonVariants("primary")}>
             Read the flagship case study
           </Link>
           <Link
-            href={`/work/${flagship.slug}#key-decisions`}
+            href="#field-notes"
             className="text-sm text-ink underline decoration-border-strong underline-offset-4 transition-colors hover:decoration-accent"
           >
             How I make decisions
           </Link>
         </div>
+        <p className="mt-10 font-mono text-xs text-ink-tertiary">
+          {home.facts.join("  ·  ")}
+          {"  ·  "}
+          {home.availability}
+        </p>
       </Section>
 
-      <Section space="sm" tone="subtle" ariaLabel="At a glance">
-        <dl className="flex flex-wrap gap-x-16 gap-y-6">
-          {home.proof.map((s) => (
-            // DOM order is term-first (dt → dd → dd) for valid <dl> semantics;
-            // `order-*` keeps the value visually on top.
-            <div key={s.label} className="flex max-w-[28ch] flex-col">
-              <dt className="order-2 mt-1 text-sm text-ink-secondary">{s.label}</dt>
-              <dd className="order-1 font-mono text-2xl tabular-nums text-ink">{s.value}</dd>
-              <dd className="order-3 mt-1 text-xs text-ink-tertiary">{s.method}</dd>
-            </div>
-          ))}
-        </dl>
-      </Section>
-
-      <Section space="lg">
-        <SectionHeading kicker="Flagship case study">{flagship.title}</SectionHeading>
-        <p className="mt-3 max-w-[var(--width-prose)] text-ink-secondary">{flagship.summary}</p>
+      {/* Beat 2 — Interactive architecture: the flagship, explorable */}
+      <Section space="lg" tone="subtle" ariaLabel="Inside the flagship system">
+        <SectionHeading kicker={home.architecture.kicker}>
+          {home.architecture.title}
+        </SectionHeading>
+        <p className="mt-3 max-w-[62ch] text-lg text-ink-secondary">{home.architecture.invite}</p>
         {diagram ? (
-          <div className="mt-6">
+          <div className="mt-8">
             <SystemDiagram spec={diagram} />
           </div>
         ) : null}
-        <div className="mt-2 flex flex-wrap gap-x-12 gap-y-6">
+        <div className="mt-10 flex flex-wrap gap-x-14 gap-y-6">
           {flagship.metrics.slice(0, 3).map((m) => (
             <Metric key={m.label} label={m.label} after={m.value} method={m.method} />
           ))}
         </div>
-        <div className="mt-8">
+        <div className="mt-10">
           <Link
             href={`/work/${flagship.slug}`}
             className="inline-flex items-center gap-1.5 text-sm font-medium text-accent hover:text-accent-hover"
           >
-            Read the full write-up <ArrowRight size={15} strokeWidth={1.5} />
+            Read the full DBWhisper case study <ArrowRight size={15} strokeWidth={1.5} />
           </Link>
         </div>
       </Section>
 
+      {/* Beat 3 — Field notes: how I think, in three real entries */}
+      <Section space="lg" ariaLabel="Field notes">
+        <div id="field-notes" className="scroll-mt-24">
+          <SectionHeading kicker="From the notebook">Three decisions that shaped the work</SectionHeading>
+        </div>
+        <div className="mt-12 flex flex-col gap-14">
+          {home.fieldNotes.map((note) => (
+            <article
+              key={note.n}
+              className="grid gap-x-10 gap-y-3 md:grid-cols-[7rem_1fr]"
+            >
+              <div className="flex items-baseline gap-3 md:flex-col md:items-start md:gap-1">
+                <span className="font-mono text-3xl tabular-nums text-ink-tertiary">{note.n}</span>
+                <span className="font-mono text-xs text-ink-tertiary">{note.kicker}</span>
+              </div>
+              <div className="max-w-[60ch]">
+                <h3 className="text-xl text-ink sm:text-2xl">{note.title}</h3>
+                <p className="mt-3 text-ink-secondary">{note.body}</p>
+                <div className="mt-5 flex flex-wrap items-center gap-x-6 gap-y-2">
+                  <span className="font-mono text-sm">
+                    <span className="tabular-nums text-ink">{note.tag.value}</span>{" "}
+                    <span className="text-ink-tertiary">{note.tag.label}</span>
+                  </span>
+                  <Link
+                    href={note.href}
+                    className="text-sm text-ink underline decoration-border-strong underline-offset-4 transition-colors hover:decoration-accent"
+                  >
+                    Read the case
+                  </Link>
+                </div>
+              </div>
+            </article>
+          ))}
+        </div>
+      </Section>
+
+      {/* Beat 4 — Other systems: compact survey, a scale-step down */}
       <Section space="md" tone="subtle">
         <SectionHeading kicker="More work">Other systems</SectionHeading>
         <ul className="mt-8 divide-y divide-border border-y border-border">
@@ -90,12 +129,14 @@ export default async function Home() {
               >
                 <div>
                   <div className="flex flex-wrap items-baseline gap-3">
-                    <h3 className="text-xl text-ink transition-colors group-hover:text-accent">
+                    <h3 className="text-lg text-ink transition-colors group-hover:text-accent">
                       {p.title}
                     </h3>
                     <span className="font-mono text-xs uppercase text-ink-tertiary">{p.status}</span>
                   </div>
-                  <p className="mt-1 max-w-[var(--width-prose)] text-sm text-ink-secondary">{p.summary}</p>
+                  <p className="mt-1 max-w-[var(--width-prose)] text-sm text-ink-secondary">
+                    {p.summary}
+                  </p>
                 </div>
                 <span className="font-mono text-sm tabular-nums text-ink-secondary">
                   {p.metrics[0]?.value}{" "}
@@ -106,24 +147,29 @@ export default async function Home() {
           ))}
         </ul>
         <div className="mt-8">
-          <Link href="/work" className="inline-flex items-center gap-1.5 text-sm font-medium text-accent hover:text-accent-hover">
+          <Link
+            href="/work"
+            className="inline-flex items-center gap-1.5 text-sm font-medium text-accent hover:text-accent-hover"
+          >
             All work <ArrowRight size={15} strokeWidth={1.5} />
           </Link>
         </div>
       </Section>
 
-      <Section space="md">
-        <SectionHeading kicker="How I think">Principles</SectionHeading>
-        <div className="mt-8 divide-y divide-border border-y border-border">
+      {/* Beat 5 — Principles: prose-forward, a distinct voice */}
+      <Section space="md" ariaLabel="Principles">
+        <SectionHeading kicker="How I work">Principles</SectionHeading>
+        <div className="mt-10 grid gap-10 md:grid-cols-3 md:gap-12">
           {home.principles.map((pr) => (
-            <div key={pr.title} className="grid gap-2 py-6 md:grid-cols-[minmax(0,18rem)_1fr] md:gap-8">
-              <h3 className="text-lg text-ink">{pr.title}</h3>
-              <p className="max-w-[var(--width-prose)] text-ink-secondary">{pr.body}</p>
+            <div key={pr.title} className="max-w-[42ch]">
+              <h3 className="text-lg font-medium text-ink">{pr.title}</h3>
+              <p className="mt-2 text-ink-secondary">{pr.body}</p>
             </div>
           ))}
         </div>
       </Section>
 
+      {/* Beat 6 — Writing: compressed */}
       <Section space="md" tone="subtle">
         <SectionHeading kicker="Writing">Selected writing</SectionHeading>
         <ul className="mt-8 divide-y divide-border border-y border-border">
@@ -131,12 +177,11 @@ export default async function Home() {
             <li key={p.slug}>
               <Link
                 href={`/writing/${p.slug}`}
-                className="group grid gap-1 py-5 md:grid-cols-[1fr_auto] md:items-baseline md:gap-8"
+                className="group grid gap-1 py-4 md:grid-cols-[1fr_auto] md:items-baseline md:gap-8"
               >
-                <div>
-                  <h3 className="text-lg text-ink transition-colors group-hover:text-accent">{p.title}</h3>
-                  <p className="mt-1 max-w-[var(--width-prose)] text-sm text-ink-secondary">{p.summary}</p>
-                </div>
+                <h3 className="text-base text-ink transition-colors group-hover:text-accent">
+                  {p.title}
+                </h3>
                 <time dateTime={p.date} className="font-mono text-xs text-ink-tertiary">
                   {formatDate(p.date)}
                 </time>
@@ -145,28 +190,43 @@ export default async function Home() {
           ))}
         </ul>
         <div className="mt-8">
-          <Link href="/writing" className="inline-flex items-center gap-1.5 text-sm font-medium text-accent hover:text-accent-hover">
+          <Link
+            href="/writing"
+            className="inline-flex items-center gap-1.5 text-sm font-medium text-accent hover:text-accent-hover"
+          >
             All writing <ArrowRight size={15} strokeWidth={1.5} />
           </Link>
         </div>
       </Section>
 
+      {/* Beat 7 — Contact: a quiet resolution, not a second hero */}
       <Section space="lg">
-        <SectionHeading kicker="Contact">Let&apos;s talk.</SectionHeading>
-        <p className="mt-3 max-w-[var(--width-prose)] text-ink-secondary">
-          Building something that needs grounded, honest AI? The fastest way to reach me is email.
-        </p>
-        <div className="mt-6 flex flex-wrap items-center gap-5">
-          <a href={`mailto:${SITE.email}`} className={buttonVariants("primary")}>
+        <p className="font-mono text-xs uppercase tracking-[0.04em] text-ink-tertiary">Contact</p>
+        <h2 className="mt-4 max-w-[24ch] text-2xl text-ink sm:text-3xl">
+          Building something that needs grounded, honest AI?
+        </h2>
+        <div className="mt-6 flex flex-wrap items-center gap-x-8 gap-y-3">
+          <a
+            href={`mailto:${SITE.email}`}
+            className="text-lg text-ink underline decoration-border-strong underline-offset-4 transition-colors hover:decoration-accent"
+          >
             {SITE.email}
           </a>
           <a
             href={SITE.socials.github}
             target="_blank"
             rel="noopener noreferrer"
-            className="text-sm text-ink underline decoration-border-strong underline-offset-4 hover:decoration-accent"
+            className="font-mono text-sm text-ink-tertiary underline decoration-border underline-offset-4 hover:text-ink"
           >
             GitHub
+          </a>
+          <a
+            href={SITE.socials.linkedin}
+            target="_blank"
+            rel="noopener noreferrer"
+            className="font-mono text-sm text-ink-tertiary underline decoration-border underline-offset-4 hover:text-ink"
+          >
+            LinkedIn
           </a>
         </div>
       </Section>
