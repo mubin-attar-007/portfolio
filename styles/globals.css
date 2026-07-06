@@ -88,3 +88,27 @@ a {
     scroll-behavior: auto !important;
   }
 }
+
+/* Shiki code highlighting — transparent bg (use our surface), our mono face,
+   dark palette activated under an explicit or OS dark preference. */
+.shiki {
+  background-color: transparent !important;
+}
+.shiki,
+.shiki code,
+.shiki span {
+  font-family: var(--font-mono);
+  font-size: 0.8125rem;
+  line-height: 1.65;
+}
+:root[data-theme="dark"] .shiki,
+:root[data-theme="dark"] .shiki span {
+  color: var(--shiki-dark) !important;
+}
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme]) .shiki,
+  :root:not([data-theme]) .shiki span {
+    color: var(--shiki-dark) !important;
+  }
+}
+
