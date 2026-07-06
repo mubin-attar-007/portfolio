@@ -1,10 +1,10 @@
 import type { MetadataRoute } from "next";
-import { url } from "@/lib/site";
+import { SITE } from "@/config/site";
 
 export default function robots(): MetadataRoute.Robots {
   return {
     rules: { userAgent: "*", allow: "/" },
-    sitemap: url("/sitemap.xml"),
-    host: url(),
+    sitemap: `${SITE.url}/sitemap.xml`,
+    host: SITE.url,
   };
 }

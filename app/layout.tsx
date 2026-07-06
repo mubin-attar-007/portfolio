@@ -6,6 +6,7 @@ import "@/styles/globals.css";
 import { SITE } from "@/config/site";
 import { Header } from "@/components/layout/header";
 import { Footer } from "@/components/layout/footer";
+import { JsonLd } from "@/components/seo/json-ld";
 
 // Display serif — italic only (essay titles, pull-quotes). Geist Sans/Mono come
 // self-hosted from the `geist` package (their .variable = --font-geist-sans/mono).
@@ -38,6 +39,7 @@ export default function RootLayout({ children }: Readonly<{ children: React.Reac
     >
       <head>
         <script dangerouslySetInnerHTML={{ __html: THEME_SCRIPT }} />
+        <JsonLd />
       </head>
       <body className="flex min-h-screen flex-col">
         <a href="#main" className="skip-link">

@@ -27,8 +27,15 @@ export function Assistant() {
       e.preventDefault();
       setOpen(true);
     };
+    // Mobile nav (and any other trigger) opens the assistant via this event,
+    // since the header trigger + "/" hotkey are desktop/keyboard only.
+    const onOpen = () => setOpen(true);
     document.addEventListener("keydown", onKey);
-    return () => document.removeEventListener("keydown", onKey);
+    window.addEventListener("open-assistant", onOpen);
+    return () => {
+      document.removeEventListener("keydown", onKey);
+      window.removeEventListener("open-assistant", onOpen);
+    };
   }, []);
 
   return (
