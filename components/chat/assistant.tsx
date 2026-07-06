@@ -33,7 +33,7 @@ export function Assistant() {
         data-open={open || undefined}
         aria-haspopup="dialog"
         aria-expanded={open}
-        aria-label="Ask about Mubin — open AI assistant"
+        aria-label="Ask Friday — open Mubin's AI assistant"
         onClick={() => (open ? closePanel() : openPanel())}
       >
         <span className="chat-fab-glow" aria-hidden />
@@ -50,7 +50,7 @@ export function Assistant() {
             <circle cx="13" cy="8" r="1" fill="currentColor" />
           </svg>
         </span>
-        <span className="chat-fab-label">Ask about Mubin</span>
+        <span className="chat-fab-label">Ask Friday</span>
       </button>
 
       {mounted && <ChatPanel open={open} onClose={closePanel} returnFocusRef={btnRef} />}

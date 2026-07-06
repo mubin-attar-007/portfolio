@@ -53,6 +53,15 @@ export function ChatPanel({
     if (el) el.scrollTop = el.scrollHeight;
   }, [messages]);
 
+  // Auto-grow the composer to fit its content (capped by the CSS max-height),
+  // so a short question never shows an awkward inner scrollbar.
+  useLayoutEffect(() => {
+    const el = inputRef.current;
+    if (!el) return;
+    el.style.height = "auto";
+    el.style.height = `${el.scrollHeight}px`;
+  }, [draft]);
+
   // On open: focus the input and remember the trigger to restore focus later.
   useEffect(() => {
     if (open) {
@@ -117,15 +126,15 @@ export function ChatPanel({
         className="chat-panel"
         role="dialog"
         aria-modal="true"
-        aria-label="Ask about Mubin — AI assistant"
+        aria-label="Friday — Mubin's AI assistant"
       >
         {/* header */}
         <header className="chat-head">
           <div className="chat-head-id">
             <span className="chat-orb" aria-hidden />
             <div>
-              <p className="chat-title">Ask about Mubin</p>
-              <p className="chat-sub">Grounded in his real work · answers cite sources</p>
+              <p className="chat-title">Friday</p>
+              <p className="chat-sub">Mubin's AI · grounded in his real work, cites sources</p>
             </div>
           </div>
           <div className="chat-head-actions">
@@ -161,9 +170,9 @@ export function ChatPanel({
           {empty ? (
             <div className="chat-empty">
               <p className="chat-empty-lead">
-                I&apos;m a retrieval-grounded assistant. I answer from Mubin&apos;s real projects,
-                case studies, and résumé — and I cite where each answer comes from. Ask me anything,
-                or start here:
+                I&apos;m <strong>Friday</strong>, Mubin&apos;s AI assistant. I answer from his real
+                projects, case studies, and résumé — and I cite where each answer comes from. Ask me
+                anything, or start here:
               </p>
               <div className="chat-starters">
                 {STARTERS.map((q) => (
@@ -237,11 +246,6 @@ function Bubble({ message }: { message: ChatMessage }) {
   return (
     <div className="chat-row chat-row-ai">
       <div className="chat-bubble chat-bubble-ai">
-        {message.mode === "fallback" && (
-          <span className="chat-mode-badge" title="Live assistant was busy — grounded FAQ answer">
-            offline · grounded answer
-          </span>
-        )}
         <div
           className="chat-answer"
           aria-live={message.streaming ? "polite" : "off"}

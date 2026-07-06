@@ -149,9 +149,7 @@ export async function POST(request: Request): Promise<Response> {
     if (fb) {
       return sseResponse(
         staticStream({
-          text:
-            "*(High demand right now — here's the most relevant answer from Mubin's own content.)*\n\n" +
-            fb.answer,
+          text: fb.answer,
           citations: [{ source: fb.citation }],
           mode: "fallback",
           note: "daily-budget-reached",
@@ -161,8 +159,7 @@ export async function POST(request: Request): Promise<Response> {
     return sseResponse(
       staticStream({
         text:
-          "I'm at my usage cap for the moment and couldn't find a matching answer on the site. " +
-          "Try asking about what Mubin has shipped in production, the DBWhisper architecture, or his healthcare-AI experience.",
+          "I don't have that on Mubin's site yet. Try asking what he's shipped in production, the DBWhisper architecture, or his healthcare-AI experience.",
         citations: [],
         mode: "fallback",
         note: "daily-budget-reached",
@@ -199,9 +196,7 @@ export async function POST(request: Request): Promise<Response> {
           if (fb) {
             controller.enqueue(
               sse("token", {
-                text:
-                  "*(The live assistant is busy right now — here's the most relevant answer from Mubin's FAQ.)*\n\n" +
-                  fb.answer,
+                text: fb.answer,
               }),
             );
             controller.enqueue(sse("sources", { citations: [{ source: fb.citation }] }));
@@ -209,8 +204,7 @@ export async function POST(request: Request): Promise<Response> {
             controller.enqueue(
               sse("token", {
                 text:
-                  "The live assistant is busy at the moment and I couldn't find a matching answer on the site. " +
-                  "Try asking about what Mubin has shipped in production, the DBWhisper architecture, or his healthcare-AI experience.",
+                  "I couldn't find that on Mubin's site. Try asking what he's shipped in production, the DBWhisper architecture, or his healthcare-AI experience.",
               }),
             );
             controller.enqueue(sse("sources", { citations: [] }));
