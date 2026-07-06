@@ -13,7 +13,7 @@ import { Assistant } from "@/components/features/assistant";
  */
 export function Header() {
   return (
-    <header className="sticky top-0 z-40 border-b border-border bg-bg/85 backdrop-blur-sm">
+    <header className="sticky top-0 z-40 border-b border-border bg-bg">
       <div className="mx-auto flex h-16 w-full max-w-[var(--width-container)] items-center justify-between px-6 md:px-8">
         <Link
           href="/"
