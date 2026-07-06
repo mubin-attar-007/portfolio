@@ -1,7 +1,8 @@
 // -----------------------------------------------------------------------------
-// Grounding proof set. Ten representative questions with the source we expect
-// retrieval to surface, plus terms the top passage must mention. This asserts
-// the RETRIEVAL layer is correct WITHOUT any LLM quota (test/retrieval.test.mts).
+// Grounding proof set. Representative questions (factual + reasoning, across all
+// four projects, the résumé, and the Sevina role) with the source we expect
+// retrieval to surface, plus terms the top passage must mention. Asserts the
+// RETRIEVAL layer is correct WITHOUT any LLM quota (test/retrieval.test.mts).
 // -----------------------------------------------------------------------------
 
 export type TestQuestion = {
@@ -67,5 +68,35 @@ export const TEST_QUESTIONS: TestQuestion[] = [
       "In TradePulse, how does the event-driven engine decide on a closed bar and fill on the next bar's open to prevent look-ahead?",
     expectedSource: "TradePulse case study",
     mustMention: ["closed bar", "look-ahead"],
+  },
+  {
+    question: "What went wrong in LLM Studio in production and how was it fixed?",
+    expectedSource: "LLM Studio",
+    mustMention: ["epoch"],
+  },
+  {
+    question: "How does CrownWager avoid overfitting its NBA betting model?",
+    expectedSource: "CrownWager",
+    mustMention: ["xgboost", "cross-validation"],
+  },
+  {
+    question: "Why did he build DBWhisper on LangGraph and how is the agent structured?",
+    expectedSource: "DBWhisper",
+    mustMention: ["langgraph", "sql"],
+  },
+  {
+    question: "How does TradePulse guarantee backtest and paper trading match?",
+    expectedSource: "TradePulse case study",
+    mustMention: ["fastapi", "postgres"],
+  },
+  {
+    question: "What database and vector search does DBWhisper use?",
+    expectedSource: "DBWhisper case study",
+    mustMention: ["postgres", "fastapi"],
+  },
+  {
+    question: "How does LLM Studio keep one user from reading another user's chats?",
+    expectedSource: "LLM Studio",
+    mustMention: ["llm studio"],
   },
 ];

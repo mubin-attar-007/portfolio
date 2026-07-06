@@ -3,12 +3,13 @@ import { SITE } from "@/config/site";
 import { NavLinks } from "./nav-links";
 import { MobileNav } from "./mobile-nav";
 import { ThemeToggle } from "@/components/features/theme-toggle";
+import { Assistant } from "@/components/features/assistant";
 
 /**
- * Header — site masthead. Logo (name in mono), primary nav, an "Ask about my
- * work" ghost affordance (wired to the assistant in Sprint 5), theme toggle,
- * and the mobile drawer. A11y: <header> landmark; nav is labelled; all controls
- * keyboard operable with visible focus.
+ * Header — site masthead. Logo (name in mono), primary nav, the grounded
+ * "Ask about my work" assistant launcher, theme toggle, and the mobile drawer.
+ * A11y: <header> landmark; nav is labelled; all controls keyboard operable with
+ * visible focus.
  */
 export function Header() {
   return (
@@ -24,13 +25,7 @@ export function Header() {
 
         <div className="flex items-center gap-2 md:gap-5">
           <NavLinks />
-          {/* Ask about my work — becomes the grounded assistant trigger in Sprint 5 */}
-          <Link
-            href="/work"
-            className="hidden rounded-[var(--radius-md)] border border-border-strong px-3 py-1.5 text-sm text-ink transition-colors hover:border-accent hover:text-accent md:inline-flex"
-          >
-            Ask about my work
-          </Link>
+          <Assistant />
           <ThemeToggle />
           <MobileNav />
         </div>

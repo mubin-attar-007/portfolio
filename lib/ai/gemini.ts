@@ -8,7 +8,9 @@
 
 import type { ChatMessage } from "./guard";
 
-const MODEL = "gemini-2.0-flash";
+// gemini-2.5-flash is the current free-tier flash model. gemini-2.0-flash was
+// moved to a 0-quota free tier, so it 429s immediately — do not revert.
+const MODEL = "gemini-2.5-flash";
 const BASE = "https://generativelanguage.googleapis.com/v1beta/models";
 
 /** Thrown for any upstream failure. Message is safe to surface — no key. */
@@ -58,6 +60,9 @@ export async function* streamGemini(args: StreamArgs): AsyncGenerator<string> {
       temperature: 0.3,
       maxOutputTokens: 800,
       topP: 0.9,
+      // 2.5-flash defaults to a thinking budget; grounded Q&A doesn't need it,
+      // and it would burn free-tier tokens + add latency. Disable it.
+      thinkingConfig: { thinkingBudget: 0 },
     },
     // Keep safety at defaults; content is professional Q&A about a portfolio.
   };

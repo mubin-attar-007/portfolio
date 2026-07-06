@@ -74,9 +74,11 @@ export function sanitizeMessages(input: unknown): SanitizeResult {
  * cheap first gate that refuses the blatant ones without spending LLM quota.
  */
 const INJECTION_PATTERNS: RegExp[] = [
-  /ignore (all |your |the |previous |above |prior )?(instructions|rules|prompt)/i,
-  /disregard (all |your |the |previous |above |prior )?(instructions|rules|prompt)/i,
-  /forget (all |your |the |previous |everything )?(instructions|rules|prompt|above)/i,
+  // Allow any run of qualifier words between the verb and the object so the
+  // canonical "ignore all previous instructions" (two qualifiers) is caught.
+  /ignore\s+(?:(?:all|your|the|previous|above|prior|any|these|those)\s+)*(instructions|rules|prompt|context|guidelines)/i,
+  /disregard\s+(?:(?:all|your|the|previous|above|prior|any|these|those)\s+)*(instructions|rules|prompt|context|guidelines)/i,
+  /forget\s+(?:(?:all|your|the|previous|above|prior|any|everything|these|those)\s+)*(instructions|rules|prompt|above|context)/i,
   /(reveal|show|print|repeat|expose|leak|output|tell me) (me )?(your |the )?(system )?(prompt|instructions|rules)/i,
   /what (is|are) your (system )?(prompt|instructions)/i,
   /you are (now|no longer)\b/i,
