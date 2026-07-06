@@ -130,6 +130,7 @@ export function DBWhisperBody() {
             { label: "write access to your data", value: "none", method: "Fail-closed validator + read-only DB user; a query is rejected if it references a table outside the enrolled schema." },
             { label: "LLM providers", value: "6", method: "One fallback interface; Gemini free tier is the final fallback so it runs with zero paid keys." },
             { label: "SQL dialects", value: "3", method: "Postgres, MySQL, SQL Server via SQLAlchemy 2.0 + ODBC." },
+            { label: "per-run guardrails", value: "k=4 · ≤8 calls · 30s", method: "Retrieval returns the top 4 tables; each tool is capped at 8 calls per run; execution runs under a 30s timeout, a 1000-row cap, and a 5000-char SQL limit." },
             { label: "infra cost", value: "$0", method: "Vercel + Hugging Face Docker Space + Neon Postgres, all free-tier." },
           ]}
         />

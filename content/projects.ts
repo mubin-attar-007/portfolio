@@ -56,7 +56,7 @@ const RAW = [
     order: 3,
     systems: ["XGBoost model", "fair-odds edge + Kelly staking", "graded model track-record"],
     metrics: [
-      { label: "model accuracy", value: "~65%", method: "5-fold stratified cross-validation on the training set." },
+      { label: "model accuracy", value: "65.2% ± 0.8%", method: "5-fold stratified cross-validation on 15,115 NBA games; base home-win rate is 57.5%, so a real ~8-point edge (ROC-AUC 0.685)." },
       { label: "track-record", value: "graded vs finals", method: "Every published pick is settled against the real final score; the record is flagged 'insufficient' below 20 settled picks." },
     ],
     links: { live: "https://crownwager.vercel.app", repo: "https://github.com/mubin-attar-007/crownwager" },

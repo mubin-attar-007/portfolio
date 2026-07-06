@@ -110,9 +110,11 @@ export function CrownWagerBody() {
       <CS id="performance-cost" title="Performance & cost">
         <MetricsTable
           rows={[
-            { label: "model accuracy", value: "~65%", method: "5-fold stratified cross-validation; shallow model (max_depth 3), above the base home-win rate." },
-            { label: "track record", value: "graded vs finals", method: "Picks settle only on FINAL scores; aggregated per edge tier; flagged insufficient below 20 settled picks." },
-            { label: "money math", value: "Decimal", method: "Edge, EV, and half-Kelly staking in Decimal; arbitrage flagged when Σ(1/odds) < 1, legs sized to equalize payout." },
+            { label: "accuracy (CV)", value: "65.2% ± 0.8%", method: "5-fold stratified cross-validation on 15,115 NBA games (2012–24), one fixed random split — no cherry-picking. The base home-win rate in the data is 57.5%, so this is a real ~8-point edge." },
+            { label: "held-out test", value: "64.3%", method: "80/20 hold-out on 3,023 unseen games; ROC-AUC 0.685, log-loss 0.628 — the calibration signal that keeps Kelly staking from over-sizing." },
+            { label: "model shape", value: "106 features · depth 3", method: "750 shallow trees (max_depth 3, learning rate 0.01) over 106 pre-game features; kept deliberately shallow to resist overfitting and stay interpretable." },
+            { label: "track record", value: "graded vs finals", method: "Picks settle only on FINAL scores; aggregated per edge tier; unmappable picks voided; flagged insufficient below 20 settled picks." },
+            { label: "money math", value: "Decimal", method: "Edge, EV, and half-Kelly (0.5) staking in Decimal; arbitrage flagged when Σ(1/odds) < 1, legs sized to equalize payout." },
             { label: "legacy → rebuild", value: "2.3/10 → hardened", method: "A twelve-dimension assessment drove a rebuild with per-IP rate limiting, admin 2FA, CSP, and blocking bandit + gitleaks in CI." },
           ]}
         />
