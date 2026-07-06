@@ -1,119 +1,53 @@
 import type { Metadata } from "next";
-import { Fraunces, Instrument_Sans, Geist_Mono } from "next/font/google";
-import "./globals.css";
-import { profile, projects, experience } from "@/lib/content";
-import { SITE } from "@/lib/site";
-import { Assistant } from "@/components/chat/assistant";
+import { GeistSans } from "geist/font/sans";
+import { GeistMono } from "geist/font/mono";
+import { Newsreader } from "next/font/google";
+import "@/styles/globals.css";
+import { SITE } from "@/config/site";
+import { Header } from "@/components/layout/header";
+import { Footer } from "@/components/layout/footer";
 
-// Display / headings — Fraunces (variable, with true italic for the accent).
-const fraunces = Fraunces({
-  variable: "--font-fraunces",
+// Display serif — italic only (essay titles, pull-quotes). Geist Sans/Mono come
+// self-hosted from the `geist` package (their .variable = --font-geist-sans/mono).
+const newsreader = Newsreader({
+  variable: "--font-newsreader",
   subsets: ["latin"],
-  display: "swap",
-  axes: ["opsz", "SOFT"],
   style: ["normal", "italic"],
-});
-// Body — Instrument Sans (variable).
-const instrument = Instrument_Sans({
-  variable: "--font-instrument",
-  subsets: ["latin"],
   display: "swap",
 });
-// Data / labels / code / eyebrows — Geist Mono (variable).
-const geistMono = Geist_Mono({
-  variable: "--font-geist-mono",
-  subsets: ["latin"],
-  display: "swap",
-});
-
-const DESC =
-  "Mubin Attar — AI/ML engineer who ships real, live AI products. Four production apps: NL→SQL agents, an AI SaaS platform, honest backtesting, and +EV sports models. No faked demos, no vanity metrics.";
 
 export const metadata: Metadata = {
-  metadataBase: new URL(SITE),
-  title: {
-    default: "Mubin Attar — AI/ML Engineer",
-    template: "%s · Mubin Attar",
-  },
-  description: DESC,
-  keywords: [
-    "AI Engineer", "ML Engineer", "GenAI", "LLM", "RAG", "LangGraph", "agents",
-    "FastAPI", "Next.js", "Mubin Attar",
-  ],
-  authors: [{ name: profile.name, url: profile.socials.github }],
-  openGraph: {
-    type: "website",
-    url: SITE,
-    title: "Mubin Attar — AI/ML Engineer",
-    description: DESC,
-    siteName: "Mubin Attar",
-  },
-  twitter: { card: "summary_large_image", title: "Mubin Attar — AI/ML Engineer", description: DESC },
-  alternates: { canonical: SITE },
+  metadataBase: new URL(SITE.url),
+  title: { default: `${SITE.name} — ${SITE.role}`, template: `%s · ${SITE.name}` },
+  description:
+    "Mubin Attar — AI/ML engineer. Evidence over claims: architecture, decisions, and measured results. Every metric links to how it was measured.",
+  alternates: { canonical: SITE.url },
 };
 
-// Current employer, straight from resume content (never invented).
-const currentRole = experience[0];
-
-const personLd = {
-  "@context": "https://schema.org",
-  "@type": "Person",
-  "@id": `${SITE}/#person`,
-  name: profile.name,
-  jobTitle: profile.role,
-  description: profile.summary,
-  email: profile.email,
-  url: SITE,
-  image: `${SITE}${profile.headshot}`,
-  address: { "@type": "PostalAddress", addressLocality: "Ahmedabad", addressCountry: "IN" },
-  worksFor: currentRole
-    ? { "@type": "Organization", name: currentRole.company }
-    : undefined,
-  sameAs: [
-    profile.socials.github,
-    profile.socials.linkedin,
-    profile.socials.huggingface,
-    profile.socials.leetcode,
-  ],
-  knowsAbout: ["Generative AI", "Large Language Models", "RAG", "Agents", "Machine Learning", "MLOps"],
-  makesOffer: projects.map((p) => ({
-    "@type": "Offer",
-    itemOffered: { "@type": "SoftwareApplication", name: p.name, applicationCategory: "WebApplication", url: p.live },
-  })),
-};
-
-const websiteLd = {
-  "@context": "https://schema.org",
-  "@type": "WebSite",
-  "@id": `${SITE}/#website`,
-  url: SITE,
-  name: "Mubin Attar — AI/ML Engineer",
-  description: DESC,
-  inLanguage: "en",
-  publisher: { "@id": `${SITE}/#person` },
-};
+// Pre-paint theme application (no flash). Light is the default/brand; only an
+// explicit stored preference overrides it here — OS preference is handled in CSS.
+const THEME_SCRIPT = `(function(){try{var t=localStorage.getItem('theme');if(t==='dark'||t==='light')document.documentElement.setAttribute('data-theme',t);}catch(e){}})();`;
 
 export default function RootLayout({ children }: Readonly<{ children: React.ReactNode }>) {
+  const year = new Date().getFullYear();
   return (
     <html
       lang="en"
-      className={`${fraunces.variable} ${instrument.variable} ${geistMono.variable} antialiased`}
+      className={`${GeistSans.variable} ${GeistMono.variable} ${newsreader.variable}`}
       suppressHydrationWarning
     >
-      <body className="min-h-screen">
-        <script
-          type="application/ld+json"
-          dangerouslySetInnerHTML={{ __html: JSON.stringify([personLd, websiteLd]) }}
-        />
-        <a
-          href="#work"
-          className="sr-only focus:not-sr-only focus:fixed focus:left-4 focus:top-4 focus:z-[100] focus:rounded-lg focus:bg-accent focus:px-4 focus:py-2 focus:font-semibold focus:text-bg"
-        >
+      <head>
+        <script dangerouslySetInnerHTML={{ __html: THEME_SCRIPT }} />
+      </head>
+      <body className="flex min-h-screen flex-col">
+        <a href="#main" className="skip-link">
           Skip to content
         </a>
-        {children}
-        <Assistant />
-        <div className="grain" aria-hidden />
+        <Header />
+        <main id="main" className="flex-1">
+          {children}
+        </main>
+        <Footer year={year} />
       </body>
     </html>
   );
