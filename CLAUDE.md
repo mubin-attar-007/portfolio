@@ -84,7 +84,7 @@ npm run dev            # local dev
 npm run build          # production build (fails on Zod content errors)
 npm run lint           # eslint
 npm test               # node --test (lib + content schema fixtures)
-npm run test:a11y      # playwright + axe smoke (added Sprint 1)
+npm run test:a11y      # playwright + axe-core, every route × light/dark; needs a server on :3200; exits 1 on any WCAG 2.2 AA violation
 ```
 
 ## Repository layout (root-level adaptation of ARCHITECTURE §2)
