@@ -11,6 +11,9 @@ import { projects, projectBySlug } from "@/content/projects";
 import type { Project } from "@/content/schema";
 import { SITE } from "@/config/site";
 import { DBWhisperBody } from "@/components/case-studies/dbwhisper";
+import { TradePulseBody } from "@/components/case-studies/tradepulse";
+import { CrownWagerBody } from "@/components/case-studies/crownwager";
+import { LlmStudioBody } from "@/components/case-studies/llm-studio";
 import { GenericBody } from "@/components/case-studies/generic";
 
 export const dynamicParams = false;
@@ -39,6 +42,9 @@ export async function generateMetadata({
 /** Projects with an authored deep write-up; others get GenericBody. */
 const BODIES: Record<string, () => ReactNode> = {
   dbwhisper: DBWhisperBody,
+  tradepulse: TradePulseBody,
+  crownwager: CrownWagerBody,
+  "llm-studio": LlmStudioBody,
 };
 
 export default async function CaseStudyPage({ params }: { params: Promise<{ slug: string }> }) {

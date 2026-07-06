@@ -5,7 +5,7 @@ import { SectionHeading } from "@/components/ui/section-heading";
 import { Metric } from "@/components/ui/metric";
 import { buttonVariants } from "@/components/ui/button";
 import { SystemDiagram } from "@/components/diagrams/system-diagram";
-import { diagrams } from "@/components/diagrams/data/dbwhisper";
+import { diagrams } from "@/components/diagrams/data";
 import { SITE } from "@/config/site";
 import { home } from "@/content/site";
 import { featuredProject, secondaryProjects } from "@/content/projects";

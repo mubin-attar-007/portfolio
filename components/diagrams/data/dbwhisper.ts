@@ -24,7 +24,3 @@ export const dbwhisperDiagram: DiagramSpec = {
     { from: "api", to: "mem", label: "checkpoint" },
   ],
 };
-
-export const diagrams: Record<string, DiagramSpec> = {
-  dbwhisper: dbwhisperDiagram,
-};
