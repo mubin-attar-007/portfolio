@@ -9,15 +9,18 @@ import { diagrams } from "@/components/diagrams/data/dbwhisper";
 import { SITE } from "@/config/site";
 import { home } from "@/content/site";
 import { featuredProject, secondaryProjects } from "@/content/projects";
+import { allWriting } from "@/lib/writing";
+import { formatDate } from "@/lib/format";
 
 /**
  * Home — DESIGN §4 tempo: hero → proof strip → flagship feature → secondary
  * projects (rows) → principles → contact. Adjacent sections differ in tone or
  * density (never two card-grids). Accent budget ≤ 2 per viewport.
  */
-export default function Home() {
+export default async function Home() {
   const flagship = featuredProject;
   const diagram = flagship.diagram ? diagrams[flagship.diagram] : undefined;
+  const posts = (await allWriting()).slice(0, 3);
 
   return (
     <>
@@ -116,6 +119,33 @@ export default function Home() {
               <p className="max-w-[var(--width-prose)] text-ink-secondary">{pr.body}</p>
             </div>
           ))}
+        </div>
+      </Section>
+
+      <Section space="md" tone="subtle">
+        <SectionHeading kicker="Writing">Selected writing</SectionHeading>
+        <ul className="mt-8 divide-y divide-border border-y border-border">
+          {posts.map((p) => (
+            <li key={p.slug}>
+              <Link
+                href={`/writing/${p.slug}`}
+                className="group grid gap-1 py-5 md:grid-cols-[1fr_auto] md:items-baseline md:gap-8"
+              >
+                <div>
+                  <h3 className="text-lg text-ink transition-colors group-hover:text-accent">{p.title}</h3>
+                  <p className="mt-1 max-w-[var(--width-prose)] text-sm text-ink-secondary">{p.summary}</p>
+                </div>
+                <time dateTime={p.date} className="font-mono text-xs text-ink-tertiary">
+                  {formatDate(p.date)}
+                </time>
+              </Link>
+            </li>
+          ))}
+        </ul>
+        <div className="mt-8">
+          <Link href="/writing" className="inline-flex items-center gap-1.5 text-sm font-medium text-accent hover:text-accent-hover">
+            All writing <ArrowRight size={15} strokeWidth={1.5} />
+          </Link>
         </div>
       </Section>
 

@@ -1,0 +1,29 @@
+---
+title: "Look-ahead-free by construction"
+summary: "The most common way a backtest lies to you is look-ahead bias. Here's how I designed it out of TradePulse instead of hoping to catch it later."
+date: "2026-04-12"
+category: "essay"
+topics: ["backtesting", "quant", "correctness"]
+---
+
+A backtest is a machine for producing convincing numbers, which makes it dangerous. The most common way it lies is look-ahead bias: the strategy, at some moment, uses information it could not have had yet. A single off-by-one — deciding on today's close but filling at today's close instead of tomorrow's open — turns a mediocre idea into a beautiful equity curve that evaporates the instant real money is involved.
+
+You can try to test for look-ahead after the fact. It's better to make it structurally impossible.
+
+## Decide on i, fill on i+1
+
+In TradePulse the engine is event-driven and the rule is mechanical: a decision made on bar `i` can only be filled at the open of bar `i+1`. The strategy never sees a bar it wouldn't have had. This isn't a convention you have to remember — it's how the event loop is wired, so a strategy *can't* accidentally peek even if the author wants to.
+
+To keep it honest as the code changes, there's a canary: a test that deliberately constructs a strategy which would profit only from look-ahead, and asserts it does *not* profit. If someone later refactors the fill logic and reintroduces the bug, that test goes red and the build fails. The property is enforced, not documented.
+
+## Costs are not optional
+
+The second way a backtest flatters you is by trading for free. Real fills pay commission and slippage; a backtest that ignores them will happily "profit" from strategies that churn. So costs are modeled by default, not as an afterthought you remember to switch on. Drawdown is always shown next to return, because a return without its drawdown is half a sentence.
+
+## Say what the number means
+
+Sharpe and Sortino are only meaningful if you know the risk-free rate you subtracted. TradePulse states it — risk-free rate is shown wherever those ratios appear — because a Sharpe with an unstated assumption is a number pretending to be a fact. The point of the whole exercise is to be *less* fooled than the average backtest, and that starts with never hiding an assumption inside a metric.
+
+## The principle
+
+The reliable way to keep a system honest is to make the dishonest states unrepresentable. You don't remind yourself not to look ahead; you build a loop where looking ahead can't happen and a test that fails if it ever can again. You don't hope you remembered to include costs; you make "no costs" the thing you'd have to go out of your way to write. Correctness you have to remember is correctness you'll eventually forget.

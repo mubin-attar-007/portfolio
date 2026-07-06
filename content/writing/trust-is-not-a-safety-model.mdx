@@ -1,0 +1,35 @@
+---
+title: "Trust is not a safety model"
+summary: "Why I gate an LLM's SQL behind a deterministic, fail-closed validator instead of trusting the model to behave."
+date: "2026-05-20"
+category: "essay"
+topics: ["LLM safety", "agents", "SQL"]
+---
+
+The demo version of natural-language-to-SQL takes an afternoon: take a question, hand it to a model with the schema, run whatever comes back. It works often enough to be convincing in a screen recording. It is also the exact reason most of these tools never touch a real database.
+
+A language model will, given the chance, emit `DROP TABLE`, a multi-statement payload, or a confident query against a table that doesn't exist. You can reduce how often that happens — a better prompt, a bigger model, a stern system message — but "less often" is not a safety property. If the only thing standing between a user's typo and a dropped table is the model's disposition on that particular call, you don't have a safety model. You have a hope.
+
+So in DBWhisper the model is never trusted to be safe. It's trusted to be *useful*, and everything it produces passes through a gate it cannot argue with.
+
+## The gate
+
+Before any query reaches a database, a deterministic validator has to pass it. It parses the SQL properly (with `sqlparse`, not a regex that a comment can slip past) and enforces a small, boring set of rules: the statement must start with `SELECT` or `WITH`; exactly one statement; no DDL, DML, or `EXEC`; no reaching into `information_schema`, `sys.`, or `pg_catalog`. And when a specific database is in play, it checks the query only touches tables that were enrolled and documented for that database.
+
+The decisive rule is the last one, and its default is the whole point: **if the validator can't load a schema index for the database, it refuses the query rather than allowing it.** It fails *closed*. A missing index isn't "probably fine," it's "I can't vouch for what this touches," and the safe answer to that is no.
+
+## Why closed, not open
+
+Failing open is the tempting default because it's invisible when things go right. Everything works in the demo, works in the happy path, works right up until the one query the model got wrong meets the one moment your read-only assumption wasn't actually enforced.
+
+The asymmetry is the argument. A false "unsafe" costs a user one rejected query and a moment of friction. A false "safe" costs you a mutated or leaked database. When the downside is that lopsided, you design for the cheap failure and accept its cost — which here is real: the validator rejects some exotic-but-valid SQL, and every database needs an enrollment step before it can be queried. I'll take both.
+
+## Defense in depth
+
+The validator is one layer, not the whole story, because any single gate is a single point of failure. Underneath it: the app connects as a read-only database user (and warns if a connection looks writable), queries run under a timeout and a row cap, and logs are sanitized — connection-string passwords, API keys, and SQL literals masked — before anything is written. No one layer failing exposes the data.
+
+## The general shape
+
+This isn't really about SQL. The moment an LLM's output can *do* something — run code, call a tool, spend money, change state — the interesting engineering is the deterministic boundary around it, not the model in the middle. Put a gate in front of the action. Make the gate simple enough to audit and reason about. Give it a default that's safe when it's uncertain. Then let the model be as creative as it likes on the other side of it, where the worst it can do is be wrong and get caught.
+
+Trust the model to be helpful. Never trust it to be safe.

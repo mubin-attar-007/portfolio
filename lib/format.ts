@@ -30,3 +30,12 @@ export function deltaTone(
 export function deltaArrow(tone: DeltaTone): string {
   return tone === "positive" ? "▲" : tone === "negative" ? "▼" : "→";
 }
+
+const MONTHS = ["Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"];
+
+/** Format an ISO date ("2026-05-20") as "May 2026" — deterministic, no locale/timezone. */
+export function formatDate(iso: string): string {
+  const [y, m] = iso.split("-");
+  const month = MONTHS[Number(m) - 1] ?? "";
+  return `${month} ${y}`.trim();
+}

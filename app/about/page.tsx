@@ -1,4 +1,5 @@
 import type { Metadata } from "next";
+import Link from "next/link";
 import { Section } from "@/components/layout/section";
 import { about } from "@/content/site";
 import { SITE } from "@/config/site";
@@ -26,9 +27,12 @@ export default function AboutPage() {
         <a href={SITE.socials.linkedin} target="_blank" rel="noopener noreferrer" className="text-ink underline decoration-border-strong underline-offset-4 hover:decoration-accent">
           LinkedIn
         </a>
-        <a href="/Mubin_Attar_Resume.pdf" className="text-ink underline decoration-border-strong underline-offset-4 hover:decoration-accent">
-          Résumé (PDF)
-        </a>
+        <Link href="/resume" className="text-ink underline decoration-border-strong underline-offset-4 hover:decoration-accent">
+          Résumé
+        </Link>
+        <Link href="/timeline" className="text-ink underline decoration-border-strong underline-offset-4 hover:decoration-accent">
+          Timeline
+        </Link>
       </div>
     </Section>
   );

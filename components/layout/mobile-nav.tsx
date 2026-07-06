@@ -18,11 +18,6 @@ export function MobileNav() {
   const panelRef = useRef<HTMLDivElement>(null);
   const toggleRef = useRef<HTMLButtonElement>(null);
 
-  // close on route change
-  useEffect(() => {
-    setOpen(false);
-  }, [pathname]);
-
   // scroll-lock + Escape + focus trap while open; restore focus on close
   useEffect(() => {
     if (!open) return;
@@ -98,6 +93,7 @@ export function MobileNav() {
                 <Link
                   key={item.href}
                   href={item.href}
+                  onClick={() => setOpen(false)}
                   aria-current={active ? "page" : undefined}
                   className={`rounded-[var(--radius-md)] px-3 py-3 text-lg ${
                     active ? "text-accent" : "text-ink hover:text-ink"

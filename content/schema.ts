@@ -34,3 +34,28 @@ export const ProjectSchema = z.object({
   diagram: z.string().optional(),
 });
 export type Project = z.infer<typeof ProjectSchema>;
+
+export const WritingSchema = z.object({
+  slug: z.string(),
+  title: z.string(),
+  summary: z.string().max(220),
+  date: z.string(),
+  updated: z.string().optional(),
+  category: z.enum(["essay", "guide", "note"]),
+  topics: z.array(z.string()).default([]),
+  draft: z.boolean().default(false),
+});
+export type WritingMeta = z.infer<typeof WritingSchema>;
+
+/** One phase of the timeline. Body carries Built/Learned/Mistake/Changed lines. */
+export const TimelineSchema = z.object({
+  period: z.string(),
+  role: z.string(),
+  org: z.string().optional(),
+  order: z.number(),
+  built: z.string(),
+  learned: z.string(),
+  mistake: z.string(),
+  changed: z.string(),
+});
+export type TimelinePhase = z.infer<typeof TimelineSchema>;

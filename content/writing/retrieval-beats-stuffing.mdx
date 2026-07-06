@@ -1,0 +1,41 @@
+---
+title: "Retrieval beats stuffing the schema"
+summary: "A practical approach to natural-language-to-SQL on real databases: document the schema, embed it, and retrieve per question instead of pasting the whole thing into the prompt."
+date: "2026-03-08"
+category: "guide"
+topics: ["RAG", "NL→SQL", "retrieval"]
+---
+
+Most natural-language-to-SQL tutorials paste the whole schema into the prompt. That works on the tutorial's five-table toy database and falls apart on a real one, which has dozens to hundreds of tables. The schema is too large to fit, too noisy to reason over, and the model reliably picks the wrong tables. Making NL→SQL work at real scale is mostly a retrieval problem, not a prompting one.
+
+Here is the approach I used in DBWhisper.
+
+## Document the schema, once per database
+
+When a database is first enrolled, introspect it and turn each table into structured documentation — a short summary, its columns, its relationships, some stats — rather than raw DDL. This is the step that makes everything else possible: the model retrieves against *documentation*, which is written for comprehension, not against a schema dump, which is written for a parser.
+
+## Embed the documentation, not the data
+
+Embed those table documents into a vector store (pgvector works well and keeps the stack small). You're indexing descriptions of tables, so the index is tiny relative to the data and cheap to search. No customer data goes into it.
+
+## Retrieve per question, in layers
+
+For each question, the agent does a few narrow things instead of one big thing:
+
+- **Find candidate tables** by semantic search over the table *summaries* — a handful, not the whole schema.
+- **Fetch only the section it needs** for each candidate (columns, or relationships, or stats), so the prompt stays small.
+- **Check for a verified example** — a human-approved question→SQL pair for *this* database — and prefer adapting a close one over writing SQL from scratch.
+
+Only then does it generate, against a prompt that contains the few relevant tables rather than all of them.
+
+## Keep the loop bounded
+
+An agent with tools will, occasionally, loop — call the same retrieval tool over and over, convinced the next call will help. Cap it: cache each tool's result per run, and after a tool has been called some small number of times, return an "abort hint" that tells the model to stop and produce its answer with what it has. Bounded loops are both a cost control and a reliability one.
+
+## The flywheel
+
+The verified-query step is the part that compounds. Every time a question→SQL pair is approved for a database, future similar questions retrieve and adapt it. Accuracy on a given database improves with curated use — a feedback loop that's cheaper and more durable than prompt-tuning against a moving target. A good retrieval layer plus a small feedback loop beats a bigger model with a bigger prompt.
+
+## Why it's worth the enrollment step
+
+The cost of all this is an enrollment pass per database. In exchange you get NL→SQL that works beyond toy schemas, prompts small enough to stay fast and cheap, and a much smaller surface for the model to hallucinate across — because it's only ever looking at the few tables that matter. On a $0 stack, that isn't a nice-to-have; it's the only way the thing runs at all.
