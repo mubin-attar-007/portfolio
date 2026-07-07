@@ -31,7 +31,9 @@ const ROUTES = [
 
 async function audit(page, route) {
   await page.goto(BASE + route, { waitUntil: "load", timeout: 60000 });
-  await page.waitForTimeout(400);
+  // let on-load entrance animations (e.g. the hero) settle before auditing, so
+  // contrast is checked on the state users see, not a mid-fade frame
+  await page.waitForTimeout(1300);
   await page.addScriptTag({ content: AXE });
   const res = await page.evaluate(
     (tags) => axe.run(document, { runOnly: { type: "tag", values: tags } }),

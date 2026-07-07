@@ -193,6 +193,35 @@ export const home = {
     ],
   },
 
+  // FAQ — the questions a hiring manager actually has, answered plainly. Every
+  // answer is true and consistent with the rest of the site (no new claims).
+  faq: {
+    kicker: "Questions",
+    title: "The short version",
+    items: [
+      {
+        q: "Are you available for work?",
+        a: "Open to AI/ML roles — remote, or in Ahmedabad, India. The fastest way to reach me is email; I read and answer every one myself.",
+      },
+      {
+        q: "How do you work?",
+        a: "Solo and end-to-end: I design, build, ship, and maintain. Evidence over demos — every number you see is genuinely computed, and it links to how it was measured.",
+      },
+      {
+        q: "What's your stack?",
+        a: "FastAPI, Next.js, Postgres, and Docker, with LangGraph and retrieval for agents and XGBoost for predictive ML. The full list is on the Uses page.",
+      },
+      {
+        q: "Can I try the products or read the code?",
+        a: "Yes — all four are live and launchable from the section above, and the repositories are on GitHub.",
+      },
+      {
+        q: "What do you not do?",
+        a: "I don't ship screenshots or invented metrics. If a number can't be shared, I describe the mechanism and say so — never a fabricated figure.",
+      },
+    ],
+  },
+
   // DRAFT — the thesis of the "Trust is not a safety model" essay, in one line.
   philosophy: "The interesting engineering isn’t the model in the middle — it’s the deterministic boundary you build around it.",
 } as const;

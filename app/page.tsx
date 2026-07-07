@@ -10,6 +10,7 @@ import { SkillRotator } from "@/components/features/skill-rotator";
 import { ComponentShowcase } from "@/components/features/component-showcase";
 import { CapabilityGrid } from "@/components/features/capability-grid";
 import { LiveDemos } from "@/components/features/live-demos";
+import { Faq } from "@/components/features/faq";
 import { diagrams } from "@/components/diagrams/data";
 import { SITE } from "@/config/site";
 import { home } from "@/content/site";
@@ -39,15 +40,29 @@ export default async function Home() {
       <Section space="lg" className="!pt-[clamp(4.5rem,9vw,8rem)]">
         <div className="grid grid-cols-1 items-center gap-12 lg:grid-cols-[minmax(0,1.1fr)_minmax(0,0.9fr)] lg:gap-16">
           <div className="min-w-0">
-            <p className="font-mono text-xs uppercase tracking-[0.04em] text-ink-tertiary">
+            <p
+              className="hero-item font-mono text-xs uppercase tracking-[0.04em] text-ink-tertiary"
+              style={{ animationDelay: "0.02s" }}
+            >
               {home.metaLine}
             </p>
-            <h1 className="mt-8 max-w-[19ch] text-4xl leading-[1.05] tracking-[-0.02em] text-ink sm:text-5xl lg:text-6xl">
+            <h1
+              className="hero-item mt-8 max-w-[19ch] text-4xl leading-[1.05] tracking-[-0.02em] text-ink sm:text-5xl lg:text-6xl"
+              style={{ animationDelay: "0.09s" }}
+            >
               {headLead}
               {headTail ? <span className="text-ink-tertiary"> — {headTail}</span> : null}
             </h1>
-            <p className="mt-8 max-w-[52ch] text-lg text-ink-secondary">{home.lede}</p>
-            <div className="mt-8 flex flex-wrap items-center gap-3">
+            <p
+              className="hero-item mt-8 max-w-[52ch] text-lg text-ink-secondary"
+              style={{ animationDelay: "0.18s" }}
+            >
+              {home.lede}
+            </p>
+            <div
+              className="hero-item mt-8 flex flex-wrap items-center gap-3"
+              style={{ animationDelay: "0.26s" }}
+            >
               <Link href={`/work/${flagship.slug}`} className={buttonVariants("primary")}>
                 Read the flagship case study
               </Link>
@@ -55,13 +70,16 @@ export default async function Home() {
                 How I make decisions
               </Link>
             </div>
-            <p className="mt-10 font-mono text-xs text-ink-tertiary">
+            <p
+              className="hero-item mt-10 font-mono text-xs text-ink-tertiary"
+              style={{ animationDelay: "0.34s" }}
+            >
               {home.facts.join("  ·  ")}
               {"  ·  "}
               {home.availability}
             </p>
           </div>
-          <div className="min-w-0 lg:pt-2">
+          <div className="hero-item min-w-0 lg:pt-2" style={{ animationDelay: "0.16s" }}>
             <HeroTerminal />
           </div>
         </div>
@@ -207,6 +225,11 @@ export default async function Home() {
             />
           </Link>
         </div>
+      </Section>
+
+      {/* Beat 7.5 — FAQ: the questions a hiring manager has, in a Clerk accordion */}
+      <Section space="md" tone="subtle" ariaLabel="Frequently asked questions" className="reveal">
+        <Faq />
       </Section>
 
       {/* Beat 8 — Contact: a serif philosophy line, then a quiet resolution (dark close) */}

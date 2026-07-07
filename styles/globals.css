@@ -195,6 +195,26 @@ h4 {
   }
 }
 
+/* --- hero on-load entrance: a quiet staggered fade + rise (Clerk-style) ---
+   Only under prefers-reduced-motion: no-preference, so reduced-motion renders
+   the hero at rest (never hidden). Stagger via per-element animation-delay. */
+@media (prefers-reduced-motion: no-preference) {
+  .hero-item {
+    opacity: 0;
+    animation: hero-rise 0.62s var(--ease-out) both;
+  }
+  @keyframes hero-rise {
+    from {
+      opacity: 0;
+      transform: translateY(14px);
+    }
+    to {
+      opacity: 1;
+      transform: none;
+    }
+  }
+}
+
 /* --- capability card illustrations: bespoke SVG scenes that play on hover ---
    (Clerk-caliber — staggered, spring-accented; motion is transform/opacity/colour
    only and collapses under prefers-reduced-motion). */
