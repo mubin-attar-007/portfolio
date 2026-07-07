@@ -18,10 +18,10 @@
   --color-ink-tertiary: #696a76;    /* meta labels (AA 4.5:1 on bg + bg-subtle) */
   --color-border: #e8e8ee;          /* hairlines (cool) */
   --color-border-strong: #d6d7df;   /* inputs, emphasized dividers */
-  --color-accent: #3457b8;          /* links, primary button, active nav, focus — calmer, slightly desaturated royal blue */
-  --color-accent-hover: #2b478f;    /* hover */
+  --color-accent: #6320d9;          /* links, primary button, active nav, focus — our premium violet (Clerk-energy, distinctly ours) */
+  --color-accent-hover: #7c3aed;    /* hover — brighter violet */
   --color-on-accent: #ffffff;       /* text on an accent fill (white in light) */
-  --color-accent-subtle: #eef3fe;   /* accent-tinted backgrounds (rare) */
+  --color-accent-subtle: #f1ebfe;   /* accent-tinted backgrounds (rare) — light lavender */
   --color-positive: #15803d;        /* improved metrics */
   --color-negative: #b91c1c;        /* regressions / before-values */
   --color-warning: #b45309;         /* caution callouts */
@@ -87,10 +87,10 @@
   --color-ink-tertiary: #87878f;    /* lighter than light theme — AA 4.5:1 on dark bg */
   --color-border: #2b2b33;
   --color-border-strong: #3a3a45;
-  --color-accent: #7fa5f5;
-  --color-accent-hover: #9bb8f8;
-  --color-accent-subtle: #1b2438;
-  --color-on-accent: #111318;       /* dark ink on the light-blue dark accent */
+  --color-accent: #b39cf7;          /* light violet — AA on dark bg */
+  --color-accent-hover: #c8b8fa;
+  --color-accent-subtle: #251d47;   /* deep violet tint */
+  --color-on-accent: #17131f;       /* dark ink on the light-violet dark accent */
   --color-positive: #4ade80;
   --color-negative: #f87171;
   --color-warning: #fbbf24;

@@ -13,8 +13,11 @@ export const home = {
   // A single quiet fact line — the facts survive; the hollow stat cards don't.
   facts: ["4 live products", "shipping AI since 2022", "$0 free-tier stack"],
 
-  // The tech-stack ticker (a slow horizontal marquee) — real tools across the
-  // four projects, an engineering-honest take on Clerk's moving logo strip.
+  // The tech-stack rotator — real tools across the four live products, shown in
+  // Clerk's vertical slot-machine (each column cycles its own tools). The honest
+  // take on Clerk's "trusted by" logo wall: we have no customer logos, so we
+  // rotate the stack that actually ships the work.
+  stackLabel: "The stack behind four live products.",
   stack: [
     "FastAPI", "Next.js", "LangGraph", "pgvector", "PostgreSQL", "XGBoost",
     "TypeScript", "React", "Docker", "Redis", "TimescaleDB", "Gemini",

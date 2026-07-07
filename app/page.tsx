@@ -6,7 +6,7 @@ import { Metric } from "@/components/ui/metric";
 import { buttonVariants } from "@/components/ui/button";
 import { SystemDiagram } from "@/components/diagrams/system-diagram";
 import { HeroTerminal } from "@/components/features/hero-terminal";
-import { Ticker } from "@/components/features/ticker";
+import { SkillRotator } from "@/components/features/skill-rotator";
 import { diagrams } from "@/components/diagrams/data";
 import { SITE } from "@/config/site";
 import { home } from "@/content/site";
@@ -62,8 +62,8 @@ export default async function Home() {
         </div>
       </Section>
 
-      {/* A moving strip of the real stack — the engineering take on a logo bar */}
-      <Ticker />
+      {/* The real stack in Clerk's slot-machine — the engineering take on a logo wall */}
+      <SkillRotator />
 
       {/* Beat 2 — Interactive architecture: the flagship, on a dark band */}
       <Section space="lg" tone="invert" ariaLabel="Inside the flagship system" className="reveal">
