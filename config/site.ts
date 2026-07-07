@@ -16,3 +16,10 @@ export const SITE = {
 } as const;
 
 export type Site = typeof SITE;
+
+/** The slim top status bar (site chrome — evergreen, not an announcement). */
+export const STATUS = {
+  text: "Open to AI/ML roles — remote or Ahmedabad, India",
+  cta: "Get in touch",
+  href: `mailto:${SITE.email}`,
+} as const;

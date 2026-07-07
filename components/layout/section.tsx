@@ -2,11 +2,12 @@ import type { ReactNode } from "react";
 import { Container } from "./container";
 
 /**
- * Section — vertical rhythm primitive. Alternating `tone` drives the
- * "adjacent sections must differ" tempo rule (DESIGN §4).
- * Props: `space` (sm|md|lg section rhythm), `tone` (page|subtle background),
- * `bleed` (skip the inner Container), `id`, `aria-label`, `className`.
- * A11y: renders a <section>; pass `aria-label`/`aria-labelledby` when it needs a name.
+ * Section — vertical rhythm primitive. `tone` drives the light/dark section
+ * rhythm (DESIGN §4). `invert` is a full dark band (Clerk-style): it scopes the
+ * dark colour tokens locally so all child components adapt, adds a faint
+ * technical texture, and (with `notch`) an angular light↔dark transition edge.
+ * Props: `space` (sm|md|lg), `tone` (page|subtle|invert), `notch` (angular edge,
+ * defaults on for invert), `bleed`, `id`, `aria-label`, `className`.
  */
 const SPACE: Record<"sm" | "md" | "lg", string> = {
   sm: "py-[var(--space-section-sm)]",
@@ -14,9 +15,16 @@ const SPACE: Record<"sm" | "md" | "lg", string> = {
   lg: "py-[var(--space-section-lg)]",
 };
 
+const TONE: Record<"page" | "subtle" | "invert", string> = {
+  page: "bg-bg",
+  subtle: "bg-bg-subtle",
+  invert: "tone-invert",
+};
+
 export function Section({
   space = "md",
   tone = "page",
+  notch,
   bleed = false,
   id,
   ariaLabel,
@@ -24,20 +32,22 @@ export function Section({
   children,
 }: {
   space?: "sm" | "md" | "lg";
-  tone?: "page" | "subtle";
+  tone?: "page" | "subtle" | "invert";
+  notch?: boolean;
   bleed?: boolean;
   id?: string;
   ariaLabel?: string;
   className?: string;
   children: ReactNode;
 }) {
+  const notched = (notch ?? tone === "invert") ? "tone-notch" : "";
   return (
     <section
       id={id}
       aria-label={ariaLabel}
-      className={`${SPACE[space]} ${tone === "subtle" ? "bg-bg-subtle" : "bg-bg"} ${className}`}
+      className={`relative ${SPACE[space]} ${TONE[tone]} ${notched} ${className}`}
     >
-      {bleed ? children : <Container>{children}</Container>}
+      {bleed ? children : <Container className="relative">{children}</Container>}
     </section>
   );
 }

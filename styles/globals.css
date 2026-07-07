@@ -144,6 +144,53 @@ h4 {
   }
 }
 
+/* --- dark section band (Clerk-style light/dark section rhythm) --- */
+/* Scopes the dark colour tokens LOCALLY so every child component adapts, adds a
+   faint technical texture, and (with .tone-notch) an angular transition edge. */
+.tone-invert {
+  --color-bg: #0d0e12;
+  --color-bg-subtle: #15161c;
+  --color-surface: #191b22;
+  --color-ink: #f4f4f7;
+  --color-ink-secondary: #a7a9b5;
+  --color-ink-tertiary: #838594; /* light on dark — AA on the dark band */
+  --color-border: #292b34;
+  --color-border-strong: #3a3d48;
+  --color-accent: #8aa6f5;
+  --color-accent-hover: #a3bcf8;
+  --color-on-accent: #0d0e12;
+  --color-accent-subtle: #1a2340;
+  background-color: var(--color-bg);
+  color: var(--color-ink);
+}
+/* faint dot-grid texture, masked so it fades toward the edges */
+.tone-invert::before {
+  content: "";
+  position: absolute;
+  inset: 0;
+  z-index: 0;
+  pointer-events: none;
+  background-image: radial-gradient(circle at 1px 1px, rgba(255, 255, 255, 0.05) 1px, transparent 1.6px);
+  background-size: 30px 30px;
+  -webkit-mask-image: radial-gradient(125% 90% at 50% 28%, #000 32%, transparent 76%);
+  mask-image: radial-gradient(125% 90% at 50% 28%, #000 32%, transparent 76%);
+}
+/* angular light↔dark transition: a shallow centre notch top + bottom */
+.tone-notch {
+  clip-path: polygon(
+    0 0, 38% 0, 42% 32px, 58% 32px, 62% 0, 100% 0,
+    100% 100%, 62% 100%, 58% calc(100% - 32px), 42% calc(100% - 32px), 38% 100%, 0 100%
+  );
+}
+@media (max-width: 640px) {
+  .tone-notch {
+    clip-path: polygon(
+      0 0, 32% 0, 39% 22px, 61% 22px, 68% 0, 100% 0,
+      100% 100%, 68% 100%, 61% calc(100% - 22px), 39% calc(100% - 22px), 32% 100%, 0 100%
+    );
+  }
+}
+
 /* Shiki code highlighting — transparent bg (use our surface), our mono face,
    dark palette activated under an explicit or OS dark preference. */
 .shiki {

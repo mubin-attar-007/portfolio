@@ -61,8 +61,8 @@ export default async function Home() {
         </div>
       </Section>
 
-      {/* Beat 2 — Interactive architecture: the flagship, explorable */}
-      <Section space="lg" tone="subtle" ariaLabel="Inside the flagship system" className="reveal">
+      {/* Beat 2 — Interactive architecture: the flagship, on a dark band */}
+      <Section space="lg" tone="invert" ariaLabel="Inside the flagship system" className="reveal">
         <SectionHeading kicker={home.architecture.kicker}>
           {home.architecture.title}
         </SectionHeading>
