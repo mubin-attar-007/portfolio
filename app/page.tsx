@@ -6,6 +6,7 @@ import { Metric } from "@/components/ui/metric";
 import { buttonVariants } from "@/components/ui/button";
 import { SystemDiagram } from "@/components/diagrams/system-diagram";
 import { HeroTerminal } from "@/components/features/hero-terminal";
+import { Ticker } from "@/components/features/ticker";
 import { diagrams } from "@/components/diagrams/data";
 import { SITE } from "@/config/site";
 import { home } from "@/content/site";
@@ -60,6 +61,9 @@ export default async function Home() {
           </div>
         </div>
       </Section>
+
+      {/* A moving strip of the real stack — the engineering take on a logo bar */}
+      <Ticker />
 
       {/* Beat 2 — Interactive architecture: the flagship, on a dark band */}
       <Section space="lg" tone="invert" ariaLabel="Inside the flagship system" className="reveal">
@@ -122,8 +126,8 @@ export default async function Home() {
         </div>
       </Section>
 
-      {/* Beat 4 — Other systems: compact survey, a scale-step down */}
-      <Section space="md" tone="subtle" className="reveal">
+      {/* Beat 4 — Other systems: compact survey on a dark band */}
+      <Section space="md" tone="invert" className="reveal">
         <SectionHeading kicker="More work">Other systems</SectionHeading>
         <ul className="mt-8 divide-y divide-border border-y border-border">
           {secondaryProjects.map((p) => (
@@ -229,8 +233,8 @@ export default async function Home() {
         </div>
       </Section>
 
-      {/* Beat 8 — Contact: a serif philosophy line, then a quiet resolution */}
-      <Section space="lg" className="reveal">
+      {/* Beat 8 — Contact: a serif philosophy line, then a quiet resolution (dark close) */}
+      <Section space="lg" tone="invert" className="reveal">
         <p className="max-w-[24ch] font-serif text-2xl italic leading-snug text-ink sm:text-3xl">
           {home.philosophy}
         </p>

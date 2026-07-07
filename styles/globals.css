@@ -191,6 +191,28 @@ h4 {
   }
 }
 
+/* --- horizontal tech-stack ticker (marquee) --- */
+.ticker-track {
+  animation: ticker-scroll 42s linear infinite;
+}
+@keyframes ticker-scroll {
+  from {
+    transform: translateX(0);
+  }
+  to {
+    transform: translateX(-50%);
+  }
+}
+.ticker-mask {
+  -webkit-mask-image: linear-gradient(90deg, transparent, #000 7%, #000 93%, transparent);
+  mask-image: linear-gradient(90deg, transparent, #000 7%, #000 93%, transparent);
+}
+@media (prefers-reduced-motion: reduce) {
+  .ticker-track {
+    animation: none;
+  }
+}
+
 /* Shiki code highlighting — transparent bg (use our surface), our mono face,
    dark palette activated under an explicit or OS dark preference. */
 .shiki {

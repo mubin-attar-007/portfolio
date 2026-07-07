@@ -13,6 +13,14 @@ export const home = {
   // A single quiet fact line — the facts survive; the hollow stat cards don't.
   facts: ["4 live products", "shipping AI since 2022", "$0 free-tier stack"],
 
+  // The tech-stack ticker (a slow horizontal marquee) — real tools across the
+  // four projects, an engineering-honest take on Clerk's moving logo strip.
+  stack: [
+    "FastAPI", "Next.js", "LangGraph", "pgvector", "PostgreSQL", "XGBoost",
+    "TypeScript", "React", "Docker", "Redis", "TimescaleDB", "Gemini",
+    "SQLAlchemy", "Django", "Tailwind", "Playwright",
+  ],
+
   // A representative DBWhisper request for the hero — illustrative, not a
   // benchmark. Shows the real behaviour: retrieve → validate → read-only SQL.
   heroDemo: {
