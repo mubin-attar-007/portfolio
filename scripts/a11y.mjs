@@ -24,6 +24,7 @@ const ROUTES = [
   "/writing/trust-is-not-a-safety-model",
   "/about",
   "/timeline",
+  "/uses",
   "/resume",
   "/dev/components",
 ];

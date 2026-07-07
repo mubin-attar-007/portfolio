@@ -19,6 +19,7 @@ const NAV: FLink[] = [
   { label: "Writing", href: "/writing" },
   { label: "About", href: "/about" },
   { label: "Timeline", href: "/timeline" },
+  { label: "Uses", href: "/uses" },
   { label: "Résumé", href: "/resume" },
 ];
 

@@ -14,6 +14,7 @@ export default function sitemap(): MetadataRoute.Sitemap {
     { path: "/writing", priority: 0.7 },
     { path: "/about", priority: 0.6 },
     { path: "/timeline", priority: 0.6 },
+    { path: "/uses", priority: 0.5 },
     { path: "/resume", priority: 0.6 },
   ];
 

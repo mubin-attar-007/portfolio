@@ -205,3 +205,39 @@ export const about = {
     "The one rule across all of it: every number a user sees is genuinely computed — never faked.",
   ],
 } as const;
+
+/**
+ * /uses — the real stack behind the four live products. Deliberately boring and
+ * cheap; every tool here actually ships in one of the projects (no aspirational
+ * padding). Grouped for scanability.
+ */
+export const uses = {
+  intro:
+    "The tools behind four live products — chosen to be boring, cheap, and reliable. A $0 free-tier stack, on purpose: the constraint rules out waste.",
+  groups: [
+    {
+      title: "Languages & frameworks",
+      items: ["Python", "TypeScript", "FastAPI", "Next.js", "React", "Django", "Tailwind CSS"],
+    },
+    {
+      title: "AI / ML",
+      items: [
+        "LangGraph",
+        "Gemini",
+        "Multi-provider LLM fallback",
+        "pgvector",
+        "BM25 retrieval",
+        "XGBoost",
+        "scikit-learn",
+      ],
+    },
+    {
+      title: "Data & infrastructure",
+      items: ["PostgreSQL", "Neon", "Redis", "TimescaleDB", "SQLAlchemy", "Docker"],
+    },
+    {
+      title: "Deploy & tooling",
+      items: ["Vercel", "Hugging Face Spaces", "GitHub Actions", "Playwright", "pytest", "ruff", "Shiki"],
+    },
+  ],
+} as const;
