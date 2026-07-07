@@ -62,8 +62,8 @@ export function AssistantPanel({
       if (e.key === "Tab" && panelRef.current) {
         const items = tabbables(panelRef.current);
         if (items.length === 0) return;
-        const first = items[0];
-        const last = items[items.length - 1];
+        const first = items[0]!;
+        const last = items[items.length - 1]!;
         if (e.shiftKey && document.activeElement === first) {
           e.preventDefault();
           last.focus();
@@ -99,7 +99,7 @@ export function AssistantPanel({
       const update = (patch: Partial<Msg>) =>
         setMessages((prev) => {
           const next = [...prev];
-          const last = next[next.length - 1];
+          const last = next[next.length - 1]!; // an assistant message was just appended
           next[next.length - 1] = { ...last, ...patch };
           return next;
         });

@@ -51,7 +51,7 @@ export function sanitizeMessages(input: unknown): SanitizeResult {
   const bounded = cleaned.slice(-MAX_HISTORY_TURNS);
 
   // The latest message must be from the user.
-  const last = bounded[bounded.length - 1];
+  const last = bounded[bounded.length - 1]!; // cleaned is non-empty (checked above)
   if (last.role !== "user") return { ok: false, reason: "malformed" };
 
   // Reject a genuinely over-long latest user message. Measure the NORMALIZED

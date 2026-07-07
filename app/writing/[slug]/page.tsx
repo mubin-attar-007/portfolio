@@ -5,6 +5,7 @@ import { Container } from "@/components/layout/container";
 import { writingSlugs, loadWriting } from "@/lib/writing";
 import { formatDate } from "@/lib/format";
 import { SITE } from "@/config/site";
+import { ArticleJsonLd } from "@/components/seo/json-ld";
 
 export const dynamicParams = false;
 
@@ -34,9 +35,17 @@ export default async function WritingPost({ params }: { params: Promise<{ slug: 
   const w = await loadWriting(slug);
   if (!w) notFound();
   const { meta, content } = w;
+  const url = `${SITE.url}/writing/${slug}`;
 
   return (
     <Container className="py-16">
+      <ArticleJsonLd
+        title={meta.title}
+        description={meta.summary}
+        url={url}
+        datePublished={meta.date}
+        dateModified={meta.updated}
+      />
       <Link href="/writing" className="font-mono text-xs text-ink-tertiary hover:text-ink">
         ← Writing
       </Link>

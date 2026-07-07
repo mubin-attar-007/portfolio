@@ -6,7 +6,7 @@ import type { ReactNode } from "react";
  */
 export function PullQuote({ children, cite }: { children: ReactNode; cite?: string }) {
   return (
-    <blockquote className="my-8 border-l-[3px] border-border-strong pl-6">
+    <blockquote className="my-8 border-l-[length:var(--stripe-width)] border-border-strong pl-6">
       <p className="font-serif text-2xl italic text-ink">{children}</p>
       {cite ? (
         <cite className="mt-2 block font-sans text-sm not-italic text-ink-tertiary">— {cite}</cite>

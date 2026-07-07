@@ -41,7 +41,7 @@ export function SystemDiagram({ spec, caption }: { spec: DiagramSpec; caption?: 
   const refs = useRef<(SVGGElement | null)[]>([]);
 
   const topLeft = (id: string) => {
-    const n = byId[id];
+    const n = byId[id]!; // ids always come from spec.nodes
     return { x: PAD + n.col * (NODE_W + GAP_X), y: PAD + n.row * (NODE_H + GAP_Y) };
   };
   const center = (id: string) => {
@@ -59,7 +59,8 @@ export function SystemDiagram({ spec, caption }: { spec: DiagramSpec; caption?: 
       refs.current[(i - 1 + n) % n]?.focus();
     } else if (e.key === "Enter" || e.key === " ") {
       e.preventDefault();
-      setPinned((p) => (p === spec.nodes[i].id ? null : spec.nodes[i].id));
+      const id = spec.nodes[i]!.id; // i is a valid node index
+      setPinned((p) => (p === id ? null : id));
     } else if (e.key === "Escape") {
       setPinned(null);
     }
@@ -100,7 +101,9 @@ export function SystemDiagram({ spec, caption }: { spec: DiagramSpec; caption?: 
                 fill="none"
                 stroke={lit ? "var(--color-accent)" : "var(--color-border-strong)"}
                 strokeWidth={lit ? 1.6 : 1.2}
-                strokeDasharray={edge.dashed ? "4 4" : undefined}
+                // active edges show a flowing "current"; others keep their style
+                strokeDasharray={lit ? "6 4" : edge.dashed ? "4 4" : undefined}
+                className={lit ? "sd-flow" : undefined}
                 markerEnd={`url(#sd-arrow${lit ? "-lit" : ""})`}
                 opacity={active && !lit ? 0.4 : 1}
               />

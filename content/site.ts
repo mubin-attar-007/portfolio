@@ -13,6 +13,24 @@ export const home = {
   // A single quiet fact line — the facts survive; the hollow stat cards don't.
   facts: ["4 live products", "shipping AI since 2022", "$0 free-tier stack"],
 
+  // A representative DBWhisper request for the hero — illustrative, not a
+  // benchmark. Shows the real behaviour: retrieve → validate → read-only SQL.
+  heroDemo: {
+    app: "dbwhisper",
+    badge: "read-only",
+    prompt: "revenue by month, last year",
+    steps: ["retrieving schema — 4 tables", "validating — SELECT-only ✓"],
+    sql: [
+      "SELECT date_trunc('month', o.created_at) AS month,",
+      "       sum(o.amount) AS revenue",
+      "FROM orders o",
+      "WHERE o.created_at >= now() - interval '1 year'",
+      "GROUP BY 1 ORDER BY 1;",
+    ],
+    result: "12 rows · never wrote to your data",
+    note: "A representative request — the validator gates every query.",
+  },
+
   // The interactive architecture centerpiece framing (the flagship is pulled
   // from content/projects.ts; this is just the section's voice).
   architecture: {
@@ -65,6 +83,21 @@ export const home = {
       body: "A $0 stack rules out waste: retrieval-scoped prompts, bounded agent loops, lean containers. The limits shaped the design from the start.",
     },
   ],
+
+  // DRAFT — grounded in real work + stated intentions (see each project's
+  // "What I'd do differently"). Owner to confirm/refine the exact list.
+  exploring: {
+    kicker: "Currently exploring",
+    items: [
+      "Golden-query evals for text-to-SQL — execution accuracy, not vibes",
+      "Model Context Protocol (MCP) for typed tool-use across agents",
+      "Long-context vs. retrieval — when a bigger window still loses to a small, scoped prompt",
+      "Agent memory beyond flat conversation summaries",
+    ],
+  },
+
+  // DRAFT — the thesis of the "Trust is not a safety model" essay, in one line.
+  philosophy: "The interesting engineering isn’t the model in the middle — it’s the deterministic boundary you build around it.",
 } as const;
 
 export const about = {

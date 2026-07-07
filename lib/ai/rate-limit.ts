@@ -101,7 +101,7 @@ export function checkRateLimit(key: string, now: number = Date.now()): RateResul
   const recent = bucket.filter((t) => now - t < WINDOW_MS);
 
   if (recent.length >= MAX_REQUESTS) {
-    const oldest = recent[0];
+    const oldest = recent[0]!; // length >= MAX_REQUESTS >= 1
     const retryAfterSec = Math.max(1, Math.ceil((WINDOW_MS - (now - oldest)) / 1000));
     buckets.set(key, recent);
     return { allowed: false, retryAfterSec, remaining: 0 };

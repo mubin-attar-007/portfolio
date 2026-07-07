@@ -23,7 +23,7 @@ export function Callout({
   return (
     <div
       role="note"
-      className={`rounded-[var(--radius-sm)] border-l-[3px] bg-bg-subtle px-4 py-3 text-ink-secondary ${BORDER[variant]}`}
+      className={`rounded-[var(--radius-sm)] border-l-[length:var(--stripe-width)] bg-bg-subtle px-4 py-3 text-ink-secondary ${BORDER[variant]}`}
     >
       {children}
     </div>

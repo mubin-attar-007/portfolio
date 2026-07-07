@@ -86,7 +86,7 @@ export const projects: Project[] = RAW.map((p) => ProjectSchema.parse(p)).sort(
   (a, b) => a.order - b.order,
 );
 
-export const featuredProject: Project = projects.find((p) => p.featured) ?? projects[0];
+export const featuredProject: Project = projects.find((p) => p.featured) ?? projects[0]!;
 export const secondaryProjects: Project[] = projects.filter((p) => p.slug !== featuredProject.slug);
 export const projectBySlug = (slug: string): Project | undefined =>
   projects.find((p) => p.slug === slug);

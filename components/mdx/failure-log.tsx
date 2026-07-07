@@ -14,7 +14,7 @@ export type FailureEntry = {
 
 export function FailureLog({ entries }: { entries: FailureEntry[] }) {
   return (
-    <div className="my-6 flex flex-col gap-5 border-l-[3px] border-border-strong pl-5">
+    <div className="my-6 flex flex-col gap-5 border-l-[length:var(--stripe-width)] border-border-strong pl-5">
       {entries.map((e, i) => {
         const tone =
           i === 0 ? "text-negative" : i === entries.length - 1 ? "text-positive" : "text-ink";

@@ -1,5 +1,48 @@
 import { SITE } from "@/config/site";
 
+/** Serialize a JSON-LD graph into an inert <script>. */
+function LdScript({ data }: { data: unknown }) {
+  return (
+    <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: JSON.stringify(data) }} />
+  );
+}
+
+/**
+ * ArticleJsonLd — BlogPosting structured data for a writing post, authored by
+ * the site's Person node. Rendered on each /writing/[slug] page.
+ */
+export function ArticleJsonLd({
+  title,
+  description,
+  url,
+  datePublished,
+  dateModified,
+}: {
+  title: string;
+  description: string;
+  url: string;
+  datePublished: string;
+  dateModified?: string;
+}) {
+  return (
+    <LdScript
+      data={{
+        "@context": "https://schema.org",
+        "@type": "BlogPosting",
+        headline: title,
+        description,
+        url,
+        mainEntityOfPage: url,
+        datePublished,
+        dateModified: dateModified ?? datePublished,
+        author: { "@type": "Person", name: SITE.name, url: SITE.url },
+        publisher: { "@id": `${SITE.url}/#person` },
+        inLanguage: "en",
+      }}
+    />
+  );
+}
+
 /**
  * Structured data (schema.org) — a Person + WebSite graph so search engines and
  * assistants can resolve who this site is about. Grounded in real facts only

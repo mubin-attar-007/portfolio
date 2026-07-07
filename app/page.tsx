@@ -5,6 +5,7 @@ import { SectionHeading } from "@/components/ui/section-heading";
 import { Metric } from "@/components/ui/metric";
 import { buttonVariants } from "@/components/ui/button";
 import { SystemDiagram } from "@/components/diagrams/system-diagram";
+import { HeroTerminal } from "@/components/features/hero-terminal";
 import { diagrams } from "@/components/diagrams/data";
 import { SITE } from "@/config/site";
 import { home } from "@/content/site";
@@ -14,10 +15,11 @@ import { formatDate } from "@/lib/format";
 
 /**
  * Home — reimagined for rhythm (DESIGN §4). Each section does a distinct job and
- * differs in scale/density/background: hero (inspire) → interactive architecture
- * (prove/explore) → field notes (teach) → other systems (survey) → writing →
- * contact (resolve). One accent budget ≤2 per viewport; hierarchy via size and
- * space, never decoration.
+ * differs in scale/density/background: hero (inspire, with a focal terminal) →
+ * interactive architecture (prove/explore) → field notes (teach) → other systems
+ * (survey) → principles → currently exploring → writing → contact (resolve, on a
+ * serif philosophy line). Accent ≤2 per viewport; hierarchy via size + space.
+ * Sections below the hero carry `reveal` (scroll-driven fade-up, reduced-motion-safe).
  */
 export default async function Home() {
   const flagship = featuredProject;
@@ -27,36 +29,40 @@ export default async function Home() {
 
   return (
     <>
-      {/* Beat 1 — Hero: big, confident, airy */}
+      {/* Beat 1 — Hero: text + a representative terminal as the focal point */}
       <Section space="lg">
-        <p className="font-mono text-xs uppercase tracking-[0.04em] text-ink-tertiary">
-          {home.metaLine}
-        </p>
-        <h1 className="mt-8 max-w-[19ch] text-4xl leading-[1.04] tracking-[-0.02em] text-ink sm:text-6xl lg:text-7xl">
-          {headLead}
-          {headTail ? <span className="text-ink-tertiary"> — {headTail}</span> : null}
-        </h1>
-        <p className="mt-8 max-w-[56ch] text-lg text-ink-secondary sm:text-xl">{home.lede}</p>
-        <div className="mt-8 flex flex-wrap items-center gap-5">
-          <Link href={`/work/${flagship.slug}`} className={buttonVariants("primary")}>
-            Read the flagship case study
-          </Link>
-          <Link
-            href="#field-notes"
-            className="text-sm text-ink underline decoration-border-strong underline-offset-4 transition-colors hover:decoration-accent"
-          >
-            How I make decisions
-          </Link>
+        <div className="grid items-center gap-12 lg:grid-cols-[1.1fr_0.9fr] lg:gap-16">
+          <div>
+            <p className="font-mono text-xs uppercase tracking-[0.04em] text-ink-tertiary">
+              {home.metaLine}
+            </p>
+            <h1 className="mt-8 max-w-[19ch] text-4xl leading-[1.05] tracking-[-0.02em] text-ink sm:text-5xl lg:text-6xl">
+              {headLead}
+              {headTail ? <span className="text-ink-tertiary"> — {headTail}</span> : null}
+            </h1>
+            <p className="mt-8 max-w-[52ch] text-lg text-ink-secondary">{home.lede}</p>
+            <div className="mt-8 flex flex-wrap items-center gap-3">
+              <Link href={`/work/${flagship.slug}`} className={buttonVariants("primary")}>
+                Read the flagship case study
+              </Link>
+              <Link href="#field-notes" className={buttonVariants("ghost")}>
+                How I make decisions
+              </Link>
+            </div>
+            <p className="mt-10 font-mono text-xs text-ink-tertiary">
+              {home.facts.join("  ·  ")}
+              {"  ·  "}
+              {home.availability}
+            </p>
+          </div>
+          <div className="lg:pt-2">
+            <HeroTerminal />
+          </div>
         </div>
-        <p className="mt-10 font-mono text-xs text-ink-tertiary">
-          {home.facts.join("  ·  ")}
-          {"  ·  "}
-          {home.availability}
-        </p>
       </Section>
 
       {/* Beat 2 — Interactive architecture: the flagship, explorable */}
-      <Section space="lg" tone="subtle" ariaLabel="Inside the flagship system">
+      <Section space="lg" tone="subtle" ariaLabel="Inside the flagship system" className="reveal">
         <SectionHeading kicker={home.architecture.kicker}>
           {home.architecture.title}
         </SectionHeading>
@@ -74,24 +80,26 @@ export default async function Home() {
         <div className="mt-10">
           <Link
             href={`/work/${flagship.slug}`}
-            className="inline-flex items-center gap-1.5 text-sm font-medium text-accent hover:text-accent-hover"
+            className="group inline-flex items-center gap-1.5 text-sm font-medium text-accent hover:text-accent-hover"
           >
-            Read the full DBWhisper case study <ArrowRight size={15} strokeWidth={1.5} />
+            Read the full DBWhisper case study{" "}
+            <ArrowRight
+              size={15}
+              strokeWidth={1.5}
+              className="transition-transform group-hover:translate-x-0.5"
+            />
           </Link>
         </div>
       </Section>
 
       {/* Beat 3 — Field notes: how I think, in three real entries */}
-      <Section space="lg" ariaLabel="Field notes">
+      <Section space="lg" ariaLabel="Field notes" className="reveal">
         <div id="field-notes" className="scroll-mt-24">
           <SectionHeading kicker="From the notebook">Three decisions that shaped the work</SectionHeading>
         </div>
         <div className="mt-12 flex flex-col gap-14">
           {home.fieldNotes.map((note) => (
-            <article
-              key={note.n}
-              className="grid gap-x-10 gap-y-3 md:grid-cols-[7rem_1fr]"
-            >
+            <article key={note.n} className="grid gap-x-10 gap-y-3 md:grid-cols-[7rem_1fr]">
               <div className="flex items-baseline gap-3 md:flex-col md:items-start md:gap-1">
                 <span className="font-mono text-3xl tabular-nums text-ink-tertiary">{note.n}</span>
                 <span className="font-mono text-xs text-ink-tertiary">{note.kicker}</span>
@@ -104,10 +112,7 @@ export default async function Home() {
                     <span className="tabular-nums text-ink">{note.tag.value}</span>{" "}
                     <span className="text-ink-tertiary">{note.tag.label}</span>
                   </span>
-                  <Link
-                    href={note.href}
-                    className="text-sm text-ink underline decoration-border-strong underline-offset-4 transition-colors hover:decoration-accent"
-                  >
+                  <Link href={note.href} className="link-underline text-sm text-ink">
                     Read the case
                   </Link>
                 </div>
@@ -118,7 +123,7 @@ export default async function Home() {
       </Section>
 
       {/* Beat 4 — Other systems: compact survey, a scale-step down */}
-      <Section space="md" tone="subtle">
+      <Section space="md" tone="subtle" className="reveal">
         <SectionHeading kicker="More work">Other systems</SectionHeading>
         <ul className="mt-8 divide-y divide-border border-y border-border">
           {secondaryProjects.map((p) => (
@@ -149,15 +154,20 @@ export default async function Home() {
         <div className="mt-8">
           <Link
             href="/work"
-            className="inline-flex items-center gap-1.5 text-sm font-medium text-accent hover:text-accent-hover"
+            className="group inline-flex items-center gap-1.5 text-sm font-medium text-accent hover:text-accent-hover"
           >
-            All work <ArrowRight size={15} strokeWidth={1.5} />
+            All work{" "}
+            <ArrowRight
+              size={15}
+              strokeWidth={1.5}
+              className="transition-transform group-hover:translate-x-0.5"
+            />
           </Link>
         </div>
       </Section>
 
       {/* Beat 5 — Principles: prose-forward, a distinct voice */}
-      <Section space="md" ariaLabel="Principles">
+      <Section space="md" ariaLabel="Principles" className="reveal">
         <SectionHeading kicker="How I work">Principles</SectionHeading>
         <div className="mt-10 grid gap-10 md:grid-cols-3 md:gap-12">
           {home.principles.map((pr) => (
@@ -169,8 +179,23 @@ export default async function Home() {
         </div>
       </Section>
 
-      {/* Beat 6 — Writing: compressed */}
-      <Section space="md" tone="subtle">
+      {/* Beat 6 — Currently exploring: an active-learning signal */}
+      <Section space="sm" tone="subtle" ariaLabel="Currently exploring" className="reveal">
+        <SectionHeading kicker={home.exploring.kicker}>What I&apos;m digging into now</SectionHeading>
+        <ul className="mt-8 grid gap-x-12 gap-y-3 sm:grid-cols-2">
+          {home.exploring.items.map((item) => (
+            <li key={item} className="flex gap-3 text-ink-secondary">
+              <span className="font-mono text-ink-tertiary" aria-hidden>
+                →
+              </span>
+              {item}
+            </li>
+          ))}
+        </ul>
+      </Section>
+
+      {/* Beat 7 — Writing: compressed */}
+      <Section space="md" className="reveal">
         <SectionHeading kicker="Writing">Selected writing</SectionHeading>
         <ul className="mt-8 divide-y divide-border border-y border-border">
           {posts.map((p) => (
@@ -192,42 +217,49 @@ export default async function Home() {
         <div className="mt-8">
           <Link
             href="/writing"
-            className="inline-flex items-center gap-1.5 text-sm font-medium text-accent hover:text-accent-hover"
+            className="group inline-flex items-center gap-1.5 text-sm font-medium text-accent hover:text-accent-hover"
           >
-            All writing <ArrowRight size={15} strokeWidth={1.5} />
+            All writing{" "}
+            <ArrowRight
+              size={15}
+              strokeWidth={1.5}
+              className="transition-transform group-hover:translate-x-0.5"
+            />
           </Link>
         </div>
       </Section>
 
-      {/* Beat 7 — Contact: a quiet resolution, not a second hero */}
-      <Section space="lg">
-        <p className="font-mono text-xs uppercase tracking-[0.04em] text-ink-tertiary">Contact</p>
-        <h2 className="mt-4 max-w-[24ch] text-2xl text-ink sm:text-3xl">
-          Building something that needs grounded, honest AI?
-        </h2>
-        <div className="mt-6 flex flex-wrap items-center gap-x-8 gap-y-3">
-          <a
-            href={`mailto:${SITE.email}`}
-            className="text-lg text-ink underline decoration-border-strong underline-offset-4 transition-colors hover:decoration-accent"
-          >
-            {SITE.email}
-          </a>
-          <a
-            href={SITE.socials.github}
-            target="_blank"
-            rel="noopener noreferrer"
-            className="font-mono text-sm text-ink-tertiary underline decoration-border underline-offset-4 hover:text-ink"
-          >
-            GitHub
-          </a>
-          <a
-            href={SITE.socials.linkedin}
-            target="_blank"
-            rel="noopener noreferrer"
-            className="font-mono text-sm text-ink-tertiary underline decoration-border underline-offset-4 hover:text-ink"
-          >
-            LinkedIn
-          </a>
+      {/* Beat 8 — Contact: a serif philosophy line, then a quiet resolution */}
+      <Section space="lg" className="reveal">
+        <p className="max-w-[24ch] font-serif text-2xl italic leading-snug text-ink sm:text-3xl">
+          {home.philosophy}
+        </p>
+        <div className="mt-14">
+          <p className="font-mono text-xs uppercase tracking-[0.04em] text-ink-tertiary">Contact</p>
+          <h2 className="mt-4 max-w-[24ch] text-2xl text-ink">
+            Building something that needs grounded, honest AI?
+          </h2>
+          <div className="mt-6 flex flex-wrap items-center gap-x-8 gap-y-3">
+            <a href={`mailto:${SITE.email}`} className="link-underline text-lg text-ink">
+              {SITE.email}
+            </a>
+            <a
+              href={SITE.socials.github}
+              target="_blank"
+              rel="noopener noreferrer"
+              className="link-underline font-mono text-sm text-ink-tertiary"
+            >
+              GitHub
+            </a>
+            <a
+              href={SITE.socials.linkedin}
+              target="_blank"
+              rel="noopener noreferrer"
+              className="link-underline font-mono text-sm text-ink-tertiary"
+            >
+              LinkedIn
+            </a>
+          </div>
         </div>
       </Section>
     </>

@@ -94,6 +94,56 @@ h4 {
   }
 }
 
+/* --- interaction polish (all opacity/transform/color; reduced-motion-safe) --- */
+
+/* Animated underline: grows left→right on hover, no layout shift. */
+.link-underline {
+  background-image: linear-gradient(currentColor, currentColor);
+  background-position: 0 100%;
+  background-repeat: no-repeat;
+  background-size: 0% 1px;
+  padding-bottom: 1px;
+  transition: background-size var(--motion-base) var(--ease-out);
+}
+.link-underline:hover,
+.link-underline:focus-visible {
+  background-size: 100% 1px;
+}
+
+/* Section reveal: fade + 4px rise, driven by scroll position (no JS). Only in
+   browsers that support scroll-driven timelines; everyone else sees it static.
+   Elements already in view on load render at the end state. */
+@media (prefers-reduced-motion: no-preference) {
+  @supports (animation-timeline: view()) {
+    .reveal {
+      animation: reveal-up linear both;
+      animation-timeline: view();
+      animation-range: entry 0% cover 18%;
+    }
+    @keyframes reveal-up {
+      from {
+        opacity: 0;
+        transform: translateY(10px);
+      }
+      to {
+        opacity: 1;
+        transform: none;
+      }
+    }
+  }
+
+  /* Diagram edge-flow: a dashed "current" flows toward the target — ONLY on the
+     active (hovered/pinned) node's edges, so it's interactive, not ambient. */
+  .sd-flow {
+    animation: sd-dash 0.9s linear infinite;
+  }
+  @keyframes sd-dash {
+    to {
+      stroke-dashoffset: -10;
+    }
+  }
+}
+
 /* Shiki code highlighting — transparent bg (use our surface), our mono face,
    dark palette activated under an explicit or OS dark preference. */
 .shiki {

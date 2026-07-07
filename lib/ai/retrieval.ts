@@ -87,10 +87,10 @@ function chunkMdxByH2(source: string): { heading: string; body: string }[] {
   const matches: { heading: string; start: number; end: number }[] = [];
   let m: RegExpExecArray | null;
   while ((m = re.exec(withoutFm)) !== null) {
-    matches.push({ heading: m[1].trim(), start: m.index, end: re.lastIndex });
+    matches.push({ heading: m[1]!.trim(), start: m.index, end: re.lastIndex });
   }
   for (let i = 0; i < matches.length; i++) {
-    const cur = matches[i];
+    const cur = matches[i]!;
     const next = matches[i + 1];
     const bodyStart = cur.end;
     const bodyEnd = next ? next.start : withoutFm.length;
@@ -290,7 +290,7 @@ export function retrieve(query: string, opts: RetrieveOptions = {}): RetrievedPa
 
   // Score every passage.
   const scored: RetrievedPassage[] = INDEX.passages.map((p, i) => {
-    const toks = INDEX.tokens[i];
+    const toks = INDEX.tokens[i]!; // parallel array, same length as passages
     if (toks.length === 0) return { ...p, score: 0 };
 
     // term frequency map for this passage
@@ -298,7 +298,7 @@ export function retrieve(query: string, opts: RetrieveOptions = {}): RetrievedPa
     for (const t of toks) tf.set(t, (tf.get(t) ?? 0) + 1);
 
     let score = 0;
-    const dl = INDEX.docLen[i];
+    const dl = INDEX.docLen[i]!; // parallel array
     const norm = K1 * (1 - B + B * (dl / (INDEX.avgDocLen || 1)));
     // Only score each distinct query term once per document.
     for (const term of new Set(qTerms)) {

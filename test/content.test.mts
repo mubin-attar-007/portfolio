@@ -9,7 +9,8 @@ import assert from "node:assert/strict";
 
 import { projects, featuredProject } from "../content/projects.ts";
 
-const isHttps = (url: string): boolean => {
+const isHttps = (url: string | undefined): boolean => {
+  if (!url) return false;
   try {
     return new URL(url).protocol === "https:";
   } catch {
@@ -60,5 +61,5 @@ test("project slugs are unique", () => {
 test("exactly one project is featured (the flagship)", () => {
   const featured = projects.filter((p) => p.featured);
   assert.equal(featured.length, 1, "there must be exactly one featured project");
-  assert.equal(featuredProject.slug, featured[0].slug, "featuredProject must be the featured one");
+  assert.equal(featuredProject.slug, featured[0]!.slug, "featuredProject must be the featured one");
 });

@@ -75,7 +75,7 @@ test("every test question retrieves the expected source + required terms", () =>
 
     // Expected source should appear in the TOP passage's source (strongest
     // signal). We check the top hit specifically.
-    const top = hits[0];
+    const top = hits[0]!; // hits.length === 0 handled above
     if (!top.source.includes(q.expectedSource)) {
       failures.push(
         `"${q.question}" → top source "${top.source}" does not include "${q.expectedSource}"`,
@@ -103,7 +103,7 @@ test("off-topic queries retrieve nothing (relevance floor holds)", () => {
     const hits = retrieve(q, { k: 4 });
     if (hits.length > 0) {
       leaks.push(
-        `"${q}" → leaked ${hits.length} passage(s), top "${hits[0].source}" @ ${hits[0].score.toFixed(2)}`,
+        `"${q}" → leaked ${hits.length} passage(s), top "${hits[0]!.source}" @ ${hits[0]!.score.toFixed(2)}`,
       );
     }
   }

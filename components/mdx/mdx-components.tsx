@@ -60,7 +60,7 @@ export const mdxComponents = {
   em: (p: ComponentPropsWithoutRef<"em">) => <em {...p} />,
   hr: () => <hr className="my-10 border-border" />,
   blockquote: (p: ComponentPropsWithoutRef<"blockquote">) => (
-    <blockquote className="my-6 border-l-[3px] border-border-strong pl-5 text-ink-secondary italic" {...p} />
+    <blockquote className="my-6 border-l-[length:var(--stripe-width)] border-border-strong pl-5 text-ink-secondary italic" {...p} />
   ),
   code: (p: ComponentPropsWithoutRef<"code">) => (
     <code className="rounded-[var(--radius-sm)] bg-bg-subtle px-1.5 py-0.5 font-mono text-[0.85em] text-ink" {...p} />
