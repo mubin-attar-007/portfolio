@@ -195,6 +195,77 @@ h4 {
   }
 }
 
+/* --- capability card illustrations: bespoke SVG scenes that play on hover ---
+   (Clerk-caliber — staggered, spring-accented; motion is transform/opacity/colour
+   only and collapses under prefers-reduced-motion). */
+.illo {
+  color: var(--color-ink-tertiary);
+}
+.illo * {
+  transition:
+    transform 460ms var(--ease-out),
+    opacity 460ms var(--ease-out),
+    fill 300ms var(--ease-out),
+    stroke 300ms var(--ease-out),
+    color 300ms var(--ease-out);
+}
+
+/* validator: token slides into the gate → scan line → ✓ springs in */
+.illo-validator .v-token {
+  transition-duration: 420ms;
+}
+.cap-card:hover .illo-validator .v-token {
+  transform: translateX(52px);
+}
+.cap-card:hover .illo-validator .v-gate {
+  stroke: var(--color-accent);
+}
+.illo-validator .v-scan {
+  transform-box: fill-box;
+  transform-origin: center;
+  transform: scaleY(0);
+  opacity: 0;
+}
+.cap-card:hover .illo-validator .v-scan {
+  transform: scaleY(1);
+  opacity: 1;
+  transition-delay: 220ms;
+}
+.illo-validator .v-check {
+  transform-box: fill-box;
+  transform-origin: center;
+  opacity: 0;
+  transform: scale(0.35);
+}
+.cap-card:hover .illo-validator .v-check {
+  opacity: 1;
+  transform: scale(1);
+  transition:
+    transform 480ms var(--ease-spring) 440ms,
+    opacity 260ms var(--ease-out) 440ms;
+}
+
+/* retrieval: the two relevant rows light up and pull out of the stack */
+.cap-card:hover .illo-retrieval .r-row:not(.r-pick) {
+  opacity: 0.38;
+}
+.cap-card:hover .illo-retrieval .r-pick {
+  color: var(--color-accent);
+  transform: translateX(13px);
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .illo *,
+  .cap-card:hover .illo * {
+    transition: none !important;
+  }
+  .illo-validator .v-check,
+  .illo-validator .v-scan {
+    opacity: 1;
+    transform: none;
+  }
+}
+
 /* --- terminal caret (component showcase) --- */
 .caret-blink {
   animation: caret-blink 1.05s steps(1) infinite;

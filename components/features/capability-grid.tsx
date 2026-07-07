@@ -13,6 +13,7 @@ import {
   type LucideIcon,
 } from "lucide-react";
 import { home } from "@/content/site";
+import { ILLOS } from "./capability-illustrations";
 
 /**
  * CapabilityGrid — the dark "capabilities" band (adapted from Clerk's auth
@@ -68,10 +69,11 @@ export function CapabilityGrid() {
       <ul ref={ref} className="mt-14 grid gap-5 sm:grid-cols-2 lg:grid-cols-3">
         {capabilities.items.map((c, i) => {
           const Icon = ICONS[c.icon] ?? ShieldCheck;
+          const Illo = ILLOS[c.icon];
           return (
             <li
               key={c.title}
-              className="group relative overflow-hidden rounded-[var(--radius-lg)] border border-border bg-surface p-6 shadow-[var(--shadow-sm)] hover:-translate-y-1 hover:border-border-strong hover:shadow-[var(--shadow-lg)]"
+              className="cap-card group relative overflow-hidden rounded-[var(--radius-lg)] border border-border bg-surface p-6 shadow-[var(--shadow-sm)] hover:-translate-y-1 hover:border-border-strong hover:shadow-[var(--shadow-lg)]"
               style={{
                 opacity: shown ? 1 : 0,
                 transform: shown ? "none" : "translateY(16px)",
@@ -83,10 +85,17 @@ export function CapabilityGrid() {
                 aria-hidden
                 className="pointer-events-none absolute -left-8 -top-8 h-28 w-28 rounded-full bg-accent opacity-0 blur-2xl transition-opacity duration-500 ease-[var(--ease-out)] group-hover:opacity-[0.10]"
               />
-              <span className="relative inline-flex h-9 w-9 items-center justify-center rounded-[var(--radius-md)] bg-accent-subtle text-accent transition-[background-color,color,scale] duration-300 ease-[var(--ease-out)] group-hover:scale-105 group-hover:bg-accent group-hover:text-on-accent">
-                <Icon size={18} strokeWidth={1.6} aria-hidden />
-              </span>
-              <p className="relative mt-5 font-mono text-xs uppercase tracking-wide text-ink-tertiary">
+              {/* illustration well: an animated SVG scene, or the icon tile */}
+              <div className="relative mb-5 flex h-24 items-center justify-center overflow-hidden rounded-[var(--radius-md)] border border-border bg-bg-subtle px-5">
+                {Illo ? (
+                  <Illo />
+                ) : (
+                  <span className="inline-flex h-10 w-10 items-center justify-center rounded-[var(--radius-md)] bg-accent-subtle text-accent transition-[background-color,color,scale] duration-300 ease-[var(--ease-spring)] group-hover:scale-110 group-hover:bg-accent group-hover:text-on-accent">
+                    <Icon size={20} strokeWidth={1.6} aria-hidden />
+                  </span>
+                )}
+              </div>
+              <p className="relative font-mono text-xs uppercase tracking-wide text-ink-tertiary">
                 {c.kicker}
               </p>
               <h3 className="relative mt-1 text-lg text-ink transition-colors duration-300 ease-[var(--ease-out)] group-hover:text-accent">
