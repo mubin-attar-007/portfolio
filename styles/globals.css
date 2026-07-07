@@ -229,14 +229,10 @@ h4 {
   font-size: 0.8125rem;
   line-height: 1.65;
 }
+/* Dark syntax palette only on the explicit dark choice — the brand default is
+   light (no prefers-color-scheme auto-switch, matching tokens.css). */
 :root[data-theme="dark"] .shiki,
 :root[data-theme="dark"] .shiki span {
   color: var(--shiki-dark) !important;
-}
-@media (prefers-color-scheme: dark) {
-  :root:not([data-theme]) .shiki,
-  :root:not([data-theme]) .shiki span {
-    color: var(--shiki-dark) !important;
-  }
 }
 

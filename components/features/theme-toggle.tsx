@@ -20,9 +20,9 @@ export function ThemeToggle() {
     const current: Theme =
       stored === "dark" || stored === "light"
         ? stored
-        : (document.documentElement.getAttribute("data-theme") as Theme | null) ??
-          (window.matchMedia("(prefers-color-scheme: dark)").matches ? "dark" : "light");
-    // one-time read of the persisted/OS theme on mount (not a cascading render)
+        : ((document.documentElement.getAttribute("data-theme") as Theme | null) ?? "light");
+    // one-time read of the persisted theme (else the light brand default) on
+    // mount — we intentionally do NOT follow the OS scheme (light is the brand)
     // eslint-disable-next-line react-hooks/set-state-in-effect
     setTheme(current);
   }, []);

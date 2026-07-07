@@ -26,8 +26,9 @@ export const metadata: Metadata = {
   alternates: { canonical: SITE.url },
 };
 
-// Pre-paint theme application (no flash). Light is the default/brand; only an
-// explicit stored preference overrides it here — OS preference is handled in CSS.
+// Pre-paint theme application (no flash). The light page with dark section-bands
+// is the brand default and always renders unless the visitor has explicitly
+// chosen dark (stored) — we intentionally do NOT follow the OS colour-scheme.
 const THEME_SCRIPT = `(function(){try{var t=localStorage.getItem('theme');if(t==='dark'||t==='light')document.documentElement.setAttribute('data-theme',t);}catch(e){}})();`;
 
 export default function RootLayout({ children }: Readonly<{ children: React.ReactNode }>) {
