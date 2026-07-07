@@ -8,20 +8,19 @@
    ============================================================================ */
 
 @theme {
-  /* ---- color: light (default) ---- */
-  /* Cool, accent-biased premium neutrals ("chosen" greys, a hint of the accent). */
-  --color-bg: #fcfcfd;              /* page background — clean cool near-white */
-  --color-bg-subtle: #f3f4f7;       /* alternate section bands, inline code bg */
-  --color-surface: #ffffff;         /* cards, panels, code blocks (pops on the cool ground) */
-  --color-ink: #18181b;             /* primary text — neutral near-black */
-  --color-ink-secondary: #52535d;   /* supporting text — cool, accent-biased */
-  --color-ink-tertiary: #696a76;    /* meta labels (AA 4.5:1 on bg + bg-subtle) */
-  --color-border: #e8e8ee;          /* hairlines (cool) */
-  --color-border-strong: #d6d7df;   /* inputs, emphasized dividers */
-  --color-accent: #6320d9;          /* links, primary button, active nav, focus — our premium violet (Clerk-energy, distinctly ours) */
-  --color-accent-hover: #7c3aed;    /* hover — brighter violet */
-  --color-on-accent: #ffffff;       /* text on an accent fill (white in light) */
-  --color-accent-subtle: #f1ebfe;   /* accent-tinted backgrounds (rare) — light lavender */
+  /* ---- color: light (default) — Clerk's exact palette (extracted from clerk.com) ---- */
+  --color-bg: #f7f7f8;              /* page background — Clerk's cool near-white */
+  --color-bg-subtle: #eeeef0;       /* alternate section bands, inline code bg */
+  --color-surface: #ffffff;         /* cards, panels, code blocks */
+  --color-ink: #131316;             /* primary text — Clerk's near-black */
+  --color-ink-secondary: #5e5f6e;   /* supporting text */
+  --color-ink-tertiary: #676876;    /* Clerk's tertiary, nudged darker to clear AA 4.5:1 on bg + bg-subtle */
+  --color-border: #e3e3e8;          /* hairlines */
+  --color-border-strong: #d9d9de;   /* inputs, emphasized dividers (Clerk card border) */
+  --color-accent: #6c47ff;          /* Clerk's exact purple — links, primary button, active nav, focus */
+  --color-accent-hover: #5a37e0;    /* hover — Clerk darkens the purple */
+  --color-on-accent: #ffffff;       /* text on an accent fill */
+  --color-accent-subtle: #f0edff;   /* accent-tinted backgrounds (rare) */
   --color-positive: #15803d;        /* improved metrics */
   --color-negative: #b91c1c;        /* regressions / before-values */
   --color-warning: #b45309;         /* caution callouts */
@@ -78,20 +77,20 @@
   --shadow-overlay: var(--shadow-lg); /* legacy alias (menus, dialogs, assistant) */
 }
 
-/* ---- color: dark (preference, not the brand) ---- */
+/* ---- color: dark (preference, not the brand) — Clerk's exact dark palette ---- */
 :root[data-theme="dark"] {
-  --color-bg: #121216;
-  --color-bg-subtle: #191920;
-  --color-surface: #1d1d24;
-  --color-ink: #ececf0;
-  --color-ink-secondary: #a4a4b0;
-  --color-ink-tertiary: #87878f;    /* lighter than light theme — AA 4.5:1 on dark bg */
-  --color-border: #2b2b33;
-  --color-border-strong: #3a3a45;
-  --color-accent: #b39cf7;          /* light violet — AA on dark bg */
-  --color-accent-hover: #c8b8fa;
-  --color-accent-subtle: #251d47;   /* deep violet tint */
-  --color-on-accent: #17131f;       /* dark ink on the light-violet dark accent */
+  --color-bg: #131316;              /* Clerk's dark section bg */
+  --color-bg-subtle: #1a1a1f;
+  --color-surface: #212126;         /* Clerk's dark card */
+  --color-ink: #f7f7f8;
+  --color-ink-secondary: #b7b8c2;   /* Clerk's dark secondary */
+  --color-ink-tertiary: #9394a1;    /* Clerk's dark tertiary — AA on dark bg */
+  --color-border: #2f3037;          /* Clerk's dark border */
+  --color-border-strong: #42434d;
+  --color-accent: #9a7fff;          /* Clerk's purple lightened for AA as text on dark */
+  --color-accent-hover: #b3a0ff;
+  --color-accent-subtle: #241d47;   /* deep purple tint */
+  --color-on-accent: #131316;       /* dark ink on the lightened-purple fill (AA) */
   --color-positive: #4ade80;
   --color-negative: #f87171;
   --color-warning: #fbbf24;

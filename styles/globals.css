@@ -148,18 +148,18 @@ h4 {
 /* Scopes the dark colour tokens LOCALLY so every child component adapts, adds a
    faint technical texture, and (with .tone-notch) an angular transition edge. */
 .tone-invert {
-  --color-bg: #0d0e12;
-  --color-bg-subtle: #15161c;
-  --color-surface: #191b22;
-  --color-ink: #f4f4f7;
-  --color-ink-secondary: #a7a9b5;
-  --color-ink-tertiary: #838594; /* light on dark — AA on the dark band */
-  --color-border: #292b34;
-  --color-border-strong: #3a3d48;
-  --color-accent: #ab97f5;
-  --color-accent-hover: #c4b4f9;
-  --color-on-accent: #0d0e12;
-  --color-accent-subtle: #221a44;
+  --color-bg: #131316; /* Clerk's exact dark-section colours */
+  --color-bg-subtle: #1a1a1f;
+  --color-surface: #212126;
+  --color-ink: #f7f7f8;
+  --color-ink-secondary: #b7b8c2;
+  --color-ink-tertiary: #9394a1; /* light on dark — AA on the dark band */
+  --color-border: #2f3037;
+  --color-border-strong: #42434d;
+  --color-accent: #9a7fff;
+  --color-accent-hover: #b3a0ff;
+  --color-on-accent: #131316;
+  --color-accent-subtle: #241d47;
   --shadow-sm: 0 0 0 0.5px rgb(255 255 255 / 0.07), 0 1px 2px rgb(0 0 0 / 0.5);
   --shadow-md: 0 0 0 0.5px rgb(255 255 255 / 0.08), 0 8px 20px -6px rgb(0 0 0 / 0.55);
   --shadow-lg: 0 0 0 0.5px rgb(255 255 255 / 0.09), 0 16px 38px -10px rgb(0 0 0 / 0.65);

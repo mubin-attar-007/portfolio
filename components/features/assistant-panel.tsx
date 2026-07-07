@@ -1,6 +1,7 @@
 "use client";
 
 import { useCallback, useEffect, useRef, useState } from "react";
+import { createPortal } from "react-dom";
 import { X } from "lucide-react";
 
 /**
@@ -153,7 +154,9 @@ export function AssistantPanel({
 
   const empty = messages.length === 0;
 
-  return (
+  // Portal to <body>: the header pill has backdrop-filter, which would otherwise
+  // make it the containing block for this fixed panel and mis-anchor it.
+  return createPortal(
     <>
       <div className="fixed inset-0 z-50 bg-ink/15" onClick={onClose} aria-hidden />
       <div
@@ -161,7 +164,7 @@ export function AssistantPanel({
         role="dialog"
         aria-modal="true"
         aria-label="Ask about Mubin's work"
-        className="fixed inset-x-0 bottom-0 z-50 flex h-[85dvh] flex-col rounded-t-[var(--radius-lg)] border border-border bg-surface shadow-[var(--shadow-overlay)] sm:inset-y-0 sm:left-auto sm:right-0 sm:h-dvh sm:w-[420px] sm:rounded-none sm:border-y-0 sm:border-r-0"
+        className="fixed inset-x-0 bottom-0 z-50 flex h-[85dvh] flex-col overflow-hidden rounded-t-[var(--radius-lg)] border border-border bg-surface shadow-[var(--shadow-overlay)] sm:inset-x-auto sm:bottom-6 sm:right-6 sm:h-auto sm:max-h-[calc(100dvh-6rem)] sm:w-[400px] sm:rounded-[var(--radius-lg)]"
       >
         <header className="flex items-center justify-between border-b border-border px-5 py-3">
           <div>
@@ -274,6 +277,7 @@ export function AssistantPanel({
           Grounded in this site&apos;s content · may be imperfect · answers aren&apos;t stored.
         </p>
       </div>
-    </>
+    </>,
+    document.body,
   );
 }

@@ -1,5 +1,4 @@
-import Link from "next/link";
-import { SITE } from "@/config/site";
+import { LogoLink } from "./logo-link";
 import { NavLinks } from "./nav-links";
 import { MobileNav } from "./mobile-nav";
 import { ThemeToggle } from "@/components/features/theme-toggle";
@@ -15,13 +14,7 @@ export function Header() {
   return (
     <header className="sticky top-0 z-40 px-3 pt-3 sm:px-4">
       <div className="mx-auto flex h-14 w-full max-w-[var(--width-container)] items-center justify-between rounded-[var(--radius-lg)] border border-border bg-bg/80 pl-5 pr-2.5 shadow-[var(--shadow-md)] backdrop-blur-md">
-        <Link
-          href="/"
-          className="font-mono text-sm font-medium tracking-tight text-ink"
-          aria-label={`${SITE.name} — home`}
-        >
-          {SITE.name.toLowerCase().replace(/\s+/g, " ")}
-        </Link>
+        <LogoLink />
 
         <div className="flex items-center gap-2 md:gap-5">
           <NavLinks />

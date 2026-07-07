@@ -33,8 +33,10 @@ export default async function Home() {
 
   return (
     <>
-      {/* Beat 1 — Hero: text + a representative terminal as the focal point */}
-      <Section space="lg">
+      {/* Beat 1 — Hero: text + a representative terminal as the focal point.
+          Trim the top padding so the sticky header's space doesn't make the
+          first view top-heavy (keeps the hero roughly balanced in the fold). */}
+      <Section space="lg" className="!pt-[clamp(4.5rem,9vw,8rem)]">
         <div className="grid grid-cols-1 items-center gap-12 lg:grid-cols-[minmax(0,1.1fr)_minmax(0,0.9fr)] lg:gap-16">
           <div className="min-w-0">
             <p className="font-mono text-xs uppercase tracking-[0.04em] text-ink-tertiary">
