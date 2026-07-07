@@ -27,8 +27,11 @@ export function HeroTerminal() {
     { text: d.result, tone: "ok" },
   ];
 
-  const [typed, setTyped] = useState(0); // chars of the prompt typed
-  const [revealed, setRevealed] = useState(0); // post-prompt lines shown
+  // Start FULL so the server-rendered HTML already contains the terminal content
+  // (good for LCP + no first-paint flash). The driver's "done" branch then holds
+  // and loops (full → hold → reset → type → …).
+  const [typed, setTyped] = useState(d.prompt.length);
+  const [revealed, setRevealed] = useState(blocks.length);
   const [reduced, setReduced] = useState(false);
   const [paused, setPaused] = useState(false);
 

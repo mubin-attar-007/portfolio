@@ -42,10 +42,9 @@ export default async function Home() {
             >
               {home.metaLine}
             </p>
-            <h1
-              className="hero-item mt-8 max-w-[24ch] text-4xl leading-[1.05] tracking-[-0.02em] text-ink sm:text-5xl lg:text-6xl"
-              style={{ animationDelay: "0.09s" }}
-            >
+            {/* The LCP element paints immediately (no entrance fade) — the surrounding
+                hero elements still fade in around it. Keeps LCP fast. */}
+            <h1 className="mt-8 max-w-[24ch] text-4xl leading-[1.05] tracking-[-0.02em] text-ink sm:text-5xl lg:text-6xl">
               {headLead}
               {headTail ? <span className="text-ink-tertiary"> — {headTail}</span> : null}
             </h1>

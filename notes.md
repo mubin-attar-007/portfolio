@@ -141,3 +141,17 @@ the purple; the plan's "faint kicker" is a guideline, not a hard rule).
     quality, and adds a client component + scroll-spy I'd rather not rush overnight. Case study is
     already Phase-4-level (context → constraints → architecture → data flow → key decisions →
     what failed → perf/cost → operations → what I'd do differently → evidence).
+- **Phase 6** (quality floor — see MORNING_REPORT.md for the full table) —
+  - **Perf:** 79→**84**; **LCP 5.6→4.4s** via (a) removing the entrance fade from the LCP `<h1>`
+    (paints immediately) and (b) SSR-ing the hero terminal's full content (was rendering empty on
+    the server). CLS 0→0.002, TBT 40→50ms, A11y **100**. The ≥95/LCP<2s target isn't reachable on
+    a throttled localhost `next start` (dominant cost = `unused-javascript ≈230 KiB` = Next.js
+    framework floor + necessary client components); production edge would be materially faster but
+    I can't measure it (no-deploy rule). **Logged, not blocked.**
+  - **Keyboard pass:** tabbed 22 elements — **every one shows the 2px accent focus ring** (global
+    `:focus-visible`), logical order (skip-link → nav → CTAs → **graph nodes reachable**). ✅
+  - **OG images:** per-page (`/opengraph-image` 200 image/png + per-project). ✅
+  - **Metadata/copy consistency:** one canonical availability line (`home.availability` == `STATUS.text`),
+    one email (`SITE.email`), canonical URL `mubin-attar.vercel.app` sitewide. ✅
+  - **Final a11y gate: 0 violations** (10 routes × light/dark).
+  - Wrote **MORNING_REPORT.md**. Did NOT deploy / did NOT touch main (per run rules).
