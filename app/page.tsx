@@ -8,6 +8,7 @@ import { SystemDiagram } from "@/components/diagrams/system-diagram";
 import { HeroTerminal } from "@/components/features/hero-terminal";
 import { SkillRotator } from "@/components/features/skill-rotator";
 import { ComponentShowcase } from "@/components/features/component-showcase";
+import { CapabilityGrid } from "@/components/features/capability-grid";
 import { diagrams } from "@/components/diagrams/data";
 import { SITE } from "@/config/site";
 import { home } from "@/content/site";
@@ -132,8 +133,13 @@ export default async function Home() {
         </div>
       </Section>
 
-      {/* Beat 4 — Other systems: compact survey on a dark band */}
-      <Section space="md" tone="invert" className="reveal">
+      {/* Beat 3.5 — Capabilities: a dark card grid (Clerk auth-section pattern) */}
+      <Section space="lg" tone="invert" ariaLabel="What I build" className="reveal">
+        <CapabilityGrid />
+      </Section>
+
+      {/* Beat 4 — Other systems: compact survey (light, to keep the dark rhythm) */}
+      <Section space="md" className="reveal">
         <SectionHeading kicker="More work">Other systems</SectionHeading>
         <ul className="mt-8 divide-y divide-border border-y border-border">
           {secondaryProjects.map((p) => (

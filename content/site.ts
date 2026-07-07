@@ -123,6 +123,54 @@ export const home = {
     },
   ],
 
+  // The capabilities grid (dark band) — concrete, recurring guarantees across the
+  // four products, each attributed to the project it ships in. Every claim is
+  // backed by a real mechanism or a method-footnoted metric (Law: no fabrication).
+  capabilities: {
+    eyebrow: "What I actually build",
+    title: "Safety and honesty, engineered in",
+    body: "The same decisions recur across four live products — each a deterministic guarantee, not a best-effort prompt.",
+    cta: { label: "See all work", href: "/work" },
+    items: [
+      {
+        icon: "validator",
+        kicker: "dbwhisper",
+        title: "Fail-closed validation",
+        body: "Every generated SQL passes a deterministic gate — SELECT-only, single statement, enrolled tables. It refuses when it can't prove the query is safe.",
+      },
+      {
+        icon: "retrieval",
+        kicker: "dbwhisper",
+        title: "Retrieval-scoped prompts",
+        body: "BM25 pulls only the tables a question needs. A small, scoped context beats stuffing the whole schema — cheaper, and more accurate.",
+      },
+      {
+        icon: "lookahead",
+        kicker: "tradepulse",
+        title: "Look-ahead-free backtests",
+        body: "Decisions on closed bars, fills on the next open. A canary scrambles every future bar and asserts the past equity curve is byte-identical.",
+      },
+      {
+        icon: "metrics",
+        kicker: "crownwager",
+        title: "Honest metrics",
+        body: "One fixed split plus 5-fold cross-validation, reported with error bars: 65.2% ± 0.8% on 15,115 games — not a cherry-picked 68%.",
+      },
+      {
+        icon: "fallback",
+        kicker: "resilience",
+        title: "Multi-provider fallback",
+        body: "Six LLM providers behind one interface; the first with credentials wins and a free tier is the floor. No single vendor is a hard dependency.",
+      },
+      {
+        icon: "infra",
+        kicker: "$0 stack",
+        title: "Runs on a free tier",
+        body: "Retrieval-first prompts, bounded agent loops, lean containers — four products in production on a deliberately $0 stack.",
+      },
+    ],
+  },
+
   // DRAFT — grounded in real work + stated intentions (see each project's
   // "What I'd do differently"). Owner to confirm/refine the exact list.
   exploring: {

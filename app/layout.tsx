@@ -5,7 +5,6 @@ import { Newsreader } from "next/font/google";
 import "@/styles/globals.css";
 import { SITE } from "@/config/site";
 import { Header } from "@/components/layout/header";
-import { StatusBar } from "@/components/layout/status-bar";
 import { Footer } from "@/components/layout/footer";
 import { JsonLd } from "@/components/seo/json-ld";
 
@@ -47,7 +46,6 @@ export default function RootLayout({ children }: Readonly<{ children: React.Reac
         <a href="#main" className="skip-link">
           Skip to content
         </a>
-        <StatusBar />
         <Header />
         <main id="main" className="flex-1">
           {children}
