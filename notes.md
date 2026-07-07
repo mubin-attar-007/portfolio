@@ -29,5 +29,30 @@ at 1440 and 390 each phase.
 ## Deferred / rejected
 (running list — appended per phase)
 
+### D3 · V10 (header vs footer nav) — INTENTIONAL, documented (not a bug)
+Header = the **primary destinations** (Work/Writing/About/Résumé) in the signature pill nav;
+footer = the **full site map** (adds Timeline + Uses, the secondary/supporting pages). This is a
+deliberate, common flagship IA: a lean premium header + a complete footer. Adding Timeline+Uses
+to the pill would crowd the signature nav (already 4 links + the Friday launcher + theme toggle).
+→ V10 resolved as "intentional." (If the owner wants everything in the header, it's a one-line
+add to `config/nav.ts`.)
+
+### D4 · V6 (marquee duplicate text) — already resolved in v2.0.2
+`skill-rotator.tsx` renders the plain-text stack list as `<p className="sr-only">…</p>` (Tailwind
+visually-hidden) — it's a screen-reader/SEO fallback, not visible. The plan's audit flagged it
+against an earlier build (the old `ticker.tsx`, since deleted). → V6 closed (verified hidden).
+
+### D5 · Kicker/card unification → folded into Phase 2
+Card anatomy is already consistent sitewide (`border-border` + `bg-surface` + `--radius-lg` +
+`--shadow-sm`, same padding). Two kicker patterns coexist: `<SectionHeading>` (kicker in
+`--fg-faint`) and newer inline kickers in `--accent`. Rather than churn them now, I unify to ONE
+kicker treatment while rebuilding sections in Phase 2 (the sections get rewritten there anyway).
+Decision on kicker color deferred to Phase 2 (leaning accent — on-brand, Clerk-like, owner loves
+the purple; the plan's "faint kicker" is a guideline, not a hard rule).
+
 ## Phase log
-- Phase 0: (in progress)
+- **Phase 0** ✅ — audit.md (baseline Perf 79 / A11y 100 / LCP 5.6s / CLS 0 / TBT 40ms), no code changed.
+- **Phase 1** (in progress) — tokenized the 2 stragglers: `--drop-node` (diagram node shadow,
+  was a hardcoded rgba) + `--motion-reveal` (600ms) / `--motion-slow` for inline durations in
+  system-diagram + capability-grid. V6 closed (sr-only). V10 closed (intentional). Card anatomy
+  already consistent; full kicker unification → Phase 2.

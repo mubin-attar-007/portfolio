@@ -139,8 +139,9 @@ export function SystemDiagram({ spec, caption }: { spec: DiagramSpec; caption?: 
                   transformBox: "fill-box",
                   transformOrigin: "center",
                   transform: on ? "scale(1.035)" : "scale(1)",
-                  filter: on ? "drop-shadow(0 6px 14px rgba(18,14,40,0.24))" : "none",
-                  transition: "transform 300ms var(--ease-out), filter 300ms var(--ease-out)",
+                  filter: on ? "var(--drop-node)" : "none",
+                  transition:
+                    "transform var(--motion-slow) var(--ease-out), filter var(--motion-slow) var(--ease-out)",
                 }}
               >
                 <rect
@@ -154,7 +155,7 @@ export function SystemDiagram({ spec, caption }: { spec: DiagramSpec; caption?: 
                   strokeWidth={on ? 1.5 : 1}
                   style={{
                     transition:
-                      "fill 300ms var(--ease-out), stroke 300ms var(--ease-out), stroke-width 300ms var(--ease-out)",
+                      "fill var(--motion-slow) var(--ease-out), stroke var(--motion-slow) var(--ease-out), stroke-width var(--motion-slow) var(--ease-out)",
                   }}
                 />
                 <text
