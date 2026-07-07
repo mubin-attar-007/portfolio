@@ -254,13 +254,118 @@ h4 {
   transform: translateX(13px);
 }
 
+/* lookahead: past bars lock to accent, future dims, a scan sweeps once */
+.cap-card:hover .illo-lookahead .l-past {
+  color: var(--color-accent);
+}
+.cap-card:hover .illo-lookahead .l-future {
+  opacity: 0.3;
+}
+.illo-lookahead .l-scan {
+  opacity: 0;
+}
+.cap-card:hover .illo-lookahead .l-scan {
+  animation: l-sweep 1000ms var(--ease-out) forwards;
+}
+@keyframes l-sweep {
+  0% {
+    transform: translateX(0);
+    opacity: 0;
+  }
+  12% {
+    opacity: 0.9;
+  }
+  85% {
+    opacity: 0.9;
+  }
+  100% {
+    transform: translateX(166px);
+    opacity: 0;
+  }
+}
+
+/* metrics: the error-bar bracket draws in; the point gives a spring nudge */
+.illo-metrics .m-err {
+  transform-box: fill-box;
+  transform-origin: center;
+  transform: scaleY(0);
+  opacity: 0;
+}
+.cap-card:hover .illo-metrics .m-err {
+  transform: scaleY(1);
+  opacity: 1;
+  transition-delay: 120ms;
+}
+.illo-metrics .m-dot {
+  transform-box: fill-box;
+  transform-origin: center;
+}
+.cap-card:hover .illo-metrics .m-dot {
+  transform: scale(1.18);
+  transition-timing-function: var(--ease-spring);
+}
+
+/* fallback: providers light in a downward cascade, ✓ springs on the winner */
+.cap-card:hover .illo-fallback .f-r0 {
+  color: var(--color-accent);
+}
+.cap-card:hover .illo-fallback .f-r1 {
+  color: var(--color-accent);
+  transition-delay: 130ms;
+}
+.cap-card:hover .illo-fallback .f-r2 {
+  color: var(--color-accent);
+  transition-delay: 260ms;
+}
+.illo-fallback .f-check {
+  transform-box: fill-box;
+  transform-origin: center;
+  opacity: 0;
+  transform: scale(0.35);
+}
+.cap-card:hover .illo-fallback .f-check {
+  opacity: 1;
+  transform: scale(1);
+  transition:
+    transform 460ms var(--ease-spring) 380ms,
+    opacity 240ms var(--ease-out) 380ms;
+}
+
+/* infra: lean blocks pop into a tidy stack, bottom-up, turning accent */
+.cap-card:hover .illo-infra .i-block {
+  color: var(--color-accent);
+}
+.cap-card:hover .illo-infra .i-b0 {
+  animation: i-pop 460ms var(--ease-spring) 0ms;
+}
+.cap-card:hover .illo-infra .i-b1 {
+  animation: i-pop 460ms var(--ease-spring) 120ms;
+}
+.cap-card:hover .illo-infra .i-b2 {
+  animation: i-pop 460ms var(--ease-spring) 240ms;
+}
+@keyframes i-pop {
+  0% {
+    transform: translateY(0);
+  }
+  45% {
+    transform: translateY(-6px);
+  }
+  100% {
+    transform: translateY(0);
+  }
+}
+
 @media (prefers-reduced-motion: reduce) {
   .illo *,
   .cap-card:hover .illo * {
     transition: none !important;
+    animation: none !important;
   }
   .illo-validator .v-check,
-  .illo-validator .v-scan {
+  .illo-validator .v-scan,
+  .illo-metrics .m-err,
+  .illo-fallback .f-check {
     opacity: 1;
     transform: none;
   }
