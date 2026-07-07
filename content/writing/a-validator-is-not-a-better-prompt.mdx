@@ -1,0 +1,13 @@
+---
+title: "A validator is not a better prompt"
+summary: "Short note: why DBWhisper gates every generated query with deterministic code instead of a stricter system prompt — 'less often' is not a safety property."
+date: "2026-06-20"
+category: "note"
+topics: ["safety", "NL→SQL"]
+---
+
+A better prompt makes a model emit a destructive query _less often_. It never makes it _never_. "Less often" is a probability, not a safety property — and a safety property is the only kind worth shipping.
+
+So in DBWhisper, every generated statement passes a deterministic validator before anything runs: SELECT-only, a single statement, enrolled tables only. It fails closed — if it can't prove the query is safe, it refuses.
+
+The prompt still matters. It just isn't the boundary. The boundary is code you can read, test, and trust for the times the model is wrong.

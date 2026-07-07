@@ -1,50 +1,50 @@
 import type { Metadata } from "next";
-import Link from "next/link";
+import { Rss } from "lucide-react";
 import { Section } from "@/components/layout/section";
 import { SITE } from "@/config/site";
 import { allWriting } from "@/lib/writing";
-import { formatDate } from "@/lib/format";
-import type { WritingMeta } from "@/content/schema";
+import { WritingList } from "@/components/features/writing-list";
 
 export const metadata: Metadata = {
   title: "Writing",
-  description: "Essays and guides on AI systems, evaluation, and honest ML.",
-  alternates: { canonical: `${SITE.url}/writing` },
+  description: "Essays, guides, and notes on AI systems, evaluation, and honest ML.",
+  alternates: {
+    canonical: `${SITE.url}/writing`,
+    types: { "application/rss+xml": `${SITE.url}/writing/feed.xml` },
+  },
 };
-
-const LABEL: Record<WritingMeta["category"], string> = { essay: "Essay", guide: "Guide", note: "Note" };
 
 export default async function WritingIndex() {
   const posts = await allWriting();
+  const items = posts.map((p) => ({
+    slug: p.slug,
+    title: p.title,
+    summary: p.summary,
+    date: p.date,
+    category: p.category,
+    topics: p.topics,
+  }));
+
   return (
     <Section space="lg">
-      <p className="font-mono text-xs uppercase text-ink-tertiary">Writing</p>
-      <h1 className="mt-6 max-w-[20ch] text-4xl text-ink sm:text-5xl">Writing</h1>
+      <p className="font-mono text-xs uppercase tracking-[0.04em] text-ink-tertiary">Writing</p>
+      <div className="mt-6 flex flex-wrap items-baseline justify-between gap-4">
+        <h1 className="max-w-[20ch] text-4xl tracking-[-0.02em] text-ink sm:text-5xl">Writing</h1>
+        <a
+          href="/writing/feed.xml"
+          className="group inline-flex items-center gap-1.5 font-mono text-xs text-ink-tertiary transition-colors hover:text-accent"
+        >
+          <Rss size={13} strokeWidth={1.6} aria-hidden />
+          RSS
+        </a>
+      </div>
       <p className="mt-6 max-w-[var(--width-prose)] text-lg text-ink-secondary">
-        Essays and guides on AI systems, evaluation, and honest ML — mined from the decisions and
-        failures in my case studies.
+        Essays, guides, and short notes on AI systems, evaluation, and honest ML — mined from the
+        decisions and failures in my case studies. Filter by topic, or browse the archive.
       </p>
-      <ul className="mt-10 divide-y divide-border border-y border-border">
-        {posts.map((p) => (
-          <li key={p.slug}>
-            <Link
-              href={`/writing/${p.slug}`}
-              className="group -mx-4 grid gap-1 rounded-[var(--radius-md)] px-4 py-6 transition-colors duration-200 ease-[var(--ease-out)] hover:bg-bg-subtle md:grid-cols-[1fr_auto] md:items-baseline md:gap-8"
-            >
-              <div>
-                <div className="flex flex-wrap items-baseline gap-3">
-                  <h2 className="text-xl text-ink transition-colors group-hover:text-accent">{p.title}</h2>
-                  <span className="font-mono text-xs uppercase text-ink-tertiary">{LABEL[p.category]}</span>
-                </div>
-                <p className="mt-1 max-w-[var(--width-prose)] text-sm text-ink-secondary">{p.summary}</p>
-              </div>
-              <time dateTime={p.date} className="font-mono text-xs text-ink-tertiary">
-                {formatDate(p.date)}
-              </time>
-            </Link>
-          </li>
-        ))}
-      </ul>
+      <div className="mt-12">
+        <WritingList posts={items} />
+      </div>
     </Section>
   );
 }
