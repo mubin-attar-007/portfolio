@@ -30,3 +30,8 @@ is `tradepulse-live.vercel.app`. Find/replace in the README:
 
 ## Decisions for Mubin
 - [ ] Custom domain `mubinattar.com` (Phase 6 recommendation) — purchase + point DNS at Vercel.
+- [ ] **(Optional) Shorter hero headline** — the current one wraps to ~4 lines at the big hero
+      size; the plan prefers ≤2. Kept your copy + the punchy type. If you want it tighter, a
+      2-line option (edit `home.headline` in `content/site.ts`), e.g.:
+      "I build grounded AI systems — and show how they work." (drop "actually") — or your own.
+      Left as-is because it's your voice; only you should change the headline copy.

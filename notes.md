@@ -109,3 +109,20 @@ the purple; the plan's "faint kicker" is a guideline, not a hard rule).
     so no animated motion runs; the hero terminal + capability reveals + illustrations all have
     explicit reduced-motion static paths. Instant sub-2px hover offsets are imperceptible (meets
     "hover = colour/border only" intent).
+- **Phase 4** (section polish) — discipline pass (border weight / spacing / type scale / single accent):
+  - **FAQ**: chevron (Plus→×) rotation sped to `duration-150` (`--motion-fast`) per the plan's
+    "chevron rotates --dur-fast." Accessible accordion already (real `<button>` + aria-expanded).
+  - **Hero**: dual CTA on one row ✓; lede 3 lines ✓. **Headline is ~4 lines** at the punchy
+    lg:text-6xl — the plan wants ≤2, but the owner's headline ("I build grounded AI systems — and
+    show how they actually work.") is ~60 chars and can't fit 2 lines in the hero's left column
+    without shrinking the type (weakens the hero) or shortening the copy (owner content). Kept the
+    large type; logged an OPTIONAL shorter-headline suggestion in TODO_HUMAN. Widened max-width
+    19ch→24ch for slightly better breaks.
+  - **Product cards** (LiveDemos): metadata order already matches the mandate (live status chip ·
+    one-line tech tag · title · ≤2-line description · Launch + Case study); cold-start note is one
+    muted line. ✓
+  - **Bento/guarantee cards**: title + ≤3-line body; consistent card anatomy. ✓
+  - **Footer**: already tightened to brand sign-off + nav + socials + colophon, with "Thanks for
+    reading this far." as the one warm serif moment. ✓
+  - Verified desktop (1440) this phase; mobile (390) structurally unchanged since Phase 1 (verified)
+    and covered again in the Phase 6 full-route sweep. 0 console/runtime errors.

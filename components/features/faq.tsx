@@ -40,7 +40,7 @@ export function Faq() {
                     size={18}
                     strokeWidth={1.7}
                     aria-hidden
-                    className={`shrink-0 text-ink-tertiary transition-transform duration-300 ease-[var(--ease-out)] ${on ? "rotate-45 text-accent" : ""}`}
+                    className={`shrink-0 text-ink-tertiary transition-[transform,color] duration-150 ease-[var(--ease-out)] ${on ? "rotate-45 text-accent" : ""}`}
                   />
                 </button>
               </h3>
