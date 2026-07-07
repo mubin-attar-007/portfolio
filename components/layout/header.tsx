@@ -14,7 +14,7 @@ import { Assistant } from "@/components/features/assistant";
 export function Header() {
   return (
     <header className="sticky top-0 z-40 px-3 pt-3 sm:px-4">
-      <div className="mx-auto flex h-14 w-full max-w-[var(--width-container)] items-center justify-between rounded-[var(--radius-lg)] border border-border bg-bg/80 pl-5 pr-2.5 backdrop-blur-md shadow-[var(--shadow-overlay)]">
+      <div className="mx-auto flex h-14 w-full max-w-[var(--width-container)] items-center justify-between rounded-[var(--radius-lg)] border border-border bg-bg/80 pl-5 pr-2.5 shadow-[var(--shadow-md)] backdrop-blur-md">
         <Link
           href="/"
           className="font-mono text-sm font-medium tracking-tight text-ink"

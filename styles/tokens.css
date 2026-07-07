@@ -9,14 +9,15 @@
 
 @theme {
   /* ---- color: light (default) ---- */
-  --color-bg: #fcfcf9;              /* page background — warm paper, not pure white */
-  --color-bg-subtle: #f5f5f1;       /* alternate section bands, inline code bg */
-  --color-surface: #ffffff;         /* cards, panels, code blocks */
-  --color-ink: #1c1c1a;             /* primary text */
-  --color-ink-secondary: #57534e;   /* supporting text, captions */
-  --color-ink-tertiary: #6f6a61;    /* meta labels, timestamps (AA 4.5:1 on bg + bg-subtle) */
-  --color-border: #e7e5e1;          /* hairlines (default) */
-  --color-border-strong: #d6d2cc;   /* inputs, emphasized dividers */
+  /* Cool, accent-biased premium neutrals ("chosen" greys, a hint of the accent). */
+  --color-bg: #fcfcfd;              /* page background — clean cool near-white */
+  --color-bg-subtle: #f3f4f7;       /* alternate section bands, inline code bg */
+  --color-surface: #ffffff;         /* cards, panels, code blocks (pops on the cool ground) */
+  --color-ink: #18181b;             /* primary text — neutral near-black */
+  --color-ink-secondary: #52535d;   /* supporting text — cool, accent-biased */
+  --color-ink-tertiary: #696a76;    /* meta labels (AA 4.5:1 on bg + bg-subtle) */
+  --color-border: #e8e8ee;          /* hairlines (cool) */
+  --color-border-strong: #d6d7df;   /* inputs, emphasized dividers */
   --color-accent: #3457b8;          /* links, primary button, active nav, focus — calmer, slightly desaturated royal blue */
   --color-accent-hover: #2b478f;    /* hover */
   --color-on-accent: #ffffff;       /* text on an accent fill (white in light) */
@@ -61,26 +62,31 @@
   /* ---- borders ---- */
   --stripe-width: 3px; /* accent left-rule on callouts / pull-quotes (token, not a raw value) */
 
-  /* ---- motion (§1.6) ---- */
-  --motion-fast: 120ms;
-  --motion-base: 180ms;
-  --motion-slow: 240ms;
-  --ease-out: cubic-bezier(0.2, 0, 0, 1);
+  /* ---- motion (§1.6) — Clerk's signature curves (adopted verbatim) ---- */
+  --motion-fast: 140ms;
+  --motion-base: 200ms;
+  --motion-slow: 300ms;
+  --ease-out: cubic-bezier(0.4, 0.36, 0, 1);      /* Clerk primary — smooth settle */
+  --ease-emphasized: cubic-bezier(0.33, 1, 0.68, 1); /* Clerk secondary — gentle overshoot for reveals */
 
-  /* ---- elevation: depth is hairlines + bg shifts, not shadows (§1.5) ---- */
-  --shadow-overlay: 0 4px 24px rgb(0 0 0 / 0.08); /* menus, dialogs, assistant only */
+  /* ---- elevation: tactile surfaces (hairline ring + inset top-highlight + soft drop) ---- */
+  --shadow-sm: 0 0 0 0.5px rgb(17 17 26 / 0.05), 0 1px 2px rgb(17 17 26 / 0.05), 0 2px 5px -1px rgb(17 17 26 / 0.04);
+  --shadow-md: 0 0 0 0.5px rgb(17 17 26 / 0.06), 0 1px 2px rgb(17 17 26 / 0.05), 0 8px 20px -6px rgb(17 17 26 / 0.10);
+  --shadow-lg: 0 0 0 0.5px rgb(17 17 26 / 0.06), 0 2px 6px rgb(17 17 26 / 0.06), 0 16px 38px -10px rgb(17 17 26 / 0.16);
+  --shadow-btn: inset 0 1px 0 rgb(255 255 255 / 0.22), 0 1px 2px rgb(17 17 26 / 0.24), 0 2px 5px -1px rgb(17 17 26 / 0.12);
+  --shadow-overlay: var(--shadow-lg); /* legacy alias (menus, dialogs, assistant) */
 }
 
 /* ---- color: dark (preference, not the brand) ---- */
 :root[data-theme="dark"] {
-  --color-bg: #131312;
-  --color-bg-subtle: #1a1a18;
-  --color-surface: #1e1e1c;
-  --color-ink: #edece8;
-  --color-ink-secondary: #a8a49d;
-  --color-ink-tertiary: #8a857c;    /* lighter than light theme — AA 4.5:1 on dark bg */
-  --color-border: #2c2b28;
-  --color-border-strong: #3a3934;
+  --color-bg: #121216;
+  --color-bg-subtle: #191920;
+  --color-surface: #1d1d24;
+  --color-ink: #ececf0;
+  --color-ink-secondary: #a4a4b0;
+  --color-ink-tertiary: #87878f;    /* lighter than light theme — AA 4.5:1 on dark bg */
+  --color-border: #2b2b33;
+  --color-border-strong: #3a3a45;
   --color-accent: #7fa5f5;
   --color-accent-hover: #9bb8f8;
   --color-accent-subtle: #1b2438;
@@ -88,20 +94,24 @@
   --color-positive: #4ade80;
   --color-negative: #f87171;
   --color-warning: #fbbf24;
-  --shadow-overlay: 0 4px 24px rgb(0 0 0 / 0.4);
+  --shadow-sm: 0 0 0 0.5px rgb(255 255 255 / 0.06), 0 1px 2px rgb(0 0 0 / 0.4);
+  --shadow-md: 0 0 0 0.5px rgb(255 255 255 / 0.07), 0 8px 20px -6px rgb(0 0 0 / 0.5);
+  --shadow-lg: 0 0 0 0.5px rgb(255 255 255 / 0.08), 0 16px 38px -10px rgb(0 0 0 / 0.6);
+  --shadow-btn: inset 0 1px 0 rgb(255 255 255 / 0.12), 0 1px 2px rgb(0 0 0 / 0.5);
+  --shadow-overlay: var(--shadow-lg);
 }
 
 /* honor the OS preference only until the visitor makes an explicit choice */
 @media (prefers-color-scheme: dark) {
   :root:not([data-theme]) {
-    --color-bg: #131312;
-    --color-bg-subtle: #1a1a18;
-    --color-surface: #1e1e1c;
-    --color-ink: #edece8;
-    --color-ink-secondary: #a8a49d;
-    --color-ink-tertiary: #8a857c;    /* lighter than light theme — AA 4.5:1 on dark bg */
-    --color-border: #2c2b28;
-    --color-border-strong: #3a3934;
+    --color-bg: #121216;
+    --color-bg-subtle: #191920;
+    --color-surface: #1d1d24;
+    --color-ink: #ececf0;
+    --color-ink-secondary: #a4a4b0;
+    --color-ink-tertiary: #87878f;    /* lighter than light theme — AA 4.5:1 on dark bg */
+    --color-border: #2b2b33;
+    --color-border-strong: #3a3a45;
     --color-accent: #7fa5f5;
     --color-accent-hover: #9bb8f8;
     --color-accent-subtle: #1b2438;
@@ -109,6 +119,10 @@
     --color-positive: #4ade80;
     --color-negative: #f87171;
     --color-warning: #fbbf24;
-    --shadow-overlay: 0 4px 24px rgb(0 0 0 / 0.4);
+    --shadow-sm: 0 0 0 0.5px rgb(255 255 255 / 0.06), 0 1px 2px rgb(0 0 0 / 0.4);
+    --shadow-md: 0 0 0 0.5px rgb(255 255 255 / 0.07), 0 8px 20px -6px rgb(0 0 0 / 0.5);
+    --shadow-lg: 0 0 0 0.5px rgb(255 255 255 / 0.08), 0 16px 38px -10px rgb(0 0 0 / 0.6);
+    --shadow-btn: inset 0 1px 0 rgb(255 255 255 / 0.12), 0 1px 2px rgb(0 0 0 / 0.5);
+    --shadow-overlay: var(--shadow-lg);
   }
 }

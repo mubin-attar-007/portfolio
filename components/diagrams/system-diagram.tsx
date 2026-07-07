@@ -70,7 +70,7 @@ export function SystemDiagram({ spec, caption }: { spec: DiagramSpec; caption?: 
 
   return (
     <figure className="my-6">
-      <div className="overflow-x-auto rounded-[var(--radius-lg)] border border-border bg-surface p-4">
+      <div className="overflow-x-auto rounded-[var(--radius-lg)] border border-border bg-surface p-4 shadow-[var(--shadow-sm)]">
         <svg
           viewBox={`0 0 ${width} ${height}`}
           width={width}

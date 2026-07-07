@@ -23,3 +23,12 @@ export const STATUS = {
   cta: "Get in touch",
   href: `mailto:${SITE.email}`,
 } as const;
+
+/**
+ * Footer sign-off — a personal line in the owner's voice (not a company tagline
+ * and not a metric). Spoken to the reader who scrolled through the evidence.
+ */
+export const FOOTER = {
+  signoff: "Thanks for reading this far.",
+  invite: "The rest is a conversation — I answer every email myself.",
+} as const;

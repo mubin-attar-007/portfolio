@@ -1,16 +1,20 @@
 import Link from "next/link";
+import { ArrowUpRight } from "lucide-react";
 import { Container } from "./container";
-import { SITE } from "@/config/site";
-import { projects } from "@/content/projects";
+import { SITE, STATUS, FOOTER } from "@/config/site";
 
 /**
- * Footer — a quiet multi-column link matrix (Clerk-style) on a faint ground:
- * a brand block + Projects / Site / Elsewhere columns, then a colophon row.
- * A11y: <footer> landmark; column headings label their link groups.
+ * Footer — a personal sign-off, not a company sitemap. Clerk's footer *craft*
+ * (generous space, hairline rules, mono microcopy) adapted to a personal brand:
+ * a serif sign-off to the reader who scrolled the evidence, one clear way to
+ * reach me, then a single quiet strip of essential nav + profiles and a
+ * colophon. No column matrix, no "Resources / Legal" — one engineer signing the
+ * page. A11y: <footer> landmark; the nav strip is labelled; every link is
+ * keyboard-operable with a visible focus ring; the status dot is decorative.
  */
-type FLink = { label: string; href: string; ext?: boolean };
+type FLink = { label: string; href: string };
 
-const SITE_LINKS: FLink[] = [
+const NAV: FLink[] = [
   { label: "Work", href: "/work" },
   { label: "Writing", href: "/writing" },
   { label: "About", href: "/about" },
@@ -18,66 +22,88 @@ const SITE_LINKS: FLink[] = [
   { label: "Résumé", href: "/resume" },
 ];
 
-function FooterCol({ title, links }: { title: string; links: FLink[] }) {
-  return (
-    <div>
-      <h2 className="font-mono text-xs uppercase tracking-[0.06em] text-ink-tertiary">{title}</h2>
-      <ul className="mt-4 flex flex-col gap-2.5">
-        {links.map((l) => (
-          <li key={l.label}>
-            {l.ext ? (
-              <a
-                href={l.href}
-                target="_blank"
-                rel="noopener noreferrer"
-                className="text-sm text-ink-secondary transition-colors hover:text-ink"
-              >
-                {l.label}
-              </a>
-            ) : (
-              <Link href={l.href} className="text-sm text-ink-secondary transition-colors hover:text-ink">
-                {l.label}
-              </Link>
-            )}
-          </li>
-        ))}
-      </ul>
-    </div>
-  );
-}
+const PROFILES: FLink[] = [
+  { label: "GitHub", href: SITE.socials.github },
+  { label: "LinkedIn", href: SITE.socials.linkedin },
+  { label: "Hugging Face", href: SITE.socials.huggingface },
+];
 
 export function Footer({ year }: { year: number }) {
-  const elsewhere: FLink[] = [
-    { label: "GitHub", href: SITE.socials.github, ext: true },
-    { label: "LinkedIn", href: SITE.socials.linkedin, ext: true },
-    { label: "Hugging Face", href: SITE.socials.huggingface, ext: true },
-    { label: "Email", href: `mailto:${SITE.email}`, ext: true },
-  ];
   return (
     <footer className="border-t border-border bg-bg-subtle">
-      <Container className="py-16">
-        <div className="grid gap-10 md:grid-cols-[1.5fr_1fr_1fr_1fr]">
-          <div>
+      <Container className="py-16 sm:py-20">
+        {/* Sign-off — a human close + one clear invitation, in the owner's voice */}
+        <div className="flex flex-col gap-10 md:flex-row md:items-end md:justify-between">
+          <div className="max-w-[42ch]">
             <Link href="/" className="font-mono text-sm font-medium tracking-tight text-ink">
               {SITE.name.toLowerCase()}
             </Link>
-            <p className="mt-3 max-w-[28ch] text-sm text-ink-tertiary">
-              {SITE.role}. I build grounded AI systems — and show how they actually work.
+            <p className="mt-5 font-serif text-2xl italic leading-snug text-ink sm:text-[1.75rem]">
+              {FOOTER.signoff}
+            </p>
+            <p className="mt-4 max-w-[34ch] text-sm text-ink-secondary">{FOOTER.invite}</p>
+          </div>
+          <div className="flex flex-col items-start gap-4 md:items-end">
+            <a
+              href={`mailto:${SITE.email}`}
+              className="group inline-flex items-center gap-2 text-lg text-ink"
+            >
+              <span className="link-underline">{SITE.email}</span>
+              <ArrowUpRight
+                size={18}
+                strokeWidth={1.5}
+                className="text-ink-tertiary transition-transform group-hover:-translate-y-0.5 group-hover:translate-x-0.5"
+                aria-hidden
+              />
+            </a>
+            <p className="inline-flex items-center gap-2 font-mono text-xs text-ink-tertiary">
+              <span className="h-1.5 w-1.5 rounded-full bg-positive" aria-hidden />
+              {STATUS.text}
             </p>
           </div>
-          <FooterCol
-            title="Projects"
-            links={projects.map((p) => ({ label: p.title, href: `/work/${p.slug}` }))}
-          />
-          <FooterCol title="Site" links={SITE_LINKS} />
-          <FooterCol title="Elsewhere" links={elsewhere} />
         </div>
-        <div className="mt-14 flex flex-col gap-3 border-t border-border pt-6 font-mono text-xs text-ink-tertiary md:flex-row md:items-center md:justify-between">
+
+        {/* One quiet strip: essential nav + profiles (not a company matrix) */}
+        <div className="mt-14 flex flex-col gap-5 border-t border-border pt-7 sm:flex-row sm:items-center sm:justify-between">
+          <nav aria-label="Footer" className="flex flex-wrap gap-x-6 gap-y-2">
+            {NAV.map((l) => (
+              <Link
+                key={l.label}
+                href={l.href}
+                className="text-sm text-ink-secondary transition-colors hover:text-ink"
+              >
+                {l.label}
+              </Link>
+            ))}
+          </nav>
+          <div className="flex flex-wrap gap-x-6 gap-y-2">
+            {PROFILES.map((l) => (
+              <a
+                key={l.label}
+                href={l.href}
+                target="_blank"
+                rel="noopener noreferrer"
+                className="font-mono text-xs text-ink-tertiary transition-colors hover:text-ink"
+              >
+                {l.label}
+              </a>
+            ))}
+          </div>
+        </div>
+
+        {/* Colophon */}
+        <div className="mt-8 flex flex-col gap-3 font-mono text-xs text-ink-tertiary sm:flex-row sm:items-center sm:justify-between">
           <span>
-            © {year} {SITE.name} · Built with Next.js, TypeScript &amp; Tailwind
+            © {year} {SITE.name} · {SITE.location}
           </span>
-          <span className="flex items-center gap-4">
-            <a href={SITE.socials.github} target="_blank" rel="noopener noreferrer" className="hover:text-ink">
+          <span className="flex flex-wrap items-center gap-x-5 gap-y-1">
+            <span>Built with Next.js, TypeScript &amp; Tailwind</span>
+            <a
+              href={SITE.socials.github}
+              target="_blank"
+              rel="noopener noreferrer"
+              className="hover:text-ink"
+            >
               Source
             </a>
             <a href="/llms.txt" className="hover:text-ink">

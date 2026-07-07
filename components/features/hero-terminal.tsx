@@ -10,7 +10,7 @@ import { home } from "@/content/site";
 export function HeroTerminal() {
   const d = home.heroDemo;
   return (
-    <figure className="overflow-hidden rounded-[var(--radius-lg)] border border-border bg-surface">
+    <figure className="overflow-hidden rounded-[var(--radius-lg)] border border-border bg-surface shadow-[var(--shadow-md)]">
       <div className="flex items-center justify-between border-b border-border px-4 py-2">
         <span className="font-mono text-xs text-ink-tertiary">{d.app}</span>
         <span className="rounded-[var(--radius-sm)] border border-border px-1.5 py-0.5 font-mono text-[0.65rem] uppercase tracking-wide text-ink-tertiary">

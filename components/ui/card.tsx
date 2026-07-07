@@ -18,7 +18,7 @@ export function Card({
 }) {
   return (
     <Tag
-      className={`rounded-[var(--radius-md)] border border-border bg-surface p-6 transition-colors hover:border-border-strong ${className}`}
+      className={`rounded-[var(--radius-md)] border border-border bg-surface p-6 shadow-[var(--shadow-sm)] transition-colors hover:border-border-strong ${className}`}
     >
       {children}
     </Tag>

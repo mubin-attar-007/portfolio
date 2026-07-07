@@ -116,7 +116,7 @@ h4 {
 @media (prefers-reduced-motion: no-preference) {
   @supports (animation-timeline: view()) {
     .reveal {
-      animation: reveal-up linear both;
+      animation: reveal-up var(--ease-out) both;
       animation-timeline: view();
       animation-range: entry 0% cover 18%;
     }
@@ -160,6 +160,10 @@ h4 {
   --color-accent-hover: #a3bcf8;
   --color-on-accent: #0d0e12;
   --color-accent-subtle: #1a2340;
+  --shadow-sm: 0 0 0 0.5px rgb(255 255 255 / 0.07), 0 1px 2px rgb(0 0 0 / 0.5);
+  --shadow-md: 0 0 0 0.5px rgb(255 255 255 / 0.08), 0 8px 20px -6px rgb(0 0 0 / 0.55);
+  --shadow-lg: 0 0 0 0.5px rgb(255 255 255 / 0.09), 0 16px 38px -10px rgb(0 0 0 / 0.65);
+  --shadow-btn: inset 0 1px 0 rgb(255 255 255 / 0.12), 0 1px 2px rgb(0 0 0 / 0.55);
   background-color: var(--color-bg);
   color: var(--color-ink);
 }

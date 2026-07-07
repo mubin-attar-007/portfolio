@@ -18,7 +18,7 @@ const SIZES: Record<Size, string> = {
 };
 
 const VARIANTS: Record<Variant, string> = {
-  primary: "bg-accent text-on-accent hover:bg-accent-hover",
+  primary: "bg-accent text-on-accent shadow-[var(--shadow-btn)] hover:bg-accent-hover",
   secondary: "border border-border-strong text-ink hover:border-ink",
   ghost: "text-ink underline decoration-transparent underline-offset-4 hover:decoration-current",
 };
