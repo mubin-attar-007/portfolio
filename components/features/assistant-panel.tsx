@@ -89,6 +89,11 @@ export function AssistantPanel({
     if (el) el.scrollTop = el.scrollHeight;
   }, [messages]);
 
+  // collapse the input back to one line once it's cleared (after send)
+  useEffect(() => {
+    if (draft === "" && inputRef.current) inputRef.current.style.height = "auto";
+  }, [draft]);
+
   const ask = useCallback(
     async (question: string) => {
       const q = question.trim();
@@ -168,8 +173,10 @@ export function AssistantPanel({
       >
         <header className="flex items-center justify-between border-b border-border px-5 py-3">
           <div>
-            <p className="text-sm font-medium text-ink">Ask about my work</p>
-            <p className="font-mono text-xs text-ink-tertiary">Answers only from this site</p>
+            <p className="text-sm font-medium text-ink">Friday</p>
+            <p className="font-mono text-xs text-ink-tertiary">
+              RAG over my case studies, writing &amp; résumé
+            </p>
           </div>
           <button
             type="button"
@@ -184,9 +191,8 @@ export function AssistantPanel({
         <div ref={logRef} className="flex-1 overflow-y-auto px-5 py-4">
           {empty ? (
             <div>
-              <p className="text-sm text-ink-secondary">
-                A grounded assistant over this site&apos;s case studies, writing, and résumé. Ask
-                anything, or start here:
+              <p className="font-mono text-xs uppercase tracking-wide text-ink-tertiary">
+                Try one, or ask your own
               </p>
               <ul className="mt-4 flex flex-col gap-2">
                 {STARTERS.map((s) => (
@@ -253,7 +259,11 @@ export function AssistantPanel({
             rows={1}
             value={draft}
             maxLength={400}
-            onChange={(e) => setDraft(e.target.value)}
+            onChange={(e) => {
+              setDraft(e.target.value);
+              e.target.style.height = "auto";
+              e.target.style.height = `${Math.min(e.target.scrollHeight, 112)}px`;
+            }}
             onKeyDown={(e) => {
               if (e.key === "Enter" && !e.shiftKey) {
                 e.preventDefault();
@@ -261,9 +271,9 @@ export function AssistantPanel({
                 setDraft("");
               }
             }}
-            placeholder="Ask about a project, a decision, or his experience…"
+            placeholder="Ask about a project or a decision…"
             aria-label="Your question"
-            className="max-h-28 flex-1 resize-none rounded-[var(--radius-md)] border border-border bg-bg px-3 py-2 text-sm text-ink outline-none focus-visible:border-border-strong"
+            className="max-h-28 flex-1 resize-none overflow-y-auto rounded-[var(--radius-md)] border border-border bg-bg px-3 py-2 text-sm text-ink outline-none focus-visible:border-border-strong"
           />
           <button
             type="submit"
@@ -274,7 +284,7 @@ export function AssistantPanel({
           </button>
         </form>
         <p className="px-5 pb-3 font-mono text-xs text-ink-tertiary">
-          Grounded in this site&apos;s content · may be imperfect · answers aren&apos;t stored.
+          Cited · may be imperfect · not stored.
         </p>
       </div>
     </>,

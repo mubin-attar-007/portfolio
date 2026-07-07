@@ -46,7 +46,7 @@ export function Assistant() {
         onClick={() => setOpen(true)}
         className="hidden items-center gap-2 rounded-[var(--radius-md)] border border-border-strong px-3 py-1.5 text-sm text-ink transition-colors hover:border-accent hover:text-accent md:inline-flex"
       >
-        Ask about my work
+        Ask Friday
         <kbd className="rounded-[var(--radius-sm)] border border-border bg-bg-subtle px-1 font-mono text-xs text-ink-tertiary">
           /
         </kbd>

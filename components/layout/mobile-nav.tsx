@@ -111,7 +111,7 @@ export function MobileNav() {
               }}
               className="mt-3 rounded-[var(--radius-md)] border border-border-strong px-3 py-3 text-left text-lg text-ink"
             >
-              Ask about my work
+              Ask Friday
             </button>
           </div>
         </div>
