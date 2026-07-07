@@ -88,7 +88,7 @@ export function ComponentShowcase() {
                       </span>
                     </span>
                     <span
-                      className="grid transition-all duration-300"
+                      className="grid transition-all duration-300 ease-[var(--ease-out)]"
                       style={{ gridTemplateRows: on ? "1fr" : "0fr" }}
                     >
                       <span className="overflow-hidden">
