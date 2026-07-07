@@ -13,6 +13,19 @@ export const home = {
   // A single quiet fact line — the facts survive; the hollow stat cards don't.
   facts: ["4 live products", "shipping AI since 2022", "$0 free-tier stack"],
 
+  // Proof strip (the honest "trusted by" replacement) — real, verifiable credibility,
+  // no logos/quotes we can't back. Employer is the anchor; every stat is true.
+  proof: {
+    lead: "AI/ML Engineer at",
+    employer: "Sevina Technologies",
+    employerNote: "healthcare-AI automation, by day",
+    stats: [
+      { value: "4", label: "products live in production" },
+      { value: "3+ yrs", label: "shipping production AI" },
+      { value: "$0", label: "free-tier infrastructure" },
+    ],
+  },
+
   // The tech-stack rotator — real tools across the four live products, shown in
   // Clerk's vertical slot-machine (each column cycles its own tools). The honest
   // take on Clerk's "trusted by" logo wall: we have no customer logos, so we
@@ -74,7 +87,7 @@ export const home = {
   // screenshots, they're deployed and runnable. Cards + launch links are pulled
   // from content/projects.ts; this is just the section's voice.
   live: {
-    kicker: "Live, not screenshots",
+    kicker: "Deployed, not described",
     title: "Four products. All live — go try them.",
     lede: "Everything here is deployed and running on a $0 free-tier stack. Launch any of them, or read exactly how it's built.",
     note: "Free-tier backends may cold-start on first load.",
@@ -208,16 +221,12 @@ export const home = {
         a: "Solo and end-to-end: I design, build, ship, and maintain. Evidence over demos — every number you see is genuinely computed, and it links to how it was measured.",
       },
       {
-        q: "What's your stack?",
-        a: "FastAPI, Next.js, Postgres, and Docker, with LangGraph and retrieval for agents and XGBoost for predictive ML. The full list is on the Uses page.",
-      },
-      {
         q: "Can I try the products or read the code?",
-        a: "Yes — all four are live and launchable from the section above, and the repositories are on GitHub.",
+        a: "Yes — all four are live and launchable from the section above, and every repository is public on GitHub.",
       },
       {
         q: "What do you not do?",
-        a: "I don't ship screenshots or invented metrics. If a number can't be shared, I describe the mechanism and say so — never a fabricated figure.",
+        a: "I don't claim what I can't show running or back with a real number. If a figure can't be shared, I describe the mechanism instead — never a fabricated one.",
       },
     ],
   },

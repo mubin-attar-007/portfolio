@@ -1,5 +1,6 @@
 "use client";
 
+import Link from "next/link";
 import { useMemo, useRef, useState, type KeyboardEvent } from "react";
 import type { DiagramSpec } from "./types";
 
@@ -22,7 +23,18 @@ const PAD = 18;
 const LABEL_SIZE = 13;
 const SUB_SIZE = 10.5;
 
-export function SystemDiagram({ spec, caption }: { spec: DiagramSpec; caption?: string }) {
+export function SystemDiagram({
+  spec,
+  caption,
+  compact = false,
+  deepLink = "/work/dbwhisper",
+}: {
+  spec: DiagramSpec;
+  caption?: string;
+  /** Homepage: short reveal (1–2 lines) + deep link. Case study: full decision essays. */
+  compact?: boolean;
+  deepLink?: string;
+}) {
   const cols = Math.max(...spec.nodes.map((n) => n.col)) + 1;
   const rows = Math.max(...spec.nodes.map((n) => n.row)) + 1;
   const width = PAD * 2 + cols * NODE_W + (cols - 1) * GAP_X;
@@ -222,7 +234,20 @@ export function SystemDiagram({ spec, caption }: { spec: DiagramSpec; caption?: 
               ) : null}
             </div>
             <p className="mt-1 text-ink-secondary">{shown.description}</p>
-            {shown.decision ? (
+            {/* Homepage (compact): 1–2 line reveal + deep link. The full
+                Instead-of/Why/Tradeoff essays live on the case study (fixes V2). */}
+            {shown.decision && compact ? (
+              <Link
+                href={deepLink}
+                className="group mt-3 inline-flex items-center gap-1.5 text-sm font-medium text-accent hover:text-accent-hover"
+              >
+                Read the decision behind {shown.label}
+                <span className="transition-transform group-hover:translate-x-0.5" aria-hidden>
+                  →
+                </span>
+              </Link>
+            ) : null}
+            {shown.decision && !compact ? (
               <dl className="mt-3 flex flex-col gap-2 border-t border-border pt-3">
                 {shown.decision.rejected ? (
                   <div className="grid gap-0.5 sm:grid-cols-[6.5rem_1fr] sm:gap-3">

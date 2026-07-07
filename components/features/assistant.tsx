@@ -44,6 +44,8 @@ export function Assistant() {
         ref={triggerRef}
         type="button"
         onClick={() => setOpen(true)}
+        title="Friday — an AI assistant that answers only from this site's content (case studies, writing, résumé). Press / to open."
+        aria-label="Ask Friday — an AI assistant grounded on this site. Press slash to open."
         className="hidden items-center gap-2 rounded-[var(--radius-md)] border border-border-strong px-3 py-1.5 text-sm text-ink transition-colors hover:border-accent hover:text-accent md:inline-flex"
       >
         Ask Friday

@@ -52,7 +52,37 @@ the purple; the plan's "faint kicker" is a guideline, not a hard rule).
 
 ## Phase log
 - **Phase 0** ✅ — audit.md (baseline Perf 79 / A11y 100 / LCP 5.6s / CLS 0 / TBT 40ms), no code changed.
-- **Phase 1** (in progress) — tokenized the 2 stragglers: `--drop-node` (diagram node shadow,
-  was a hardcoded rgba) + `--motion-reveal` (600ms) / `--motion-slow` for inline durations in
+- **Phase 1** ✅ — tokenized the 2 stragglers: `--drop-node` (diagram node shadow, was a
+  hardcoded rgba) + `--motion-reveal` (600ms) / `--motion-slow` for inline durations in
   system-diagram + capability-grid. V6 closed (sr-only). V10 closed (intentional). Card anatomy
   already consistent; full kicker unification → Phase 2.
+- **Phase 2** (in progress) — homepage restructured (`app/page.tsx`):
+  - **V1** ✅ merged the two DBWhisper sections into ONE flagship section (architecture graph +
+    a compact 3-stage safety rail); deleted the now-dead `component-showcase.tsx`.
+  - **V2** ✅ `SystemDiagram` gained a `compact` prop — homepage node reveal is now `description`
+    + "Read the decision behind X →" deep link; full Why/Instead-of/Tradeoff essays stay for the
+    case study (rendered when `!compact`). Passed `compact` from the homepage.
+  - **V3** ✅ added `ProofStrip` (Sevina Technologies employer anchor + 3 real stats: 4 live
+    products / 3+ yrs / $0 infra). No stars (only 1 total — too small to show without undercutting
+    the honesty thesis) and no quotes (→ TODO_HUMAN).
+  - **V4** ✅ hero now has a dual CTA (case study + **Get in touch**); added a **mid-page hire
+    CTA** band (availability + Get in touch) so the conversion action recurs (hero → mid → footer
+    = 3×).
+  - **V5** ✅ "screenshots" now lands once (hero lede). `home.live.kicker` → "Deployed, not
+    described"; FAQ "what you don't do" rephrased off "screenshots".
+  - **V7** ✅ removed the raw "none / 6 / 3" metric trio from the homepage flagship section (it
+    read as a broken stat); the safety story is carried by the 3-stage rail; the metrics remain on
+    the case study.
+  - **V8** ✅ "Ask Friday" trigger got a native `title` + richer `aria-label` explaining it's an
+    AI assistant grounded on the site (press /).
+  - **V9** ✅ exact copy-paste corrections written to `TODO_HUMAN.md` (GitHub website field
+    netlify→vercel; TradePulse README demo URL → `tradepulse-live.vercel.app`). External, human-only.
+  - Also: **removed the Principles section** (its message overlaps the guarantees bento + the
+    flagship safety story — Chanel rule, shortens the page); **merged Currently-exploring + Selected
+    writing** into one two-column section. Mid-CTA band set to `bg-surface` so it doesn't read as a
+    second subtle band next to exploring.
+  - **Order deviation from the plan (documented):** kept Field-notes BEFORE the guarantees bento
+    (plan lists bento first) to preserve the light/dark **notched** alternation (flagship dark →
+    notebook light → bento dark → products light). The plan's exact bento-before-notebook order
+    would put two dark bands adjacent. Subject-adjacency (the real V1 concern) is fully satisfied:
+    no two neighbouring sections share a subject.
