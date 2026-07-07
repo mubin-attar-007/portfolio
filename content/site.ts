@@ -42,6 +42,34 @@ export const home = {
     note: "A representative request — the validator gates every query.",
   },
 
+  // The flagship "up close" showcase — a Clerk-Components-style split: an
+  // accordion of the three real stages on the left, an animated terminal that
+  // plays the active stage on the right. Every line is real behaviour, not a
+  // benchmark. Copy lives here (Law 3).
+  showcase: {
+    eyebrow: "The flagship, up close",
+    title: "How DBWhisper stays safe",
+    body: "A natural-language-to-SQL agent with a deterministic safety boundary. Every request walks the same three stages — each a real decision, not a prompt.",
+    cta: { label: "Read the full case study", href: "/work/dbwhisper" },
+    steps: [
+      {
+        key: "retrieve",
+        label: "Retrieve the schema",
+        body: "BM25 over table docs pulls only the few tables a question needs — never the whole database into the prompt.",
+      },
+      {
+        key: "validate",
+        label: "Validate, fail-closed",
+        body: "A deterministic validator gates every generated statement: SELECT-only, single statement, enrolled tables. It refuses when it can't prove safety.",
+      },
+      {
+        key: "execute",
+        label: "Execute read-only",
+        body: "The query runs as a least-privilege, read-only user. Rows come back; nothing is ever written.",
+      },
+    ],
+  },
+
   // The interactive architecture centerpiece framing (the flagship is pulled
   // from content/projects.ts; this is just the section's voice).
   architecture: {

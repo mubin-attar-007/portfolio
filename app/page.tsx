@@ -7,6 +7,7 @@ import { buttonVariants } from "@/components/ui/button";
 import { SystemDiagram } from "@/components/diagrams/system-diagram";
 import { HeroTerminal } from "@/components/features/hero-terminal";
 import { SkillRotator } from "@/components/features/skill-rotator";
+import { ComponentShowcase } from "@/components/features/component-showcase";
 import { diagrams } from "@/components/diagrams/data";
 import { SITE } from "@/config/site";
 import { home } from "@/content/site";
@@ -64,6 +65,11 @@ export default async function Home() {
 
       {/* The real stack in Clerk's slot-machine — the engineering take on a logo wall */}
       <SkillRotator />
+
+      {/* Beat 1.5 — Flagship up close: a Clerk-Components-style split (light) */}
+      <Section space="lg" ariaLabel="How DBWhisper stays safe" className="reveal">
+        <ComponentShowcase />
+      </Section>
 
       {/* Beat 2 — Interactive architecture: the flagship, on a dark band */}
       <Section space="lg" tone="invert" ariaLabel="Inside the flagship system" className="reveal">

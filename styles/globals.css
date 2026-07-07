@@ -195,6 +195,21 @@ h4 {
   }
 }
 
+/* --- terminal caret (component showcase) --- */
+.caret-blink {
+  animation: caret-blink 1.05s steps(1) infinite;
+}
+@keyframes caret-blink {
+  50% {
+    opacity: 0;
+  }
+}
+@media (prefers-reduced-motion: reduce) {
+  .caret-blink {
+    animation: none;
+  }
+}
+
 /* --- horizontal tech-stack ticker (marquee) --- */
 .ticker-track {
   animation: ticker-scroll 42s linear infinite;
