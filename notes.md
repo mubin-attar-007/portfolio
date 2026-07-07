@@ -86,3 +86,26 @@ the purple; the plan's "faint kicker" is a guideline, not a hard rule).
     notebook light → bento dark → products light). The plan's exact bento-before-notebook order
     would put two dark bands adjacent. Subject-adjacency (the real V1 concern) is fully satisfied:
     no two neighbouring sections share a subject.
+- **Phase 3** (motion system) —
+  - **Signature effect #1 built:** the hero terminal is now a **typing loop** — types the query,
+    reveals retrieve → validate → SQL → result, holds ~3.2s, loops (~10s total). **Pauses on
+    hover, replays on click**, renders the full static frame under prefers-reduced-motion. Driven
+    by a self-scheduling effect (no leaked timers). This is "the site's one wow" per the plan.
+  - **Hover durations trimmed to ≤250ms** (plan rule): diagram node + capability-card hover
+    transitions 300ms→`--motion-base` (200ms). Reveal timings stay `--motion-reveal` (600ms).
+  - **#3 graph hover** already met the spec (hovered node brightens + lifts, connected edges
+    brighten via `sd-flow`, non-connected edges dim to 0.4; keyboard focus = same path). Left as-is.
+  - **#2 gradient-border hover → solid `border-strong` brighten** (documented divergence): the
+    owner chose ONE **solid** accent (`#6c47ff`), not a gradient (D0). "Border brightens on hover"
+    is implemented with `--color-border-strong`; a gradient border would introduce a gradient we
+    deliberately don't have.
+  - **#4 marquee → slot-machine** (documented): the continuous marquee was replaced by the
+    slot-machine SkillRotator in v2.0.x (owner-approved). It's slow + discrete + edge-masked, so it
+    meets the "ambient motion is slow and not distracting" intent; kept.
+  - **#5 nav scroll-border → floating pill** (documented): the nav is a floating bordered pill
+    (always bordered), not a full-width bar that gains a border on scroll — different, intentional
+    design. Kept.
+  - **Reduced-motion:** global rule collapses all transition/animation durations to ~0 (8 blocks),
+    so no animated motion runs; the hero terminal + capability reveals + illustrations all have
+    explicit reduced-motion static paths. Instant sub-2px hover offsets are imperceptible (meets
+    "hover = colour/border only" intent).

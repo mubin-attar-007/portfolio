@@ -153,7 +153,7 @@ export function SystemDiagram({
                   transform: on ? "scale(1.035)" : "scale(1)",
                   filter: on ? "var(--drop-node)" : "none",
                   transition:
-                    "transform var(--motion-slow) var(--ease-out), filter var(--motion-slow) var(--ease-out)",
+                    "transform var(--motion-base) var(--ease-out), filter var(--motion-base) var(--ease-out)",
                 }}
               >
                 <rect
@@ -167,7 +167,7 @@ export function SystemDiagram({
                   strokeWidth={on ? 1.5 : 1}
                   style={{
                     transition:
-                      "fill var(--motion-slow) var(--ease-out), stroke var(--motion-slow) var(--ease-out), stroke-width var(--motion-slow) var(--ease-out)",
+                      "fill var(--motion-base) var(--ease-out), stroke var(--motion-base) var(--ease-out), stroke-width var(--motion-base) var(--ease-out)",
                   }}
                 />
                 <text

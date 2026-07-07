@@ -77,7 +77,7 @@ export function CapabilityGrid() {
               style={{
                 opacity: shown ? 1 : 0,
                 transform: shown ? "none" : "translateY(16px)",
-                transition: `opacity var(--motion-reveal) var(--ease-out) ${i * 70}ms, transform var(--motion-reveal) var(--ease-out) ${i * 70}ms, translate var(--motion-slow) var(--ease-out), border-color var(--motion-slow) var(--ease-out), box-shadow var(--motion-slow) var(--ease-out)`,
+                transition: `opacity var(--motion-reveal) var(--ease-out) ${i * 70}ms, transform var(--motion-reveal) var(--ease-out) ${i * 70}ms, translate var(--motion-base) var(--ease-out), border-color var(--motion-base) var(--ease-out), box-shadow var(--motion-base) var(--ease-out)`,
               }}
             >
               {/* soft accent wash from the top-left, revealed on hover */}
