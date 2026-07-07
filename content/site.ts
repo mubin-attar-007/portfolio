@@ -70,6 +70,16 @@ export const home = {
     ],
   },
 
+  // The "live demos" band — the AI/ML-brand differentiator: these aren't
+  // screenshots, they're deployed and runnable. Cards + launch links are pulled
+  // from content/projects.ts; this is just the section's voice.
+  live: {
+    kicker: "Live, not screenshots",
+    title: "Four products. All live — go try them.",
+    lede: "Everything here is deployed and running on a $0 free-tier stack. Launch any of them, or read exactly how it's built.",
+    note: "Free-tier backends may cold-start on first load.",
+  },
+
   // The interactive architecture centerpiece framing (the flagship is pulled
   // from content/projects.ts; this is just the section's voice).
   architecture: {

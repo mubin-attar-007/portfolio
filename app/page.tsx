@@ -9,10 +9,11 @@ import { HeroTerminal } from "@/components/features/hero-terminal";
 import { SkillRotator } from "@/components/features/skill-rotator";
 import { ComponentShowcase } from "@/components/features/component-showcase";
 import { CapabilityGrid } from "@/components/features/capability-grid";
+import { LiveDemos } from "@/components/features/live-demos";
 import { diagrams } from "@/components/diagrams/data";
 import { SITE } from "@/config/site";
 import { home } from "@/content/site";
-import { featuredProject, secondaryProjects } from "@/content/projects";
+import { featuredProject } from "@/content/projects";
 import { allWriting } from "@/lib/writing";
 import { formatDate } from "@/lib/format";
 
@@ -138,48 +139,9 @@ export default async function Home() {
         <CapabilityGrid />
       </Section>
 
-      {/* Beat 4 — Other systems: compact survey (light, to keep the dark rhythm) */}
-      <Section space="md" className="reveal">
-        <SectionHeading kicker="More work">Other systems</SectionHeading>
-        <ul className="mt-8 divide-y divide-border border-y border-border">
-          {secondaryProjects.map((p) => (
-            <li key={p.slug}>
-              <Link
-                href={`/work/${p.slug}`}
-                className="group -mx-4 grid gap-2 rounded-[var(--radius-md)] px-4 py-6 transition-colors duration-200 ease-[var(--ease-out)] hover:bg-bg-subtle md:grid-cols-[1fr_auto] md:items-baseline md:gap-8"
-              >
-                <div>
-                  <div className="flex flex-wrap items-baseline gap-3">
-                    <h3 className="text-lg text-ink transition-colors group-hover:text-accent">
-                      {p.title}
-                    </h3>
-                    <span className="font-mono text-xs uppercase text-ink-tertiary">{p.status}</span>
-                  </div>
-                  <p className="mt-1 max-w-[var(--width-prose)] text-sm text-ink-secondary">
-                    {p.summary}
-                  </p>
-                </div>
-                <span className="font-mono text-sm tabular-nums text-ink-secondary">
-                  {p.metrics[0]?.value}{" "}
-                  <span className="text-ink-tertiary">{p.metrics[0]?.label}</span>
-                </span>
-              </Link>
-            </li>
-          ))}
-        </ul>
-        <div className="mt-8">
-          <Link
-            href="/work"
-            className="group inline-flex items-center gap-1.5 text-sm font-medium text-accent hover:text-accent-hover"
-          >
-            All work{" "}
-            <ArrowRight
-              size={15}
-              strokeWidth={1.5}
-              className="transition-transform group-hover:translate-x-0.5"
-            />
-          </Link>
-        </div>
+      {/* Beat 4 — Live products: everything is deployed, so make it launchable */}
+      <Section space="lg" ariaLabel="Live products" className="reveal">
+        <LiveDemos />
       </Section>
 
       {/* Beat 5 — Principles: prose-forward, a distinct voice */}
