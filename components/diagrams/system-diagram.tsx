@@ -135,6 +135,13 @@ export function SystemDiagram({ spec, caption }: { spec: DiagramSpec; caption?: 
                 className={`outline-none [&:focus-visible>rect]:stroke-[var(--color-accent)] ${
                   n.decision ? "cursor-pointer" : "cursor-default"
                 }`}
+                style={{
+                  transformBox: "fill-box",
+                  transformOrigin: "center",
+                  transform: on ? "scale(1.035)" : "scale(1)",
+                  filter: on ? "drop-shadow(0 6px 14px rgba(18,14,40,0.24))" : "none",
+                  transition: "transform 300ms var(--ease-out), filter 300ms var(--ease-out)",
+                }}
               >
                 <rect
                   x={p.x}
@@ -142,9 +149,13 @@ export function SystemDiagram({ spec, caption }: { spec: DiagramSpec; caption?: 
                   width={NODE_W}
                   height={NODE_H}
                   rx="8"
-                  fill={isPinned ? "var(--color-accent-subtle)" : "var(--color-surface)"}
+                  fill={isPinned || on ? "var(--color-accent-subtle)" : "var(--color-surface)"}
                   stroke={on ? "var(--color-accent)" : "var(--color-border)"}
                   strokeWidth={on ? 1.5 : 1}
+                  style={{
+                    transition:
+                      "fill 300ms var(--ease-out), stroke 300ms var(--ease-out), stroke-width 300ms var(--ease-out)",
+                  }}
                 />
                 <text
                   x={p.x + 14}

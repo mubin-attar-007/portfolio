@@ -24,7 +24,8 @@ const VARIANTS: Record<Variant, string> = {
 };
 
 export function buttonVariants(variant: Variant = "primary", size: Size = "md"): string {
-  return `inline-flex items-center justify-center gap-2 rounded-[var(--radius-md)] font-medium transition-colors disabled:pointer-events-none disabled:opacity-50 ${SIZES[size]} ${VARIANTS[variant]}`;
+  // Tactile: all state changes on Clerk's curve; a small press on :active.
+  return `inline-flex items-center justify-center gap-2 rounded-[var(--radius-md)] font-medium transition-[color,background-color,border-color,box-shadow,translate,opacity] duration-200 ease-[var(--ease-out)] active:translate-y-px disabled:pointer-events-none disabled:opacity-50 ${SIZES[size]} ${VARIANTS[variant]}`;
 }
 
 export function Button({

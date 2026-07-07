@@ -29,7 +29,7 @@ export default async function WritingIndex() {
           <li key={p.slug}>
             <Link
               href={`/writing/${p.slug}`}
-              className="group grid gap-1 py-6 md:grid-cols-[1fr_auto] md:items-baseline md:gap-8"
+              className="group -mx-4 grid gap-1 rounded-[var(--radius-md)] px-4 py-6 transition-colors duration-200 ease-[var(--ease-out)] hover:bg-bg-subtle md:grid-cols-[1fr_auto] md:items-baseline md:gap-8"
             >
               <div>
                 <div className="flex flex-wrap items-baseline gap-3">
