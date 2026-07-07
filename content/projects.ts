@@ -19,7 +19,7 @@ const RAW = [
     order: 1,
     systems: ["LangGraph agent", "pgvector retrieval", "fail-closed SQL validator", "multi-provider LLM fallback"],
     metrics: [
-      { label: "write access to your data", value: "none", method: "Fail-closed read-only validator gates every query before execution; the query is rejected if it references a table outside the enrolled schema, or if no schema index exists." },
+      { label: "writes to your data, ever", value: "0", method: "Fail-closed read-only validator gates every query before execution; the query is rejected if it references a table outside the enrolled schema, or if no schema index exists." },
       { label: "LLM providers behind one fallback", value: "6", method: "OpenAI → OpenRouter → DeepSeek → Groq → Anthropic → Gemini; the first with credentials wins, Gemini's free tier is the final fallback." },
       { label: "SQL dialects supported", value: "3", method: "Postgres, MySQL, and SQL Server via SQLAlchemy 2.0 + ODBC, with per-dialect generation directives." },
     ],

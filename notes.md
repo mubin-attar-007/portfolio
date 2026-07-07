@@ -126,3 +126,18 @@ the purple; the plan's "faint kicker" is a guideline, not a hard rule).
     reading this far." as the one warm serif moment. ✓
   - Verified desktop (1440) this phase; mobile (390) structurally unchanged since Phase 1 (verified)
     and covered again in the Phase 6 full-route sweep. 0 console/runtime errors.
+- **Phase 5** (subpages) —
+  - All 7 subpages (`/work`, `/work/dbwhisper`, `/writing`, `/about`, `/resume`, `/timeline`,
+    `/uses`) screenshot at 1440 + 390: **0 console/runtime errors**, token-consistent (they were
+    built token-first).
+  - **V2 fully closed:** the case studies render `<SystemDiagram>` **without** `compact`, so the
+    full Why/Instead-of/Tradeoff node essays live on `/work/dbwhisper` (the "Key decisions" table)
+    — exactly where the plan wants the depth. The homepage stays compact (short + deep link).
+  - **V7 finished:** changed `dbwhisper.metrics[0]` `none / "write access to your data"` →
+    `0 / "writes to your data, ever"` in `content/projects.ts` — reads as an instant guarantee on
+    the case study (the homepage trio was already removed in Phase 2).
+  - **Sticky TOC** (plan suggestion for the case study): the page is long but well-sectioned with
+    clear headings; a sticky TOC is a nice-to-have, **deferred** (logged) — not blocking flagship
+    quality, and adds a client component + scroll-spy I'd rather not rush overnight. Case study is
+    already Phase-4-level (context → constraints → architecture → data flow → key decisions →
+    what failed → perf/cost → operations → what I'd do differently → evidence).
