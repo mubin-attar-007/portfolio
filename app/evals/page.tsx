@@ -68,7 +68,46 @@ export default function EvalsPage() {
         ))}
       </div>
 
-      <div className="mt-14 overflow-x-auto">
+      {/* Mobile (< md): each eval as a stacked card so Result/Date/Notes never
+          scroll off-screen. Desktop keeps the scannable table below. */}
+      <ul className="mt-14 flex flex-col gap-4 md:hidden">
+        {evals.map((e) => (
+          <li
+            key={`${e.system}-${e.benchmark}`}
+            className="rounded-[var(--radius-md)] border border-border bg-surface p-5 shadow-[var(--shadow-sm)]"
+          >
+            <div className="flex items-center justify-between gap-3">
+              <span className="font-medium text-ink">{e.system}</span>
+              <Status status={e.status} result={e.result} />
+            </div>
+            <p className="mt-1 text-sm text-ink-secondary">{e.benchmark}</p>
+            <dl className="mt-4 flex flex-col gap-2 border-t border-border pt-4 text-sm">
+              <div className="flex justify-between gap-6">
+                <dt className="font-mono text-xs uppercase tracking-[0.06em] text-ink-tertiary">Metric</dt>
+                <dd className="text-right text-ink-secondary">{e.metric}</dd>
+              </div>
+              <div className="flex justify-between gap-6">
+                <dt className="font-mono text-xs uppercase tracking-[0.06em] text-ink-tertiary">Date</dt>
+                <dd className="text-right font-mono text-xs text-ink-tertiary">
+                  {e.date ? formatDate(e.date) : "—"}
+                </dd>
+              </div>
+            </dl>
+            {e.note ? (
+              <p className="mt-3 text-sm text-ink-secondary">
+                {e.note}
+                {e.link ? (
+                  <span className="mt-1.5 block">
+                    <ResultLink href={e.link}>method</ResultLink>
+                  </span>
+                ) : null}
+              </p>
+            ) : null}
+          </li>
+        ))}
+      </ul>
+
+      <div className="mt-14 hidden overflow-x-auto md:block">
         <table className="w-full min-w-[48rem] border-collapse text-sm">
           <caption className="sr-only">Eval registry — system, method, metric, result, and date.</caption>
           <thead>
