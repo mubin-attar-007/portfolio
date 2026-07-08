@@ -20,7 +20,12 @@ const csp = [
   "base-uri 'self'",
   "form-action 'self'",
   "frame-ancestors 'none'",
-  "upgrade-insecure-requests",
+  // Only force http→https upgrades where HTTPS actually exists (the Vercel
+  // deploy). A local `next start` served over http:// on a LAN IP has no HTTPS
+  // to upgrade to, so this would break every stylesheet/script on that preview
+  // (localhost is exempt from the upgrade; a raw LAN IP is not). Production
+  // (Vercel sets VERCEL=1) is unchanged.
+  ...(process.env.VERCEL ? ["upgrade-insecure-requests"] : []),
 ].join("; ");
 
 const securityHeaders = [
