@@ -30,10 +30,11 @@ const RAW = [
   {
     system: "DBWhisper",
     benchmark: "Custom golden-query set",
-    metric: "Execution accuracy + fail-closed refusals",
-    result: "In progress",
-    status: "in-progress",
-    note: "Hand-built queries over enrolled schemas; also measures the validator’s refusals on unsafe or out-of-scope requests.",
+    metric: "Execution accuracy · fail-closed refusals",
+    result: "82% exact · 100% fail-closed",
+    status: "complete",
+    date: "2026-07-08",
+    note: "22 natural-language golden queries + 4 unsafe/out-of-scope prompts over a read-only Postgres store, run end-to-end through DBWhisper’s live pipeline (schema retrieval → generation → read-only validator → execute). 82% exact result-set match (18/22); 95% (21/22) when crediting correct answers that returned an extra column. All 4 destructive or out-of-scope prompts were refused fail-closed (4/4).",
     link: "/work/dbwhisper",
   },
 ] as const;
