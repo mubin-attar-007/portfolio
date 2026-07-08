@@ -42,3 +42,10 @@ next-env.d.ts
 
 # flagship-v2 audit artifacts
 lh-*.json
+
+# internal flagship-v2 process docs (kept local, not shipped)
+audit.md
+notes.md
+TODO_HUMAN.md
+MORNING_REPORT.md
+FLAGSHIP_PLAN.md.md
