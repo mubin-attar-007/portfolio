@@ -136,7 +136,7 @@ export function SystemDiagram({
                 role="button"
                 aria-pressed={n.decision ? isPinned : undefined}
                 aria-label={`${n.label}${n.sublabel ? `, ${n.sublabel}` : ""}. ${n.description}${
-                  n.decision?.why ? ` Why: ${n.decision.why}` : ""
+                  !compact && n.decision?.why ? ` Why: ${n.decision.why}` : ""
                 }`}
                 onMouseEnter={() => setHover(n.id)}
                 onMouseLeave={() => setHover((h) => (h === n.id ? null : h))}
@@ -279,14 +279,17 @@ export function SystemDiagram({
         )}
       </div>
 
-      {/* text alternative / narration — screen readers and no-JS */}
+      {/* Text alternative / narration — screen readers and no-JS. On the compact
+          homepage it narrates only the map (label + description); the full
+          decision essays (why/instead-of/tradeoff) live on the case study
+          (!compact), so they aren't duplicated into the homepage DOM (fixes V2). */}
       <ul className="sr-only">
         {spec.nodes.map((n) => (
           <li key={n.id}>
             {n.label}: {n.description}
-            {n.decision?.why ? ` Why: ${n.decision.why}` : ""}
-            {n.decision?.rejected ? ` Instead of: ${n.decision.rejected}.` : ""}
-            {n.decision?.tradeoff ? ` Tradeoff: ${n.decision.tradeoff}` : ""}
+            {!compact && n.decision?.why ? ` Why: ${n.decision.why}` : ""}
+            {!compact && n.decision?.rejected ? ` Instead of: ${n.decision.rejected}.` : ""}
+            {!compact && n.decision?.tradeoff ? ` Tradeoff: ${n.decision.tradeoff}` : ""}
           </li>
         ))}
       </ul>
