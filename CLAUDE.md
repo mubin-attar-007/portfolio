@@ -35,7 +35,7 @@ each deliberate and documented:
 | pnpm | **npm** | existing lockfile |
 | Next 15 | **Next 16 (modified)** | read `node_modules/next/dist/docs/` before any Next API; middleware is `proxy.ts`; `params` is async |
 | @content-collections + Zod (ADR-003) | **next-mdx-remote/rsc + Zod at load** | build FAILS on invalid frontmatter — same intent (typed, validated, build-time-checked) |
-| Anthropic + Voyage (ADR-006) | **Gemini generation + local BM25 retrieval** | only a Gemini key is available; retrieval-first, works at zero LLM quota |
+| Anthropic + Voyage (ADR-006) | **Gemini generation + pgvector embedding retrieval** | Gemini (or local HF) embeddings in a PGVector store; retrieval-first, scoped prompts |
 | Vitest + RTL | **node --test** (lib) + **Playwright + @axe-core/playwright** (a11y) | |
 | `src/` layout | **root-level** `app/ components/ lib/ content/ config/ constants/ styles/ types/` | keeps the `@/*`→root alias; adopt the spec's SUB-organization (`components/{ui,layout,sections,diagrams,mdx,features}`) |
 | Shiki (ADR-008) | **Shiki** (build-time) | as spec |

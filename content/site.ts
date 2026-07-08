@@ -68,7 +68,7 @@ export const home = {
       {
         key: "retrieve",
         label: "Retrieve the schema",
-        body: "BM25 over table docs pulls only the few tables a question needs — never the whole database into the prompt.",
+        body: "pgvector retrieval over embedded table docs pulls only the few tables a question needs — never the whole database into the prompt.",
       },
       {
         key: "validate",
@@ -165,7 +165,7 @@ export const home = {
         icon: "retrieval",
         kicker: "dbwhisper",
         title: "Retrieval-scoped prompts",
-        body: "BM25 pulls only the tables a question needs. A small, scoped context beats stuffing the whole schema — cheaper, and more accurate.",
+        body: "pgvector similarity pulls only the tables a question needs. A small, scoped context beats stuffing the whole schema — cheaper, and more accurate.",
       },
       {
         icon: "lookahead",
@@ -297,7 +297,7 @@ export const uses = {
         "Gemini",
         "Multi-provider LLM fallback",
         "pgvector",
-        "BM25 retrieval",
+        "embedding retrieval",
         "XGBoost",
         "scikit-learn",
       ],
