@@ -1,0 +1,11 @@
+---
+title: "Enforce tenancy in the repository layer, not the route"
+date: "2026-02-21"
+tags: ["infra", "security"]
+---
+
+The tempting place to check "does this user own this row?" is the route handler. It's also the easy place to forget — one new endpoint without the check and you've leaked another tenant's data.
+
+In LLM Studio, ownership is enforced in the **repository layer**: every query that touches user data filters by owner, so there's no code path to the database that skips the check. Routes can't opt out, because they never see an unscoped query.
+
+Defense that lives at a boundary you can't route around beats defense you have to remember to add. See [LLM Studio](/work/llm-studio).

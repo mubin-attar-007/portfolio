@@ -6,6 +6,7 @@ import { writingSlugs, loadWriting } from "@/lib/writing";
 import { formatDate } from "@/lib/format";
 import { SITE } from "@/config/site";
 import { ArticleJsonLd } from "@/components/seo/json-ld";
+import { NewsletterForm } from "@/components/features/newsletter-form";
 
 export const dynamicParams = false;
 
@@ -59,6 +60,9 @@ export default async function WritingPost({ params }: { params: Promise<{ slug: 
         <div className="mt-8">{content}</div>
       </article>
       <div className="mt-16 max-w-[var(--width-prose)] border-t border-border pt-8">
+        <NewsletterForm />
+      </div>
+      <div className="mt-10 max-w-[var(--width-prose)]">
         <Link href="/writing" className="text-sm font-medium text-accent hover:text-accent-hover">
           ← All writing
         </Link>

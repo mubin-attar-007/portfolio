@@ -9,6 +9,7 @@ import { Metric, MetricsRow } from "@/components/ui/metric";
 import { buttonVariants } from "@/components/ui/button";
 import { projects, projectBySlug } from "@/content/projects";
 import type { Project } from "@/content/schema";
+import { formatDate } from "@/lib/format";
 import { SITE } from "@/config/site";
 import { DBWhisperBody } from "@/components/case-studies/dbwhisper";
 import { TradePulseBody } from "@/components/case-studies/tradepulse";
@@ -99,6 +100,25 @@ export default async function CaseStudyPage({ params }: { params: Promise<{ slug
       </div>
 
       <div className="mt-4">{Body ? <Body /> : <GenericBody project={p} />}</div>
+
+      {p.changelog.length > 0 ? (
+        <section
+          aria-label="Changelog"
+          className="mt-16 max-w-[var(--width-prose)] border-t border-border pt-8"
+        >
+          <h2 className="font-mono text-xs uppercase tracking-[0.06em] text-ink-tertiary">Changelog</h2>
+          <ol className="mt-6 flex flex-col gap-5">
+            {p.changelog.map((c, i) => (
+              <li key={`${c.date}-${i}`} className="grid gap-1 sm:grid-cols-[8rem_1fr] sm:gap-6">
+                <time dateTime={c.date} className="font-mono text-xs text-ink-tertiary">
+                  {formatDate(c.date)}
+                </time>
+                <p className="text-ink-secondary">{c.summary}</p>
+              </li>
+            ))}
+          </ol>
+        </section>
+      ) : null}
 
       <div className="mt-16 border-t border-border pt-8">
         <Link href="/work" className="text-sm font-medium text-accent hover:text-accent-hover">

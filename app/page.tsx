@@ -62,9 +62,9 @@ export default async function Home() {
               <Link href={`/work/${flagship.slug}`} className={buttonVariants("primary")}>
                 Read the flagship case study
               </Link>
-              <a href={`mailto:${SITE.email}`} className={buttonVariants("secondary")}>
+              <Link href="/hire" className={buttonVariants("secondary")}>
                 Get in touch
-              </a>
+              </Link>
             </div>
             <p
               className="hero-item mt-10 font-mono text-xs text-ink-tertiary"
@@ -153,6 +153,19 @@ export default async function Home() {
             </article>
           ))}
         </div>
+        <div className="mt-12">
+          <Link
+            href="/notes"
+            className="group inline-flex items-center gap-1.5 text-sm font-medium text-accent hover:text-accent-hover"
+          >
+            All notes{" "}
+            <ArrowRight
+              size={15}
+              strokeWidth={1.5}
+              className="transition-transform group-hover:translate-x-0.5"
+            />
+          </Link>
+        </div>
       </Section>
 
       {/* Guarantees bento — dark card grid */}
@@ -172,28 +185,32 @@ export default async function Home() {
             <span className="h-2 w-2 rounded-full bg-positive" aria-hidden />
             {STATUS.text}
           </p>
-          <a href={STATUS.href} className={buttonVariants("primary", "sm")}>
+          <Link href={STATUS.href} className={buttonVariants("primary", "sm")}>
             {STATUS.cta}
             <ArrowUpRight size={15} strokeWidth={1.8} />
-          </a>
+          </Link>
         </div>
       </div>
 
-      {/* Exploring + Writing — merged two-column (shortens the page) */}
-      <Section space="md" tone="subtle" ariaLabel="Exploring and writing" className="reveal">
+      {/* Now + Writing — merged two-column (shortens the page) */}
+      <Section space="md" tone="subtle" ariaLabel="Now and writing" className="reveal">
         <div className="grid gap-12 md:grid-cols-2 md:gap-16">
           <div>
-            <SectionHeading kicker={home.exploring.kicker}>What I&apos;m digging into now</SectionHeading>
-            <ul className="mt-8 flex flex-col gap-3">
-              {home.exploring.items.map((item) => (
-                <li key={item} className="flex gap-3 text-ink-secondary">
-                  <span className="font-mono text-ink-tertiary" aria-hidden>
-                    →
-                  </span>
-                  {item}
-                </li>
-              ))}
-            </ul>
+            <SectionHeading kicker={home.now.kicker}>{home.now.title}</SectionHeading>
+            <p className="mt-8 max-w-[42ch] text-ink-secondary">{home.now.teaser}</p>
+            <div className="mt-6">
+              <Link
+                href={home.now.href}
+                className="group inline-flex items-center gap-1.5 text-sm font-medium text-accent hover:text-accent-hover"
+              >
+                {home.now.cta}{" "}
+                <ArrowRight
+                  size={15}
+                  strokeWidth={1.5}
+                  className="transition-transform group-hover:translate-x-0.5"
+                />
+              </Link>
+            </div>
           </div>
           <div>
             <SectionHeading kicker="Writing">Selected writing</SectionHeading>

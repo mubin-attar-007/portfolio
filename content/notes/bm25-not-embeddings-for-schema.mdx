@@ -1,0 +1,11 @@
+---
+title: "BM25, not embeddings, for schema retrieval"
+date: "2026-04-02"
+tags: ["rag", "retrieval", "infra"]
+---
+
+The obvious move for "which tables does this question need?" is embeddings. I use BM25 instead.
+
+Table and column names are *lexical* — `orders`, `created_at`, `amount`. A question about "revenue last month" overlaps those tokens directly; you rarely need semantic similarity to find them. BM25 over the table docs pulls the few relevant tables with no model call, no vector index to keep warm, and no embedding cost — which matters on a free tier.
+
+It also **works at zero quota**: retrieval never depends on an LLM being reachable, so the safety-critical path (retrieve → validate → read-only execute) can't be knocked out by a rate limit. Embeddings would buy fuzzier matching I don't need for schema scope. Either way, retrieval beats stuffing the whole database into the prompt — see [DBWhisper](/work/dbwhisper).

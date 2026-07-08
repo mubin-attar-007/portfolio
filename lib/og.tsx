@@ -10,13 +10,14 @@ import { ImageResponse } from "next/og";
 export const OG_SIZE = { width: 1200, height: 630 } as const;
 export const OG_CONTENT_TYPE = "image/png";
 
-// Brand tokens, inlined (satori can't read CSS variables).
-const BG = "#FCFCF9";
-const INK = "#1C1C1A";
-const INK_2 = "#57534e";
-const INK_3 = "#8a857e";
-const BORDER = "#e7e4de";
-const ACCENT = "#1d4ed8";
+// Brand tokens, inlined (satori can't read CSS variables). Kept in sync with
+// styles/tokens.css — the light (default) palette, Clerk purple accent.
+const BG = "#f7f7f8"; // --color-bg
+const INK = "#131316"; // --color-ink
+const INK_2 = "#5e5f6e"; // --color-ink-secondary
+const INK_3 = "#676876"; // --color-ink-tertiary
+const BORDER = "#d9d9de"; // --color-border-strong
+const ACCENT = "#6c47ff"; // --color-accent
 
 export function renderOg(opts: {
   /** mono meta line, e.g. "mubin attar · ai/ml engineer" */

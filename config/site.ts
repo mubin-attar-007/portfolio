@@ -17,11 +17,15 @@ export const SITE = {
 
 export type Site = typeof SITE;
 
-/** The slim top status bar (site chrome — evergreen, not an announcement). */
+/**
+ * Availability chrome (evergreen, not an announcement). `href` points at /hire
+ * — the single funnel for contact intent. The literal email address stays a
+ * mailto wherever it's shown verbatim (footer, /hire, homepage contact).
+ */
 export const STATUS = {
   text: "Open to AI/ML roles — remote or Ahmedabad, India",
   cta: "Get in touch",
-  href: `mailto:${SITE.email}`,
+  href: "/hire",
 } as const;
 
 /**

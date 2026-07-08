@@ -11,6 +11,7 @@
     "test:a11y": "node scripts/a11y.mjs"
   },
   "dependencies": {
+    "@vercel/analytics": "^2.0.1",
     "geist": "^1.7.2",
     "lucide-react": "^1.23.0",
     "next": "16.2.10",

@@ -194,16 +194,15 @@ export const home = {
     ],
   },
 
-  // DRAFT — grounded in real work + stated intentions (see each project's
-  // "What I'd do differently"). Owner to confirm/refine the exact list.
-  exploring: {
-    kicker: "Currently exploring",
-    items: [
-      "Golden-query evals for text-to-SQL — execution accuracy, not vibes",
-      "Model Context Protocol (MCP) for typed tool-use across agents",
-      "Long-context vs. retrieval — when a bigger window still loses to a small, scoped prompt",
-      "Agent memory beyond flat conversation summaries",
-    ],
+  // Homepage teaser for /now — a 3-line snapshot. The full "currently exploring"
+  // list now lives on /now (single source: content/now.mdx), not here.
+  now: {
+    kicker: "Now",
+    title: "What I'm working on now",
+    teaser:
+      "Standing up evals for DBWhisper, keeping four products live, and turning this site into a running notebook — a snapshot I update by hand.",
+    cta: "See what I'm doing now",
+    href: "/now",
   },
 
   // FAQ — the questions a hiring manager actually has, answered plainly. Every
@@ -243,6 +242,40 @@ export const about = {
     "The one rule across all of it: every number a user sees is genuinely computed — never faked.",
   ],
 } as const;
+
+/**
+ * /hire — the "work with me" page. Availability is single-sourced from STATUS;
+ * "How I work" links to real decision notes so the claim is backed, not asserted.
+ */
+export const hire = {
+  kicker: "Hire me",
+  title: "Let's build something honest.",
+  lede:
+    "I design, build, ship, and maintain AI systems end to end — and I show the evidence. If that's the kind of engineer you need, here's how I work and how to reach me.",
+  howIWork: {
+    body: "Solo and end to end: architecture, implementation, deploy, and the honest numbers. I put deterministic boundaries around models rather than trusting them, I measure what I ship, and I'd rather show a lower real number than a higher invented one. A few decisions that show how I think:",
+    notes: [
+      { label: "BM25, not embeddings, for schema retrieval", href: "/notes/bm25-not-embeddings-for-schema" },
+      { label: "Six LLM providers behind one interface", href: "/notes/six-providers-one-interface" },
+      { label: "Enforce tenancy in the repository layer, not the route", href: "/notes/tenancy-in-the-repository-layer" },
+    ],
+  },
+} as const;
+
+/** A talk or appearance. */
+export type Talk = {
+  date: string;
+  title: string;
+  venue: string;
+  href?: string;
+};
+
+/**
+ * Talks & appearances — real entries only. Empty until the first one happens;
+ * the page renders an honest empty state (never an invented lineup). Add a row
+ * here when a talk is booked.
+ */
+export const talks: Talk[] = [];
 
 /**
  * /uses — the real stack behind the four live products. Deliberately boring and

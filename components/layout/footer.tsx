@@ -2,26 +2,19 @@ import Link from "next/link";
 import { ArrowUpRight } from "lucide-react";
 import { Container } from "./container";
 import { SITE, STATUS, FOOTER } from "@/config/site";
+import { FOOTER_NAV } from "@/config/nav";
 
 /**
- * Footer — a personal sign-off, not a company sitemap. Clerk's footer *craft*
- * (generous space, hairline rules, mono microcopy) adapted to a personal brand:
- * a serif sign-off to the reader who scrolled the evidence, one clear way to
- * reach me, then a single quiet strip of essential nav + profiles and a
- * colophon. No column matrix, no "Resources / Legal" — one engineer signing the
- * page. A11y: <footer> landmark; the nav strip is labelled; every link is
- * keyboard-operable with a visible focus ring; the status dot is decorative.
+ * Footer — a personal sign-off, then the complete site map. Clerk's footer
+ * *craft* (generous space, hairline rules, mono microcopy) adapted to a personal
+ * brand: a serif sign-off to the reader who scrolled the evidence, one clear way
+ * to reach me, then a grouped map (Explore · Me · Elsewhere) so no route is
+ * orphaned, and a colophon. Not a "Resources / Legal" company matrix — small,
+ * quiet, one engineer signing the page. A11y: <footer> landmark; each nav group
+ * is a labelled landmark; every link is keyboard-operable with a visible focus
+ * ring; the status dot is decorative.
  */
 type FLink = { label: string; href: string };
-
-const NAV: FLink[] = [
-  { label: "Work", href: "/work" },
-  { label: "Writing", href: "/writing" },
-  { label: "About", href: "/about" },
-  { label: "Timeline", href: "/timeline" },
-  { label: "Uses", href: "/uses" },
-  { label: "Résumé", href: "/resume" },
-];
 
 const PROFILES: FLink[] = [
   { label: "GitHub", href: SITE.socials.github },
@@ -64,31 +57,45 @@ export function Footer({ year }: { year: number }) {
           </div>
         </div>
 
-        {/* One quiet strip: essential nav + profiles (not a company matrix) */}
-        <div className="mt-14 flex flex-col gap-5 border-t border-border pt-7 sm:flex-row sm:items-center sm:justify-between">
-          <nav aria-label="Footer" className="flex flex-wrap gap-x-6 gap-y-2">
-            {NAV.map((l) => (
-              <Link
-                key={l.label}
-                href={l.href}
-                className="text-sm text-ink-secondary transition-colors hover:text-ink"
-              >
-                {l.label}
-              </Link>
-            ))}
-          </nav>
-          <div className="flex flex-wrap gap-x-6 gap-y-2">
-            {PROFILES.map((l) => (
-              <a
-                key={l.label}
-                href={l.href}
-                target="_blank"
-                rel="noopener noreferrer"
-                className="font-mono text-xs text-ink-tertiary transition-colors hover:text-ink"
-              >
-                {l.label}
-              </a>
-            ))}
+        {/* The complete site map, grouped so nothing is orphaned (Explore · Me · Elsewhere) */}
+        <div className="mt-14 grid grid-cols-2 gap-x-8 gap-y-10 border-t border-border pt-10 sm:grid-cols-3">
+          {FOOTER_NAV.map((group) => (
+            <nav key={group.heading} aria-label={group.heading}>
+              <h2 className="font-mono text-xs uppercase tracking-[0.06em] text-ink-tertiary">
+                {group.heading}
+              </h2>
+              <ul className="mt-4 flex flex-col gap-2.5">
+                {group.links.map((l) => (
+                  <li key={l.href}>
+                    <Link
+                      href={l.href}
+                      className="text-sm text-ink-secondary transition-colors hover:text-ink"
+                    >
+                      {l.label}
+                    </Link>
+                  </li>
+                ))}
+              </ul>
+            </nav>
+          ))}
+          <div>
+            <h2 className="font-mono text-xs uppercase tracking-[0.06em] text-ink-tertiary">
+              Elsewhere
+            </h2>
+            <ul className="mt-4 flex flex-col gap-2.5">
+              {PROFILES.map((l) => (
+                <li key={l.label}>
+                  <a
+                    href={l.href}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="text-sm text-ink-secondary transition-colors hover:text-ink"
+                  >
+                    {l.label}
+                  </a>
+                </li>
+              ))}
+            </ul>
           </div>
         </div>
 

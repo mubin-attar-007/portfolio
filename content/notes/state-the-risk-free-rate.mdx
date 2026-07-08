@@ -1,0 +1,11 @@
+---
+title: "State the risk-free rate wherever Sharpe appears"
+date: "2026-05-09"
+tags: ["quant", "honesty"]
+---
+
+A Sharpe ratio is meaningless without the risk-free rate it assumed — change the rate and the number moves. Most backtests quietly pick one (often zero) and never say so.
+
+In TradePulse, Sharpe and Sortino are annualized and the **risk-free rate is printed wherever they appear**. No silent assumption; the reader can check the math.
+
+It's a small discipline, but it's the same rule as everywhere else on this site: a metric ships with the method that produced it, or it doesn't ship. More in the [TradePulse case study](/work/tradepulse).

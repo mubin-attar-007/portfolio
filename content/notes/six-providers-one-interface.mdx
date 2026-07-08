@@ -1,0 +1,12 @@
+---
+title: "Six LLM providers behind one interface"
+date: "2026-03-14"
+tags: ["infra", "agents"]
+source: "https://github.com/mubin-attar-007/dbwhisper"
+---
+
+DBWhisper generates SQL through a chain of six providers — OpenAI → OpenRouter → DeepSeek → Groq → Anthropic → Gemini. The first one with credentials wins; Gemini's free tier is the floor.
+
+The point isn't redundancy for its own sake. It's that **no single vendor is a hard dependency**, and the whole thing still runs at zero LLM spend. A rate-limit or an outage at one provider degrades to the next, not to a 500. On a $0 stack that's not a nice-to-have — it's the only way the product stays up.
+
+The interface is the invariant: generation asks for "SQL for this schema and question," and which model answers is a config detail, not an architecture decision. The full chain is in the [DBWhisper case study](/work/dbwhisper).

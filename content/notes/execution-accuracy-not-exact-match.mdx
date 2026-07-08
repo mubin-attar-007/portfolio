@@ -1,0 +1,12 @@
+---
+title: "For text-to-SQL, measure execution accuracy"
+date: "2026-06-18"
+tags: ["evals", "sql"]
+source: "https://yale-lily.github.io/spider"
+---
+
+Two SQL queries can be spelled completely differently and return exactly the same rows. So string-matching generated SQL against a reference — *exact-match accuracy* — punishes correct answers for cosmetic reasons.
+
+The metric that matters is **execution accuracy**: run both queries against the database and compare result sets. That's what I'm building the golden-query evals around for DBWhisper, and it's why I'm running it against [Spider](https://yale-lily.github.io/spider), whose harness scores execution.
+
+"The model felt right" is not a number. Until the eval runs, the honest state is *in progress* — which is exactly how it's shown on [Evals](/evals), not dressed up as a result I don't have yet.

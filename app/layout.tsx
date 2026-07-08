@@ -2,6 +2,7 @@ import type { Metadata } from "next";
 import { GeistSans } from "geist/font/sans";
 import { GeistMono } from "geist/font/mono";
 import { Newsreader } from "next/font/google";
+import { Analytics } from "@vercel/analytics/next";
 import "@/styles/globals.css";
 import { SITE } from "@/config/site";
 import { Header } from "@/components/layout/header";
@@ -22,7 +23,10 @@ export const metadata: Metadata = {
   title: { default: `${SITE.name} — ${SITE.role}`, template: `%s · ${SITE.name}` },
   description:
     "Mubin Attar — AI/ML engineer. Evidence over claims: architecture, decisions, and measured results. Every metric links to how it was measured.",
-  alternates: { canonical: SITE.url },
+  alternates: {
+    canonical: SITE.url,
+    types: { "application/rss+xml": `${SITE.url}/rss.xml` },
+  },
 };
 
 // Pre-paint theme application (no flash). The light page with dark section-bands
@@ -51,6 +55,7 @@ export default function RootLayout({ children }: Readonly<{ children: React.Reac
           {children}
         </main>
         <Footer year={year} />
+        <Analytics />
       </body>
     </html>
   );

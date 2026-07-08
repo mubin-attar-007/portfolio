@@ -25,6 +25,12 @@ const RAW = [
     ],
     links: { live: "https://dbwhisper.vercel.app", repo: "https://github.com/mubin-attar-007/dbwhisper" },
     diagram: "dbwhisper",
+    changelog: [
+      { date: "2026-07-03", summary: "Schema browser, a verified NL→SQL training flywheel, and the full marketing site." },
+      { date: "2026-07-01", summary: "Flagship web console — auto-generated charts, CSV export, sortable results, staged progress." },
+      { date: "2026-06-08", summary: "Production hardening: Argon2id auth, per-query tenancy, API-key + per-IP rate limits, a SQL allowlist, and optional Sentry." },
+      { date: "2026-06-05", summary: "Productionized from a prototype — Next.js frontend, dialect-agnostic schema extraction, and a live demo on Neon." },
+    ],
   },
   {
     slug: "tradepulse",
@@ -43,6 +49,13 @@ const RAW = [
     ],
     links: { live: "https://tradepulse-live.vercel.app", repo: "https://github.com/mubin-attar-007/tradepulse" },
     diagram: "tradepulse",
+    changelog: [
+      { date: "2026-07-03", summary: "Public per-ticker pages, a position-sizing calculator, and real paper-trading email alerts." },
+      { date: "2026-07-02", summary: "A public methodology page and a reality pass — cut anything the engine couldn't back." },
+      { date: "2026-07-01", summary: "Credible backtest report: an underwater drawdown curve and full trade CSV export." },
+      { date: "2026-06-04", summary: "Free-tier cloud deploy (Docker on Hugging Face Spaces + Neon) running on real live market data." },
+      { date: "2026-06-03", summary: "First build — a look-ahead-safe, cost-aware backtest engine with a grounded NL→strategy copilot." },
+    ],
   },
   {
     slug: "crownwager",
@@ -61,6 +74,13 @@ const RAW = [
     ],
     links: { live: "https://crownwager.vercel.app", repo: "https://github.com/mubin-attar-007/crownwager" },
     diagram: "crownwager",
+    changelog: [
+      { date: "2026-07-02", summary: "A verifiable model track-record and prediction confidence grades; cut a cherry-picked split in a reality pass." },
+      { date: "2026-07-01", summary: "Best-bets credibility layer — fair odds, confidence grades, and filters." },
+      { date: "2026-06-08", summary: "Security hardening: admin 2FA, cookie-JWT auth, a circuit breaker on the AI client, and blocking CI gates." },
+      { date: "2026-06-04", summary: "Card-free free-tier deploy (Hugging Face Space + Vercel), bankroll ROI/P&L tracking, and launch hardening." },
+      { date: "2026-06-03", summary: "First build — a validated XGBoost NBA moneyline model served behind the analytics platform." },
+    ],
   },
   {
     slug: "llm-studio",
@@ -79,6 +99,11 @@ const RAW = [
     ],
     links: { live: "https://heisenbergblue-llm-studio.hf.space", repo: "https://github.com/mubin-attar-007/llm_studio" },
     diagram: "llm-studio",
+    changelog: [
+      { date: "2026-07-02", summary: "End-to-end account flows (change/forgot password, delete account) and SEO/PWA metadata." },
+      { date: "2026-07-01", summary: "A ChatGPT-parity UI overhaul and clearer provider rate-limit / quota error handling." },
+      { date: "2026-06-30", summary: "Rebuilt a single-user chat app into a multi-user SaaS — per-user auth + history, Dockerized, CI/CD, hardened." },
+    ],
   },
 ] as const;
 

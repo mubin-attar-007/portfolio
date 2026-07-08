@@ -4,13 +4,19 @@ import { Section } from "@/components/layout/section";
 import { SITE } from "@/config/site";
 import { allWriting } from "@/lib/writing";
 import { WritingList } from "@/components/features/writing-list";
+import { NewsletterForm } from "@/components/features/newsletter-form";
 
 export const metadata: Metadata = {
   title: "Writing",
   description: "Essays, guides, and notes on AI systems, evaluation, and honest ML.",
   alternates: {
     canonical: `${SITE.url}/writing`,
-    types: { "application/rss+xml": `${SITE.url}/writing/feed.xml` },
+    types: {
+      "application/rss+xml": [
+        { url: `${SITE.url}/rss.xml`, title: `${SITE.name} — Writing & Notes` },
+        { url: `${SITE.url}/writing/feed.xml`, title: `${SITE.name} — Writing` },
+      ],
+    },
   },
 };
 
@@ -44,6 +50,9 @@ export default async function WritingIndex() {
       </p>
       <div className="mt-12">
         <WritingList posts={items} />
+      </div>
+      <div className="mt-20 max-w-[var(--width-prose)]">
+        <NewsletterForm />
       </div>
     </Section>
   );

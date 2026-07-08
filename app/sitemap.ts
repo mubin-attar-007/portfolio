@@ -1,9 +1,10 @@
 import type { MetadataRoute } from "next";
 import { projects } from "@/content/projects";
 import { writingSlugs } from "@/lib/writing";
+import { noteSlugs } from "@/lib/notes";
 import { SITE } from "@/config/site";
 
-/** Every indexable route: the static pages, each case study, each essay. */
+/** Every indexable route: the static pages, each case study, essay, and note. */
 export default function sitemap(): MetadataRoute.Sitemap {
   const now = new Date();
   const u = (path: string) => `${SITE.url}${path}`;
@@ -12,9 +13,14 @@ export default function sitemap(): MetadataRoute.Sitemap {
     { path: "", priority: 1 },
     { path: "/work", priority: 0.9 },
     { path: "/writing", priority: 0.7 },
+    { path: "/notes", priority: 0.7 },
+    { path: "/now", priority: 0.6 },
+    { path: "/evals", priority: 0.6 },
+    { path: "/hire", priority: 0.7 },
     { path: "/about", priority: 0.6 },
     { path: "/timeline", priority: 0.6 },
     { path: "/uses", priority: 0.5 },
+    { path: "/talks", priority: 0.5 },
     { path: "/resume", priority: 0.6 },
   ];
 
@@ -36,6 +42,12 @@ export default function sitemap(): MetadataRoute.Sitemap {
       lastModified: now,
       changeFrequency: "monthly" as const,
       priority: 0.6,
+    })),
+    ...noteSlugs().map((slug) => ({
+      url: u(`/notes/${slug}`),
+      lastModified: now,
+      changeFrequency: "monthly" as const,
+      priority: 0.5,
     })),
   ];
 }
