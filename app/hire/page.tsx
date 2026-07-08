@@ -21,7 +21,11 @@ const H2 = "font-mono text-xs uppercase tracking-[0.06em] text-ink-tertiary";
  * is the page every "contact" CTA routes to.
  */
 export default function HirePage() {
-  const cal = process.env.NEXT_PUBLIC_CAL_URL;
+  // Only an absolute http(s) URL activates "Book a call" — a relative/placeholder
+  // value (e.g. "/hire_booking") falls back to the honest "coming soon" state
+  // instead of rendering a broken link.
+  const calRaw = process.env.NEXT_PUBLIC_CAL_URL;
+  const cal = calRaw && /^https?:\/\//.test(calRaw) ? calRaw : undefined;
 
   return (
     <Section space="lg">
