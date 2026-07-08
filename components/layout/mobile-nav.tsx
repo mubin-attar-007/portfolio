@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useRef, useState } from "react";
+import { createPortal } from "react-dom";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { Menu, X } from "lucide-react";
@@ -9,6 +10,9 @@ import { NAV } from "@/config/nav";
 /**
  * MobileNav — hamburger + slide-in drawer for < md. Dialog semantics, focus
  * trap, Escape/route-change/backdrop close, body scroll-lock, focus restore.
+ * The overlay is portalled to <body>: the header carries `backdrop-filter`,
+ * which would otherwise become the containing block for the drawer's
+ * `position: fixed` and trap it inside the header pill instead of the viewport.
  * Props: none (reads NAV). A11y: `aria-expanded` on the toggle; drawer is a
  * labelled modal dialog; fully keyboard operable.
  */
@@ -70,52 +74,55 @@ export function MobileNav() {
         {open ? <X size={20} strokeWidth={1.5} /> : <Menu size={20} strokeWidth={1.5} />}
       </button>
 
-      {open && (
-        <div className="fixed inset-0 z-50">
-          <button
-            type="button"
-            aria-label="Close menu"
-            tabIndex={-1}
-            onClick={() => setOpen(false)}
-            className="absolute inset-0 bg-ink/20"
-          />
-          <div
-            id="mobile-menu"
-            ref={panelRef}
-            role="dialog"
-            aria-modal="true"
-            aria-label="Menu"
-            className="absolute right-0 top-0 flex h-full w-[78%] max-w-xs flex-col gap-1 border-l border-border bg-surface px-5 pb-8 pt-20 shadow-[var(--shadow-overlay)]"
-          >
-            {NAV.map((item) => {
-              const active = pathname === item.href || pathname.startsWith(`${item.href}/`);
-              return (
-                <Link
-                  key={item.href}
-                  href={item.href}
-                  onClick={() => setOpen(false)}
-                  aria-current={active ? "page" : undefined}
-                  className={`rounded-[var(--radius-md)] px-3 py-3 text-lg ${
-                    active ? "text-accent" : "text-ink hover:text-ink"
-                  }`}
-                >
-                  {item.label}
-                </Link>
-              );
-            })}
+      {open &&
+        typeof document !== "undefined" &&
+        createPortal(
+          <div className="fixed inset-0 z-50">
             <button
               type="button"
-              onClick={() => {
-                setOpen(false);
-                window.dispatchEvent(new CustomEvent("open-assistant"));
-              }}
-              className="mt-3 rounded-[var(--radius-md)] border border-border-strong px-3 py-3 text-left text-lg text-ink"
+              aria-label="Close menu"
+              tabIndex={-1}
+              onClick={() => setOpen(false)}
+              className="absolute inset-0 bg-ink/20"
+            />
+            <div
+              id="mobile-menu"
+              ref={panelRef}
+              role="dialog"
+              aria-modal="true"
+              aria-label="Menu"
+              className="absolute inset-y-0 right-0 flex w-[78%] max-w-xs flex-col gap-1 border-l border-border bg-surface px-5 pb-8 pt-20 shadow-[var(--shadow-overlay)]"
             >
-              Ask Friday
-            </button>
-          </div>
-        </div>
-      )}
+              {NAV.map((item) => {
+                const active = pathname === item.href || pathname.startsWith(`${item.href}/`);
+                return (
+                  <Link
+                    key={item.href}
+                    href={item.href}
+                    onClick={() => setOpen(false)}
+                    aria-current={active ? "page" : undefined}
+                    className={`rounded-[var(--radius-md)] px-3 py-3 text-lg ${
+                      active ? "text-accent" : "text-ink hover:text-ink"
+                    }`}
+                  >
+                    {item.label}
+                  </Link>
+                );
+              })}
+              <button
+                type="button"
+                onClick={() => {
+                  setOpen(false);
+                  window.dispatchEvent(new CustomEvent("open-assistant"));
+                }}
+                className="mt-3 rounded-[var(--radius-md)] border border-border-strong px-3 py-3 text-left text-lg text-ink"
+              >
+                Ask Friday
+              </button>
+            </div>
+          </div>,
+          document.body,
+        )}
     </div>
   );
 }
