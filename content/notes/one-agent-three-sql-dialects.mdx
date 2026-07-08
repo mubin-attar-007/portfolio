@@ -1,0 +1,11 @@
+---
+title: "One agent, three SQL dialects"
+date: "2026-04-02"
+tags: ["sql", "agents"]
+---
+
+DBWhisper answers questions against Postgres, MySQL, and SQL Server. The lazy way is to emit one generic SQL string and hope each engine accepts it — they don't. Date functions, identifier quoting, and pagination all differ.
+
+So generation carries **per-dialect directives**: the model is told which dialect it's targeting and emits `date_trunc(...)` for Postgres and the right equivalent elsewhere. Execution runs through SQLAlchemy 2.0 (plus ODBC for SQL Server), and the same fail-closed validator gates every statement regardless of dialect.
+
+The dialect is a parameter, not a fork in the codebase — one agent, three engines. See the [DBWhisper case study](/work/dbwhisper).

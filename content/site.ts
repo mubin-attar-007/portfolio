@@ -255,7 +255,7 @@ export const hire = {
   howIWork: {
     body: "Solo and end to end: architecture, implementation, deploy, and the honest numbers. I put deterministic boundaries around models rather than trusting them, I measure what I ship, and I'd rather show a lower real number than a higher invented one. A few decisions that show how I think:",
     notes: [
-      { label: "BM25, not embeddings, for schema retrieval", href: "/notes/bm25-not-embeddings-for-schema" },
+      { label: "One agent, three SQL dialects", href: "/notes/one-agent-three-sql-dialects" },
       { label: "Six LLM providers behind one interface", href: "/notes/six-providers-one-interface" },
       { label: "Enforce tenancy in the repository layer, not the route", href: "/notes/tenancy-in-the-repository-layer" },
     ],
