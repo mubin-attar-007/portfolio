@@ -1,0 +1,11 @@
+---
+title: "Solo, but every deploy still has to pass the gate"
+date: "2026-05-16"
+tags: ["infra", "testing"]
+---
+
+Working solo, it's tempting to skip CI — no one else to break. I do the opposite: LLM Studio's pipeline gates every deploy on the full pytest suite (31 tests) plus **ruff**, **pip-audit**, and **gitleaks**.
+
+The point isn't ceremony. It's that "I'll remember to check" doesn't scale past a few weeks, and the boring failures — a leaked secret, a vulnerable dependency, a lint regression — are exactly the ones a human skips when moving fast. A gate that runs on every push doesn't get tired or optimistic.
+
+Constraints force good engineering: a $0 stack and one pair of hands means the machine has to catch what I won't. See [LLM Studio](/work/llm-studio).

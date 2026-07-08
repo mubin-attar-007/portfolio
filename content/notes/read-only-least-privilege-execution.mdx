@@ -1,0 +1,11 @@
+---
+title: "The validator is the belt; least-privilege is the braces"
+date: "2026-06-25"
+tags: ["security", "sql"]
+---
+
+DBWhisper's fail-closed validator already rejects anything that isn't a single read-only SELECT over enrolled tables. So why also run the query as a least-privilege, read-only database user?
+
+Because defense-in-depth means never trusting a single gate. The validator is code I wrote — code has bugs. The database's own permission system is a second, independent boundary that doesn't care what my validator thinks: if the connection literally cannot write, then a bug that slips a mutation past the validator still can't touch your data.
+
+Belt *and* braces. Rows come back; nothing is ever written — and two separate mechanisms have to both fail for that to stop being true. More in the [DBWhisper case study](/work/dbwhisper).
