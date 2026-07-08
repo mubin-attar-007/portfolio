@@ -26,7 +26,14 @@ import { formatDate } from "@/lib/format";
  */
 export default async function Home() {
   const flagship = featuredProject;
-  const diagram = flagship.diagram ? diagrams[flagship.diagram] : undefined;
+  const rawDiagram = flagship.diagram ? diagrams[flagship.diagram] : undefined;
+  // The homepage diagram is compact: keep the map + which nodes are explorable
+  // (empty `decision` marker → the tick + deep link still render), but strip the
+  // why/instead-of/tradeoff essays so they live ONLY on the case study, never in
+  // the homepage DOM or its serialized props (fixes V2 airtight).
+  const diagram = rawDiagram
+    ? { ...rawDiagram, nodes: rawDiagram.nodes.map((n) => (n.decision ? { ...n, decision: {} } : n)) }
+    : undefined;
   const posts = (await allWriting()).slice(0, 3);
   const [headLead, headTail] = home.headline.split(" — ");
 
