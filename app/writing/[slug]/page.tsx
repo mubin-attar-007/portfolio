@@ -7,6 +7,7 @@ import { formatDate } from "@/lib/format";
 import { SITE } from "@/config/site";
 import { ArticleJsonLd } from "@/components/seo/json-ld";
 import { NewsletterForm } from "@/components/features/newsletter-form";
+import { PostCover } from "@/components/features/post-cover";
 
 export const dynamicParams = false;
 
@@ -51,7 +52,12 @@ export default async function WritingPost({ params }: { params: Promise<{ slug: 
         ← Writing
       </Link>
       <article className="mt-8 max-w-[var(--width-prose)]">
-        <p className="font-mono text-xs uppercase text-ink-tertiary">
+        {/* Article header cover — same slug seed as the index card, so the essay
+            and its card share one identity (the study's engineering-post cover). */}
+        <div className="aspect-[16/7] overflow-hidden rounded-[var(--radius-lg)] border border-border bg-bg-subtle">
+          <PostCover slug={slug} category={meta.category} />
+        </div>
+        <p className="mt-8 font-mono text-xs uppercase text-ink-tertiary">
           {meta.category} · {formatDate(meta.date)}
           {meta.updated ? ` · updated ${formatDate(meta.updated)}` : ""}
         </p>

@@ -26,14 +26,6 @@ export function NoteList({ notes }: { notes: Note[] }) {
   const [active, setActive] = useState<string | null>(null);
 
   const filtered = active ? notes.filter((n) => n.tags.includes(active)) : notes;
-  const byMonth = useMemo(() => {
-    const m = new Map<string, Note[]>();
-    for (const n of filtered) {
-      const key = n.date.slice(0, 7); // YYYY-MM
-      (m.get(key) ?? m.set(key, []).get(key)!).push(n);
-    }
-    return Array.from(m.entries()); // filtered is already newest-first
-  }, [filtered]);
 
   return (
     <div>
@@ -48,45 +40,33 @@ export function NoteList({ notes }: { notes: Note[] }) {
         ))}
       </div>
 
-      <div className="mt-12 flex flex-col gap-10">
-        {byMonth.map(([key, ns]) => (
-          <section key={key}>
-            <h2 className="font-mono text-xs uppercase tracking-[0.06em] text-ink-tertiary">
-              {formatDate(`${key}-01`)}
-            </h2>
-            <ul className="mt-4 divide-y divide-border border-y border-border">
-              {ns.map((n) => (
-                <li key={n.slug}>
-                  <Link
-                    href={`/notes/${n.slug}`}
-                    className="group -mx-4 flex flex-col gap-2 rounded-[var(--radius-md)] px-4 py-4 transition-colors duration-200 ease-[var(--ease-out)] hover:bg-bg-subtle sm:flex-row sm:items-baseline sm:gap-5"
-                  >
-                    <time
-                      dateTime={n.date}
-                      className="shrink-0 font-mono text-xs text-ink-tertiary sm:w-24"
-                    >
-                      {formatDate(n.date)}
-                    </time>
-                    <span className="flex-1 text-ink transition-colors group-hover:text-accent">
-                      {n.title}
+      <ul className="mt-12 grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
+        {filtered.map((n) => (
+          <li key={n.slug}>
+            <Link
+              href={`/notes/${n.slug}`}
+              className="group flex h-full flex-col justify-between gap-6 rounded-[var(--radius-lg)] border border-border bg-surface p-4 shadow-[var(--shadow-sm)] transition-colors hover:border-border-strong"
+            >
+              <span className="text-ink transition-colors group-hover:text-accent">{n.title}</span>
+              <div className="flex items-center justify-between gap-3">
+                <time dateTime={n.date} className="shrink-0 font-mono text-xs text-ink-tertiary">
+                  {formatDate(n.date)}
+                </time>
+                <span className="flex flex-wrap justify-end gap-x-2 gap-y-1">
+                  {n.tags.map((t) => (
+                    <span key={t} className="font-mono text-xs text-ink-tertiary">
+                      #{t}
                     </span>
-                    <span className="flex flex-wrap gap-x-2 gap-y-1">
-                      {n.tags.map((t) => (
-                        <span key={t} className="font-mono text-xs text-ink-tertiary">
-                          #{t}
-                        </span>
-                      ))}
-                    </span>
-                  </Link>
-                </li>
-              ))}
-            </ul>
-          </section>
+                  ))}
+                </span>
+              </div>
+            </Link>
+          </li>
         ))}
-        {filtered.length === 0 ? (
-          <p className="text-ink-secondary">No notes tagged &ldquo;{active}&rdquo; yet.</p>
-        ) : null}
-      </div>
+      </ul>
+      {filtered.length === 0 ? (
+        <p className="mt-12 text-ink-secondary">No notes tagged &ldquo;{active}&rdquo; yet.</p>
+      ) : null}
     </div>
   );
 }
