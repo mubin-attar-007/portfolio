@@ -26,7 +26,7 @@ export function LiveDemos() {
         {projects.map((p) => (
           <li
             key={p.slug}
-            className="group relative flex flex-col rounded-[var(--radius-lg)] border border-border bg-surface p-6 shadow-[var(--shadow-sm)] transition-[transform,border-color,box-shadow] duration-300 ease-[var(--ease-out)] hover:-translate-y-1 hover:border-border-strong hover:shadow-[var(--shadow-lg)]"
+            className="group relative flex flex-col rounded-[var(--radius-lg)] border border-border bg-surface p-6 shadow-[var(--shadow-sm)] transition-[transform,border-color,box-shadow] duration-[var(--motion-slow)] hover:-translate-y-1 hover:border-border-strong hover:shadow-[var(--shadow-lg)]"
           >
             <div className="flex items-center justify-between">
               <span className="inline-flex items-center gap-2 font-mono text-xs text-ink-secondary">
@@ -40,7 +40,7 @@ export function LiveDemos() {
                 {p.systems[0]}
               </span>
             </div>
-            <h3 className="mt-5 text-xl text-ink transition-colors duration-300 ease-[var(--ease-out)] group-hover:text-accent">
+            <h3 className="mt-5 text-xl text-ink transition-colors duration-[var(--motion-slow)] group-hover:text-accent">
               {p.title}
             </h3>
             <p className="mt-2 text-sm text-ink-secondary">{p.summary}</p>
@@ -62,7 +62,7 @@ export function LiveDemos() {
                 <ArrowUpRight
                   size={15}
                   strokeWidth={1.8}
-                  className="transition-transform duration-300 ease-[var(--ease-out)] group-hover:-translate-y-0.5 group-hover:translate-x-0.5"
+                  className="transition-transform duration-[var(--motion-slow)] group-hover:-translate-y-0.5 group-hover:translate-x-0.5"
                 />
               </a>
               <Link

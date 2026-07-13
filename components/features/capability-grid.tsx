@@ -90,7 +90,7 @@ export function CapabilityGrid() {
                 {Illo ? (
                   <Illo />
                 ) : (
-                  <span className="inline-flex h-10 w-10 items-center justify-center rounded-[var(--radius-md)] bg-accent-subtle text-accent transition-[background-color,color,scale] duration-300 ease-[var(--ease-spring)] group-hover:scale-110 group-hover:bg-accent group-hover:text-on-accent">
+                  <span className="inline-flex h-10 w-10 items-center justify-center rounded-[var(--radius-md)] bg-accent-subtle text-accent transition-[background-color,color,scale] duration-[var(--motion-slow)] ease-[var(--ease-spring)] group-hover:scale-110 group-hover:bg-accent group-hover:text-on-accent">
                     <Icon size={20} strokeWidth={1.6} aria-hidden />
                   </span>
                 )}
@@ -98,14 +98,14 @@ export function CapabilityGrid() {
               <p className="relative font-mono text-xs uppercase tracking-wide text-ink-tertiary">
                 {c.kicker}
               </p>
-              <h3 className="relative mt-1 text-lg text-ink transition-colors duration-300 ease-[var(--ease-out)] group-hover:text-accent">
+              <h3 className="relative mt-1 text-lg text-ink transition-colors duration-[var(--motion-slow)] group-hover:text-accent">
                 {c.title}
               </h3>
               <p className="relative mt-2 text-sm text-ink-secondary">{c.body}</p>
               {/* accent underline that grows across the base on hover */}
               <span
                 aria-hidden
-                className="pointer-events-none absolute inset-x-0 bottom-0 h-0.5 origin-left scale-x-0 bg-accent transition-transform duration-300 ease-[var(--ease-out)] group-hover:scale-x-100"
+                className="pointer-events-none absolute inset-x-0 bottom-0 h-0.5 origin-left scale-x-0 bg-accent transition-transform duration-[var(--motion-slow)] group-hover:scale-x-100"
               />
             </li>
           );
