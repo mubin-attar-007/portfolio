@@ -59,10 +59,10 @@ export function CapabilityGrid() {
   return (
     <div className="relative z-10 mx-auto w-full max-w-[var(--width-container)]">
       <div className="mx-auto max-w-[46ch] text-center">
-        <p className="font-mono text-xs uppercase tracking-[0.06em] text-accent">
+        <p className="font-mono text-xs uppercase tracking-[0.06em] text-ink-tertiary">
           {capabilities.eyebrow}
         </p>
-        <h2 className="mt-4 text-3xl tracking-[-0.02em] text-ink sm:text-4xl">{capabilities.title}</h2>
+        <h2 className="mt-4 text-4xl tracking-[-0.02em] text-ink sm:text-5xl">{capabilities.title}</h2>
         <p className="mt-4 text-lg text-ink-secondary">{capabilities.body}</p>
       </div>
 

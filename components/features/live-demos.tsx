@@ -10,7 +10,9 @@ import { formatDateFull } from "@/lib/format";
  * launchable: each card shows a live status, the stack, and links to the
  * running app (new tab) and its case study. Server component (static links).
  * A11y: real links with discernible names; the live dot is a static marker;
- * hover is transform/colour only.
+ * hover is transform/colour only. The card lift is a deliberate, documented
+ * exception to the base Card no-lift contract — a live product earns a little
+ * presence — not an oversight.
  */
 export function LiveDemos() {
   const { live } = home;
