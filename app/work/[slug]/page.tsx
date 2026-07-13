@@ -153,6 +153,13 @@ export default async function CaseStudyPage({ params }: { params: Promise<{ slug
               className="block h-auto w-full"
             >
               <source src={`/demos/${slug}.webm`} type="video/webm" />
+              <track
+                kind="captions"
+                src={`/demos/${slug}.vtt`}
+                srcLang="en"
+                label="English"
+                default
+              />
             </video>
           </Figure>
         </div>

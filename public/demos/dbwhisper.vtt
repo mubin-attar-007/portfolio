@@ -1,0 +1,28 @@
+WEBVTT
+
+00:07.000 --> 00:12.500
+Ask your database anything — in plain English.
+
+00:12.500 --> 00:21.000
+DBWhisper writes safe, read-only SQL, runs it, and shows you the answer.
+
+00:21.000 --> 00:28.000
+Measured, not claimed: 82% golden-set exact · 100% fail-closed · 73% on Spider dev.
+
+00:28.000 --> 00:35.000
+Three steps: connect your database, ask in plain English, get SQL you can trust.
+
+00:35.000 --> 00:41.000
+Readable, editable SQL · auto-charts · conversational follow-ups · multi-engine.
+
+00:41.000 --> 00:48.000
+Under the hood: the right tables are retrieved, SQL is generated, proven read-only, then run.
+
+00:48.000 --> 00:53.000
+Schema-grounded, not schema-dumped. Fail-closed. Six providers, always an answer.
+
+00:53.000 --> 00:59.000
+Read-only by construction. SQL shown before it runs. Least-privilege connections.
+
+00:59.000 --> 01:04.000
+Live and open source — query your data in plain English.
