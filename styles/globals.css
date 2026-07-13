@@ -157,6 +157,14 @@ h4 {
   --color-accent-hover: #b3a0ff;
   --color-on-accent: #131316;
   --color-accent-subtle: #241d47;
+  /* Status colours must be scoped here too: without them a Metric delta or
+     before/after value dropped into a tone='invert' section keeps the LIGHT
+     #15803d / #b91c1c against the dark surface (~3:1, below AA). Mirror the
+     [data-theme=dark] palette (tokens.css) so a valid component in a valid
+     container can never render an inaccessible result. */
+  --color-positive: #4ade80;
+  --color-negative: #f87171;
+  --color-warning: #fbbf24;
   --shadow-sm: 0 0 0 0.5px rgb(255 255 255 / 0.07), 0 1px 2px rgb(0 0 0 / 0.5);
   --shadow-md: 0 0 0 0.5px rgb(255 255 255 / 0.08), 0 8px 20px -6px rgb(0 0 0 / 0.55);
   --shadow-lg: 0 0 0 0.5px rgb(255 255 255 / 0.09), 0 16px 38px -10px rgb(0 0 0 / 0.65);
@@ -191,6 +199,27 @@ h4 {
       100% 100%, 68% 100%, 61% calc(100% - 22px), 39% calc(100% - 22px), 32% 100%, 0 100%
     );
   }
+}
+
+/* --- hero technical texture (Clerk's barely-there circuit-board, our palette) ---
+   A faint dot-grid on the light ground, masked so it POOLS behind the terminal
+   (right) and fades out under the headline (left) and toward the edges — so it
+   adds "wonderful" depth without ever touching legibility. Decorative; paints
+   behind the relative Container content (same technique as .tone-invert::before).
+   Purely static — nothing to gate under reduced-motion. */
+.hero-surface::before {
+  content: "";
+  position: absolute;
+  inset: 0;
+  z-index: 0;
+  pointer-events: none;
+  background-image: radial-gradient(circle at 1px 1px, rgb(19 19 22 / 0.05) 1px, transparent 1.6px);
+  background-size: 26px 26px;
+  -webkit-mask-image: radial-gradient(85% 75% at 72% 42%, #000 6%, transparent 66%);
+  mask-image: radial-gradient(85% 75% at 72% 42%, #000 6%, transparent 66%);
+}
+:root[data-theme="dark"] .hero-surface::before {
+  background-image: radial-gradient(circle at 1px 1px, rgb(255 255 255 / 0.05) 1px, transparent 1.6px);
 }
 
 /* --- hero on-load entrance: a quiet staggered fade + rise (Clerk-style) ---
@@ -400,28 +429,6 @@ h4 {
 }
 @media (prefers-reduced-motion: reduce) {
   .caret-blink {
-    animation: none;
-  }
-}
-
-/* --- horizontal tech-stack ticker (marquee) --- */
-.ticker-track {
-  animation: ticker-scroll 42s linear infinite;
-}
-@keyframes ticker-scroll {
-  from {
-    transform: translateX(0);
-  }
-  to {
-    transform: translateX(-50%);
-  }
-}
-.ticker-mask {
-  -webkit-mask-image: linear-gradient(90deg, transparent, #000 7%, #000 93%, transparent);
-  mask-image: linear-gradient(90deg, transparent, #000 7%, #000 93%, transparent);
-}
-@media (prefers-reduced-motion: reduce) {
-  .ticker-track {
     animation: none;
   }
 }

@@ -1,11 +1,19 @@
 import type { Metadata } from "next";
 import Link from "next/link";
-import { ArrowRight } from "lucide-react";
+import { ArrowRight, Database, LineChart, Target, MessagesSquare } from "lucide-react";
 import { Section } from "@/components/layout/section";
 import { SectionHeading } from "@/components/ui/section-heading";
 import { Metric } from "@/components/ui/metric";
 import { SITE } from "@/config/site";
 import { featuredProject, secondaryProjects } from "@/content/projects";
+
+/** A monochrome line-icon per system — the Clerk docs-card motif (calm, not photos). */
+const PROJECT_ICON: Record<string, typeof ArrowRight> = {
+  dbwhisper: Database,
+  tradepulse: LineChart,
+  crownwager: Target,
+  "llm-studio": MessagesSquare,
+};
 
 export const metadata: Metadata = {
   title: "Work",
@@ -47,37 +55,41 @@ export default function WorkIndex() {
 
       <Section space="md">
         <SectionHeading kicker="More">Other systems</SectionHeading>
-        <ul className="mt-8 divide-y divide-border border-y border-border">
-          {secondaryProjects.map((p) => (
-            <li key={p.slug}>
-              <Link
-                href={`/work/${p.slug}`}
-                className="group grid gap-2 py-6 md:grid-cols-[1fr_auto] md:items-baseline md:gap-8"
-              >
-                <div>
-                  <div className="flex flex-wrap items-baseline gap-3">
-                    <h2 className="text-xl text-ink transition-colors group-hover:text-accent">
-                      {p.title}
-                    </h2>
+        <ul className="mt-8 grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
+          {secondaryProjects.map((p) => {
+            const Icon = PROJECT_ICON[p.slug] ?? Database;
+            return (
+              <li key={p.slug}>
+                <Link
+                  href={`/work/${p.slug}`}
+                  className="group flex h-full flex-col rounded-[var(--radius-lg)] border border-border bg-surface p-5 shadow-[var(--shadow-sm)] transition-colors hover:border-border-strong"
+                >
+                  <div className="flex items-center justify-between">
+                    <span className="inline-flex h-9 w-9 items-center justify-center rounded-[var(--radius-md)] border border-border text-ink-tertiary transition-colors group-hover:text-accent">
+                      <Icon size={18} strokeWidth={1.5} aria-hidden />
+                    </span>
                     <span className="font-mono text-xs uppercase text-ink-tertiary">{p.status}</span>
                   </div>
-                  <p className="mt-1 max-w-[var(--width-prose)] text-sm text-ink-secondary">{p.summary}</p>
-                </div>
-                <span className="flex items-center gap-2 font-mono text-sm tabular-nums text-ink-secondary">
-                  <span>
-                    {p.metrics[0]?.value}{" "}
-                    <span className="text-ink-tertiary">{p.metrics[0]?.label}</span>
-                  </span>
-                  <ArrowRight
-                    size={15}
-                    strokeWidth={1.5}
-                    aria-hidden
-                    className="-translate-x-1 text-ink-tertiary opacity-0 transition-all duration-[var(--motion-base)] ease-[var(--ease-out)] group-hover:translate-x-0 group-hover:text-accent group-hover:opacity-100 motion-reduce:transition-none motion-reduce:translate-x-0 motion-reduce:opacity-100"
-                  />
-                </span>
-              </Link>
-            </li>
-          ))}
+                  <h2 className="mt-4 text-lg text-ink transition-colors group-hover:text-accent">
+                    {p.title}
+                  </h2>
+                  <p className="mt-1.5 flex-1 text-sm text-ink-secondary">{p.summary}</p>
+                  <div className="mt-4 flex items-center justify-between gap-3 border-t border-border pt-3">
+                    <span className="font-mono text-sm tabular-nums text-ink">
+                      {p.metrics[0]?.value}{" "}
+                      <span className="text-ink-tertiary">{p.metrics[0]?.label}</span>
+                    </span>
+                    <ArrowRight
+                      size={15}
+                      strokeWidth={1.5}
+                      aria-hidden
+                      className="shrink-0 text-ink-tertiary transition-transform group-hover:translate-x-0.5 group-hover:text-accent"
+                    />
+                  </div>
+                </Link>
+              </li>
+            );
+          })}
         </ul>
       </Section>
     </>

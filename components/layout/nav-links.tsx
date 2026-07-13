@@ -14,6 +14,21 @@ export function NavLinks() {
     <nav aria-label="Primary" className="hidden items-center gap-6 md:flex">
       {NAV.map((item) => {
         const active = pathname === item.href || pathname.startsWith(`${item.href}/`);
+        // "Hire me" is the conversion action for a hiring audience — promote it to
+        // a filled accent control so it clearly leads (the assistant keeps its own
+        // bordered pill; both stay, the hire action just ranks above it).
+        if (item.href === "/hire") {
+          return (
+            <Link
+              key={item.href}
+              href={item.href}
+              aria-current={active ? "page" : undefined}
+              className="rounded-[var(--radius-md)] bg-accent px-3 py-1.5 text-sm font-medium text-on-accent shadow-[var(--shadow-btn)] transition-colors hover:bg-accent-hover"
+            >
+              {item.label}
+            </Link>
+          );
+        }
         return (
           <Link
             key={item.href}

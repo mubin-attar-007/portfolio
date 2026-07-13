@@ -1,6 +1,7 @@
 import Link from "next/link";
 import { ArrowUpRight } from "lucide-react";
 import { Container } from "./container";
+import { BoundaryMark } from "@/components/ui/boundary-mark";
 import { SITE, STATUS, FOOTER } from "@/config/site";
 import { FOOTER_NAV } from "@/config/nav";
 
@@ -29,7 +30,11 @@ export function Footer({ year }: { year: number }) {
         {/* Sign-off — a human close + one clear invitation, in the owner's voice */}
         <div className="flex flex-col gap-10 md:flex-row md:items-end md:justify-between">
           <div className="max-w-[42ch]">
-            <Link href="/" className="font-mono text-sm font-medium tracking-tight text-ink">
+            <Link
+              href="/"
+              className="inline-flex items-center gap-2 font-mono text-sm font-medium tracking-tight text-ink"
+            >
+              <BoundaryMark size={17} className="text-ink" />
               {SITE.name.toLowerCase()}
             </Link>
             <p className="mt-5 font-serif text-2xl italic leading-snug text-ink sm:text-[1.75rem]">

@@ -49,7 +49,7 @@ export default async function Home() {
   return (
     <>
       {/* Hero — text + a representative terminal as the focal point. */}
-      <Section space="lg" className="!pt-[clamp(4.5rem,9vw,8rem)]">
+      <Section space="lg" className="hero-surface !pt-[clamp(4.5rem,9vw,8rem)]">
         <div className="grid grid-cols-1 items-center gap-12 lg:grid-cols-[minmax(0,1.1fr)_minmax(0,0.9fr)] lg:gap-16">
           <div className="min-w-0">
             <p
@@ -60,7 +60,7 @@ export default async function Home() {
             </p>
             {/* The LCP element paints immediately (no entrance fade) — the surrounding
                 hero elements still fade in around it. Keeps LCP fast. */}
-            <h1 className="mt-8 max-w-[24ch] text-4xl leading-[1.05] tracking-[-0.02em] text-ink sm:text-5xl lg:text-6xl">
+            <h1 className="mt-8 max-w-[20ch] text-[2.6rem] font-bold leading-[1.02] tracking-[-0.035em] text-ink sm:text-6xl lg:text-[4.25rem]">
               {headLead}
               {headTail ? <span className="text-ink-tertiary"> — {headTail}</span> : null}
             </h1>
@@ -70,10 +70,19 @@ export default async function Home() {
             >
               {home.lede}
             </p>
+            {/* The thesis, stated up front (it reprises in the dark contact close).
+                The short accent left-rule literally draws the "boundary" the
+                sentence describes — the one motif, ≤2 accent marks in view. */}
+            <p
+              className="hero-item mt-7 max-w-[48ch] border-l-2 border-accent pl-4 text-base text-ink"
+              style={{ animationDelay: "0.24s" }}
+            >
+              {home.philosophy}
+            </p>
             {/* dual CTA (fixes V4): flagship case study + a real contact action */}
             <div
               className="hero-item mt-8 flex flex-wrap items-center gap-3"
-              style={{ animationDelay: "0.26s" }}
+              style={{ animationDelay: "0.3s" }}
             >
               <Link href={`/work/${flagship.slug}`} className={buttonVariants("primary")}>
                 Read the flagship case study
