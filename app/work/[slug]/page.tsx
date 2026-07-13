@@ -50,10 +50,11 @@ const BODIES: Record<string, () => ReactNode> = {
 };
 
 /**
- * Live-product screenshots (public/demos/<slug>.png), captured from each real
- * deployment. Only products with a PUBLIC surface appear — LLM Studio is
- * auth-gated, so it has no shot rather than a faked one (Ground Rule: evidence,
- * not marketing). Rendered once, below the metrics row.
+ * Live-product demo tours (public/demos/<slug>.webm), recorded from each real
+ * deployment — a title card + a captioned feature walkthrough. Poster is a real
+ * screenshot; older Safari that can't play webm falls back to it. LLM Studio is
+ * auth-gated, so its tour is signed into a real account (the chat UI, streaming,
+ * and model switching), not a login screen. Rendered once, below the metrics row.
  */
 const DEMO_SHOTS: Record<string, { alt: string; caption: string }> = {
   dbwhisper: {
@@ -67,6 +68,10 @@ const DEMO_SHOTS: Record<string, { alt: string; caption: string }> = {
   tradepulse: {
     alt: "Silent screen tour of TradePulse's live site — an honest backtesting terminal for building and running trading strategies.",
     caption: "Silent tour of the live product — an honest backtesting terminal, “no cherry-picked numbers.”",
+  },
+  "llm-studio": {
+    alt: "Silent screen tour of LLM Studio's live app — a private multi-model chat workspace with token streaming and model switching.",
+    caption: "Silent tour of the live app — a private, multi-model chat workspace: streaming answers, model switching, and per-user quotas.",
   },
 };
 
