@@ -84,7 +84,7 @@ export default async function Home() {
               className="hero-item mt-8 flex flex-wrap items-center gap-3"
               style={{ animationDelay: "0.3s" }}
             >
-              <Link href={`/work/${flagship.slug}`} className={buttonVariants("primary")}>
+              <Link href={`/work/${flagship.slug}`} className={buttonVariants("primary", "lg")}>
                 Read the flagship case study
               </Link>
               <Link href="/hire" className={buttonVariants("secondary")}>

@@ -9,15 +9,15 @@ import { formatDateFull } from "@/lib/format";
  * LiveDemos — the "try it" band. Every product is deployed, so make it
  * launchable: each card shows a live status, the stack, and links to the
  * running app (new tab) and its case study. Server component (static links).
- * A11y: real links with discernible names; the pulsing dot is decorative and
- * pauses under reduced-motion; hover is transform/colour only.
+ * A11y: real links with discernible names; the live dot is a static marker;
+ * hover is transform/colour only.
  */
 export function LiveDemos() {
   const { live } = home;
   return (
     <div>
-      <p className="font-mono text-xs uppercase tracking-[0.06em] text-accent">{live.kicker}</p>
-      <h2 className="mt-4 max-w-[22ch] text-3xl tracking-[-0.02em] text-ink sm:text-4xl">
+      <p className="font-mono text-xs uppercase tracking-[0.06em] text-ink-tertiary">{live.kicker}</p>
+      <h2 className="mt-4 max-w-[22ch] text-4xl tracking-[-0.02em] text-ink sm:text-5xl">
         {live.title}
       </h2>
       <p className="mt-4 max-w-[58ch] text-lg text-ink-secondary">{live.lede}</p>
@@ -30,10 +30,7 @@ export function LiveDemos() {
           >
             <div className="flex items-center justify-between">
               <span className="inline-flex items-center gap-2 font-mono text-xs text-ink-secondary">
-                <span className="relative flex h-2 w-2" aria-hidden>
-                  <span className="absolute inline-flex h-full w-full animate-ping rounded-full bg-positive opacity-60" />
-                  <span className="relative inline-flex h-2 w-2 rounded-full bg-positive" />
-                </span>
+                <span className="h-2 w-2 rounded-full bg-positive" aria-hidden />
                 Live
               </span>
               <span className="font-mono text-xs uppercase tracking-wide text-ink-tertiary">

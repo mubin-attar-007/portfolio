@@ -5,17 +5,16 @@ import { Check } from "lucide-react";
 import { home } from "@/content/site";
 
 /**
- * HeroTerminal — the site's signature "wow": a representative DBWhisper request
- * that types itself, then reveals retrieve → validate → read-only SQL → result,
- * holds, and loops (~10s). Pauses on hover, replays on click, and renders the
- * full static state under prefers-reduced-motion. Driven by a self-scheduling
- * effect (each state advance schedules the next; `paused` stops scheduling) — no
- * timers to leak. A11y: <figure> with a caption; the loop is decorative and the
- * final state is the meaningful one, so it's aria-hidden with an sr-only summary.
+ * HeroTerminal — the site's signature moment: a representative DBWhisper request
+ * that types itself ONCE (retrieve → validate → read-only SQL → result), then
+ * holds the finished frame — a reaction, not a perpetual performance (premium is
+ * still, not busy). Click to replay; renders the full static frame under
+ * prefers-reduced-motion. Driven by a self-scheduling effect that STOPS when
+ * done — no loop, no leaked timers. A11y: <figure> + caption; the type-in is
+ * decorative (aria-hidden) and the final state carries the meaning (sr-only).
  */
 const TYPE_MS = 46; // per prompt char
 const STEP_MS = 620; // between revealed lines
-const HOLD_MS = 3200; // dwell on the finished frame before looping
 
 type Block = { text: string; tone: "dim" | "sql" | "ok" };
 
@@ -27,11 +26,11 @@ export function HeroTerminal() {
     { text: d.result, tone: "ok" },
   ];
 
-  // Start FULL so the server-rendered HTML already contains the terminal content
-  // (good for LCP + no first-paint flash). The driver's "done" branch then holds
-  // and loops (full → hold → reset → type → …).
-  const [typed, setTyped] = useState(d.prompt.length);
-  const [revealed, setRevealed] = useState(blocks.length);
+  // Start EMPTY: the terminal types itself once on mount, then holds. The LCP
+  // element is the h1 (not this figure), so an empty first paint costs no LCP;
+  // the min-height below reserves the space so there is no layout shift.
+  const [typed, setTyped] = useState(0);
+  const [revealed, setRevealed] = useState(0);
   const [reduced, setReduced] = useState(false);
   const [paused, setPaused] = useState(false);
 
@@ -41,31 +40,26 @@ export function HeroTerminal() {
     setReduced(window.matchMedia("(prefers-reduced-motion: reduce)").matches);
   }, []);
 
-  // reduced-motion → render the full static frame (driver effect stays idle below)
+  // reduced-motion → render the full static frame (driver effect stays idle)
   const shownTyped = reduced ? d.prompt.length : typed;
   const shownRevealed = reduced ? blocks.length : revealed;
+  const done = typed >= d.prompt.length && revealed >= blocks.length;
 
-  // self-scheduling driver: pick the next advance from the current state
+  // self-scheduling driver: type, then reveal, then STOP and hold (no loop).
   useEffect(() => {
-    if (reduced || paused) return;
+    if (reduced || paused || done) return;
     let ms: number;
     let next: () => void;
     if (typed < d.prompt.length) {
       ms = TYPE_MS;
       next = () => setTyped((t) => t + 1);
-    } else if (revealed < blocks.length) {
+    } else {
       ms = revealed === 0 ? 520 : STEP_MS;
       next = () => setRevealed((r) => r + 1);
-    } else {
-      ms = HOLD_MS;
-      next = () => {
-        setTyped(0);
-        setRevealed(0);
-      };
     }
     const id = setTimeout(next, ms);
     return () => clearTimeout(id);
-  }, [typed, revealed, reduced, paused, d.prompt.length, blocks.length]);
+  }, [typed, revealed, reduced, paused, done, d.prompt.length, blocks.length]);
 
   return (
     <figure
@@ -89,7 +83,7 @@ export function HeroTerminal() {
           <span className="text-accent">▸</span>
           <span className="text-ink">
             {d.prompt.slice(0, shownTyped)}
-            {!reduced ? <span className="caret-blink text-accent">▋</span> : null}
+            {!reduced && !done ? <span className="caret-blink text-accent">▋</span> : null}
           </span>
         </div>
         <div className="mt-3 flex flex-col gap-0.5">
