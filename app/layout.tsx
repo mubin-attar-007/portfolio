@@ -9,6 +9,7 @@ import { Header } from "@/components/layout/header";
 import { Footer } from "@/components/layout/footer";
 import { JsonLd } from "@/components/seo/json-ld";
 import { RevealObserver } from "@/components/features/reveal-observer";
+import { MobileAssistantLauncher } from "@/components/features/mobile-assistant-launcher";
 
 // Display serif — italic only (essay titles, pull-quotes). Geist Sans/Mono come
 // self-hosted from the `geist` package (their .variable = --font-geist-sans/mono).
@@ -56,6 +57,7 @@ export default function RootLayout({ children }: Readonly<{ children: React.Reac
           {children}
         </main>
         <Footer year={year} />
+        <MobileAssistantLauncher />
         <RevealObserver />
         <Analytics />
       </body>

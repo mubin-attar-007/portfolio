@@ -65,14 +65,21 @@ export function AssistantPanel({
   const inputRef = useRef<HTMLTextAreaElement>(null);
   const logRef = useRef<HTMLDivElement>(null);
 
+  // Single close path: unmount, then restore focus to the launcher (WCAG 2.4.3).
+  // Escape, the X button, and the backdrop all route through this so no close
+  // path ever strands keyboard focus on <body>.
+  const close = useCallback(() => {
+    onClose();
+    returnFocusRef.current?.focus();
+  }, [onClose, returnFocusRef]);
+
   // focus the input on open; trap focus + Escape while open; restore on close
   useEffect(() => {
     const t = setTimeout(() => inputRef.current?.focus(), 30);
     const onKey = (e: KeyboardEvent) => {
       if (e.key === "Escape") {
         e.preventDefault();
-        onClose();
-        returnFocusRef.current?.focus();
+        close();
         return;
       }
       if (e.key === "Tab" && panelRef.current) {
@@ -94,7 +101,7 @@ export function AssistantPanel({
       clearTimeout(t);
       document.removeEventListener("keydown", onKey);
     };
-  }, [onClose, returnFocusRef]);
+  }, [close]);
 
   // autoscroll the transcript as tokens arrive (not on the empty state, which
   // would shove the starter questions out of view)
@@ -178,7 +185,7 @@ export function AssistantPanel({
   // make it the containing block for this fixed panel and mis-anchor it.
   return createPortal(
     <>
-      <div className="fixed inset-0 z-50 bg-ink/15" onClick={onClose} aria-hidden />
+      <div className="fixed inset-0 z-50 bg-ink/15" onClick={close} aria-hidden />
       <div
         ref={panelRef}
         role="dialog"
@@ -195,7 +202,7 @@ export function AssistantPanel({
           </div>
           <button
             type="button"
-            onClick={onClose}
+            onClick={close}
             aria-label="Close"
             className="inline-flex h-8 w-8 items-center justify-center rounded-[var(--radius-md)] text-ink-secondary hover:text-ink"
           >
@@ -241,7 +248,8 @@ export function AssistantPanel({
                     ) : null}
                     <div
                       className="whitespace-pre-wrap text-sm leading-relaxed text-ink-secondary"
-                      aria-live={m.streaming ? "polite" : "off"}
+                      aria-live="polite"
+                      aria-busy={m.streaming || undefined}
                     >
                       {m.content}
                       {m.streaming && !m.content ? (
@@ -296,7 +304,7 @@ export function AssistantPanel({
             }}
             placeholder="Ask about a project or a decision…"
             aria-label="Your question"
-            className="max-h-28 flex-1 resize-none overflow-y-auto rounded-[var(--radius-md)] border border-border bg-bg px-3 py-2 text-sm text-ink outline-none focus-visible:border-border-strong"
+            className="max-h-28 flex-1 resize-none overflow-y-auto rounded-[var(--radius-md)] border border-border bg-bg px-3 py-2 text-sm text-ink focus-visible:border-border-strong"
           />
           <button
             type="submit"

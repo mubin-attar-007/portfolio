@@ -82,12 +82,16 @@ export function SystemDiagram({
 
   return (
     <figure className="my-6">
+      {/* On phones the graph keeps its NATIVE size and the bordered container
+          scrolls, so node labels stay legible instead of shrinking to ~5px to
+          fit a 360px viewport. It scales-to-fit only from md up (where it fits). */}
+      <p className="mb-2 font-mono text-xs text-ink-tertiary md:hidden">Swipe the diagram to explore →</p>
       <div className="overflow-x-auto rounded-[var(--radius-lg)] border border-border bg-surface p-4 shadow-[var(--shadow-sm)]">
         <svg
           viewBox={`0 0 ${width} ${height}`}
           width={width}
           height={height}
-          className="h-auto max-w-full"
+          className="h-auto md:max-w-full"
           role="group"
           aria-label={caption ?? "System architecture diagram"}
         >
