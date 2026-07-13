@@ -55,10 +55,38 @@ h4 {
 :focus-visible {
   outline: 2px solid var(--color-accent);
   outline-offset: 2px;
-  border-radius: var(--radius-sm);
 }
 :focus:not(:focus-visible) {
   outline: none;
+}
+
+/* Interactive cursor standard. Native <button> defaults to the arrow cursor
+   while <a> gets the pointer hand — which is exactly why "Ask Friday" and the
+   theme toggle felt different from the nav links. One rule: every ENABLED
+   interactive control is a pointer; anything disabled is not-allowed. */
+button:not(:disabled),
+[role="button"]:not([aria-disabled="true"]),
+label[for],
+summary {
+  cursor: pointer;
+}
+button:disabled,
+[aria-disabled="true"],
+[disabled] {
+  cursor: not-allowed;
+}
+
+/* Icon-only button: a subtle square hit-area veil on hover so icon controls read
+   as pressable — matching the bordered pills beside them (theme toggle + hamburger
+   used to only tint their glyph, which read as "different"). Token-derived, so it
+   adapts to light/dark automatically. */
+.icon-btn {
+  transition:
+    color var(--motion-base) var(--ease-out),
+    background-color var(--motion-base) var(--ease-out);
+}
+.icon-btn:hover {
+  background-color: color-mix(in srgb, var(--color-ink) 6%, transparent);
 }
 
 /* skip-to-content link */

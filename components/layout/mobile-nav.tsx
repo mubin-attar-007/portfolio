@@ -69,7 +69,7 @@ export function MobileNav() {
         aria-expanded={open}
         aria-controls="mobile-menu"
         onClick={() => setOpen((v) => !v)}
-        className="inline-flex h-9 w-9 items-center justify-center rounded-[var(--radius-md)] text-ink-secondary hover:text-ink"
+        className="icon-btn inline-flex h-9 w-9 items-center justify-center rounded-[var(--radius-md)] text-ink-secondary hover:text-ink"
       >
         {open ? <X size={20} strokeWidth={1.5} /> : <Menu size={20} strokeWidth={1.5} />}
       </button>
@@ -101,8 +101,8 @@ export function MobileNav() {
                     href={item.href}
                     onClick={() => setOpen(false)}
                     aria-current={active ? "page" : undefined}
-                    className={`rounded-[var(--radius-md)] px-3 py-3 text-lg ${
-                      active ? "text-accent" : "text-ink hover:text-ink"
+                    className={`rounded-[var(--radius-md)] px-3 py-3 text-lg transition-colors ${
+                      active ? "text-accent" : "text-ink-secondary hover:text-ink"
                     }`}
                   >
                     {item.label}
@@ -115,7 +115,7 @@ export function MobileNav() {
                   setOpen(false);
                   window.dispatchEvent(new CustomEvent("open-assistant"));
                 }}
-                className="mt-3 rounded-[var(--radius-md)] border border-border-strong px-3 py-3 text-left text-lg text-ink"
+                className="mt-3 rounded-[var(--radius-md)] border border-border-strong px-3 py-3 text-left text-lg text-ink transition-colors hover:border-accent hover:text-accent"
               >
                 Ask Friday
               </button>
