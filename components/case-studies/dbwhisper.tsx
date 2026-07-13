@@ -1,3 +1,5 @@
+import Link from "next/link";
+import { ArrowRight } from "lucide-react";
 import { CS } from "./section";
 import { CodeBlock } from "@/components/ui/code-block";
 import { SystemDiagram } from "@/components/diagrams/system-diagram";
@@ -5,6 +7,7 @@ import { DecisionLog } from "@/components/mdx/decision-log";
 import { FailureLog } from "@/components/mdx/failure-log";
 import { MetricsTable } from "@/components/ui/metric";
 import { dbwhisperDiagram } from "@/components/diagrams/data/dbwhisper";
+import { evals } from "@/content/evals";
 
 /**
  * DBWhisper — the flagship case study body, authored from the real system.
@@ -12,6 +15,9 @@ import { dbwhisperDiagram } from "@/components/diagrams/data/dbwhisper";
  * (where a hard number doesn't exist, the mechanism is described instead).
  */
 export function DBWhisperBody() {
+  // Single-source the flagship's own measured results from the eval registry —
+  // never re-typed here, so the case study and /evals can't drift.
+  const dbEvals = evals.filter((e) => e.system === "DBWhisper");
   return (
     <div>
       <CS id="context" title="Context">
@@ -122,8 +128,8 @@ export function DBWhisperBody() {
 
       <CS id="performance-cost" title="Performance & cost">
         <p>
-          Honest and qualitative where appropriate — safety here is a property of the architecture,
-          not a benchmark number.
+          Safety is a property of the architecture, not a single number — but the pipeline is still
+          measured end to end. The structural guarantees first, then the results.
         </p>
         <MetricsTable
           rows={[
@@ -134,6 +140,42 @@ export function DBWhisperBody() {
             { label: "infra cost", value: "$0", method: "Vercel + Hugging Face Docker Space + Neon Postgres, all free-tier." },
           ]}
         />
+        {/* Results (measured) — surfaced here so the flagship shows its OWN best
+            numbers, single-sourced from content/evals.ts (never re-typed). */}
+        <div className="mt-8 rounded-[var(--radius-lg)] border border-border bg-bg-subtle p-5">
+          <p className="font-mono text-xs uppercase tracking-[0.04em] text-ink-tertiary">
+            Results (measured)
+          </p>
+          <p className="mt-2 max-w-[var(--width-prose)] text-sm text-ink-secondary">
+            The pipeline is scored end to end — two real runs, each linked to its method:
+          </p>
+          <dl className="mt-4 flex flex-col gap-4">
+            {dbEvals.map((e) => (
+              <div key={e.benchmark} className="border-l-2 border-accent pl-4">
+                <dt className="flex flex-wrap items-baseline gap-x-3 gap-y-1">
+                  <span className="font-mono text-lg tabular-nums text-ink">{e.result}</span>
+                  <span className="text-sm text-ink-secondary">
+                    {e.benchmark} · {e.metric}
+                  </span>
+                </dt>
+                {e.note ? (
+                  <dd className="mt-1 max-w-[var(--width-prose)] text-sm text-ink-tertiary">{e.note}</dd>
+                ) : null}
+              </div>
+            ))}
+          </dl>
+          <Link
+            href="/evals"
+            className="group mt-4 inline-flex items-center gap-1.5 text-sm font-medium text-accent hover:text-accent-hover"
+          >
+            See the full eval registry
+            <ArrowRight
+              size={15}
+              strokeWidth={1.5}
+              className="transition-transform group-hover:translate-x-0.5"
+            />
+          </Link>
+        </div>
       </CS>
 
       <CS id="operations" title="Operations">
