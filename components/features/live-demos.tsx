@@ -3,7 +3,7 @@ import { ArrowRight, ArrowUpRight } from "lucide-react";
 import { projects } from "@/content/projects";
 import { home } from "@/content/site";
 import { buttonVariants } from "@/components/ui/button";
-import { formatDate } from "@/lib/format";
+import { formatDateFull } from "@/lib/format";
 
 /**
  * LiveDemos — the "try it" band. Every product is deployed, so make it
@@ -46,7 +46,7 @@ export function LiveDemos() {
             <p className="mt-2 text-sm text-ink-secondary">{p.summary}</p>
             {p.changelog.length > 0 ? (
               <p className="mt-3 flex-1 font-mono text-xs text-ink-tertiary">
-                Updated {formatDate(p.changelog[0]!.date)}
+                Updated {formatDateFull(p.changelog[0]!.date)}
               </p>
             ) : (
               <span className="flex-1" />

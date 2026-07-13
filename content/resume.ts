@@ -1,10 +1,13 @@
 /**
- * Résumé content — the markdown mirror of /public/Mubin_Attar_Resume.pdf.
- * Site, PDF, and LinkedIn must carry identical facts (launch checklist).
+ * Résumé content — the single source of truth mirrored by /public/Mubin_Attar_Resume.pdf
+ * (regenerated from this data via scripts/build-resume-pdf.mjs) and LinkedIn. Site,
+ * PDF, and LinkedIn must carry identical facts (launch checklist). Every metric here
+ * is real and backed on the site (see /evals and the case studies) — no résumé number
+ * exists that the portfolio can't defend.
  */
 export const resume = {
   summary:
-    "AI/ML Engineer with 3+ years building and shipping production AI products end-to-end — GenAI/LLM applications, agentic and RAG systems, predictive ML, and healthcare-AI automation. Fluent across the stack (FastAPI, Next.js, PostgreSQL, Docker) with auth, CI/CD, and security hardening baked in.",
+    "AI/ML Engineer shipping production software since 2022 and production AI since 2024 — GenAI/LLM applications, agentic and RAG systems, predictive ML, and healthcare-AI automation. Four AI products shipped to production and kept live, each measured rather than demoed. Fluent across the stack (FastAPI, Next.js, PostgreSQL, Docker) with auth, CI/CD, and security hardening baked in.",
   skills: [
     { group: "Languages", items: "Python, JavaScript / TypeScript, SQL" },
     { group: "GenAI / LLM", items: "LangChain, LangGraph, RAG, pgvector, prompt engineering, agents, multi-provider routing (Gemini, GPT, Claude, Groq)" },
@@ -21,9 +24,9 @@ export const resume = {
       period: "2024 – present",
       place: "Ahmedabad",
       points: [
-        "Build and ship production AI & automation systems for healthcare — end-to-end pipelines (Python, Playwright, Selenium) that extract, validate, and synchronize clinical data into SQL Server, with logging, reconciliation, and error recovery.",
-        "Developed an AI clinical decision-support platform that turns CMS MDS assessments into interactive dashboards, compliance findings, and reimbursement insights (HIPPS/PDPM) for skilled-nursing facilities.",
-        "Built Generative AI applications — LLM document-analysis assistants with multi-provider routing (OpenAI, Claude, Gemini), RAG, and validated structured output — plus a FastAPI eligibility-verification service with async batch processing and CI/CD.",
+        "Build and ship production AI & automation systems for healthcare — end-to-end pipelines (Python, Playwright, Selenium) that extract, validate, and synchronize clinical, resident, and demographic data into SQL Server, with logging, reconciliation, and error recovery.",
+        "Developed an AI clinical decision-support platform that turns CMS MDS assessments into interactive dashboards, compliance findings, and reimbursement insights (HIPPS/PDPM) for skilled-nursing facilities via automated PDF extraction and deterministic, guideline-aligned rules.",
+        "Built Generative AI applications — LLM document-analysis assistants with multi-provider routing (OpenAI, Claude, Gemini), RAG, and validated structured output — plus a FastAPI eligibility-verification service with async batch processing, Dockerized deploys, and CI/CD.",
       ],
     },
     {
@@ -32,9 +35,47 @@ export const resume = {
       period: "2022 – 2024",
       place: "Pune",
       points: [
-        "Delivered end-to-end web applications — a Hospital Management System and e-commerce platforms — with Python, Django & DRF, and responsive frontends.",
+        "Delivered end-to-end web applications — including a Hospital Management System and e-commerce platforms — with Python, Django & DRF, and responsive HTML5/CSS3/JavaScript/Bootstrap frontends.",
         "Built RESTful APIs and backend services, integrated third-party APIs, and collaborated cross-functionally on requirements, design, and testing.",
       ],
+    },
+  ],
+  /**
+   * Featured projects — all live and open-source. Each carries ONE real, defensible
+   * metric (mirrored from /evals and the case studies), never a marketing figure.
+   */
+  projects: [
+    {
+      name: "DBWhisper",
+      tagline: "Natural-language-to-SQL agent — LangGraph pipeline, schema-aware pgvector retrieval, multi-LLM fallback, and a fail-closed read-only safety layer.",
+      metric: "70% Spider dev · 82% golden-set exact · 100% fail-closed",
+      stack: "FastAPI · LangGraph · Next.js",
+      live: "https://dbwhisper.vercel.app",
+      github: "https://github.com/mubin-attar-007/dbwhisper",
+    },
+    {
+      name: "TradePulse",
+      tagline: "Quant backtesting platform engineered so common backtest lies are structurally impossible — look-ahead-free by construction, costs-on-by-default, Decimal money, grounded AI copilot.",
+      metric: "Look-ahead canary + cash-conservation tests green",
+      stack: "FastAPI · Next.js · TimescaleDB · Redis",
+      live: "https://tradepulse-live.vercel.app",
+      github: "https://github.com/mubin-attar-007/tradepulse",
+    },
+    {
+      name: "CrownWager",
+      tagline: "Sports-betting analytics & ML predictions — +EV best bets, a validated XGBoost model, cross-book arbitrage finder, and a graded, verifiable track record.",
+      metric: "65.2% ± 0.8% XGBoost accuracy (5-fold CV)",
+      stack: "Django/DRF · FastAPI · Next.js",
+      live: "https://crownwager.vercel.app",
+      github: "https://github.com/mubin-attar-007/crownwager",
+    },
+    {
+      name: "LLM Studio",
+      tagline: "Multi-user, ChatGPT-style AI chat SaaS — Argon2id auth, per-user tenancy, token streaming, OpenAI-compatible multi-LLM routing, and a shared-key daily quota.",
+      metric: "Per-user tenancy · 31 tests · live on HF + Neon",
+      stack: "FastAPI · Postgres · Docker · CI",
+      live: "https://heisenbergblue-llm-studio.hf.space",
+      github: "https://github.com/mubin-attar-007/llm_studio",
     },
   ],
   education: {

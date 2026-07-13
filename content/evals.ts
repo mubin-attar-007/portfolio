@@ -10,10 +10,10 @@ export const evalsIntro = {
   kicker: "Evals",
   title: "How I measure the work",
   lede:
-    "Evals are infrastructure, not a scoreboard I curate. This is the registry: every system I can measure, the method I measure it with, and the honest current state — including the ones still in progress.",
+    "Evals are infrastructure, not a scoreboard I curate. This is the registry: every system I can measure, the method I measure it with, and the honest current state.",
   body: [
-    "“The model felt right” is not a number. For text-to-SQL that means execution accuracy — does the generated query return the correct rows — not string-matching against a reference.",
-    "Where a result isn’t in yet, the row says “in progress” rather than borrowing a number from somewhere else. When a run completes, its result and date land here, linked to how it was measured.",
+    "“The model felt right” is not a number. For text-to-SQL that means execution accuracy — does the generated query return the correct rows when run against the real database — not string-matching against a reference.",
+    "When a result isn’t in yet, the row says so plainly rather than borrowing a number from somewhere else. When a run completes, its result, date, and method land here — and where a provider limit forces a partial run, the excluded count is stated, not hidden.",
   ],
 } as const;
 
@@ -22,9 +22,10 @@ const RAW = [
     system: "DBWhisper",
     benchmark: "Spider",
     metric: "Execution accuracy",
-    result: "In progress",
-    status: "in-progress",
-    note: "Cross-domain text-to-SQL benchmark; the harness scores whether generated SQL returns the correct result set, not string-match.",
+    result: "73% (101/139, dev)",
+    status: "complete",
+    date: "2026-07-10",
+    note: "Scoped Spider dev-split run of DBWhisper’s generation model (qwen/qwen3-32b at temp 0.1) with each database’s schema in context: 139 questions across 18 databases. Generated SQL is executed against the real Spider SQLite databases and compared by result set — ordered when the gold query has ORDER BY, multiset otherwise (standard execution match). 101/139 correct; malformed generations count as incorrect. 9 of the 148 sampled questions could not be scored after repeated provider throttling and are excluded, not counted either way. Measures the NL→SQL generation core; the deployed agent adds schema retrieval and a read-only validator on top.",
     link: "https://yale-lily.github.io/spider",
   },
   {

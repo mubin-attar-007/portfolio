@@ -3,7 +3,8 @@ import Link from "next/link";
 import { ArrowUpRight } from "lucide-react";
 import { Section } from "@/components/layout/section";
 import { buttonVariants } from "@/components/ui/button";
-import { SITE, STATUS } from "@/config/site";
+import { CopyEmail } from "@/components/features/copy-email";
+import { SITE, STATUS, INTEGRATIONS } from "@/config/site";
 import { hire } from "@/content/site";
 
 export const metadata: Metadata = {
@@ -24,7 +25,7 @@ export default function HirePage() {
   // Only an absolute http(s) URL activates "Book a call" — a relative/placeholder
   // value (e.g. "/hire_booking") falls back to the honest "coming soon" state
   // instead of rendering a broken link.
-  const calRaw = process.env.NEXT_PUBLIC_CAL_URL;
+  const calRaw = process.env.NEXT_PUBLIC_CAL_URL ?? INTEGRATIONS.calUrl;
   const cal = calRaw && /^https?:\/\//.test(calRaw) ? calRaw : undefined;
 
   return (
@@ -80,7 +81,7 @@ export default function HirePage() {
             Email me
             <ArrowUpRight size={16} strokeWidth={1.8} />
           </a>
-          {cal ? (
+          {cal && (
             <a
               href={cal}
               target="_blank"
@@ -90,19 +91,17 @@ export default function HirePage() {
               Book a call
               <ArrowUpRight size={16} strokeWidth={1.8} />
             </a>
-          ) : (
-            <span className="inline-flex items-center gap-2 rounded-[var(--radius-md)] border border-dashed border-border-strong px-3 py-2 font-mono text-xs text-ink-tertiary">
-              <span className="h-1.5 w-1.5 rounded-full bg-ink-tertiary" aria-hidden />
-              Scheduling link coming soon
-            </span>
           )}
         </div>
-        <a
-          href={`mailto:${SITE.email}`}
-          className="link-underline mt-6 inline-block text-ink"
-        >
-          {SITE.email}
-        </a>
+        <div className="mt-6 flex flex-wrap items-center gap-x-5 gap-y-2">
+          <a href={`mailto:${SITE.email}`} className="link-underline text-ink">
+            {SITE.email}
+          </a>
+          <CopyEmail email={SITE.email} />
+        </div>
+        <p className="mt-6 max-w-[54ch] text-sm text-ink-tertiary">
+          References from managers and collaborators I&apos;ve shipped with are available on request.
+        </p>
       </section>
     </Section>
   );

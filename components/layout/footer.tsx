@@ -112,7 +112,7 @@ export function Footer({ year }: { year: number }) {
               rel="noopener noreferrer"
               className="hover:text-ink"
             >
-              Source
+              GitHub
             </a>
             <a href="/llms.txt" className="hover:text-ink">
               llms.txt

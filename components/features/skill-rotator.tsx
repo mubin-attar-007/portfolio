@@ -62,6 +62,7 @@ function SlotColumn({ items, delay }: { items: string[]; delay: number }) {
           "linear-gradient(to bottom, transparent, #000 18%, #000 82%, transparent)",
       }}
       aria-hidden
+      role="presentation"
     >
       <ul
         className="grid"

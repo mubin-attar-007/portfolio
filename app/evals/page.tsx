@@ -17,12 +17,12 @@ export const metadata: Metadata = {
 /** Status pill — muted for in-progress/planned (never fake-green before a run). */
 function Status({ status, result }: { status: EvalRow["status"]; result: string }) {
   if (status === "complete") {
-    return <span className="font-mono text-xs text-positive">{result}</span>;
+    return <span className="font-mono text-xs tabular-nums text-positive">{result}</span>;
   }
   const dashed = status === "planned";
   return (
     <span
-      className={`inline-flex items-center gap-1.5 rounded-full border px-2.5 py-0.5 font-mono text-xs text-ink-tertiary ${
+      className={`inline-flex items-center gap-1.5 rounded-full border px-2.5 py-0.5 font-mono text-xs tabular-nums text-ink-tertiary ${
         dashed ? "border-dashed border-border-strong" : "border-border-strong"
       }`}
     >

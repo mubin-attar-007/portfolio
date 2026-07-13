@@ -94,8 +94,8 @@ const RAW = [
     order: 4,
     systems: ["Argon2 auth + sessions", "per-user tenancy", "multi-LLM routing"],
     metrics: [
-      { label: "tests passing", value: "31", method: "pytest suite gated in CI, alongside ruff, pip-audit, and gitleaks checks." },
-      { label: "tenancy", value: "per-user", method: "Ownership is enforced on every query in the repository layer, not just at the route." },
+      { label: "tenancy isolation", value: "per-user", method: "Ownership is enforced on every query in the repository layer, not just at the route — a user can never read another user's chats or history." },
+      { label: "LLM routing", value: "cloud + local", method: "Hosted models and a local option are routed behind one interface, with per-provider rate-limit and quota errors surfaced cleanly to the user instead of failing the request." },
     ],
     links: { live: "https://heisenbergblue-llm-studio.hf.space", repo: "https://github.com/mubin-attar-007/llm_studio" },
     diagram: "llm-studio",

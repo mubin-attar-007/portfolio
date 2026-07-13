@@ -53,6 +53,44 @@ export default function ResumePage() {
             ))}
           </div>
 
+          <h2 className="mt-12 font-mono text-sm uppercase tracking-wide text-ink-tertiary">
+            Featured projects <span className="text-ink-tertiary">— all live &amp; open-source</span>
+          </h2>
+          <div className="mt-6 flex flex-col gap-6">
+            {resume.projects.map((p) => (
+              <div key={p.name}>
+                <div className="flex flex-wrap items-baseline justify-between gap-x-3 gap-y-1">
+                  <h3 className="text-lg text-ink">{p.name}</h3>
+                  <span className="font-mono text-xs text-ink-tertiary">
+                    <a
+                      href={p.live}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      className="text-accent hover:text-accent-hover"
+                    >
+                      live
+                    </a>{" "}
+                    ·{" "}
+                    <a
+                      href={p.github}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      className="text-accent hover:text-accent-hover"
+                    >
+                      github
+                    </a>
+                  </span>
+                </div>
+                <p className="mt-1 max-w-[var(--width-prose)] text-sm leading-[1.65] text-ink-secondary">
+                  {p.tagline}
+                </p>
+                <p className="mt-1.5 font-mono text-xs tabular-nums text-ink-secondary">
+                  {p.metric} <span className="text-ink-tertiary">· {p.stack}</span>
+                </p>
+              </div>
+            ))}
+          </div>
+
           <h2 className="mt-12 font-mono text-sm uppercase tracking-wide text-ink-tertiary">Education</h2>
           <div className="mt-4">
             <p className="text-ink">{resume.education.degree}</p>

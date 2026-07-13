@@ -39,3 +39,14 @@ export function formatDate(iso: string): string {
   const month = MONTHS[Number(m) - 1] ?? "";
   return `${month} ${y}`.trim();
 }
+
+/**
+ * Format an ISO date ("2026-05-20") as "May 20, 2026" — day precision, deterministic.
+ * Used where per-item dates must read distinctly (e.g. product "Updated" lines, F-19),
+ * so several items sharing a month don't collapse to one identical string.
+ */
+export function formatDateFull(iso: string): string {
+  const [y, m, d] = iso.split("-");
+  const month = MONTHS[Number(m) - 1] ?? "";
+  return d ? `${month} ${Number(d)}, ${y}`.trim() : `${month} ${y}`.trim();
+}

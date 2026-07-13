@@ -1,10 +1,11 @@
 import type { Metadata } from "next";
+import Link from "next/link";
 import { Rss } from "lucide-react";
 import { Section } from "@/components/layout/section";
 import { SITE } from "@/config/site";
 import { allWriting } from "@/lib/writing";
 import { WritingList } from "@/components/features/writing-list";
-import { NewsletterForm } from "@/components/features/newsletter-form";
+import { NewsletterForm, NEWSLETTER_ENABLED } from "@/components/features/newsletter-form";
 
 export const metadata: Metadata = {
   title: "Writing",
@@ -45,15 +46,21 @@ export default async function WritingIndex() {
         </a>
       </div>
       <p className="mt-6 max-w-[var(--width-prose)] text-lg text-ink-secondary">
-        Essays, guides, and short notes on AI systems, evaluation, and honest ML — mined from the
-        decisions and failures in my case studies. Filter by topic, or browse the archive.
+        Essays and guides on AI systems, evaluation, and honest ML — mined from the decisions and
+        failures in my case studies. For shorter, single-decision notes, see the{" "}
+        <Link href="/notes" className="link-underline text-ink">
+          notebook
+        </Link>
+        .
       </p>
       <div className="mt-12">
         <WritingList posts={items} />
       </div>
-      <div className="mt-20 max-w-[var(--width-prose)]">
-        <NewsletterForm />
-      </div>
+      {NEWSLETTER_ENABLED && (
+        <div className="mt-20 max-w-[var(--width-prose)]">
+          <NewsletterForm />
+        </div>
+      )}
     </Section>
   );
 }

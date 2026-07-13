@@ -8,6 +8,7 @@ import { SITE } from "@/config/site";
 import { Header } from "@/components/layout/header";
 import { Footer } from "@/components/layout/footer";
 import { JsonLd } from "@/components/seo/json-ld";
+import { RevealObserver } from "@/components/features/reveal-observer";
 
 // Display serif — italic only (essay titles, pull-quotes). Geist Sans/Mono come
 // self-hosted from the `geist` package (their .variable = --font-geist-sans/mono).
@@ -32,7 +33,7 @@ export const metadata: Metadata = {
 // Pre-paint theme application (no flash). The light page with dark section-bands
 // is the brand default and always renders unless the visitor has explicitly
 // chosen dark (stored) — we intentionally do NOT follow the OS colour-scheme.
-const THEME_SCRIPT = `(function(){try{var t=localStorage.getItem('theme');if(t==='dark'||t==='light')document.documentElement.setAttribute('data-theme',t);}catch(e){}})();`;
+const THEME_SCRIPT = `(function(){document.documentElement.classList.add('js');try{var t=localStorage.getItem('theme');if(t==='dark'||t==='light')document.documentElement.setAttribute('data-theme',t);}catch(e){}})();`;
 
 export default function RootLayout({ children }: Readonly<{ children: React.ReactNode }>) {
   const year = new Date().getFullYear();
@@ -55,6 +56,7 @@ export default function RootLayout({ children }: Readonly<{ children: React.Reac
           {children}
         </main>
         <Footer year={year} />
+        <RevealObserver />
         <Analytics />
       </body>
     </html>

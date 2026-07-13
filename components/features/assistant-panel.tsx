@@ -25,8 +25,23 @@ type Msg = {
   content: string;
   sources?: Source[];
   mode?: "live" | "fallback" | "refusal";
+  note?: string | null;
   streaming?: boolean;
 };
+
+/**
+ * A short, honest label for a non-live turn — so the UI never dresses a
+ * rate-limit or input prompt up as a retrieved answer. Live answers get none.
+ * "from site search" is shown only when the turn actually carries retrieved
+ * citations (the graceful FAQ fallback), keyed off real sources, not a guess.
+ */
+function turnLabel(m: Msg): string | null {
+  if (m.mode === "refusal") return "declined — out of scope";
+  if (m.mode !== "fallback") return null;
+  if (m.note === "rate-limited") return "one at a time — give it a second";
+  if (m.sources && m.sources.length > 0) return "from site search";
+  return null; // input prompts ("too long", "no question") speak for themselves
+}
 
 function tabbables(root: HTMLElement): HTMLElement[] {
   return Array.from(
@@ -134,7 +149,7 @@ export function AssistantPanel({
             const dataLine = raw.match(/data: (.*)/)?.[1];
             if (!evLine || !dataLine) continue;
             const data = JSON.parse(dataLine);
-            if (evLine === "meta") update({ mode: data.mode });
+            if (evLine === "meta") update({ mode: data.mode, note: data.note ?? null });
             else if (evLine === "token") {
               text += data.text;
               update({ content: text });
@@ -175,7 +190,7 @@ export function AssistantPanel({
           <div>
             <p className="text-sm font-medium text-ink">Friday</p>
             <p className="font-mono text-xs text-ink-tertiary">
-              RAG over my case studies, writing &amp; résumé
+              BM25 keyword search over my case studies, writing &amp; résumé
             </p>
           </div>
           <button
@@ -217,15 +232,19 @@ export function AssistantPanel({
                   </p>
                 ) : (
                   <div key={i}>
-                    {m.mode === "fallback" ? (
-                      <p className="mb-1 font-mono text-xs text-ink-tertiary">from site search</p>
+                    {turnLabel(m) ? (
+                      <p className="mb-1 font-mono text-xs text-ink-tertiary">{turnLabel(m)}</p>
                     ) : null}
                     <div
                       className="whitespace-pre-wrap text-sm leading-relaxed text-ink-secondary"
                       aria-live={m.streaming ? "polite" : "off"}
                     >
                       {m.content}
-                      {m.streaming && !m.content ? <span className="text-ink-tertiary">…</span> : null}
+                      {m.streaming && !m.content ? (
+                        <span className="font-mono text-xs text-ink-tertiary" aria-label="Searching">
+                          searching<span className="motion-safe:animate-pulse">…</span>
+                        </span>
+                      ) : null}
                     </div>
                     {m.sources && m.sources.length > 0 ? (
                       <div className="mt-2 flex flex-wrap gap-1.5">

@@ -6,6 +6,8 @@ export const NAV = [
   { label: "About", href: "/about" },
   { label: "Hire me", href: "/hire" },
 ] as const;
+// Note: Evals is surfaced via the homepage "Measured" band + the footer (not the header) —
+// the band already elevates it, so the menu stays lean (F-07 satisfied without a 6th item).
 
 export type NavItem = (typeof NAV)[number];
 

@@ -10,10 +10,13 @@ import { SkillRotator } from "@/components/features/skill-rotator";
 import { CapabilityGrid } from "@/components/features/capability-grid";
 import { LiveDemos } from "@/components/features/live-demos";
 import { Faq } from "@/components/features/faq";
+import { CopyEmail } from "@/components/features/copy-email";
+import { Testimonials } from "@/components/features/testimonials";
 import { diagrams } from "@/components/diagrams/data";
 import { SITE, STATUS } from "@/config/site";
 import { home } from "@/content/site";
 import { featuredProject } from "@/content/projects";
+import { evals } from "@/content/evals";
 import { allWriting } from "@/lib/writing";
 import { formatDate } from "@/lib/format";
 
@@ -35,6 +38,12 @@ export default async function Home() {
     ? { ...rawDiagram, nodes: rawDiagram.nodes.map((n) => (n.decision ? { ...n, decision: {} } : n)) }
     : undefined;
   const posts = (await allWriting()).slice(0, 3);
+  // Single-source the flagship eval headline from the registry — never re-typed here (F-07).
+  // Pin the end-to-end golden-set row explicitly (its lede describes the live pipeline over
+  // Postgres); the Spider row is the recognized-benchmark entry and lives on /evals, not here.
+  const measuredEval = evals.find(
+    (e) => e.system === "DBWhisper" && e.benchmark === "Custom golden-query set",
+  );
   const [headLead, headTail] = home.headline.split(" — ");
 
   return (
@@ -132,6 +141,36 @@ export default async function Home() {
         </div>
       </Section>
 
+      {/* Measured — the flagship's honest eval headline, linked to the registry (F-07).
+          A compact bordered strip (like the mid-page CTA) so it never disturbs the
+          dark/light Section rhythm. Number is single-sourced from content/evals.ts. */}
+      {measuredEval ? (
+        <div className="border-y border-border bg-surface">
+          <div className="mx-auto flex w-full max-w-[var(--width-container)] flex-col gap-4 px-6 py-8 sm:flex-row sm:items-center sm:justify-between sm:px-8">
+            <div className="min-w-0">
+              <p className="font-mono text-xs uppercase tracking-[0.04em] text-ink-tertiary">
+                {home.measured.kicker}
+              </p>
+              <p className="mt-2 max-w-[56ch] text-sm text-ink-secondary">{home.measured.lede}</p>
+              <p className="mt-2 font-mono text-lg tabular-nums text-ink sm:text-xl">
+                {measuredEval.result}
+              </p>
+            </div>
+            <Link
+              href="/evals"
+              className="group inline-flex shrink-0 items-center gap-1.5 text-sm font-medium text-accent hover:text-accent-hover"
+            >
+              {home.measured.cta}{" "}
+              <ArrowRight
+                size={15}
+                strokeWidth={1.5}
+                className="transition-transform group-hover:translate-x-0.5"
+              />
+            </Link>
+          </div>
+        </div>
+      ) : null}
+
       {/* From the notebook — how I think, in three real entries */}
       <Section space="lg" ariaLabel="Field notes" className="reveal">
         <div id="field-notes" className="scroll-mt-24">
@@ -198,6 +237,10 @@ export default async function Home() {
           </Link>
         </div>
       </div>
+
+      {/* References — the honest "what people say" band (F-06). Self-gates when empty;
+          shows a visible "sample" label until real, named quotes replace the placeholders. */}
+      <Testimonials />
 
       {/* Now + Writing — merged two-column (shortens the page) */}
       <Section space="md" tone="subtle" ariaLabel="Now and writing" className="reveal">
@@ -274,6 +317,7 @@ export default async function Home() {
             <a href={`mailto:${SITE.email}`} className="link-underline text-lg text-ink">
               {SITE.email}
             </a>
+            <CopyEmail email={SITE.email} />
             <a
               href={SITE.socials.github}
               target="_blank"

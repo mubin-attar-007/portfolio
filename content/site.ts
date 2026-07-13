@@ -11,7 +11,7 @@ export const home = {
     "GenAI/ML engineer, four live products. I don't ship screenshots — I take the systems apart: the architecture, the decisions I rejected, and the numbers, every one linked to how it was measured.",
   availability: "Open to AI/ML roles — remote or Ahmedabad, India.",
   // A single quiet fact line — the facts survive; the hollow stat cards don't.
-  facts: ["4 live products", "shipping AI since 2022", "$0 free-tier stack"],
+  facts: ["4 live products", "production AI since 2024", "$0 free-tier stack"],
 
   // Proof strip (the honest "trusted by" replacement) — real, verifiable credibility,
   // no logos/quotes we can't back. Employer is the anchor; every stat is true.
@@ -21,9 +21,19 @@ export const home = {
     employerNote: "healthcare-AI automation, by day",
     stats: [
       { value: "4", label: "products live in production" },
-      { value: "3+ yrs", label: "shipping production AI" },
+      { value: "3+ yrs", label: "shipping software" },
       { value: "$0", label: "free-tier infrastructure" },
     ],
+  },
+
+  // "Measured" band — surfaces the flagship's honest eval headline and links to the
+  // registry (F-07). The NUMBER is single-sourced from content/evals.ts (the completed
+  // golden-set row); this is framing copy only — never a hardcoded metric.
+  measured: {
+    kicker: "Measured",
+    lede:
+      "DBWhisper’s live pipeline — schema retrieval → read-only validator → execute — scored end-to-end over a read-only Postgres store:",
+    cta: "See the eval registry",
   },
 
   // The tech-stack rotator — real tools across the four live products, shown in
@@ -89,7 +99,7 @@ export const home = {
   live: {
     kicker: "Deployed, not described",
     title: "Four products. All live — go try them.",
-    lede: "Everything here is deployed and running on a $0 free-tier stack. Launch any of them, or read exactly how it's built.",
+    lede: "Everything here is deployed and running — launch any of them, or read exactly how it's built.",
     note: "Free-tier backends may cold-start on first load.",
   },
 
@@ -237,7 +247,7 @@ export const home = {
 export const about = {
   headline: "Solo engineer, real products.",
   body: [
-    "I'm an AI/ML engineer with 3+ years building and shipping production AI end to end — GenAI/LLM applications, agentic and RAG systems, and predictive ML. I work across the stack: FastAPI, Next.js, Postgres, and Docker, with auth, CI/CD, and security hardening baked in.",
+    "I'm an AI/ML engineer — shipping software since 2022 and focused on production AI since 2024: GenAI/LLM applications, agentic and RAG systems, and predictive ML. I work across the stack: FastAPI, Next.js, Postgres, and Docker, with auth, CI/CD, and security hardening baked in.",
     "By day I build healthcare-AI automation at Sevina Technologies — clinical-compliance and reimbursement pipelines (constrained by HIPAA, so shown here only in the abstract). On my own time I ship live AI products on a $0 free-tier stack, which forces discipline: no waste, real engineering, shipped.",
     "The one rule across all of it: every number a user sees is genuinely computed — never faked.",
   ],

@@ -18,6 +18,20 @@ export const SITE = {
 export type Site = typeof SITE;
 
 /**
+ * Third-party integrations — PUBLIC identifiers (a booking page + a newsletter
+ * handle, not secrets), committed so they activate on deploy with zero env setup.
+ * Each is overridable at build via its matching NEXT_PUBLIC_* var (consumed in
+ * app/hire/page.tsx and components/features/newsletter-form.tsx). Empty string =
+ * the feature stays hidden (the graceful no-config state).
+ */
+export const INTEGRATIONS = {
+  /** Cal.com booking page (all event types). A specific event = ".../mubin-attar-007/30min". */
+  calUrl: "https://cal.com/mubin-attar-007",
+  /** Buttondown newsletter handle — the embed form posts to this account. */
+  buttondownUsername: "mubin-attar-007",
+} as const;
+
+/**
  * Availability chrome (evergreen, not an announcement). `href` points at /hire
  * — the single funnel for contact intent. The literal email address stays a
  * mailto wherever it's shown verbatim (footer, /hire, homepage contact).

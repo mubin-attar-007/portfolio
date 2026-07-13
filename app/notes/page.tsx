@@ -1,10 +1,11 @@
 import type { Metadata } from "next";
+import Link from "next/link";
 import { Rss } from "lucide-react";
 import { Section } from "@/components/layout/section";
 import { SITE } from "@/config/site";
 import { allNotes } from "@/lib/notes";
 import { NoteList } from "@/components/features/note-list";
-import { NewsletterForm } from "@/components/features/newsletter-form";
+import { NewsletterForm, NEWSLETTER_ENABLED } from "@/components/features/newsletter-form";
 
 export const metadata: Metadata = {
   title: "Notes",
@@ -38,15 +39,21 @@ export default async function NotesIndex() {
         </a>
       </div>
       <p className="mt-6 max-w-[var(--width-prose)] text-lg text-ink-secondary">
-        A running notebook — short notes on the decisions behind the work: retrieval, evals, agents,
-        and the infrastructure that keeps four products live. Filter by tag.
+        A running notebook — short, single-decision notes behind the work: retrieval, evals, agents,
+        and the infrastructure that keeps four products live. For longer essays and guides, see{" "}
+        <Link href="/writing" className="link-underline text-ink">
+          writing
+        </Link>
+        .
       </p>
       <div className="mt-12">
         <NoteList notes={items} />
       </div>
-      <div className="mt-20 max-w-[var(--width-prose)]">
-        <NewsletterForm />
-      </div>
+      {NEWSLETTER_ENABLED && (
+        <div className="mt-20 max-w-[var(--width-prose)]">
+          <NewsletterForm />
+        </div>
+      )}
     </Section>
   );
 }

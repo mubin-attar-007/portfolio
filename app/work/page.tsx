@@ -63,9 +63,17 @@ export default function WorkIndex() {
                   </div>
                   <p className="mt-1 max-w-[var(--width-prose)] text-sm text-ink-secondary">{p.summary}</p>
                 </div>
-                <span className="font-mono text-sm tabular-nums text-ink-secondary">
-                  {p.metrics[0]?.value}{" "}
-                  <span className="text-ink-tertiary">{p.metrics[0]?.label}</span>
+                <span className="flex items-center gap-2 font-mono text-sm tabular-nums text-ink-secondary">
+                  <span>
+                    {p.metrics[0]?.value}{" "}
+                    <span className="text-ink-tertiary">{p.metrics[0]?.label}</span>
+                  </span>
+                  <ArrowRight
+                    size={15}
+                    strokeWidth={1.5}
+                    aria-hidden
+                    className="-translate-x-1 text-ink-tertiary opacity-0 transition-all duration-[var(--motion-base)] ease-[var(--ease-out)] group-hover:translate-x-0 group-hover:text-accent group-hover:opacity-100 motion-reduce:transition-none motion-reduce:translate-x-0 motion-reduce:opacity-100"
+                  />
                 </span>
               </Link>
             </li>
