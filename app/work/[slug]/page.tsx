@@ -1,7 +1,6 @@
 import type { Metadata } from "next";
 import type { ReactNode } from "react";
 import Link from "next/link";
-import Image from "next/image";
 import { notFound } from "next/navigation";
 import { ArrowLeft, ArrowUpRight } from "lucide-react";
 import { Container } from "@/components/layout/container";
@@ -58,16 +57,16 @@ const BODIES: Record<string, () => ReactNode> = {
  */
 const DEMO_SHOTS: Record<string, { alt: string; caption: string }> = {
   dbwhisper: {
-    alt: "DBWhisper's live console — a plain-English question turned into a validated read-only SQL query, run, and answered.",
-    caption: "The live product: plain English in, a fail-closed read-only query and answer out.",
+    alt: "Silent screen tour of DBWhisper's live site — plain-English questions turned into validated read-only SQL, run, and answered.",
+    caption: "Silent tour of the live product — plain English in, a fail-closed read-only query and answer out.",
   },
   crownwager: {
-    alt: "CrownWager's live site — a model-vs-market best bet showing edge, expected value, stake, and model win probability.",
-    caption: "The live product: model probabilities turned into +EV picks — informational only, no real-money wagering.",
+    alt: "Silent screen tour of CrownWager's live site — model-vs-market best bets with edge, expected value, and model win probability.",
+    caption: "Silent tour of the live product — model probabilities turned into +EV picks (informational only, no real-money wagering).",
   },
   tradepulse: {
-    alt: "TradePulse's live site — an honest backtesting terminal for building, analyzing, and automating trading strategies.",
-    caption: "The live product: an honest backtesting terminal — “no cherry-picked numbers.”",
+    alt: "Silent screen tour of TradePulse's live site — an honest backtesting terminal for building and running trading strategies.",
+    caption: "Silent tour of the live product — an honest backtesting terminal, “no cherry-picked numbers.”",
   },
 };
 
@@ -144,14 +143,17 @@ export default async function CaseStudyPage({ params }: { params: Promise<{ slug
               </>
             }
           >
-            <Image
-              src={`/demos/${slug}.png`}
-              alt={DEMO_SHOTS[slug]!.alt}
-              width={1920}
-              height={1140}
-              sizes="(max-width: 768px) 100vw, 720px"
-              className="h-auto w-full"
-            />
+            <video
+              poster={`/demos/${slug}.png`}
+              aria-label={DEMO_SHOTS[slug]!.alt}
+              controls
+              muted
+              playsInline
+              preload="none"
+              className="block h-auto w-full"
+            >
+              <source src={`/demos/${slug}.webm`} type="video/webm" />
+            </video>
           </Figure>
         </div>
       ) : null}

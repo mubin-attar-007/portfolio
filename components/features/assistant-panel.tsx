@@ -184,7 +184,7 @@ export function AssistantPanel({
         role="dialog"
         aria-modal="true"
         aria-label="Ask about Mubin's work"
-        className="fixed inset-x-0 bottom-0 z-50 flex h-[85dvh] flex-col overflow-hidden rounded-t-[var(--radius-lg)] border border-border bg-surface shadow-[var(--shadow-overlay)] sm:inset-x-auto sm:bottom-6 sm:right-6 sm:h-auto sm:max-h-[calc(100dvh-6rem)] sm:w-[400px] sm:rounded-[var(--radius-lg)]"
+        className="fixed inset-x-0 bottom-0 z-50 flex h-[85dvh] flex-col overflow-hidden rounded-t-[var(--radius-lg)] border border-border bg-surface shadow-[var(--shadow-overlay)] sm:inset-x-auto sm:bottom-6 sm:right-6 sm:h-[min(38rem,calc(100dvh-6rem))] sm:w-[408px] sm:rounded-[var(--radius-lg)]"
       >
         <header className="flex items-center justify-between border-b border-border px-5 py-3">
           <div>
@@ -206,7 +206,11 @@ export function AssistantPanel({
         <div ref={logRef} className="flex-1 overflow-y-auto px-5 py-4">
           {empty ? (
             <div>
-              <p className="font-mono text-xs uppercase tracking-wide text-ink-tertiary">
+              <p className="text-sm leading-relaxed text-ink-secondary">
+                Hi — I&apos;m Friday. Ask about Mubin&apos;s work and I&apos;ll answer from his case
+                studies, writing, and résumé, with sources.
+              </p>
+              <p className="mt-5 font-mono text-xs uppercase tracking-wide text-ink-tertiary">
                 Try one, or ask your own
               </p>
               <ul className="mt-4 flex flex-col gap-2">
