@@ -14,7 +14,7 @@ export function SkillRotator() {
     <div className="border-y border-border bg-bg-subtle">
       <div className="mx-auto w-full max-w-[var(--width-container)] px-6 py-9 sm:px-8">
         <p className="text-sm text-ink-secondary">{home.stackLabel}</p>
-        <div className="mt-7 grid grid-cols-2 gap-x-8 gap-y-8 sm:grid-cols-4 sm:gap-x-0 sm:divide-x sm:divide-border">
+        <div className="reveal mt-7 grid grid-cols-2 gap-x-8 gap-y-8 sm:grid-cols-4 sm:gap-x-0 sm:divide-x sm:divide-border">
           {home.stackGroups.map((g, i) => (
             <div key={g.label} className={i === 0 ? "sm:pr-6" : "sm:px-6"}>
               <p className="font-mono text-xs uppercase tracking-[0.06em] text-ink-tertiary">
