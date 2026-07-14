@@ -259,6 +259,11 @@ export const about = {
     "By day I build healthcare-AI automation at Sevina Technologies — clinical-compliance and reimbursement pipelines (constrained by HIPAA, so shown here only in the abstract). On my own time I ship live AI products on a $0 free-tier stack, which forces discipline: no waste, real engineering, shipped.",
     "The one rule across all of it: every number a user sees is genuinely computed — never faked.",
   ],
+  // Framing for the /about "how I think" section, which renders home.principles.
+  thinking: {
+    kicker: "How I think",
+    title: "Three rules I don't break",
+  },
 } as const;
 
 /**
