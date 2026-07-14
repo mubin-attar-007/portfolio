@@ -457,6 +457,27 @@ button:disabled,
   }
 }
 
+/* Stack-band cells crossfade to the next tool on each swap (Clerk's cycling
+   company wall). The keyed remount replays this; reduced-motion holds the item. */
+.stack-cell {
+  animation: stack-swap 520ms var(--ease-out);
+}
+@keyframes stack-swap {
+  from {
+    opacity: 0;
+    transform: translateY(5px);
+  }
+  to {
+    opacity: 1;
+    transform: none;
+  }
+}
+@media (prefers-reduced-motion: reduce) {
+  .stack-cell {
+    animation: none;
+  }
+}
+
 /* --- terminal caret (component showcase) --- */
 .caret-blink {
   animation: caret-blink 1.05s steps(1) infinite;
