@@ -314,35 +314,28 @@ export default async function Home() {
 
       {/* Contact — a serif philosophy line, then a quiet resolution (dark close) */}
       <Section space="lg" tone="invert" className="reveal">
-        <p className="max-w-[24ch] font-serif text-2xl italic leading-snug text-ink sm:text-3xl">
+        <p className="max-w-[24ch] font-serif text-3xl italic leading-snug text-ink sm:text-4xl">
           {home.philosophy}
         </p>
         <div className="mt-14">
-          <p className="font-mono text-xs uppercase tracking-[0.04em] text-ink-tertiary">Contact</p>
-          <h2 className="mt-4 max-w-[24ch] text-2xl text-ink">
+          <p className="inline-flex items-center gap-2.5 font-mono text-xs uppercase tracking-[0.04em] text-ink-tertiary">
+            <span className="h-2 w-2 rounded-full bg-positive" aria-hidden />
+            {STATUS.text}
+          </p>
+          <h2 className="mt-5 max-w-[20ch] text-3xl text-ink sm:text-4xl">
             Building something that needs grounded, honest AI?
           </h2>
-          <div className="mt-6 flex flex-wrap items-center gap-x-8 gap-y-3">
+          {/* One decisive close: the accent primary is the action, the literal
+              email is the quiet alternative. Socials live in the footer below. */}
+          <div className="mt-8 flex flex-wrap items-center gap-x-6 gap-y-4">
+            <Link href="/hire" className={buttonVariants("primary")}>
+              Get in touch
+              <ArrowUpRight size={15} strokeWidth={1.8} />
+            </Link>
             <a href={`mailto:${SITE.email}`} className="link-underline text-lg text-ink">
               {SITE.email}
             </a>
             <CopyEmail email={SITE.email} />
-            <a
-              href={SITE.socials.github}
-              target="_blank"
-              rel="noopener noreferrer"
-              className="link-underline font-mono text-sm text-ink-tertiary"
-            >
-              GitHub
-            </a>
-            <a
-              href={SITE.socials.linkedin}
-              target="_blank"
-              rel="noopener noreferrer"
-              className="link-underline font-mono text-sm text-ink-tertiary"
-            >
-              LinkedIn
-            </a>
           </div>
         </div>
       </Section>
