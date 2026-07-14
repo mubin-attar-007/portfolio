@@ -2,7 +2,9 @@
 
 import { useMemo, useState } from "react";
 import Link from "next/link";
+import { ArrowRight } from "lucide-react";
 import { formatDate } from "@/lib/format";
+import { PostCover } from "@/components/features/post-cover";
 
 /**
  * WritingList — the active-blog index: topic-filter chips + a year archive.
@@ -55,29 +57,39 @@ export function WritingList({ posts }: { posts: Post[] }) {
         {byYear.map(([year, ps]) => (
           <section key={year}>
             <h2 className="font-mono text-xs uppercase tracking-[0.06em] text-ink-tertiary">{year}</h2>
-            <ul className="mt-4 divide-y divide-border border-y border-border">
+            <ul className="mt-5 grid gap-5 sm:grid-cols-2 lg:grid-cols-3">
               {ps.map((p) => (
                 <li key={p.slug}>
                   <Link
                     href={`/writing/${p.slug}`}
-                    className="group -mx-4 grid gap-1 rounded-[var(--radius-md)] px-4 py-6 transition-colors duration-200 ease-[var(--ease-out)] hover:bg-bg-subtle md:grid-cols-[1fr_auto] md:items-baseline md:gap-8"
+                    className="group flex h-full flex-col overflow-hidden rounded-[var(--radius-lg)] border border-border bg-surface shadow-[var(--shadow-sm)] transition-colors hover:border-border-strong"
                   >
-                    <div>
-                      <div className="flex flex-wrap items-baseline gap-3">
-                        <h3 className="text-xl text-ink transition-colors group-hover:text-accent">
-                          {p.title}
-                        </h3>
+                    <div className="aspect-[16/7] border-b border-border bg-bg-subtle">
+                      <PostCover slug={p.slug} category={p.category} />
+                    </div>
+                    <div className="flex flex-1 flex-col p-5">
+                      <div className="flex items-center justify-between gap-3">
                         <span className="font-mono text-xs uppercase text-ink-tertiary">
                           {LABEL[p.category]}
                         </span>
+                        <time dateTime={p.date} className="font-mono text-xs text-ink-tertiary">
+                          {formatDate(p.date)}
+                        </time>
                       </div>
-                      <p className="mt-1 max-w-[var(--width-prose)] text-sm text-ink-secondary">
-                        {p.summary}
-                      </p>
+                      <h3 className="mt-3 text-lg text-ink transition-colors group-hover:text-accent">
+                        {p.title}
+                      </h3>
+                      <p className="mt-1.5 flex-1 text-sm text-ink-secondary">{p.summary}</p>
+                      <span className="mt-4 inline-flex items-center gap-1.5 text-sm font-medium text-accent">
+                        Read
+                        <ArrowRight
+                          size={14}
+                          strokeWidth={1.6}
+                          aria-hidden
+                          className="transition-transform group-hover:translate-x-0.5"
+                        />
+                      </span>
                     </div>
-                    <time dateTime={p.date} className="font-mono text-xs text-ink-tertiary">
-                      {formatDate(p.date)}
-                    </time>
                   </Link>
                 </li>
               ))}

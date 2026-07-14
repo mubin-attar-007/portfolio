@@ -50,6 +50,19 @@ export function SystemDiagram({
   const shownId = pinned ?? hover; // what the panel shows
   const shown = shownId ? byId[shownId] : null;
   const hasDecisions = spec.nodes.some((n) => n.decision);
+
+  // On hover/pin, light the active node + its directly-connected neighbours and
+  // dim the rest — so hovering a node traces its slice of the system (the Clerk/
+  // Linear "focus the subsystem" hover), not just tints one box.
+  const litNodes = useMemo(() => {
+    if (!active) return null;
+    const s = new Set<string>([active]);
+    for (const e of spec.edges) {
+      if (e.from === active) s.add(e.to);
+      else if (e.to === active) s.add(e.from);
+    }
+    return s;
+  }, [active, spec.edges]);
   const refs = useRef<(SVGGElement | null)[]>([]);
 
   const topLeft = (id: string) => {
@@ -82,12 +95,16 @@ export function SystemDiagram({
 
   return (
     <figure className="my-6">
+      {/* On phones the graph keeps its NATIVE size and the bordered container
+          scrolls, so node labels stay legible instead of shrinking to ~5px to
+          fit a 360px viewport. It scales-to-fit only from md up (where it fits). */}
+      <p className="mb-2 font-mono text-xs text-ink-tertiary md:hidden">Swipe the diagram to explore →</p>
       <div className="overflow-x-auto rounded-[var(--radius-lg)] border border-border bg-surface p-4 shadow-[var(--shadow-sm)]">
         <svg
           viewBox={`0 0 ${width} ${height}`}
           width={width}
           height={height}
-          className="h-auto max-w-full"
+          className="h-auto md:max-w-full"
           role="group"
           aria-label={caption ?? "System architecture diagram"}
         >
@@ -126,6 +143,7 @@ export function SystemDiagram({
             const p = topLeft(n.id);
             const on = active === n.id;
             const isPinned = pinned === n.id;
+            const dimmed = litNodes != null && !litNodes.has(n.id);
             return (
               <g
                 key={n.id}
@@ -150,10 +168,11 @@ export function SystemDiagram({
                 style={{
                   transformBox: "fill-box",
                   transformOrigin: "center",
-                  transform: on ? "scale(1.035)" : "scale(1)",
+                  transform: on ? "scale(1.05)" : "scale(1)",
                   filter: on ? "var(--drop-node)" : "none",
+                  opacity: dimmed ? 0.4 : 1,
                   transition:
-                    "transform var(--motion-base) var(--ease-out), filter var(--motion-base) var(--ease-out)",
+                    "transform var(--motion-base) var(--ease-out), filter var(--motion-base) var(--ease-out), opacity var(--motion-base) var(--ease-out)",
                 }}
               >
                 <rect

@@ -18,6 +18,14 @@ export function Assistant() {
 
   useEffect(() => {
     const onKey = (e: KeyboardEvent) => {
+      // Cmd/Ctrl+K — the expected command-palette shortcut; opens from anywhere,
+      // even while typing (that's the convention users reach for).
+      if ((e.metaKey || e.ctrlKey) && !e.altKey && (e.key === "k" || e.key === "K")) {
+        e.preventDefault();
+        setOpen(true);
+        return;
+      }
+      // "/" also opens, but only when the user isn't typing in a field.
       if (e.key !== "/" || e.metaKey || e.ctrlKey || e.altKey) return;
       const el = document.activeElement;
       const typing =
@@ -44,13 +52,13 @@ export function Assistant() {
         ref={triggerRef}
         type="button"
         onClick={() => setOpen(true)}
-        title="Friday — an AI assistant that answers only from this site's content (case studies, writing, résumé). Press / to open."
-        aria-label="Ask Friday — an AI assistant grounded on this site. Press slash to open."
+        title="Friday — an AI assistant that answers only from this site's content (case studies, writing, résumé). Press ⌘K or / to open."
+        aria-label="Ask Friday — an AI assistant grounded on this site. Press command-K or slash to open."
         className="hidden items-center gap-2 rounded-[var(--radius-md)] border border-border-strong px-3 py-1.5 text-sm text-ink transition-colors hover:border-accent hover:text-accent md:inline-flex"
       >
         Ask Friday
-        <kbd className="rounded-[var(--radius-sm)] border border-border bg-bg-subtle px-1 font-mono text-xs text-ink-tertiary">
-          /
+        <kbd className="rounded-[var(--radius-sm)] border border-border bg-bg-subtle px-1.5 font-mono text-[0.7rem] text-ink-tertiary">
+          ⌘K
         </kbd>
       </button>
       {open ? (

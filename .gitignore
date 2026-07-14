@@ -32,6 +32,7 @@ yarn-error.log*
 
 # env files (can opt-in for committing if needed)
 .env*
+!.env.example
 
 # vercel
 .vercel
@@ -52,3 +53,19 @@ FLAGSHIP_PLAN.md.md
 IMPLEMENTATION_PLAN.md
 PENDING_ONLINE.md
 claude_guide/
+
+# internal design study — competitor teardown incl. screenshots (kept local, not shipped)
+/docs/clerk-study.md
+/docs/clerk-study/
+
+# editor / OS cruft
+.vscode/
+.idea/
+*.swp
+*~
+Thumbs.db
+ehthumbs.db
+Desktop.ini
+
+# local AI / tooling state
+.claude/

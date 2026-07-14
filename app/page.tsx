@@ -49,7 +49,7 @@ export default async function Home() {
   return (
     <>
       {/* Hero — text + a representative terminal as the focal point. */}
-      <Section space="lg" className="!pt-[clamp(4.5rem,9vw,8rem)]">
+      <Section space="lg" className="hero-surface !pt-[clamp(4.5rem,9vw,8rem)]">
         <div className="grid grid-cols-1 items-center gap-12 lg:grid-cols-[minmax(0,1.1fr)_minmax(0,0.9fr)] lg:gap-16">
           <div className="min-w-0">
             <p
@@ -60,7 +60,7 @@ export default async function Home() {
             </p>
             {/* The LCP element paints immediately (no entrance fade) — the surrounding
                 hero elements still fade in around it. Keeps LCP fast. */}
-            <h1 className="mt-8 max-w-[24ch] text-4xl leading-[1.05] tracking-[-0.02em] text-ink sm:text-5xl lg:text-6xl">
+            <h1 className="mt-8 max-w-[20ch] text-[2.6rem] font-bold leading-[1.02] tracking-[-0.035em] text-ink sm:text-6xl lg:text-[4.25rem]">
               {headLead}
               {headTail ? <span className="text-ink-tertiary"> — {headTail}</span> : null}
             </h1>
@@ -70,12 +70,21 @@ export default async function Home() {
             >
               {home.lede}
             </p>
+            {/* The thesis, stated up front (it reprises in the dark contact close).
+                The short accent left-rule literally draws the "boundary" the
+                sentence describes — the one motif, ≤2 accent marks in view. */}
+            <p
+              className="hero-item mt-7 max-w-[48ch] border-l-2 border-accent pl-4 text-base text-ink"
+              style={{ animationDelay: "0.24s" }}
+            >
+              {home.philosophy}
+            </p>
             {/* dual CTA (fixes V4): flagship case study + a real contact action */}
             <div
               className="hero-item mt-8 flex flex-wrap items-center gap-3"
-              style={{ animationDelay: "0.26s" }}
+              style={{ animationDelay: "0.3s" }}
             >
-              <Link href={`/work/${flagship.slug}`} className={buttonVariants("primary")}>
+              <Link href={`/work/${flagship.slug}`} className={buttonVariants("primary", "lg")}>
                 Read the flagship case study
               </Link>
               <Link href="/hire" className={buttonVariants("secondary")}>
@@ -305,35 +314,28 @@ export default async function Home() {
 
       {/* Contact — a serif philosophy line, then a quiet resolution (dark close) */}
       <Section space="lg" tone="invert" className="reveal">
-        <p className="max-w-[24ch] font-serif text-2xl italic leading-snug text-ink sm:text-3xl">
+        <p className="max-w-[24ch] font-serif text-3xl italic leading-snug text-ink sm:text-4xl">
           {home.philosophy}
         </p>
         <div className="mt-14">
-          <p className="font-mono text-xs uppercase tracking-[0.04em] text-ink-tertiary">Contact</p>
-          <h2 className="mt-4 max-w-[24ch] text-2xl text-ink">
+          <p className="inline-flex items-center gap-2.5 font-mono text-xs uppercase tracking-[0.04em] text-ink-tertiary">
+            <span className="h-2 w-2 rounded-full bg-positive" aria-hidden />
+            {STATUS.text}
+          </p>
+          <h2 className="mt-5 max-w-[20ch] text-3xl text-ink sm:text-4xl">
             Building something that needs grounded, honest AI?
           </h2>
-          <div className="mt-6 flex flex-wrap items-center gap-x-8 gap-y-3">
+          {/* One decisive close: the accent primary is the action, the literal
+              email is the quiet alternative. Socials live in the footer below. */}
+          <div className="mt-8 flex flex-wrap items-center gap-x-6 gap-y-4">
+            <Link href="/hire" className={buttonVariants("primary")}>
+              Get in touch
+              <ArrowUpRight size={15} strokeWidth={1.8} />
+            </Link>
             <a href={`mailto:${SITE.email}`} className="link-underline text-lg text-ink">
               {SITE.email}
             </a>
             <CopyEmail email={SITE.email} />
-            <a
-              href={SITE.socials.github}
-              target="_blank"
-              rel="noopener noreferrer"
-              className="link-underline font-mono text-sm text-ink-tertiary"
-            >
-              GitHub
-            </a>
-            <a
-              href={SITE.socials.linkedin}
-              target="_blank"
-              rel="noopener noreferrer"
-              className="link-underline font-mono text-sm text-ink-tertiary"
-            >
-              LinkedIn
-            </a>
           </div>
         </div>
       </Section>

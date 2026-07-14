@@ -16,7 +16,7 @@ export default function ResumePage() {
       <div className="flex flex-wrap items-start justify-between gap-4">
         <div>
           <p className="font-mono text-xs uppercase text-ink-tertiary">Résumé</p>
-          <h1 className="mt-6 text-4xl text-ink sm:text-5xl">{SITE.name}</h1>
+          <h1 className="mt-6 text-4xl font-bold tracking-[-0.03em] text-ink sm:text-5xl">{SITE.name}</h1>
           <p className="mt-2 font-mono text-sm text-ink-secondary">
             {SITE.role} · {SITE.location}
           </p>
@@ -28,7 +28,7 @@ export default function ResumePage() {
 
       <p className="mt-8 max-w-[var(--width-prose)] text-lg text-ink-secondary">{resume.summary}</p>
 
-      <div className="mt-14 grid gap-12 lg:grid-cols-[1fr_20rem]">
+      <div className="reveal mt-14 grid gap-12 lg:grid-cols-[1fr_20rem]">
         <div>
           <h2 className="text-sm font-mono uppercase tracking-wide text-ink-tertiary">Experience</h2>
           <div className="mt-6 flex flex-col gap-8">

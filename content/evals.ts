@@ -38,6 +38,26 @@ const RAW = [
     note: "22 natural-language golden queries + 4 unsafe/out-of-scope prompts over a read-only Postgres store, run end-to-end through DBWhisper’s live pipeline (schema retrieval → generation → read-only validator → execute). 82% exact result-set match (18/22); 95% (21/22) when crediting correct answers that returned an extra column. All 4 destructive or out-of-scope prompts were refused fail-closed (4/4).",
     link: "/work/dbwhisper",
   },
+  {
+    system: "CrownWager",
+    benchmark: "NBA moneyline · 15,115 games",
+    metric: "Model accuracy (cross-validated)",
+    result: "65.2% ± 0.8%",
+    status: "complete",
+    date: "2026-07-02",
+    note: "5-fold stratified cross-validation on 15,115 NBA games — replacing an earlier post-hoc “best of 300 random splits” 68%. The base home-win rate is 57.5%, so this is a real ~8-point edge (ROC-AUC 0.685). Published picks are then graded against the real final score, and the track record is flagged “insufficient” below 20 settled picks.",
+    link: "/work/crownwager",
+  },
+  {
+    system: "TradePulse",
+    benchmark: "Look-ahead canary + parity suite",
+    metric: "Look-ahead leakage",
+    result: "0 leaks · byte-identical",
+    status: "complete",
+    date: "2026-07-01",
+    note: "The engine decides on closed bar i and fills at bar i+1’s open. A canary multiplies every future bar by 3× and asserts the past equity curve is byte-identical; any look-ahead leak changes the curve and fails the build. Correctness is proven structurally, not scored on returns — the platform deliberately publishes no flattering performance number.",
+    link: "/work/tradepulse",
+  },
 ] as const;
 
 export const evals: EvalRow[] = RAW.map((r) => EvalSchema.parse(r));

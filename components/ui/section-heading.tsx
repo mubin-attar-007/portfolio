@@ -21,7 +21,7 @@ export function SectionHeading({
       {kicker ? (
         <span className="font-mono text-xs uppercase text-ink-tertiary">{kicker}</span>
       ) : null}
-      <Tag id={id} className={Tag === "h2" ? "text-3xl text-ink" : "text-2xl text-ink"}>
+      <Tag id={id} className={Tag === "h2" ? "text-4xl text-ink sm:text-5xl" : "text-2xl text-ink sm:text-3xl"}>
         {children}
       </Tag>
     </div>

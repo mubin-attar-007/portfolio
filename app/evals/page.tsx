@@ -56,7 +56,7 @@ export default function EvalsPage() {
       <p className="font-mono text-xs uppercase tracking-[0.04em] text-ink-tertiary">
         {evalsIntro.kicker}
       </p>
-      <h1 className="mt-6 max-w-[18ch] text-4xl tracking-[-0.02em] text-ink sm:text-5xl">
+      <h1 className="mt-6 max-w-[18ch] text-4xl font-bold tracking-[-0.03em] text-ink sm:text-5xl">
         {evalsIntro.title}
       </h1>
       <p className="mt-6 max-w-[var(--width-prose)] text-lg text-ink-secondary">{evalsIntro.lede}</p>
@@ -70,7 +70,7 @@ export default function EvalsPage() {
 
       {/* Mobile (< md): each eval as a stacked card so Result/Date/Notes never
           scroll off-screen. Desktop keeps the scannable table below. */}
-      <ul className="mt-14 flex flex-col gap-4 md:hidden">
+      <ul className="reveal mt-14 flex flex-col gap-4 md:hidden">
         {evals.map((e) => (
           <li
             key={`${e.system}-${e.benchmark}`}
@@ -107,7 +107,7 @@ export default function EvalsPage() {
         ))}
       </ul>
 
-      <div className="mt-14 hidden overflow-x-auto md:block">
+      <div className="reveal mt-14 hidden overflow-x-auto md:block">
         <table className="w-full min-w-[48rem] border-collapse text-sm">
           <caption className="sr-only">Eval registry — system, method, metric, result, and date.</caption>
           <thead>
