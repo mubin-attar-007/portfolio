@@ -5,7 +5,7 @@ import { Section } from "@/components/layout/section";
 import { buttonVariants } from "@/components/ui/button";
 import { CopyEmail } from "@/components/features/copy-email";
 import { SITE, STATUS, INTEGRATIONS } from "@/config/site";
-import { hire } from "@/content/site";
+import { hire, home } from "@/content/site";
 
 export const metadata: Metadata = {
   title: "Hire me",
@@ -31,10 +31,19 @@ export default function HirePage() {
   return (
     <Section space="lg">
       <p className="font-mono text-xs uppercase tracking-[0.04em] text-ink-tertiary">{hire.kicker}</p>
-      <h1 className="mt-6 max-w-[16ch] text-4xl tracking-[-0.02em] text-ink sm:text-5xl">
+      <h1 className="mt-6 max-w-[16ch] text-5xl font-bold leading-[1.05] tracking-[-0.03em] text-ink sm:text-6xl">
         {hire.title}
       </h1>
       <p className="mt-6 max-w-[var(--width-prose)] text-lg text-ink-secondary">{hire.lede}</p>
+      {/* Proof anchor for cold visitors who land straight on /hire from search. */}
+      <dl className="reveal mt-10 grid max-w-[var(--width-prose)] grid-cols-3 divide-x divide-border border-y border-border">
+        {home.proof.stats.map((s) => (
+          <div key={s.label} className="px-5 py-4 first:pl-0">
+            <dt className="font-mono text-xl tabular-nums text-ink">{s.value}</dt>
+            <dd className="mt-1 text-xs text-ink-tertiary">{s.label}</dd>
+          </div>
+        ))}
+      </dl>
 
       <div className="mt-14 grid gap-x-12 gap-y-12 sm:grid-cols-2">
         <section>
@@ -54,7 +63,7 @@ export default function HirePage() {
         </section>
       </div>
 
-      <section className="mt-14 max-w-[var(--width-prose)]">
+      <section className="reveal mt-14 max-w-[var(--width-prose)]">
         <h2 className={H2}>How I work</h2>
         <p className="mt-4 text-ink-secondary">{hire.howIWork.body}</p>
         <ul className="mt-5 flex flex-col gap-2.5">
@@ -71,7 +80,7 @@ export default function HirePage() {
         </ul>
       </section>
 
-      <section className="mt-14 max-w-[var(--width-prose)] border-t border-border pt-8">
+      <section className="reveal mt-14 max-w-[var(--width-prose)] border-t border-border pt-8">
         <h2 className={H2}>Start a conversation</h2>
         <p className="mt-4 text-ink-secondary">
           The fastest way to reach me is email — I read and answer every one myself.
