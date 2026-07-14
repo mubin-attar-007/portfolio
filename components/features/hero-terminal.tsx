@@ -8,7 +8,7 @@ import { home } from "@/content/site";
  * HeroTerminal — the site's signature moment: a representative DBWhisper request
  * that types itself ONCE (retrieve → validate → read-only SQL → result), then
  * holds the finished frame — a reaction, not a perpetual performance (premium is
- * still, not busy). Click to replay; renders the full static frame under
+ * still, not busy). Hover to replay; renders the full static frame under
  * prefers-reduced-motion. Driven by a self-scheduling effect that STOPS when
  * done — no loop, no leaked timers. A11y: <figure> + caption; the type-in is
  * decorative (aria-hidden) and the final state carries the meaning (sr-only).
@@ -32,7 +32,6 @@ export function HeroTerminal() {
   const [typed, setTyped] = useState(0);
   const [revealed, setRevealed] = useState(0);
   const [reduced, setReduced] = useState(false);
-  const [paused, setPaused] = useState(false);
 
   useEffect(() => {
     // one-time read of the OS motion preference on mount (not a cascading render)
@@ -47,7 +46,7 @@ export function HeroTerminal() {
 
   // self-scheduling driver: type, then reveal, then STOP and hold (no loop).
   useEffect(() => {
-    if (reduced || paused || done) return;
+    if (reduced || done) return;
     let ms: number;
     let next: () => void;
     if (typed < d.prompt.length) {
@@ -59,17 +58,15 @@ export function HeroTerminal() {
     }
     const id = setTimeout(next, ms);
     return () => clearTimeout(id);
-  }, [typed, revealed, reduced, paused, done, d.prompt.length, blocks.length]);
+  }, [typed, revealed, reduced, done, d.prompt.length, blocks.length]);
 
   return (
     <figure
       className="overflow-hidden rounded-[var(--radius-lg)] border border-border bg-surface shadow-[var(--shadow-md)]"
-      onMouseEnter={() => setPaused(true)}
-      onMouseLeave={() => setPaused(false)}
-      onClick={() => {
+      onMouseEnter={() => {
+        // hover to replay — the terminal re-types itself on each hover-in
         setTyped(0);
         setRevealed(0);
-        setPaused(false);
       }}
     >
       <div className="flex items-center justify-between border-b border-border px-4 py-2">

@@ -446,6 +446,17 @@ button:disabled,
   }
 }
 
+/* Capability illustration status badges give a gentle nudge on card hover —
+   they're already legible at rest, so this is emphasis, not a reveal. */
+@media (prefers-reduced-motion: no-preference) {
+  .illo-badge {
+    transition: transform var(--motion-base) var(--ease-out);
+  }
+  .cap-card:hover .illo-badge {
+    transform: translateX(2px);
+  }
+}
+
 /* --- terminal caret (component showcase) --- */
 .caret-blink {
   animation: caret-blink 1.05s steps(1) infinite;

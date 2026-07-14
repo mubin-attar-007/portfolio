@@ -86,7 +86,7 @@ export function CapabilityGrid() {
                 className="pointer-events-none absolute -left-8 -top-8 h-28 w-28 rounded-full bg-accent opacity-0 blur-2xl transition-opacity duration-500 ease-[var(--ease-out)] group-hover:opacity-[0.10]"
               />
               {/* illustration well: an animated SVG scene, or the icon tile */}
-              <div className="relative mb-5 flex h-24 items-center justify-center overflow-hidden rounded-[var(--radius-md)] border border-border bg-bg-subtle px-5">
+              <div className="relative mb-5 flex h-28 items-center overflow-hidden rounded-[var(--radius-md)] border border-border bg-bg-subtle px-4">
                 {Illo ? (
                   <Illo />
                 ) : (
