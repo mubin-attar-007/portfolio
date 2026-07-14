@@ -25,7 +25,7 @@ export default async function NowPage() {
   return (
     <Section space="lg">
       <p className="font-mono text-xs uppercase tracking-[0.04em] text-ink-tertiary">Now</p>
-      <h1 className="mt-6 max-w-[18ch] text-4xl tracking-[-0.02em] text-ink sm:text-5xl">
+      <h1 className="mt-6 max-w-[18ch] text-4xl font-bold tracking-[-0.03em] text-ink sm:text-5xl">
         What I&apos;m doing now
       </h1>
       <p className="mt-5 inline-flex items-center gap-2 font-mono text-xs text-ink-tertiary">
@@ -34,10 +34,10 @@ export default async function NowPage() {
       </p>
       <p className="mt-6 max-w-[var(--width-prose)] text-lg text-ink-secondary">{meta.lede}</p>
 
-      <div className="mt-12 max-w-[var(--width-prose)]">{content}</div>
+      <div className="reveal mt-12 max-w-[var(--width-prose)]">{content}</div>
 
       {/* Open to — single-sourced from STATUS so it never diverges from /hire + footer */}
-      <div className="mt-14 max-w-[var(--width-prose)] border-t border-border pt-8">
+      <div className="reveal mt-14 max-w-[var(--width-prose)] border-t border-border pt-8">
         <h2 className="font-mono text-xs uppercase tracking-[0.06em] text-ink-tertiary">Open to</h2>
         <p className="mt-4 text-lg text-ink">{STATUS.text}.</p>
         <div className="mt-5">

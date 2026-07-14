@@ -20,7 +20,9 @@ export default function TimelinePage() {
   return (
     <Section space="lg">
       <p className="font-mono text-xs uppercase text-ink-tertiary">Timeline</p>
-      <h1 className="mt-6 max-w-[20ch] text-4xl text-ink sm:text-5xl">Growth over titles.</h1>
+      <h1 className="mt-6 max-w-[20ch] text-4xl font-bold tracking-[-0.03em] text-ink sm:text-5xl">
+        Growth over titles.
+      </h1>
       <p className="mt-6 max-w-[var(--width-prose)] text-lg text-ink-secondary">
         What I built, learned, got wrong, and changed — each phase includes the mistake, because
         that&apos;s where the learning is.
@@ -28,7 +30,7 @@ export default function TimelinePage() {
 
       <div className="mt-12 flex flex-col gap-12">
         {timeline.map((phase) => (
-          <div key={phase.period} className="grid gap-4 md:grid-cols-[minmax(0,14rem)_1fr] md:gap-10">
+          <div key={phase.period} className="reveal grid gap-4 md:grid-cols-[minmax(0,14rem)_1fr] md:gap-10">
             <div>
               <p className="font-mono text-xs uppercase text-ink-tertiary">{phase.period}</p>
               <h2 className="mt-1 text-xl text-ink">{phase.role}</h2>

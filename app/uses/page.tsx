@@ -17,13 +17,15 @@ export default function UsesPage() {
   return (
     <Section space="lg">
       <p className="font-mono text-xs uppercase tracking-[0.04em] text-ink-tertiary">Uses</p>
-      <h1 className="mt-6 max-w-[16ch] text-4xl tracking-[-0.02em] text-ink sm:text-5xl">The stack</h1>
+      <h1 className="mt-6 max-w-[16ch] text-4xl font-bold tracking-[-0.03em] text-ink sm:text-5xl">
+        The stack
+      </h1>
       <p className="mt-6 max-w-[var(--width-prose)] text-lg text-ink-secondary">{uses.intro}</p>
 
-      <div className="mt-14 grid gap-x-12 gap-y-12 sm:grid-cols-2">
+      <div className="reveal mt-14 grid gap-x-12 gap-y-12 sm:grid-cols-2">
         {uses.groups.map((g) => (
           <section key={g.title}>
-            <h2 className="font-mono text-xs uppercase tracking-[0.06em] text-accent">{g.title}</h2>
+            <h2 className="font-mono text-xs uppercase tracking-[0.06em] text-ink-tertiary">{g.title}</h2>
             <ul className="mt-5 flex flex-col gap-3">
               {g.items.map((item) => (
                 <li key={item} className="flex items-baseline gap-3 text-ink-secondary">
