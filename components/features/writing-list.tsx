@@ -5,12 +5,28 @@ import Link from "next/link";
 import { ArrowRight } from "lucide-react";
 import { formatDate } from "@/lib/format";
 import { PostCover } from "@/components/features/post-cover";
+import { Spotlight } from "@/components/features/spotlight";
 
 /**
  * WritingList — the active-blog index: topic-filter chips + a year archive.
  * Server passes the (serializable) post metadata; filtering/grouping is client
- * side. A11y: chips are real toggle buttons (aria-pressed); each post is one
- * link; the year is a heading labelling its list.
+ * side.
+ *
+ * Props:
+ * - `posts` — serializable post metadata, newest first.
+ *
+ * Motion: the archive fades up once via the shared `.reveal`. Deliberately NOT a
+ * per-card `.reveal-stagger`: the list is filtered client-side, and the reveal is
+ * driven by an observer that only re-scans on route change, so a card mounted by
+ * a filter click would stay hidden. Every card IS a single link, so it earns the
+ * shared `.lift` (hover/focus elevation) alongside `.spotlight`. One <Spotlight>
+ * wraps the whole archive — one pointer listener for every year, not one per card.
+ * Cards rest at `--shadow-md` (Clerk's card shadow) and `.lift` raises them to
+ * `--shadow-lift`, so hover still buys a visible change in depth.
+ *
+ * A11y: chips are real toggle buttons (aria-pressed); each post is one link and
+ * one tab stop; `.lift` also responds to `:focus-within`, so keyboard users get
+ * the same affordance as pointer users. All effects are reduced-motion gated.
  */
 type Post = {
   slug: string;
@@ -53,55 +69,64 @@ export function WritingList({ posts }: { posts: Post[] }) {
         ))}
       </div>
 
-      <div className="mt-12 flex flex-col gap-12">
-        {byYear.map(([year, ps]) => (
-          <section key={year}>
-            <h2 className="font-mono text-xs uppercase tracking-[0.06em] text-ink-tertiary">{year}</h2>
-            <ul className="mt-5 grid gap-5 sm:grid-cols-2 lg:grid-cols-3">
-              {ps.map((p) => (
-                <li key={p.slug}>
-                  <Link
-                    href={`/writing/${p.slug}`}
-                    className="group flex h-full flex-col overflow-hidden rounded-[var(--radius-lg)] border border-border bg-surface shadow-[var(--shadow-sm)] transition-colors hover:border-border-strong"
-                  >
-                    <div className="aspect-[16/7] border-b border-border bg-bg-subtle">
-                      <PostCover slug={p.slug} category={p.category} />
-                    </div>
-                    <div className="flex flex-1 flex-col p-5">
-                      <div className="flex items-center justify-between gap-3">
-                        <span className="font-mono text-xs uppercase text-ink-tertiary">
-                          {LABEL[p.category]}
-                        </span>
-                        <time dateTime={p.date} className="font-mono text-xs text-ink-tertiary">
-                          {formatDate(p.date)}
-                        </time>
+      <Spotlight>
+        {/* The reveal sits on the ARCHIVE, not on each card. RevealObserver adds
+            `.reveal-in` imperatively and only re-scans on route change, so a card
+            (or a whole year) mounted by a filter click would never be observed and
+            would stay at opacity 0 forever — invisible, but still focusable. This
+            wrapper mounts once and survives every filter, so it is the only safe
+            anchor. (Static, server-rendered grids keep `.reveal-stagger`.) */}
+        <div className="reveal mt-12 flex flex-col gap-12">
+          {byYear.map(([year, ps]) => (
+            <section key={year}>
+              <h2 className="font-mono text-xs uppercase tracking-[0.06em] text-ink-tertiary">
+                {year}
+              </h2>
+              <ul className="mt-5 grid gap-5 sm:grid-cols-2 lg:grid-cols-3">
+                {ps.map((p) => (
+                  <li key={p.slug}>
+                    <Link
+                      href={`/writing/${p.slug}`}
+                      className="lift spotlight group flex h-full flex-col overflow-hidden rounded-[var(--radius-md)] border border-border bg-surface shadow-[var(--shadow-md)] transition-colors hover:border-border-strong"
+                    >
+                      {/* `relative` keeps content above the .spotlight layer (z-0) */}
+                      <div className="relative aspect-[16/7] border-b border-border bg-bg-subtle">
+                        <PostCover slug={p.slug} category={p.category} />
                       </div>
-                      <h3 className="mt-3 text-lg text-ink transition-colors group-hover:text-accent">
-                        {p.title}
-                      </h3>
-                      <p className="mt-1.5 flex-1 text-sm text-ink-secondary">{p.summary}</p>
-                      <span className="mt-4 inline-flex items-center gap-1.5 text-sm font-medium text-accent">
-                        Read
-                        <ArrowRight
-                          size={14}
-                          strokeWidth={1.6}
-                          aria-hidden
-                          className="transition-transform group-hover:translate-x-0.5"
-                        />
-                      </span>
-                    </div>
-                  </Link>
-                </li>
-              ))}
-            </ul>
-          </section>
-        ))}
-        {filtered.length === 0 ? (
-          <p className="text-ink-secondary">
-            No posts tagged &ldquo;{active}&rdquo; yet.
-          </p>
-        ) : null}
-      </div>
+                      <div className="relative flex flex-1 flex-col p-5">
+                        <div className="flex items-center justify-between gap-3">
+                          <span className="font-mono text-xs uppercase text-ink-tertiary">
+                            {LABEL[p.category]}
+                          </span>
+                          <time dateTime={p.date} className="font-mono text-xs text-ink-tertiary">
+                            {formatDate(p.date)}
+                          </time>
+                        </div>
+                        <h3 className="mt-3 text-lg text-ink transition-colors group-hover:text-accent">
+                          {p.title}
+                        </h3>
+                        <p className="mt-1.5 flex-1 text-sm text-ink-secondary">{p.summary}</p>
+                        <span className="mt-4 inline-flex items-center gap-1.5 text-sm font-medium text-accent">
+                          Read
+                          <ArrowRight
+                            size={14}
+                            strokeWidth={1.6}
+                            aria-hidden
+                            className="transition-transform group-hover:translate-x-0.5"
+                          />
+                        </span>
+                      </div>
+                    </Link>
+                  </li>
+                ))}
+              </ul>
+            </section>
+          ))}
+          {filtered.length === 0 ? (
+            <p className="text-ink-secondary">No posts tagged &ldquo;{active}&rdquo; yet.</p>
+          ) : null}
+        </div>
+      </Spotlight>
     </div>
   );
 }
@@ -120,7 +145,7 @@ function Chip({
       type="button"
       onClick={onClick}
       aria-pressed={on}
-      className={`rounded-full border px-3 py-1 font-mono text-xs transition-colors duration-200 ease-[var(--ease-out)] ${
+      className={`rounded-full border px-3 py-1 font-mono text-xs transition-colors duration-fast ease-[var(--ease-out)] ${
         on
           ? "border-accent bg-accent text-on-accent"
           : "border-border-strong text-ink-secondary hover:border-ink hover:text-ink"

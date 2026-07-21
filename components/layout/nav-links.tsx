@@ -11,7 +11,7 @@ import { NAV } from "@/config/nav";
 export function NavLinks() {
   const pathname = usePathname();
   return (
-    <nav aria-label="Primary" className="hidden items-center gap-6 md:flex">
+    <nav aria-label="Primary" className="hidden items-center gap-7 md:flex">
       {NAV.map((item) => {
         const active = pathname === item.href || pathname.startsWith(`${item.href}/`);
         // "Hire me" is the conversion action for a hiring audience — promote it to
@@ -23,7 +23,9 @@ export function NavLinks() {
               key={item.href}
               href={item.href}
               aria-current={active ? "page" : undefined}
-              className="rounded-[var(--radius-md)] bg-accent px-3 py-1.5 text-sm font-medium text-on-accent shadow-[var(--shadow-btn)] transition-colors hover:bg-accent-hover active:translate-y-px"
+              // A pill CTA inside a pill bar — a 6px-radius key inside a fully
+              // rounded container reads as a mismatched part.
+              className="rounded-[var(--radius-pill)] bg-accent px-4 py-1.5 text-sm font-medium text-on-accent shadow-[var(--shadow-btn)] transition-colors hover:bg-accent-hover active:translate-y-px"
             >
               {item.label}
             </Link>
@@ -34,7 +36,9 @@ export function NavLinks() {
             key={item.href}
             href={item.href}
             aria-current={active ? "page" : undefined}
-            className={`text-sm transition-colors ${
+            // font-medium at 14px: Clerk's nav sits a notch heavier than body
+            // text so it holds its own against the logo at small size.
+            className={`text-sm font-medium transition-colors ${
               active ? "text-accent" : "text-ink-secondary hover:text-ink"
             }`}
           >

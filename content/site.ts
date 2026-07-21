@@ -1,28 +1,49 @@
 /**
  * Homepage + about copy. Structured content (hero, field notes, principles)
- * lives here rather than in a parsed .md — a pragmatic divergence documented in
- * CLAUDE.md. Every number carries its method (in the linked case study).
+ * lives in a typed .ts module rather than parsed .md: it is shaped data, not
+ * prose, so TypeScript checks it at build with no parser or schema in between.
+ * Long-form prose stays in MDX under content/{projects,writing,notes}.
+ * Every number carries its method (in the linked case study).
  */
+// Social URLs are identity, not copy, so they have exactly one home in
+// config/site.ts. Read from there rather than restated here — a profile URL
+// written down twice is a profile URL that will eventually disagree with itself.
+import { SITE } from "@/config/site";
 
 export const home = {
   metaLine: "Mubin Attar · AI/ML Engineer · Ahmedabad, India",
   headline: "I build grounded AI systems — and show how they actually work.",
+  // The hero lede is now CENTRED under the headline and capped at ~62ch, so it
+  // has to resolve in two even lines — the previous four-line version read as a
+  // paragraph pushed into a hero. Nothing factual was dropped: "GenAI/ML
+  // engineer" already sits in `metaLine` directly above it, and the substance
+  // (four live products, architecture, rejected decisions, every number linked
+  // to its method) is intact.
   lede:
-    "GenAI/ML engineer, four live products. I don't ship screenshots — I take the systems apart: the architecture, the decisions I rejected, and the numbers, every one linked to how it was measured.",
+    "Four live products, taken apart in public: the architecture, the decisions I rejected, and every number linked to how it was measured.",
+  // Hero actions. Copy lives here, not in the component (CLAUDE.md content law).
+  // Primary points at evidence, not at a contact form: the flagship case study
+  // is the thing that actually answers "can he build this".
+  ctas: {
+    primary: "Read the flagship case study",
+    secondary: "Get in touch",
+  },
   availability: "Open to AI/ML roles — remote or Ahmedabad, India.",
   // A single quiet fact line — the facts survive; the hollow stat cards don't.
   facts: ["4 live products", "production AI since 2024", "$0 free-tier stack"],
 
   // Proof strip (the honest "trusted by" replacement) — real, verifiable credibility,
-  // no logos/quotes we can't back. Employer is the anchor; every stat is true.
+  // no logos/quotes we can't back. Employer is the anchor; every stat is true AND
+  // checkable: `href` is the page where the visitor can verify the count themselves,
+  // so no number on the homepage stands unsupported.
   proof: {
     lead: "AI/ML Engineer at",
     employer: "Sevina Technologies",
     employerNote: "healthcare-AI automation, by day",
     stats: [
-      { value: "4", label: "products live in production" },
-      { value: "3+ yrs", label: "shipping software" },
-      { value: "$0", label: "free-tier infrastructure" },
+      { value: "4", label: "products live in production", href: "/work" },
+      { value: "3+ yrs", label: "shipping software", href: "/resume" },
+      { value: "$0", label: "free-tier infrastructure", href: "/uses" },
     ],
   },
 
@@ -56,12 +77,23 @@ export const home = {
   ],
 
   // A representative DBWhisper request for the hero — illustrative, not a
-  // benchmark. Shows the real behaviour: retrieve → validate → read-only SQL.
+  // benchmark. Shows the real behaviour end to end: retrieve → validate →
+  // read-only SQL → the shape that comes back. The panel renders ALL of it, so
+  // the hero figure is a complete product surface rather than a box waiting for
+  // an animation to fill it.
   heroDemo: {
     app: "dbwhisper",
     badge: "read-only",
     prompt: "revenue by month, last year",
-    steps: ["retrieving schema — 4 tables", "validating — SELECT-only ✓"],
+    // The trace names the agent's REAL tools (app/agent/tools.py in DBWhisper:
+    // `search_tables` does pgvector retrieval over table docs; `validate_sql` is
+    // the fail-closed SELECT-only / single-statement / enrolled-tables gate).
+    // Generic "thinking…" lines would say nothing; these are what the pipeline
+    // actually does, and the case study documents each one.
+    steps: [
+      { tool: "search_tables", detail: "matched orders — 4 enrolled tables" },
+      { tool: "validate_sql", detail: "SELECT-only · single statement · enrolled ✓" },
+    ],
     sql: [
       "SELECT date_trunc('month', o.created_at) AS month,",
       "       sum(o.amount) AS revenue",
@@ -69,6 +101,21 @@ export const home = {
       "WHERE o.created_at >= now() - interval '1 year'",
       "GROUP BY 1 ORDER BY 1;",
     ],
+    // The returned shape. These row VALUES are invented sample data from a demo
+    // database — so the panel labels them "sample data" in the UI. They are not
+    // a customer figure, a benchmark, or a claim of any kind. The three rows +
+    // `moreLabel` add up to the 12 rows the verdict line reports, and they run
+    // ascending to match the query's `ORDER BY 1`.
+    resultShape: {
+      columns: { key: "month", value: "revenue" },
+      rows: [
+        { month: "2024-01-01", revenue: "48,210.00" },
+        { month: "2024-02-01", revenue: "51,884.00" },
+        { month: "2024-03-01", revenue: "63,027.00" },
+      ],
+      moreLabel: "9 more rows",
+      sampleLabel: "sample data",
+    },
     result: "12 rows · never wrote to your data",
     note: "A representative request — the validator gates every query.",
   },
@@ -118,6 +165,26 @@ export const home = {
     title: "Inside DBWhisper",
     invite:
       "A natural-language-to-SQL agent that reads your database safely. Every box is a real decision — hover to trace the flow, click one to see what I rejected, why, and what it cost.",
+    cta: "Read the full DBWhisper case study",
+  },
+
+  // Band headers that used to be typed straight into app/page.tsx. They are
+  // user-facing copy, so they belong here with everything else the page says —
+  // the component should not be the place a sentence is edited.
+  notebook: {
+    kicker: "From the notebook",
+    title: "Three decisions that shaped the work",
+    cta: "All notes",
+    href: "/notes",
+    // The per-entry link label, shared by all three notes — one string because
+    // it is one affordance repeated, not three separate labels to keep in sync.
+    entryCta: "Read the case",
+  },
+  writing: {
+    kicker: "Writing",
+    title: "Selected writing",
+    cta: "All writing",
+    href: "/writing",
   },
 
   // Field notes — real entries from the build. Numbers are genuine (method in
@@ -250,19 +317,89 @@ export const home = {
 
   // DRAFT — the thesis of the "Trust is not a safety model" essay, in one line.
   philosophy: "The interesting engineering isn’t the model in the middle — it’s the deterministic boundary you build around it.",
+
+  // The contact close's ask — the direct question under the philosophy line.
+  // (Moved out of app/page.tsx where it shipped as a literal — content law 3.)
+  // The CTA label itself is STATUS.cta (config/site.ts): one funnel, one label.
+  contactTitle: "Building something that needs grounded, honest AI?",
+} as const;
+
+/**
+ * Page tops for the index routes, in one place so the four of them can be read
+ * against each other. They used to be literals inside the page components,
+ * which is how /writing and /notes ended up with a kicker and an h1 that said
+ * the same word ("Writing" over "Writing") — a duplication that is obvious here
+ * and invisible when the strings live 200 lines apart in two different files.
+ *
+ * /evals is deliberately absent: its header copy already exists as `evalsIntro`
+ * in content/evals.ts, next to the rows it introduces. Restating it here would
+ * create a second source for the same sentence.
+ *
+ * Every `lede` is framing, not a claim — no number, capability, or date is
+ * asserted here that the page below it does not back.
+ */
+export const pages = {
+  work: {
+    kicker: "Case studies",
+    title: "Systems, taken apart.",
+    lede:
+      "Not screenshots — the real engineering. Each write-up walks the architecture, the decisions that mattered, and the trade-offs, with links to the live app and its source.",
+    flagshipKicker: "Flagship",
+    flagshipCta: "Read the full write-up",
+    othersKicker: "More",
+    othersTitle: "Other systems",
+  },
+  writing: {
+    kicker: "Writing",
+    title: "Essays on building AI honestly.",
+    lede:
+      "Essays and guides on AI systems, evaluation, and honest ML — mined from the decisions and failures in my case studies.",
+    feedCta: "RSS",
+    feedHref: "/writing/feed.xml",
+    crossCta: "Shorter, single-decision notes",
+    crossHref: "/notes",
+  },
+  notes: {
+    kicker: "Notes",
+    title: "One decision per note.",
+    lede:
+      "A running notebook — short notes on the decisions behind the work: retrieval, evals, agents, and the infrastructure that keeps four products live.",
+    feedCta: "RSS",
+    feedHref: "/rss.xml",
+    crossCta: "Longer essays and guides",
+    crossHref: "/writing",
+  },
 } as const;
 
 export const about = {
+  kicker: "About",
   headline: "Solo engineer, real products.",
   body: [
     "I'm an AI/ML engineer — shipping software since 2022 and focused on production AI since 2024: GenAI/LLM applications, agentic and RAG systems, and predictive ML. I work across the stack: FastAPI, Next.js, Postgres, and Docker, with auth, CI/CD, and security hardening baked in.",
     "By day I build healthcare-AI automation at Sevina Technologies — clinical-compliance and reimbursement pipelines (constrained by HIPAA, so shown here only in the abstract). On my own time I ship live AI products on a $0 free-tier stack, which forces discipline: no waste, real engineering, shipped.",
     "The one rule across all of it: every number a user sees is genuinely computed — never faked.",
   ],
+  // The page's action pair. Previously typed straight into app/about/page.tsx,
+  // where a lone primary button sat beside four plain text links and read as
+  // unfinished; the page now uses the site's standard primary/secondary pair.
+  ctas: {
+    primary: "Work with me",
+    secondary: "Read the résumé",
+  },
+  // The supporting links under the CTA pair. `external` decides which affordance
+  // the shared TextLink renders (outward arrow vs forward chevron) — it is a fact
+  // about the destination, not a style choice, so it belongs with the content.
+  links: [
+    { label: "GitHub", href: SITE.socials.github, external: true },
+    { label: "LinkedIn", href: SITE.socials.linkedin, external: true },
+    { label: "Timeline", href: "/timeline", external: false },
+  ],
   // Framing for the /about "how I think" section, which renders home.principles.
   thinking: {
     kicker: "How I think",
     title: "Three rules I don't break",
+    cta: "See how that thinking developed",
+    href: "/timeline",
   },
 } as const;
 
@@ -301,13 +438,55 @@ export type Talk = {
 export const talks: Talk[] = [];
 
 /**
+ * /talks page copy. Lifted verbatim out of app/talks/page.tsx, where the lede
+ * and the whole empty state were typed into the component (Law 3). Nothing here
+ * is a new claim: the empty state exists precisely so the page never implies a
+ * speaking history that hasn't happened yet.
+ */
+export const talksIntro = {
+  kicker: "Talks",
+  title: "Talks & appearances",
+  lede:
+    "On building grounded, honest AI systems — evals, deterministic safety boundaries, retrieval, and shipping products on a $0 stack.",
+  /** Label for the per-talk artifact link, once there are talks to link. */
+  entryCta: "slides / recording",
+  empty: {
+    title: "No talks yet — this is where they'll live.",
+    body:
+      "If you're organizing a meetup, podcast, or conference and think I'd be a fit — on evals, LLM safety boundaries, retrieval, or shipping AI on a free tier — I'd love to hear from you.",
+    cta: { label: "Get in touch", href: "/hire" },
+  },
+} as const;
+
+/**
+ * /now page chrome. The lede and the body are the MDX file (content/now.mdx);
+ * this is only the framing the component used to hardcode. "Open to" repeats no
+ * fact — the availability sentence itself is single-sourced from STATUS.
+ */
+export const nowPage = {
+  kicker: "Now",
+  title: "What I'm doing now",
+  /** Prefix for the front-matter `updated` date. Never derived from file mtime. */
+  updatedLabel: "Last updated",
+  openTo: {
+    title: "Open to",
+    cta: { label: "Work with me", href: "/hire" },
+  },
+} as const;
+
+/**
  * /uses — the real stack behind the four live products. Deliberately boring and
  * cheap; every tool here actually ships in one of the projects (no aspirational
  * padding). Grouped for scanability.
  */
 export const uses = {
+  kicker: "Uses",
+  title: "The stack",
   intro:
     "The tools behind four live products — chosen to be boring, cheap, and reliable. A $0 free-tier stack, on purpose: the constraint rules out waste.",
+  // The page asserts "four live products"; this is the link that lets a reader
+  // check the claim rather than take it. Label only — it adds no new claim.
+  cta: { label: "See the four products", href: "/work" },
   groups: [
     {
       title: "Languages & frameworks",
@@ -332,6 +511,76 @@ export const uses = {
     {
       title: "Deploy & tooling",
       items: ["Vercel", "Hugging Face Spaces", "GitHub Actions", "Playwright", "pytest", "ruff", "Shiki"],
+    },
+  ],
+} as const;
+
+export const trust = {
+  kicker: "Trust",
+  title: "I publish what ships and what changed.",
+  body: "This site is built as an engineering portfolio, so the trust page is evidence-first: security posture, delivery promises, and the standards behind what I claim.",
+  principles: [
+    {
+      title: "Transparent risk handling",
+      body: "If I discover reliability or quality issues, I log them, fix them, and keep the changelog visible. No bug is 'buried' if it affects confidence.",
+    },
+    {
+      title: "Deterministic safety boundaries",
+      body: "LLM layers can be non-deterministic; the guardrails must not be. Validation, allowlists, and fallback paths are designed to fail closed and be auditable.",
+    },
+    {
+      title: "Single-sourced metrics",
+      body: "Every public figure in the portfolio is linked to its source: a project write-up, an eval, or a reproducible artifact.",
+    },
+  ],
+  controls: [
+    {
+      title: "Code quality gates",
+      items: ["Type checks in CI", "Deterministic tests for critical paths", "Dependency and secret hygiene", "Manual review checkpoints on risky modules"],
+    },
+    {
+      title: "AI safety controls",
+      items: ["Prompt and tool boundary checks", "Read-only execution for data tasks where possible", "Input/output constraints", "Schema and permission enforcement"],
+    },
+    {
+      title: "Operational trust",
+      items: ["Zero-downtime deployment practices", "Rollback and incident playbooks", "Post-change notes for shipped decisions", "Public changelog for architecture and product movement"],
+    },
+  ],
+} as const;
+
+export const changelog = {
+  kicker: "Changelog",
+  title: "Product and engineering updates, in order.",
+  intro:
+    "I keep this registry current so hiring teams and collaborators can see what changed, when, and why.",
+  entries: [
+    {
+      quarter: "2026 · Q1",
+      title: "Structured trust surface added",
+      details: [
+        "Added dedicated /trust and /changelog routes with evidence-first sections.",
+        "Wired trust and changelog links into primary and footer navigation.",
+        "Consolidated trust and changelog copy in a single typed content source.",
+      ],
+    },
+    {
+      quarter: "2025 · Q4",
+      title: "Homepage + evidence rhythm upgrade",
+      details: [
+        "Split architecture and delivery copy into explicit, verifiable strips.",
+        "Added measured strip and field-note scaffolding for measurable work evidence.",
+        "Reworked claims to link back to case study sources and evaluation artifacts.",
+      ],
+    },
+    {
+      quarter: "2025 · Q3",
+      title: "Live demos and stack clarity",
+      details: [
+        "Centralized the live portfolio sections and product launch links.",
+        "Added role-specific stack grouping to remove decorative tech-wall claims.",
+        "Hardened content discipline with no-numbers-on-home unless sourced.",
+      ],
     },
   ],
 } as const;

@@ -5,10 +5,15 @@ const isDev = process.env.NODE_ENV === "development";
 // Live backends this site talks to from the browser.
 const DBWHISPER = "https://heisenbergblue-dbwhisper.hf.space";
 
-// Content-Security-Policy. No nonces (site stays statically renderable), so
-// script/style use 'unsafe-inline' as Next's inline runtime + framer-motion
-// inline styles require it. connect-src explicitly allows the dbwhisper backend
-// the hero drives; 'self' covers the site's own fetches.
+// Content-Security-Policy. No nonces — a nonce must be minted per request, which
+// would opt every route out of static rendering, so 'unsafe-inline' is the price
+// of keeping the whole site static:
+//   script-src: Next's inline bootstrap + the pre-paint theme script in
+//               app/layout.tsx (it must run before first paint to avoid a flash).
+//   style-src:  React `style={{…}}` attributes — hero animation delays and the
+//               computed SVG geometry in components/diagrams/system-diagram.tsx.
+// connect-src explicitly allows the dbwhisper backend the hero drives; 'self'
+// covers the site's own fetches (including /api/chat).
 const csp = [
   "default-src 'self'",
   `script-src 'self' 'unsafe-inline'${isDev ? " 'unsafe-eval'" : ""}`,

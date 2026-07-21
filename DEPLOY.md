@@ -30,7 +30,7 @@ Production is served at `https://mubin-attar.vercel.app`.
 
 ### `GEMINI_API_KEY`
 
-The assistant calls the Gemini REST API (`gemini-2.0-flash`) from a **server-side
+The assistant calls the Gemini REST API (`gemini-2.5-flash`) from a **server-side
 route handler** (`app/api/chat/route.ts`) — the key is read from
 `process.env.GEMINI_API_KEY` and is never shipped to the browser, logged, or
 included in any error.
@@ -61,8 +61,9 @@ The assistant is designed to stay useful and honest at **zero LLM quota** — it
 never 500s and never fabricates:
 
 - **Retrieval is network-free.** Every answer is grounded in local content
-  (`/content`: profile, projects, resume, FAQ) via in-repo retrieval — no
-  embedding API, no external calls to answer.
+  (`/content`: profile, projects, resume, FAQ) through an in-memory BM25 index
+  built at module load — no embedding API, no vector store, no external call to
+  retrieve.
 - **With a working key + quota:** Gemini streams a grounded synthesis of the
   retrieved passages, then cites which content file each fact came from.
 - **On quota exhaustion, an API error, or a missing key:** the route falls back
@@ -72,13 +73,16 @@ never 500s and never fabricates:
   polite refusal and the model is **not** called.
 - The route is **rate-limited** per client IP (sliding window) and sanitizes /
   length-caps input. No PII is logged.
+- A **global daily budget cap** bounds Gemini generation calls per UTC day. Once
+  it is spent the route stops calling Gemini and serves the grounded retrieval
+  fallback, so a traffic burst cannot run up spend or starve the shared quota.
 
 So if you deploy **without** `GEMINI_API_KEY` (or the free quota runs out), the
 assistant still answers from the FAQ — it just won't do live LLM synthesis.
 
-The panel itself is **code-split** (`next/dynamic`, `ssr: false`) so none of the
-chat/streaming/markdown code ships in the landing bundle; it loads only when a
-visitor first opens the assistant.
+The panel itself is **code-split** (`React.lazy` + `Suspense` in
+`components/features/assistant.tsx`) so none of the chat/streaming code ships in
+the landing bundle; it loads only when a visitor first opens the assistant.
 
 ---
 

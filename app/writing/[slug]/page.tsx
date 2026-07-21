@@ -1,18 +1,23 @@
 import type { Metadata } from "next";
-import Link from "next/link";
 import { notFound } from "next/navigation";
-import { Container } from "@/components/layout/container";
-import { writingSlugs, loadWriting } from "@/lib/writing";
+import { Section } from "@/components/layout/section";
+import { PAGE_TOP } from "@/constants/page";
+import { routableWritingSlugs, loadWriting, writingNeighbours } from "@/lib/writing";
 import { formatDate } from "@/lib/format";
 import { SITE } from "@/config/site";
 import { ArticleJsonLd } from "@/components/seo/json-ld";
 import { NewsletterForm } from "@/components/features/newsletter-form";
 import { PostCover } from "@/components/features/post-cover";
+import { ArticleHeader } from "@/components/ui/article-header";
+import { ArticleFooter } from "@/components/ui/article-footer";
+import { ARTICLE_META } from "@/content/article";
+import { home } from "@/content/site";
+import { AuditLane } from "@/components/features/audit-lane";
 
 export const dynamicParams = false;
 
-export function generateStaticParams() {
-  return writingSlugs().map((slug) => ({ slug }));
+export async function generateStaticParams() {
+  return (await routableWritingSlugs()).map((slug) => ({ slug }));
 }
 
 export async function generateMetadata({
@@ -36,11 +41,17 @@ export default async function WritingPost({ params }: { params: Promise<{ slug: 
   const { slug } = await params;
   const w = await loadWriting(slug);
   if (!w) notFound();
-  const { meta, content } = w;
+  const { meta, content, readingMinutes } = w;
+  // Writing is sorted newest-first, so the entry BEFORE this one in the index is
+  // the newer one — the footer labels that direction "Newer" for this collection.
+  const { newer, older } = await writingNeighbours(slug);
   const url = `${SITE.url}/writing/${slug}`;
 
   return (
-    <Container className="py-16">
+    // PAGE_TOP: every route opens 128px from the nav; `space="lg"`'s 192 top
+    // made the article templates the only pages that started a step lower.
+    // The band keeps `lg`'s 208px close — it is the whole page.
+    <Section space="lg" className={PAGE_TOP}>
       <ArticleJsonLd
         title={meta.title}
         description={meta.summary}
@@ -48,31 +59,52 @@ export default async function WritingPost({ params }: { params: Promise<{ slug: 
         datePublished={meta.date}
         dateModified={meta.updated}
       />
-      <Link href="/writing" className="font-mono text-xs text-ink-tertiary hover:text-ink">
-        ← Writing
-      </Link>
-      <article className="mt-8 max-w-[var(--width-prose)]">
-        {/* Article header cover — same slug seed as the index card, so the essay
-            and its card share one identity (the study's engineering-post cover). */}
-        <div className="aspect-[16/7] overflow-hidden rounded-[var(--radius-lg)] border border-border bg-bg-subtle">
+      <article className="max-w-[var(--width-prose)]">
+        {/* Article cover — same slug seed as the index card, so the essay and
+            its card share one identity. Above the header because it is this
+            page's masthead, not evidence inside the argument. */}
+        <div className="mb-10 aspect-[16/7] overflow-hidden rounded-[var(--radius-lg)] border border-border bg-bg-subtle shadow-[var(--shadow-sm)]">
           <PostCover slug={slug} category={meta.category} />
         </div>
-        <p className="mt-8 font-mono text-xs uppercase text-ink-tertiary">
-          {meta.category} · {formatDate(meta.date)}
-          {meta.updated ? ` · updated ${formatDate(meta.updated)}` : ""}
-        </p>
-        <h1 className="mt-4 text-4xl text-ink">{meta.title}</h1>
-        <p className="mt-4 text-lg text-ink-secondary">{meta.summary}</p>
-        <div className="mt-8">{content}</div>
+        <ArticleHeader
+          kicker={meta.category}
+          title={meta.title}
+          lede={meta.summary}
+          meta={[
+            <time key="date" dateTime={meta.date}>
+              {formatDate(meta.date)}
+            </time>,
+            meta.updated ? (
+              <time key="updated" dateTime={meta.updated}>
+                {ARTICLE_META.updated(formatDate(meta.updated))}
+              </time>
+            ) : null,
+            readingMinutes > 0 ? (
+              <span key="reading">{ARTICLE_META.readingTime(readingMinutes)}</span>
+            ) : null,
+          ]}
+        />
+        <AuditLane
+          title="Audit lane"
+          items={[
+            ...home.proof.stats.map((stat) => ({
+              href: stat.href,
+              value: stat.value,
+              label: stat.label,
+            })),
+            { href: "/trust", label: "trust policy" },
+            { href: "/changelog", label: "changelog" },
+          ]}
+          className="mt-8"
+        />
+        {/* The MDX body owns its own internal rhythm (components/mdx/prose.ts);
+            this only sets the gap between the header and the first block. */}
+        <div className="mt-10">{content}</div>
       </article>
-      <div className="mt-16 max-w-[var(--width-prose)] border-t border-border pt-8">
+      <div className="mt-20 max-w-[var(--width-prose)] border-t border-border pt-8">
         <NewsletterForm />
       </div>
-      <div className="mt-10 max-w-[var(--width-prose)]">
-        <Link href="/writing" className="text-sm font-medium text-accent hover:text-accent-hover">
-          ← All writing
-        </Link>
-      </div>
-    </Container>
+      <ArticleFooter collection="writing" previous={newer} next={older} />
+    </Section>
   );
 }

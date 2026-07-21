@@ -41,3 +41,25 @@ const RAW = [
 export const timeline: TimelinePhase[] = RAW.map((p) => TimelineSchema.parse(p)).sort(
   (a, b) => a.order - b.order,
 );
+
+/**
+ * /timeline page chrome — lifted verbatim out of app/timeline/page.tsx (Law 3:
+ * no copy in components). The `labels` map also fixes the ORDER of the four
+ * rows in one place, which matters because the order is an argument: built →
+ * learned → mistake → changed reads as a consequence chain, and the mistake is
+ * the hinge. Reordering it would change what the page says.
+ */
+export const timelineIntro = {
+  kicker: "Timeline",
+  title: "Growth over titles.",
+  lede:
+    "What I built, learned, got wrong, and changed — each phase includes the mistake, because that's where the learning is.",
+  /** Forward link out of the narrative, to the same facts in résumé form. */
+  cta: { label: "Read the résumé", href: "/resume" },
+  labels: {
+    built: "Built",
+    learned: "Learned",
+    mistake: "Mistake",
+    changed: "Changed",
+  },
+} as const;

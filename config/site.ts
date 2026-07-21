@@ -1,6 +1,6 @@
 /**
  * Site config — the ONLY place outside `content/` where copy may live
- * (name, role, canonical URL, socials). Headline/bio live in content/site/.
+ * (name, role, canonical URL, socials). Headline/bio live in content/site.ts.
  */
 export const SITE = {
   name: "Mubin Attar",

@@ -43,6 +43,59 @@ function turnLabel(m: Msg): string | null {
   return null; // input prompts ("too long", "no question") speak for themselves
 }
 
+/** HTTP status /api/chat answers with when the per-IP window is exhausted. */
+const RATE_LIMITED = 429;
+
+const MODES = ["live", "fallback", "refusal"] as const;
+
+/** Narrow an untrusted `mode` field to the union the UI renders. */
+function asMode(value: unknown): Msg["mode"] {
+  return (MODES as readonly string[]).includes(value as string)
+    ? (value as Msg["mode"])
+    : undefined;
+}
+
+/** Keep only well-formed citations; a malformed one must not blank the list. */
+function asSources(value: unknown): Source[] {
+  if (!Array.isArray(value)) return [];
+  return value.filter(
+    (item): item is Source => typeof (item as Source | undefined)?.source === "string",
+  );
+}
+
+/**
+ * Parse one SSE frame into its event name and JSON payload, or null if the
+ * frame is unreadable.
+ *
+ * Returning null rather than throwing is the point: a single truncated or
+ * malformed frame must not tear down the read loop and erase the answer the
+ * visitor is already reading. The caller skips it and keeps streaming.
+ */
+function parseFrame(raw: string): { event: string; data: Record<string, unknown> } | null {
+  const event = raw.match(/^event: (.*)$/m)?.[1];
+  const payload = raw.match(/^data: (.*)$/m)?.[1];
+  if (!event || !payload) return null;
+  try {
+    const parsed: unknown = JSON.parse(payload);
+    if (typeof parsed !== "object" || parsed === null) return null;
+    return { event, data: parsed as Record<string, unknown> };
+  } catch {
+    return null;
+  }
+}
+
+/**
+ * Honest copy for a 429. Uses the server's Retry-After when it is a usable
+ * number, and stays vague rather than inventing a wait when it is not.
+ */
+function rateLimitMessage(retryAfterSec: number): string {
+  const wait =
+    Number.isFinite(retryAfterSec) && retryAfterSec > 0
+      ? `${retryAfterSec} second${retryAfterSec === 1 ? "" : "s"}`
+      : "a few seconds";
+  return `That's more questions than I can take at once. Try again in ${wait}.`;
+}
+
 function tabbables(root: HTMLElement): HTMLElement[] {
   return Array.from(
     root.querySelectorAll<HTMLElement>(
@@ -51,13 +104,7 @@ function tabbables(root: HTMLElement): HTMLElement[] {
   ).filter((el) => el.offsetParent !== null);
 }
 
-export function AssistantPanel({
-  onClose,
-  returnFocusRef,
-}: {
-  onClose: () => void;
-  returnFocusRef: React.RefObject<HTMLElement | null>;
-}) {
+export function AssistantPanel({ onClose }: { onClose: () => void }) {
   const [messages, setMessages] = useState<Msg[]>([]);
   const [draft, setDraft] = useState("");
   const [busy, setBusy] = useState(false);
@@ -65,21 +112,18 @@ export function AssistantPanel({
   const inputRef = useRef<HTMLTextAreaElement>(null);
   const logRef = useRef<HTMLDivElement>(null);
 
-  // Single close path: unmount, then restore focus to the launcher (WCAG 2.4.3).
-  // Escape, the X button, and the backdrop all route through this so no close
-  // path ever strands keyboard focus on <body>.
-  const close = useCallback(() => {
-    onClose();
-    returnFocusRef.current?.focus();
-  }, [onClose, returnFocusRef]);
-
-  // focus the input on open; trap focus + Escape while open; restore on close
+  // Single close path: Escape, the X button, and the backdrop all call the
+  // owner's `onClose`, which unmounts the panel AND restores focus to a visible
+  // launcher (WCAG 2.4.3). The panel can't pick that target itself — which
+  // launcher is visible depends on the breakpoint.
+  //
+  // focus the input on open; trap focus + Escape while open
   useEffect(() => {
     const t = setTimeout(() => inputRef.current?.focus(), 30);
     const onKey = (e: KeyboardEvent) => {
       if (e.key === "Escape") {
         e.preventDefault();
-        close();
+        onClose();
         return;
       }
       if (e.key === "Tab" && panelRef.current) {
@@ -101,7 +145,7 @@ export function AssistantPanel({
       clearTimeout(t);
       document.removeEventListener("keydown", onKey);
     };
-  }, [close]);
+  }, [onClose]);
 
   // autoscroll the transcript as tokens arrive (not on the empty state, which
   // would shove the starter questions out of view)
@@ -140,7 +184,20 @@ export function AssistantPanel({
             messages: history.map((m) => ({ role: m.role, content: m.content })),
           }),
         });
-        const reader = res.body?.getReader();
+        // The rate limiter answers 429 + Retry-After, not a stream — surface the
+        // real wait instead of letting the body reader fail into the generic
+        // "assistant is resting" copy.
+        if (res.status === RATE_LIMITED) {
+          update({
+            content: rateLimitMessage(Number(res.headers.get("Retry-After"))),
+            streaming: false,
+            mode: "fallback",
+            note: "rate-limited",
+          });
+          return;
+        }
+
+        const reader = res.ok ? res.body?.getReader() : null;
         if (!reader) throw new Error("no stream");
         const decoder = new TextDecoder();
         let buffer = "";
@@ -152,16 +209,24 @@ export function AssistantPanel({
           const events = buffer.split("\n\n");
           buffer = events.pop() ?? "";
           for (const raw of events) {
-            const evLine = raw.match(/event: (.*)/)?.[1];
-            const dataLine = raw.match(/data: (.*)/)?.[1];
-            if (!evLine || !dataLine) continue;
-            const data = JSON.parse(dataLine);
-            if (evLine === "meta") update({ mode: data.mode, note: data.note ?? null });
-            else if (evLine === "token") {
-              text += data.text;
-              update({ content: text });
-            } else if (evLine === "sources") update({ sources: data.citations });
-            else if (evLine === "done") update({ streaming: false });
+            const frame = parseFrame(raw);
+            if (!frame) continue; // unreadable frame — drop it, keep the answer
+            const { event, data } = frame;
+            if (event === "meta") {
+              update({
+                mode: asMode(data.mode),
+                note: typeof data.note === "string" ? data.note : null,
+              });
+            } else if (event === "token") {
+              if (typeof data.text === "string") {
+                text += data.text;
+                update({ content: text });
+              }
+            } else if (event === "sources") {
+              update({ sources: asSources(data.citations) });
+            } else if (event === "done") {
+              update({ streaming: false });
+            }
           }
         }
         update({ streaming: false });
@@ -185,7 +250,7 @@ export function AssistantPanel({
   // make it the containing block for this fixed panel and mis-anchor it.
   return createPortal(
     <>
-      <div className="fixed inset-0 z-50 bg-ink/15" onClick={close} aria-hidden />
+      <div className="fixed inset-0 z-50 bg-ink/15" onClick={onClose} aria-hidden />
       <div
         ref={panelRef}
         role="dialog"
@@ -202,7 +267,7 @@ export function AssistantPanel({
           </div>
           <button
             type="button"
-            onClick={close}
+            onClick={onClose}
             aria-label="Close"
             className="inline-flex h-8 w-8 items-center justify-center rounded-[var(--radius-md)] text-ink-secondary hover:text-ink"
           >

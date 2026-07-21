@@ -1,6 +1,7 @@
 "use client";
 
-import { Suspense, lazy, useEffect, useRef, useState } from "react";
+import { Suspense, lazy, useCallback, useEffect, useState } from "react";
+import { ASSISTANT_LAUNCHER_ATTR } from "./mobile-assistant-launcher";
 
 const AssistantPanel = lazy(() =>
   import("./assistant-panel").then((m) => ({ default: m.AssistantPanel })),
@@ -10,11 +11,26 @@ const AssistantPanel = lazy(() =>
  * Assistant — the "Ask about my work" launcher. Renders a quiet trigger and,
  * only once opened, lazy-loads the panel (keeps it off the initial bundle per
  * the ≤60KB assistant budget). Pressing "/" anywhere opens it, unless the user
- * is typing in a field. A11y: the trigger keeps focus to restore on close.
+ * is typing in a field. A11y: owns the close path so focus always returns to a
+ * launcher the visitor can see (WCAG 2.4.3).
  */
 export function Assistant() {
   const [open, setOpen] = useState(false);
-  const triggerRef = useRef<HTMLButtonElement>(null);
+
+  // This trigger is display:none below md, and focusing a display:none element
+  // silently strands focus on <body>. So restore to the first launcher that is
+  // actually rendered — getClientRects() rather than offsetParent, because the
+  // mobile launcher is position:fixed and always reports a null offsetParent.
+  const close = useCallback(() => {
+    setOpen(false);
+    const launchers = document.querySelectorAll<HTMLElement>(`[${ASSISTANT_LAUNCHER_ATTR}]`);
+    for (const el of launchers) {
+      if (el.getClientRects().length > 0) {
+        el.focus();
+        return;
+      }
+    }
+  }, []);
 
   useEffect(() => {
     const onKey = (e: KeyboardEvent) => {
@@ -49,7 +65,7 @@ export function Assistant() {
   return (
     <>
       <button
-        ref={triggerRef}
+        {...{ [ASSISTANT_LAUNCHER_ATTR]: "" }}
         type="button"
         onClick={() => setOpen(true)}
         title="Friday — an AI assistant that answers only from this site's content (case studies, writing, résumé). Press ⌘K or / to open."
@@ -63,7 +79,7 @@ export function Assistant() {
       </button>
       {open ? (
         <Suspense fallback={null}>
-          <AssistantPanel onClose={() => setOpen(false)} returnFocusRef={triggerRef} />
+          <AssistantPanel onClose={close} />
         </Suspense>
       ) : null}
     </>

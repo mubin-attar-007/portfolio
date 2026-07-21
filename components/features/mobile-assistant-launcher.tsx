@@ -3,6 +3,14 @@
 import { Sparkles } from "lucide-react";
 
 /**
+ * Marks every control that opens the assistant. Exactly one launcher is visible
+ * at a time (the header trigger above md, this one below), so on close the
+ * panel can hand focus back to the one the visitor can actually see instead of
+ * a display:none button — which drops focus to <body>. See Assistant.
+ */
+export const ASSISTANT_LAUNCHER_ATTR = "data-assistant-launcher";
+
+/**
  * MobileAssistantLauncher — a persistent, thumb-zone launcher (< md) for the
  * grounded assistant, the strongest live proof of the work. Rendered at the
  * <body> level (in the root layout, NOT inside the header) so its `fixed`
@@ -16,6 +24,7 @@ export function MobileAssistantLauncher() {
   return (
     <button
       type="button"
+      {...{ [ASSISTANT_LAUNCHER_ATTR]: "" }}
       onClick={() => window.dispatchEvent(new CustomEvent("open-assistant"))}
       aria-label="Ask about my work — an AI assistant grounded on this site"
       className="fixed bottom-4 right-4 z-40 inline-flex items-center gap-1.5 rounded-full border border-border bg-surface/95 px-3.5 py-2 text-sm text-ink shadow-[var(--shadow-md)] backdrop-blur transition-colors hover:border-accent hover:text-accent md:hidden"

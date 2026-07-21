@@ -4,42 +4,54 @@ import type { JSX, ReactNode } from "react";
  * Capability illustrations — compact, engineering-native "log" scenes that show
  * each mechanism ACTUALLY WORKING: the real narrative, not an abstract hint
  * (Clerk-caliber illustration in our idiom — terminals + status badges, never
- * stock art). Rich and legible at rest; the status badges settle in on card
- * hover (globals.css `.cap-card:hover .illo-badge`, reduced-motion-safe).
+ * stock art).
+ *
+ * Density is calibrated against Clerk's dark bento vignettes: sparse rows,
+ * DIM chrome, and at most ONE colour moment per scene. Everything that is not
+ * the scene's single payoff sits in tertiary ink — the eye should land on the
+ * one row where the mechanism resolves (`focal` + a toned badge), and the rest
+ * should read as ambient machinery. Early versions coloured every ✗ and ✓,
+ * which made six cards shout at once; Clerk's cards whisper.
+ *
+ * The status badges settle in on card hover (globals.css
+ * `.cap-card:hover .illo-badge`, reduced-motion-safe).
  * A11y: decorative (aria-hidden) — the card's heading + copy carry the meaning.
  */
 
 type Tone = "ok" | "no" | "accent" | "dim";
 
+const BADGE: Record<Tone, string> = {
+  ok: "text-positive",
+  no: "text-negative",
+  accent: "text-accent",
+  dim: "text-ink-tertiary",
+};
+
 function Row({
   label,
   badge,
   tone = "dim",
-  muted = false,
+  focal = false,
   strike = false,
 }: {
   label: string;
   badge?: string;
+  /** Badge colour. `dim` (default) keeps the row inside the ambient machinery. */
   tone?: Tone;
-  muted?: boolean;
+  /** The scene's payoff row — its label steps up from tertiary to secondary. */
+  focal?: boolean;
   strike?: boolean;
 }) {
-  const badgeCls =
-    tone === "ok"
-      ? "text-positive"
-      : tone === "no"
-        ? "text-negative"
-        : tone === "accent"
-          ? "text-accent"
-          : "text-ink-tertiary";
   return (
     <div className="flex items-center justify-between gap-3">
       <span
-        className={`truncate ${strike ? "line-through" : ""} ${muted ? "text-ink-tertiary" : "text-ink-secondary"}`}
+        className={`truncate ${strike ? "line-through" : ""} ${
+          focal ? "text-ink-secondary" : "text-ink-tertiary"
+        }`}
       >
         {label}
       </span>
-      {badge ? <span className={`illo-badge shrink-0 ${badgeCls}`}>{badge}</span> : null}
+      {badge ? <span className={`illo-badge shrink-0 ${BADGE[tone]}`}>{badge}</span> : null}
     </div>
   );
 }
@@ -47,11 +59,13 @@ function Row({
 function Scene({ title, children }: { title: string; children: ReactNode }) {
   return (
     <div className="w-full font-mono text-[0.63rem] leading-none" aria-hidden>
-      <div className="mb-2.5 flex items-center gap-1.5 text-ink-tertiary">
-        <span className="text-accent">▸</span>
+      {/* The chevron is chrome, not payoff — tertiary like the title, so the
+          scene's one colour moment stays the focal badge below. */}
+      <div className="mb-3 flex items-center gap-1.5 text-ink-tertiary">
+        <span>▸</span>
         <span className="uppercase tracking-wide">{title}</span>
       </div>
-      <div className="flex flex-col gap-2">{children}</div>
+      <div className="flex flex-col gap-2.5">{children}</div>
     </div>
   );
 }
@@ -60,9 +74,9 @@ function Scene({ title, children }: { title: string; children: ReactNode }) {
 export function IlloValidator() {
   return (
     <Scene title="validate_sql">
-      <Row label="DROP TABLE orders;" badge="✗ DDL" tone="no" />
-      <Row label="SELECT …; DELETE …" badge="✗ multi" tone="no" />
-      <Row label="SELECT revenue …" badge="✓ pass" tone="ok" />
+      <Row label="DROP TABLE orders;" badge="✗ DDL" />
+      <Row label="SELECT …; DELETE …" badge="✗ multi" />
+      <Row label="SELECT revenue …" badge="✓ pass" tone="ok" focal />
     </Scene>
   );
 }
@@ -71,10 +85,10 @@ export function IlloValidator() {
 export function IlloRetrieval() {
   return (
     <Scene title="retrieve · k=2 / 12">
-      <Row label="orders" badge="● pulled" tone="accent" />
-      <Row label="users" muted />
-      <Row label="order_items" badge="● pulled" tone="accent" />
-      <Row label="audit_log" muted />
+      <Row label="orders" badge="● pulled" tone="accent" focal />
+      <Row label="users" />
+      <Row label="order_items" badge="● pulled" tone="accent" focal />
+      <Row label="audit_log" />
     </Scene>
   );
 }
@@ -83,9 +97,9 @@ export function IlloRetrieval() {
 export function IlloLookahead() {
   return (
     <Scene title="backtest">
-      <Row label="decide @ bar i · close" badge="✓" tone="ok" />
-      <Row label="fill @ bar i+1 · open" badge="✓" tone="ok" />
-      <Row label="future ×3 canary" badge="byte-identical" tone="accent" />
+      <Row label="decide @ bar i · close" badge="✓" />
+      <Row label="fill @ bar i+1 · open" badge="✓" />
+      <Row label="future ×3 canary" badge="byte-identical" tone="accent" focal />
     </Scene>
   );
 }
@@ -94,8 +108,8 @@ export function IlloLookahead() {
 export function IlloMetrics() {
   return (
     <Scene title="accuracy">
-      <Row label="68.0% best-of-300" badge="✗ cherry" tone="no" strike muted />
-      <Row label="65.2% ±0.8% · 5-fold" badge="✓ real" tone="ok" />
+      <Row label="68.0% best-of-300" badge="✗ cherry" strike />
+      <Row label="65.2% ±0.8% · 5-fold" badge="✓ real" tone="ok" focal />
     </Scene>
   );
 }
@@ -104,9 +118,9 @@ export function IlloMetrics() {
 export function IlloFallback() {
   return (
     <Scene title="provider chain">
-      <Row label="OpenAI" badge="✗ no key" tone="no" muted />
-      <Row label="OpenRouter" badge="✗ 429" tone="no" muted />
-      <Row label="Gemini · free tier" badge="✓ served" tone="ok" />
+      <Row label="OpenAI" badge="✗ no key" />
+      <Row label="OpenRouter" badge="✗ 429" />
+      <Row label="Gemini · free tier" badge="✓ served" tone="ok" focal />
     </Scene>
   );
 }
@@ -118,7 +132,7 @@ export function IlloInfra() {
       <Row label="Vercel" badge="$0" />
       <Row label="HF Docker Space" badge="$0" />
       <Row label="Neon Postgres" badge="$0" />
-      <Row label="total" badge="$0 / mo" tone="accent" />
+      <Row label="total" badge="$0 / mo" tone="accent" focal />
     </Scene>
   );
 }

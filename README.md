@@ -1,36 +1,46 @@
 # Portfolio — Mubin Attar
 
-The personal portfolio of **Mubin Attar**, AI / ML Engineer. A single, fast page
-that shows four production AI products and the engineering behind them.
+The personal site of **Mubin Attar**, AI / ML Engineer. Case studies of four
+production AI products, the architecture behind them, and the decisions that
+shaped them.
 
 Live: **[mubin-attar.vercel.app](https://mubin-attar.vercel.app)**
 
 ## The thesis: every number is real
 
-The site has one rule that runs through the work it showcases — **every number a
-user sees is genuinely computed, never faked**. The products linked here ship with
-honest metrics: validated model accuracy, cost-and-slippage-aware backtests,
-graded prediction track-records. This repo holds no mock data; all content lives
-in one typed source of truth (`lib/content.ts`) so nothing drifts.
+One rule runs through the site — **every number a visitor sees is genuinely
+computed, and links to how it was measured**. That is enforced, not promised:
+content is validated by Zod at module load, and `MetricSchema.method` is a
+required non-empty string, so **a metric without a stated method fails the
+build**. There is no mock data in this repo.
 
 ## Stack
 
 - **[Next.js 16](https://nextjs.org)** (App Router) + **React 19**
-- **TypeScript**
-- **Tailwind CSS v4**
-- **Framer Motion** for motion, **lucide-react** for icons
-- SEO built in: `opengraph-image`, `sitemap`, `robots`, favicon
+- **TypeScript** (strict)
+- **Tailwind CSS v4**, configured CSS-first through `@theme` in `styles/tokens.css`
+- **MDX** via `next-mdx-remote/rsc`, **Zod** for content schemas
+- **Shiki** for syntax highlighting — at render time, so no highlighter ships to the browser
+- **lucide-react** for icons. No animation library: motion is CSS plus one `IntersectionObserver`
+- **Gemini** for the grounded assistant, over an in-repo BM25 retrieval index
+- SEO built in: per-route `opengraph-image`, `sitemap`, `robots`, RSS, JSON-LD
 - Deployed on **Vercel**
 
 ## Project structure
 
 ```
-app/         routes, layout, and SEO (og image, sitemap, robots)
-components/   page sections (hero, projects, about, contact, …)
-lib/          content.ts — the single source of truth for all copy & links
-public/       static assets (resume, images)
-test/         node:test guards for lib/content.ts
+app/           routes, layout, OG images, feeds, /api/chat
+components/    ui/ layout/ features/ diagrams/ mdx/ case-studies/ seo/
+content/       all copy — MDX bodies, typed data, schema.ts (Zod)
+lib/           content loaders, formatting, OG rendering, lib/ai/*
+config/        site identity and nav
+styles/        tokens.css (design tokens), globals.css
+scripts/       a11y gate, resume PDF build
+test/          node:test suites over lib/ and content schemas
 ```
+
+Everything is statically generated except `/api/chat`. See
+[`docs/12_ARCHITECTURE.md`](docs/12_ARCHITECTURE.md).
 
 ## Local development
 
@@ -44,14 +54,26 @@ npm run dev      # http://localhost:3000
 Other scripts:
 
 ```bash
-npm run build    # production build
-npm run lint     # eslint
-npm test         # node:test — validates lib/content.ts
+npm run build      # production build — fails on invalid content
+npm run lint       # eslint
+npm test           # node:test — lib/ + content schema fixtures
+npm run test:a11y  # axe-core WCAG 2.2 AA gate; needs a server on :3200
+npx tsc --noEmit   # type check
 ```
 
-## Deploy
+## Documentation
 
-Pushes to `main` are built and deployed automatically by **Vercel**. CI
-(`.github/workflows/ci.yml`) runs install → lint → build → test on every push
-and pull request, so a broken build or a dead project link never reaches
-production.
+`/docs` is the source of truth. Start with
+[`12_ARCHITECTURE.md`](docs/12_ARCHITECTURE.md),
+[`02_DESIGN_SYSTEM.md`](docs/02_DESIGN_SYSTEM.md), and
+[`13_DESIGN_DECISIONS.md`](docs/13_DESIGN_DECISIONS.md).
+`spec/` holds the older, longer-form specification and remains useful as
+engineering reference; where the two disagree, `/docs` and `CLAUDE.md` win.
+
+## CI and deploy
+
+`.github/workflows/ci.yml` runs on every push to `main` and every pull request:
+install → lint → type-check → test → build → **accessibility gate** (axe-core
+across all routes in light and dark). A WCAG 2.2 AA violation fails the build.
+
+Vercel builds and deploys from `main`. See [`DEPLOY.md`](DEPLOY.md).

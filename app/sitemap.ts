@@ -1,11 +1,15 @@
 import type { MetadataRoute } from "next";
 import { projects } from "@/content/projects";
-import { writingSlugs } from "@/lib/writing";
-import { noteSlugs } from "@/lib/notes";
+import { publishedWritingSlugs } from "@/lib/writing";
+import { publishedNoteSlugs } from "@/lib/notes";
 import { SITE } from "@/config/site";
 
-/** Every indexable route: the static pages, each case study, essay, and note. */
-export default function sitemap(): MetadataRoute.Sitemap {
+/**
+ * Every indexable route: the static pages, each case study, essay, and note.
+ * Draft entries are excluded — a sitemap is an invitation to crawl, so it must
+ * never advertise a URL that isn't published.
+ */
+export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
   const now = new Date();
   const u = (path: string) => `${SITE.url}${path}`;
 
@@ -20,9 +24,13 @@ export default function sitemap(): MetadataRoute.Sitemap {
     { path: "/about", priority: 0.6 },
     { path: "/timeline", priority: 0.6 },
     { path: "/uses", priority: 0.5 },
+    { path: "/trust", priority: 0.55 },
+    { path: "/changelog", priority: 0.55 },
     { path: "/talks", priority: 0.5 },
     { path: "/resume", priority: 0.6 },
   ];
+
+  const [writing, notes] = await Promise.all([publishedWritingSlugs(), publishedNoteSlugs()]);
 
   return [
     ...staticRoutes.map((r) => ({
@@ -37,13 +45,13 @@ export default function sitemap(): MetadataRoute.Sitemap {
       changeFrequency: "monthly" as const,
       priority: 0.8,
     })),
-    ...writingSlugs().map((slug) => ({
+    ...writing.map((slug) => ({
       url: u(`/writing/${slug}`),
       lastModified: now,
       changeFrequency: "monthly" as const,
       priority: 0.6,
     })),
-    ...noteSlugs().map((slug) => ({
+    ...notes.map((slug) => ({
       url: u(`/notes/${slug}`),
       lastModified: now,
       changeFrequency: "monthly" as const,

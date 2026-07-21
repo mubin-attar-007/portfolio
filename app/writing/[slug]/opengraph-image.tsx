@@ -1,13 +1,13 @@
 import { renderOg, OG_SIZE, OG_CONTENT_TYPE } from "@/lib/og";
-import { writingSlugs, loadWriting } from "@/lib/writing";
+import { routableWritingSlugs, loadWriting } from "@/lib/writing";
 
 export const alt = "Writing — Mubin Attar";
 export const size = OG_SIZE;
 export const contentType = OG_CONTENT_TYPE;
 
 /** One OG image per post (static, at build time). */
-export function generateStaticParams() {
-  return writingSlugs().map((slug) => ({ slug }));
+export async function generateStaticParams() {
+  return (await routableWritingSlugs()).map((slug) => ({ slug }));
 }
 
 export default async function OG({ params }: { params: Promise<{ slug: string }> }) {

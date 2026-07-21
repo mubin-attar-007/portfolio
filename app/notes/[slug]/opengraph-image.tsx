@@ -1,13 +1,13 @@
 import { renderOg, OG_SIZE, OG_CONTENT_TYPE } from "@/lib/og";
-import { noteSlugs, loadNote } from "@/lib/notes";
+import { routableNoteSlugs, loadNote } from "@/lib/notes";
 
 export const alt = "Note — Mubin Attar";
 export const size = OG_SIZE;
 export const contentType = OG_CONTENT_TYPE;
 
 /** One OG image per note (static, at build time). */
-export function generateStaticParams() {
-  return noteSlugs().map((slug) => ({ slug }));
+export async function generateStaticParams() {
+  return (await routableNoteSlugs()).map((slug) => ({ slug }));
 }
 
 export default async function OG({ params }: { params: Promise<{ slug: string }> }) {

@@ -1,6 +1,5 @@
-import Link from "next/link";
-import { ArrowRight } from "lucide-react";
 import { CS } from "./section";
+import { TextLink } from "@/components/ui/text-link";
 import { CodeBlock } from "@/components/ui/code-block";
 import { SystemDiagram } from "@/components/diagrams/system-diagram";
 import { DecisionLog } from "@/components/mdx/decision-log";
@@ -164,17 +163,9 @@ export function DBWhisperBody() {
               </div>
             ))}
           </dl>
-          <Link
-            href="/evals"
-            className="group mt-4 inline-flex items-center gap-1.5 text-sm font-medium text-accent hover:text-accent-hover"
-          >
+          <TextLink href="/evals" className="mt-4">
             See the full eval registry
-            <ArrowRight
-              size={15}
-              strokeWidth={1.5}
-              className="transition-transform group-hover:translate-x-0.5"
-            />
-          </Link>
+          </TextLink>
         </div>
       </CS>
 

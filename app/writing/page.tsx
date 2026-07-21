@@ -1,23 +1,44 @@
 import type { Metadata } from "next";
-import Link from "next/link";
 import { Rss } from "lucide-react";
 import { Section } from "@/components/layout/section";
+import { PageHeader } from "@/components/ui/page-header";
+import { TextLink } from "@/components/ui/text-link";
+import { PAGE_BODY_BAND, PAGE_HEADER_BAND } from "@/constants/page";
 import { SITE } from "@/config/site";
+import { home, pages } from "@/content/site";
+import { AuditLane } from "@/components/features/audit-lane";
 import { allWriting } from "@/lib/writing";
 import { WritingList } from "@/components/features/writing-list";
-import { NewsletterForm, NEWSLETTER_ENABLED } from "@/components/features/newsletter-form";
+import {
+  NewsletterForm,
+  NEWSLETTER_ENABLED,
+} from "@/components/features/newsletter-form";
+
+const WRITING_PATH = "/writing";
 
 export const metadata: Metadata = {
   title: "Writing",
-  description: "Essays, guides, and notes on AI systems, evaluation, and honest ML.",
+  description:
+    "Essays, guides, and notes on AI systems, evaluation, and honest ML.",
   alternates: {
-    canonical: `${SITE.url}/writing`,
+    canonical: `${SITE.url}${WRITING_PATH}`,
     types: {
       "application/rss+xml": [
         { url: `${SITE.url}/rss.xml`, title: `${SITE.name} — Writing & Notes` },
-        { url: `${SITE.url}/writing/feed.xml`, title: `${SITE.name} — Writing` },
+        {
+          url: `${SITE.url}/writing/feed.xml`,
+          title: `${SITE.name} — Writing`,
+        },
       ],
     },
+  },
+  openGraph: {
+    title: "Writing — Mubin Attar",
+    description:
+      "Essays, guides, and notes on AI systems, evaluation, and honest ML.",
+    url: `${SITE.url}${WRITING_PATH}`,
+    type: "website",
+    images: [{ url: `${SITE.url}${WRITING_PATH}/opengraph-image.png` }],
   },
 };
 
@@ -32,35 +53,47 @@ export default async function WritingIndex() {
     topics: p.topics,
   }));
 
+  const copy = pages.writing;
   return (
-    <Section space="lg">
-      <p className="font-mono text-xs uppercase tracking-[0.04em] text-ink-tertiary">Writing</p>
-      <div className="mt-6 flex flex-wrap items-baseline justify-between gap-4">
-        <h1 className="max-w-[20ch] text-4xl tracking-[-0.02em] text-ink sm:text-5xl">Writing</h1>
-        <a
-          href="/writing/feed.xml"
-          className="group inline-flex items-center gap-1.5 font-mono text-xs text-ink-tertiary transition-colors hover:text-accent"
-        >
-          <Rss size={13} strokeWidth={1.6} aria-hidden />
-          RSS
-        </a>
-      </div>
-      <p className="mt-6 max-w-[var(--width-prose)] text-lg text-ink-secondary">
-        Essays and guides on AI systems, evaluation, and honest ML — mined from the decisions and
-        failures in my case studies. For shorter, single-decision notes, see the{" "}
-        <Link href="/notes" className="link-underline text-ink">
-          notebook
-        </Link>
-        .
-      </p>
-      <div className="mt-12">
+    <>
+      {/* The feed and the cross-reference to /notes are ACTIONS, so they sit in
+          the header's actions slot rather than being wedged into the h1 row (the
+          feed link) and buried mid-sentence in the lede (the /notes link). The
+          lede is now just the page's claim, which is what a lede is for. */}
+      <Section space="lg" aurora className={PAGE_HEADER_BAND}>
+        <PageHeader kicker={copy.kicker} title={copy.title} lede={copy.lede}>
+          <TextLink href={copy.crossHref}>{copy.crossCta}</TextLink>
+          <a
+            href={copy.feedHref}
+            className="inline-flex items-center gap-1.5 font-mono text-xs text-ink-tertiary transition-colors duration-fast ease-[var(--ease-out)] hover:text-accent"
+          >
+            <Rss size={13} strokeWidth={1.6} aria-hidden />
+            {copy.feedCta}
+          </a>
+        </PageHeader>
+      </Section>
+      <AuditLane
+        title="Audit lane"
+        items={[
+          ...home.proof.stats.map((stat) => ({
+            href: stat.href,
+            value: stat.value,
+            label: stat.label,
+          })),
+          { href: "/trust", label: "trust policy" },
+          { href: "/changelog", label: "changelog" },
+        ]}
+        className="mt-8"
+      />
+
+      <Section space="md" className={PAGE_BODY_BAND}>
         <WritingList posts={items} />
-      </div>
-      {NEWSLETTER_ENABLED && (
-        <div className="mt-20 max-w-[var(--width-prose)]">
-          <NewsletterForm />
-        </div>
-      )}
-    </Section>
+        {NEWSLETTER_ENABLED && (
+          <div className="mt-20 max-w-[var(--width-prose)]">
+            <NewsletterForm />
+          </div>
+        )}
+      </Section>
+    </>
   );
 }
