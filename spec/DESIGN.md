@@ -1,10 +1,42 @@
 # DESIGN.md — Visual system
 
-Design intent: **an engineering notebook meets a product case study.** Calm, light,
-typography-first, generous whitespace. Reference feel: Stripe docs, Linear's marketing
-prose pages, Anthropic docs, Vercel's writing — *their restraint, not their branding*.
+Design intent: **an engineering notebook with a product-grade surface.** Calm,
+typography-first, generous whitespace, evidence in the foreground. Reference feel:
+Clerk's marketing pages (the adopted system — see §0), with Stripe docs, Linear, and
+Anthropic docs as the restraint reference.
 
 Premium design isn't louder. It is quieter. The site should disappear; the work remains.
+
+---
+
+## 0. Brand system direction (supersedes the earlier neutral-paper palette)
+
+The site is built to **Clerk's craft standard**: a cool near-white page, tactile
+elevation, a light page punctuated by dark section-bands, confident type, and calm
+motion curves. That direction shipped on `feature/clerk-caliber-pass` and is kept.
+
+The governing constraint comes from `CLAUDE.md`:
+
+> "Never copy designs directly. Understand the design principles and create an original
+> implementation."
+
+So the line is drawn at *principles, not artifacts*:
+
+- **Adopted:** the elevation model, band rhythm, spacing confidence, motion character,
+  type density — the standard of craft.
+- **Not adopted:** Clerk's logo, wordmark, illustrations, copy, or anything implying
+  affiliation. Nothing here may suggest a relationship with Clerk.
+- **RESOLVED (owner, this session):** keep the accent `#6C47FF` and the Clerk-derived
+  palette, and go *further* on depth, effect, and motion. The owner reviewed the
+  direction and chose it explicitly: *"follow the clerk's color, style, effect,
+  animation etc… i like it."* The values in §1.1 are therefore settled brand law.
+  The originality constraint is satisfied at the level that matters — the layouts,
+  copy, illustrations, diagrams, and product surfaces are entirely ours; what is
+  shared is the craft vocabulary.
+
+Everything else in this document — the accent budget (§2), the page tempo (§4), the
+anti-patterns (§9), the evidence rules — survives unaltered. A richer palette raises
+the ceiling on craft; it does not license decoration.
 
 ---
 
@@ -15,32 +47,43 @@ tokens via Tailwind utilities only. **No raw hex, px, or ms anywhere else.**
 
 ### 1.1 Color — light (default theme)
 
+> Components must consume the **token names**, never these literals. Three places
+> legitimately hold the accent as a literal, because they cannot read CSS custom
+> properties: `lib/og.tsx` (Satori), `styles/globals.css` `.tone-invert`, and
+> `styles/tokens.css` itself. Any palette change must update all three together.
+
 | Token | Value | Use |
 |---|---|---|
-| `--color-bg` | `#FCFCF9` | page background (warm paper, not pure white) |
-| `--color-bg-subtle` | `#F5F5F1` | alternate section bands, code inline bg |
+| `--color-bg` | `#F7F7F8` | page background (cool near-white) |
+| `--color-bg-subtle` | `#EEEEF0` | alternate section bands, code inline bg |
 | `--color-surface` | `#FFFFFF` | cards, panels, code blocks |
-| `--color-ink` | `#1C1C1A` | primary text |
-| `--color-ink-secondary` | `#57534E` | supporting text, captions |
-| `--color-ink-tertiary` | `#8A857E` | meta labels, timestamps |
-| `--color-border` | `#E7E5E1` | hairlines (default) |
-| `--color-border-strong` | `#D6D2CC` | inputs, emphasized dividers |
-| `--color-accent` | `#1D4ED8` | links, primary button, active nav, focus |
-| `--color-accent-hover` | `#1E40AF` | hover state |
-| `--color-accent-subtle` | `#EEF3FE` | accent-tinted backgrounds (rare) |
+| `--color-ink` | `#131316` | primary text |
+| `--color-ink-secondary` | `#5E5F6E` | supporting text, captions |
+| `--color-ink-tertiary` | `#676876` | meta labels, timestamps (darkened to clear AA on bg + bg-subtle) |
+| `--color-border` | `#E3E3E8` | hairlines (default) |
+| `--color-border-strong` | `#D9D9DE` | inputs, emphasized dividers |
+| `--color-accent` | `#6C47FF` | links, primary button, active nav, focus |
+| `--color-accent-hover` | `#5A37E0` | hover state |
+| `--color-on-accent` | `#FFFFFF` | text on an accent fill |
+| `--color-accent-subtle` | `#F0EDFF` | accent-tinted backgrounds (rare) |
 | `--color-positive` | `#15803D` | improved metrics (▼ latency, ▲ accuracy) |
 | `--color-negative` | `#B91C1C` | regressions in FailureLog "before" values |
 | `--color-warning` | `#B45309` | callout: caution |
 
-### 1.2 Color — dark (user preference via `prefers-color-scheme` + toggle)
+### 1.2 Color — dark (user preference via toggle)
 
-`--color-bg #131312` · `--color-bg-subtle #1A1A18` · `--color-surface #1E1E1C` ·
-`--color-ink #EDECE8` · `--color-ink-secondary #A8A49D` · `--color-ink-tertiary #7C7871` ·
-`--color-border #2C2B28` · `--color-border-strong #3A3934` · `--color-accent #7FA5F5` ·
-`--color-accent-hover #9BB8F8` · `--color-accent-subtle #1B2438` ·
+`--color-bg #131316` · `--color-bg-subtle #1A1A1F` · `--color-surface #212126` ·
+`--color-ink #F7F7F8` · `--color-ink-secondary #B7B8C2` · `--color-ink-tertiary #9394A1` ·
+`--color-border #2F3037` · `--color-border-strong #42434D` · `--color-accent #9A7FFF` ·
+`--color-accent-hover #B3A0FF` · `--color-accent-subtle #241D47` · `--color-on-accent #131316` ·
 positive `#4ADE80` · negative `#F87171` · warning `#FBBF24`.
 
-Dark is a *preference*, not the brand. All screenshots/OG images are produced in light.
+**The brand default is the light page carrying dark section-bands** (`tone="invert"`),
+not a light-mode variant — the alternation is the identity and renders identically
+regardless of OS setting. Full-dark is an explicit, remembered visitor choice
+(`[data-theme="dark"]` via the toggle); the site deliberately does not auto-switch on
+`prefers-color-scheme`, because the band rhythm *is* the design. All OG images are
+produced in light.
 
 ### 1.3 Typography
 
@@ -84,17 +127,30 @@ Numbers in metrics use `--font-mono` with `font-variant-numeric: tabular-nums`.
 
 - Radius: `--radius-sm 4px` (tags, inline code) · `--radius-md 8px` (cards, inputs, buttons)
   · `--radius-lg 12px` (figures, terminal frames). Nothing rounder except avatars.
-- Depth comes from **hairline borders + background shifts**, not shadows.
-- Shadows: `--shadow-none` default; `--shadow-overlay: 0 4px 24px rgb(0 0 0 / 0.08)`
-  reserved for menus, dialogs, the assistant panel. Never on static cards.
+- Depth comes primarily from **hairline borders + background shifts**. Elevation is the
+  exception, not the texture.
+- Elevation set (ratified with §0 — Clerk's tactile model): `--shadow-sm` / `--shadow-md`
+  / `--shadow-lg`, each a hairline ring + a soft drop, plus `--shadow-btn` (inset top
+  highlight) for the primary button only. `--shadow-overlay` aliases `--shadow-lg` for
+  menus, dialogs, the assistant panel.
+- **Rule that survives:** static content cards stay flat — border + background only. A
+  card may not gain a shadow, lift, or scale on hover; hover is border-strong + title→accent.
+  Elevation is reserved for things that genuinely float (overlays, the primary button).
 
 ### 1.6 Motion
 
-- Durations: `--motion-fast 120ms` (hover) · `--motion-base 180ms` · `--motion-slow 240ms` (panels).
-- Easing: `--ease-out: cubic-bezier(0.2, 0, 0, 1)`.
-- Only `opacity`, `transform`, `color` transition. Entrances: fade + 4px rise, fire once,
-  max 3 staggered siblings, 40ms stagger.
+- Durations: `--motion-fast 140ms` (hover) · `--motion-base 200ms` · `--motion-slow 300ms`
+  (panels) · `--motion-reveal 600ms` (scroll entrance fades).
+- Easing (Clerk's curves, ratified §0): `--ease-out: cubic-bezier(0.4, 0.36, 0, 1)` is the
+  default for everything — Tailwind's base transition is wired to it, so a bare
+  `transition` settles on the one curve. `--ease-emphasized: cubic-bezier(0.33, 1, 0.68, 1)`
+  for entrance reveals. `--ease-spring` exists for rare accent moments; overshoot on more
+  than one element per viewport reads as toy, so treat it as a scalpel.
+- Only `opacity`, `transform`, `color`, `border-color` transition.
+- Entrances: fade + ≤ 8px rise, fire **once**, max **4** staggered siblings, stagger from
+  the `--stagger-step` token — never a hand-typed delay in a component.
 - `prefers-reduced-motion: reduce` → transforms removed, opacity fades ≤ 80ms or none.
+  Every animated component must honor it; this is not optional and is a11y-gated.
 - Never: scroll-jacking, parallax, marquees, typing effects, looping ambient animation.
 
 ### 1.7 Layout
@@ -198,17 +254,35 @@ visible on everything. Hit targets ≥ 24×24px. Never color-only meaning (delta
 ## 9. Anti-patterns — BANNED (this section is law)
 
 1. Gradient text, glow, neon, glassmorphism/blur cards.
-2. Dark theme as default; "AI dark + electric accent" combos.
-3. More than one accent color; accent used as decoration.
-4. Uppercase headings or uppercase body; letter-spaced all-caps buttons.
-5. Skill-badge walls, logo marquees, star-rating self-assessments ("Python ★★★★★").
-6. Card grids as the default layout; borders around everything.
+2. A full-dark page as the default theme. (Dark **section-bands** on a light page are the
+   ratified brand rhythm — §1.2 — and are not this violation. The distinction: the page
+   is light and bands punctuate it; the page is never dark end-to-end unless the visitor
+   explicitly chose it.)
+3. More than one accent color; accent used as decoration. The accent is `--color-accent`
+   and nothing else — no second hue, no accent gradients, no tinted decorative shapes.
+4. Uppercase headings or uppercase body; letter-spaced all-caps buttons. (One exception,
+   already in the system: the xs mono **kicker** above a section heading may be uppercase
+   with `0.04em` tracking. Headings themselves are always sentence case.)
+5. Skill-badge walls, logo marquees, star-rating self-assessments ("Python ★★★★★"),
+   and **client-logo walls of companies you have not worked for**. A stack display is
+   permitted only if it is: text/hairline (no logos), non-looping, keyboard-irrelevant
+   (decorative, `aria-hidden` with a real text list behind it), and honest about what it
+   claims — "tools I use," never "companies I work with."
+6. Card grids as the *default* layout. A card grid is allowed where the content is
+   genuinely parallel and enumerable (a work index, a capability set) — never two grids
+   in a row, and never as a substitute for a real section with a point to make (§4 tempo
+   still governs).
 7. Typing animations, particle/mesh/grid backgrounds, spotlight cursors, tilt cards.
-8. Scroll-jacking, parallax, autoplaying video, looping animation.
+8. Scroll-jacking, parallax, autoplaying video **with sound or without a pause control**,
+   looping ambient animation. Muted, captioned product demos are permitted as evidence;
+   they must not autoplay above the fold and must be pausable (WCAG 2.2.2).
 9. Stock imagery, 3D blobs, emoji in headings/UI chrome.
 10. Vague superlatives in copy; any metric without a method footnote.
 11. Center-aligned long-form text; measures > 75ch.
-12. Anything whose only justification is "looks impressive."
+12. **Invented or placeholder social proof** — testimonials, quotes, client names, or
+    logos that are not real and permissioned. A "sample layout" label does not cure it;
+    if it isn't real, it doesn't ship. (Reinforces PROJECT_CHARTER "honesty over hype".)
+13. Anything whose only justification is "looks impressive."
 
 Litmus test for every screen: *would this look at home inside excellent technical
 documentation?* If not, simplify.

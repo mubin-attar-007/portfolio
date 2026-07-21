@@ -115,3 +115,20 @@ export const featuredProject: Project = projects.find((p) => p.featured) ?? proj
 export const secondaryProjects: Project[] = projects.filter((p) => p.slug !== featuredProject.slug);
 export const projectBySlug = (slug: string): Project | undefined =>
   projects.find((p) => p.slug === slug);
+
+/**
+ * The case studies either side of one slug, in the curated `order` above — the
+ * same sequence /work lists them in, so the end-of-article links continue the
+ * order the reader has already been shown rather than inventing a second one.
+ *
+ * Positional, NOT temporal: `order` is a curation decision with no date meaning,
+ * which is why the footer labels these "Previous"/"Next" and never "Older".
+ * Returns nulls at both ends and for an unknown slug.
+ */
+export const projectNeighbours = (
+  slug: string,
+): { previous: Project | null; next: Project | null } => {
+  const index = projects.findIndex((p) => p.slug === slug);
+  if (index === -1) return { previous: null, next: null };
+  return { previous: projects[index - 1] ?? null, next: projects[index + 1] ?? null };
+};

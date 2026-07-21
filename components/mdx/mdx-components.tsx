@@ -5,11 +5,23 @@ import { CodeBlock } from "@/components/ui/code-block";
 import { Figure } from "@/components/ui/figure";
 import { DecisionLog } from "@/components/mdx/decision-log";
 import { FailureLog } from "@/components/mdx/failure-log";
+import { PROSE } from "@/components/mdx/prose";
 
 /**
- * MDX component map — plain markdown elements styled to the design system
- * (Prose), plus the custom evidence blocks available inside content. Headings
- * get slugged ids for anchoring. Server-safe (no client hooks).
+ * MDX component map — plain markdown elements bound to the shared reading scale
+ * (components/mdx/prose.ts), plus the custom evidence blocks available inside
+ * content. Server-safe (no client hooks), so an MDX body ships zero client JS.
+ *
+ * Every class string here comes from PROSE rather than being typed inline. That
+ * is deliberate: the case-study path (`components/case-studies/section.tsx`)
+ * renders the same semantic elements through different code, and the two only
+ * stay identical if neither owns its own values.
+ *
+ * A11y: headings get slugged ids so they can be deep-linked and so a future
+ * table of contents has real targets; PROSE.h2/h3 carry the scroll margin that
+ * keeps a jumped-to heading clear of the sticky header. Links are underlined at
+ * rest, never distinguished by colour alone (WCAG 1.4.1). External links are
+ * marked `rel="noopener noreferrer"`.
  */
 function slugify(text: string): string {
   return text
@@ -28,14 +40,14 @@ function toText(node: ReactNode): string {
 
 function H2({ children, ...props }: ComponentPropsWithoutRef<"h2">) {
   return (
-    <h2 id={slugify(toText(children))} className="mt-12 scroll-mt-24 text-2xl text-ink" {...props}>
+    <h2 id={slugify(toText(children))} className={PROSE.h2} {...props}>
       {children}
     </h2>
   );
 }
 function H3({ children, ...props }: ComponentPropsWithoutRef<"h3">) {
   return (
-    <h3 id={slugify(toText(children))} className="mt-8 scroll-mt-24 text-xl text-ink" {...props}>
+    <h3 id={slugify(toText(children))} className={PROSE.h3} {...props}>
       {children}
     </h3>
   );
@@ -44,27 +56,25 @@ function H3({ children, ...props }: ComponentPropsWithoutRef<"h3">) {
 export const mdxComponents = {
   h2: H2,
   h3: H3,
-  p: (p: ComponentPropsWithoutRef<"p">) => <p className="mt-4 leading-[1.75] text-ink-secondary" {...p} />,
-  ul: (p: ComponentPropsWithoutRef<"ul">) => <ul className="mt-4 list-disc space-y-2 pl-5 marker:text-ink-tertiary" {...p} />,
-  ol: (p: ComponentPropsWithoutRef<"ol">) => <ol className="mt-4 list-decimal space-y-2 pl-5 marker:text-ink-tertiary" {...p} />,
-  li: (p: ComponentPropsWithoutRef<"li">) => <li className="pl-1 leading-[1.7] text-ink-secondary" {...p} />,
+  p: (p: ComponentPropsWithoutRef<"p">) => <p className={PROSE.p} {...p} />,
+  ul: (p: ComponentPropsWithoutRef<"ul">) => <ul className={PROSE.ul} {...p} />,
+  ol: (p: ComponentPropsWithoutRef<"ol">) => <ol className={PROSE.ol} {...p} />,
+  li: (p: ComponentPropsWithoutRef<"li">) => <li className={PROSE.li} {...p} />,
   a: ({ href = "", ...p }: ComponentPropsWithoutRef<"a">) => (
     <a
       href={href}
-      className="text-ink underline decoration-border-strong underline-offset-2 hover:decoration-accent"
+      className={PROSE.link}
       {...(/^https?:\/\//.test(href) ? { target: "_blank", rel: "noopener noreferrer" } : {})}
       {...p}
     />
   ),
-  strong: (p: ComponentPropsWithoutRef<"strong">) => <strong className="font-medium text-ink" {...p} />,
+  strong: (p: ComponentPropsWithoutRef<"strong">) => <strong className={PROSE.strong} {...p} />,
   em: (p: ComponentPropsWithoutRef<"em">) => <em {...p} />,
-  hr: () => <hr className="my-10 border-border" />,
+  hr: () => <hr className={PROSE.hr} />,
   blockquote: (p: ComponentPropsWithoutRef<"blockquote">) => (
-    <blockquote className="my-6 border-l-[length:var(--stripe-width)] border-border-strong pl-5 text-ink-secondary italic" {...p} />
+    <blockquote className={PROSE.blockquote} {...p} />
   ),
-  code: (p: ComponentPropsWithoutRef<"code">) => (
-    <code className="rounded-[var(--radius-sm)] bg-bg-subtle px-1.5 py-0.5 font-mono text-[0.85em] text-ink" {...p} />
-  ),
+  code: (p: ComponentPropsWithoutRef<"code">) => <code className={PROSE.code} {...p} />,
   // custom blocks usable directly in MDX
   Callout,
   PullQuote,

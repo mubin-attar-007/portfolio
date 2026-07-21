@@ -1,8 +1,14 @@
+import { EVIDENCE_SPACING } from "@/components/mdx/prose";
+
 /**
  * DecisionLog — the case-study primitive that carries "decisions over stacks":
  * each row names the choice, the rejected alternatives, the reason, and the
  * cost accepted (CONTENT_MODEL §1/§6). Table-like, hairline rows, generous
  * padding, no zebra, no coloured headers. A11y: a description list per decision.
+ *
+ * Shares the one evidence rhythm (EVIDENCE_SPACING) with figures, code blocks,
+ * callouts and pull quotes, so a reader scanning a case study meets a single
+ * vertical cadence instead of each block breathing to its own value.
  */
 export type Decision = {
   choice: string;
@@ -13,7 +19,7 @@ export type Decision = {
 
 export function DecisionLog({ decisions }: { decisions: Decision[] }) {
   return (
-    <div className="my-6 divide-y divide-border border-y border-border">
+    <div className={`${EVIDENCE_SPACING} divide-y divide-border border-y border-border`}>
       {decisions.map((d, i) => (
         <div key={i} className="grid gap-3 py-5 md:grid-cols-[1fr_1.5fr] md:gap-8">
           <div>

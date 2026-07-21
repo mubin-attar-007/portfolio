@@ -1,11 +1,13 @@
 import type { Metadata } from "next";
 import type { ReactNode } from "react";
 import { Container } from "@/components/layout/container";
+import { AuditLane } from "@/components/features/audit-lane";
 import { Button } from "@/components/ui/button";
 import { Tag } from "@/components/ui/tag";
 import { Card } from "@/components/ui/card";
 import { Callout } from "@/components/ui/callout";
 import { SectionHeading } from "@/components/ui/section-heading";
+import { home } from "@/content/site";
 import { Metric, MetricsRow, MetricsTable } from "@/components/ui/metric";
 import { Figure } from "@/components/ui/figure";
 import { PullQuote } from "@/components/ui/pull-quote";
@@ -52,6 +54,19 @@ export default function ComponentsPage() {
         Every primitive in every state, both themes. Toggle the theme in the header. This route is
         noindex and hidden from production nav.
       </p>
+      <AuditLane
+        title="Audit lane"
+        items={[
+          ...home.proof.stats.map((stat) => ({
+            href: stat.href,
+            value: stat.value,
+            label: stat.label,
+          })),
+          { href: "/trust", label: "trust policy" },
+          { href: "/changelog", label: "changelog" },
+        ]}
+        className="mt-8"
+      />
 
       <Row title="Buttons">
         <div className="flex flex-wrap items-center gap-4">

@@ -1,8 +1,12 @@
+import { EVIDENCE_SPACING } from "@/components/mdx/prose";
+
 /**
  * FailureLog — "failures earn trust": the v1→v2 arc of a real problem, its
  * metric value at each version (bad values in negative colour, the resolved
  * value in positive), and the cause/fix (CONTENT_MODEL §1/§6). Quiet vertical
- * feel. A11y: value colour is paired with the version label + cause/fix text.
+ * feel. Shares EVIDENCE_SPACING with the other in-prose blocks so the reading
+ * cadence stays uniform. A11y: value colour is paired with the version label +
+ * cause/fix text.
  */
 export type FailureEntry = {
   version: string;
@@ -14,7 +18,7 @@ export type FailureEntry = {
 
 export function FailureLog({ entries }: { entries: FailureEntry[] }) {
   return (
-    <div className="my-6 flex flex-col gap-5 border-l-[length:var(--stripe-width)] border-border-strong pl-5">
+    <div className={`${EVIDENCE_SPACING} flex flex-col gap-5 border-l-[length:var(--stripe-width)] border-border-strong pl-5`}>
       {entries.map((e, i) => {
         const tone =
           i === 0 ? "text-negative" : i === entries.length - 1 ? "text-positive" : "text-ink";

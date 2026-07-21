@@ -198,34 +198,326 @@ button:disabled,
   --shadow-lg: 0 0 0 0.5px rgb(255 255 255 / 0.09), 0 16px 38px -10px rgb(0 0 0 / 0.65);
   --shadow-btn: inset 0 1px 0 rgb(255 255 255 / 0.12), 0 1px 2px rgb(0 0 0 / 0.55);
   --drop-node: drop-shadow(0 6px 14px rgb(0 0 0 / 0.55));
+  --drop-node-rest: drop-shadow(0 1px 2px rgb(0 0 0 / 0.45));
   background-color: var(--color-bg);
   color: var(--color-ink);
 }
-/* faint dot-grid texture, masked so it fades toward the edges */
+/* faint dot-grid texture, masked so it fades toward the edges.
+   0.035, not 0.05: sampled against clerk.com's dark band, whose field texture
+   sits at the threshold of visibility — at 0.05 ours read as a printed pattern
+   competing with the cards rather than as ambient grain behind them. */
 .tone-invert::before {
   content: "";
   position: absolute;
   inset: 0;
   z-index: 0;
   pointer-events: none;
-  background-image: radial-gradient(circle at 1px 1px, rgba(255, 255, 255, 0.05) 1px, transparent 1.6px);
+  background-image: radial-gradient(circle at 1px 1px, rgba(255, 255, 255, 0.035) 1px, transparent 1.6px);
   background-size: 30px 30px;
   -webkit-mask-image: radial-gradient(125% 90% at 50% 28%, #000 32%, transparent 76%);
   mask-image: radial-gradient(125% 90% at 50% 28%, #000 32%, transparent 76%);
 }
-/* angular light↔dark transition: a shallow centre notch top + bottom */
+/* Light↔dark band transition — the chamfered tab, measured off clerk.com.
+   An earlier pass here was a centre pentagon, which read as a rendering fault; I
+   then removed it entirely, which was also wrong. Clerk's actual device is a
+   full-bleed dark band whose top edge STEPS UP across the container width, with
+   45° chamfers at the two container edges — so the light section appears to
+   overhang the dark one like a tab. The step is what makes the band read as a
+   deliberate plate rather than a colour change.
+   `--notch-h` is the step height; `--notch-x` is where the chamfers sit, which
+   must track the container so the corners land on the content edge.
+   Proportions re-measured off clerk.com at 1440: the step is ~48px, and the
+   chamfer is CENTRED on the container edge (top corner half a step outside the
+   container, bottom corner half a step inside) rather than starting at it —
+   centred is what makes the light section read as a plate overhanging the dark
+   band instead of a cut made inside it. */
 .tone-notch {
+  --notch-h: 48px;
+  --notch-x: max(0px, (100% - var(--width-container)) / 2 - var(--notch-h) / 2);
+  position: relative;
   clip-path: polygon(
-    0 0, 38% 0, 42% 32px, 58% 32px, 62% 0, 100% 0,
-    100% 100%, 62% 100%, 58% calc(100% - 32px), 42% calc(100% - 32px), 38% 100%, 0 100%
+    0 var(--notch-h),
+    var(--notch-x) var(--notch-h),
+    calc(var(--notch-x) + var(--notch-h)) 0,
+    calc(100% - var(--notch-x) - var(--notch-h)) 0,
+    calc(100% - var(--notch-x)) var(--notch-h),
+    100% var(--notch-h),
+    100% 100%,
+    0 100%
   );
 }
 @media (max-width: 640px) {
   .tone-notch {
-    clip-path: polygon(
-      0 0, 32% 0, 39% 22px, 61% 22px, 68% 0, 100% 0,
-      100% 100%, 68% 100%, 61% calc(100% - 22px), 39% calc(100% - 22px), 32% 100%, 0 100%
+    --notch-h: 28px;
+  }
+}
+/* The bottom-edge twin, for the one dark band that ends a PAGE (the contact
+   close): the same chamfered seam, mirrored. Measured off clerk.com's dark→light
+   hand-off: at a band's BOTTOM the outer margins run to the very edge and the
+   container-width middle stops one step short — the light surface below rises
+   into the plate as a tab, exactly inverse to the top seam. clip-path is a
+   single property, so this composes with `.tone-notch` by restating the top
+   step in one combined polygon rather than adding to it. Reuses --notch-h /
+   --notch-x from `.tone-notch`, so one knob tunes both seams (and the 640px
+   override above applies to both). */
+.tone-notch.tone-notch-b {
+  clip-path: polygon(
+    0 var(--notch-h),
+    var(--notch-x) var(--notch-h),
+    calc(var(--notch-x) + var(--notch-h)) 0,
+    calc(100% - var(--notch-x) - var(--notch-h)) 0,
+    calc(100% - var(--notch-x)) var(--notch-h),
+    100% var(--notch-h),
+    100% 100%,
+    calc(100% - var(--notch-x)) 100%,
+    calc(100% - var(--notch-x) - var(--notch-h)) calc(100% - var(--notch-h)),
+    calc(var(--notch-x) + var(--notch-h)) calc(100% - var(--notch-h)),
+    var(--notch-x) 100%,
+    0 100%
+  );
+}
+
+/* --- ambient wash -------------------------------------------------------
+   The single biggest reason a page reads "flat": one solid background colour
+   edge to edge. A pair of wide, very low-alpha accent radials gives the eye
+   depth without becoming a glow.
+
+   Painted as the element's own `background-image` rather than a pseudo-element
+   layer, deliberately: the surfaces that want a wash are exactly the surfaces
+   that already spend both pseudos — `.tone-invert::before` is the dot-grid,
+   `.hero-surface::before` is the hero grid, and `.tone-notch::after` is the
+   light↔dark lip. A third decorative layer had nowhere to live, and stacking it
+   on `::after` silently fought the notch. `background-image` composes with the
+   `background-color` the tone class sets, costs no extra box, and needs no
+   stacking context — so a section can carry tone + texture + notch + wash at
+   once. Static: nothing to gate for reduced motion.
+
+   Alphas come from --wash-strength / --wash-strength-invert (tokens.css). They
+   sit BEHIND body copy, so raising them is a contrast decision that must be
+   re-run through `npm run test:a11y`, not a taste tweak. */
+/* Radial PLACEMENT is what buys intensity here, not alpha.
+   The first version centred the dominant light at 12% -4% — directly over the
+   headline and kicker column, so it was simultaneously where the wash cost the
+   most contrast and where it read least as depth (a glow behind text just looks
+   like a dirty background). Every route puts its text in the left/centre column
+   and its imagery right, so the dominant light now sits over the RIGHT half and
+   the left-hand light is pushed off-canvas above the fold, where only its far
+   falloff reaches the kicker. That reposition is what lets the alpha go back up
+   without touching ink-tertiary's headroom — depth where the eye reads volume,
+   nothing where the eye reads words. */
+.wash {
+  background-image:
+    radial-gradient(
+      56% 48% at 82% 2%,
+      color-mix(in oklab, var(--color-accent) var(--wash-strength), transparent),
+      transparent 66%
+    ),
+    radial-gradient(
+      50% 44% at 4% -16%,
+      color-mix(in oklab, var(--color-accent) calc(var(--wash-strength) * 0.55), transparent),
+      transparent 62%
     );
+}
+
+/* --- aurora ---------------------------------------------------------------
+   Clerk's signature hero gradient is not a single-hue tint: it is a wide
+   multi-stop radial anchored ABOVE the top edge, running violet → warm →
+   cyan. Measured from clerk.com as
+     radial-gradient(241% 161% at 49% -9.5%, rgba(108,71,255,.3),
+                     rgba(255,249,99,.24) 41%, rgba(56,218,…))
+   The off-canvas anchor is the important part: only the gradient's lower
+   falloff ever reaches the page, so it reads as light spilling in from above
+   rather than as a coloured blob sitting behind the type.
+   The secondary hues are deliberately weak and exist only in this decorative
+   wash — they are never UI colour, so the one-accent rule still holds for
+   anything a visitor can act on. Alphas are held low enough that centred hero
+   text keeps AA; the a11y gate covers this. */
+.aurora {
+  position: relative;
+  isolation: isolate;
+}
+.aurora::after {
+  content: "";
+  position: absolute;
+  inset: 0;
+  z-index: 0;
+  pointer-events: none;
+  background: radial-gradient(
+    241% 161% at 49% -9.5%,
+    color-mix(in oklab, var(--color-accent) var(--aurora-violet), transparent) 0%,
+    color-mix(in oklab, var(--aurora-warm-hue) var(--aurora-warm), transparent) 41%,
+    color-mix(in oklab, var(--aurora-cool-hue) var(--aurora-cool), transparent) 68%,
+    transparent 88%
+  );
+}
+.tone-invert.wash {
+  background-image:
+    radial-gradient(
+      60% 52% at 84% 0%,
+      color-mix(in oklab, var(--color-accent) var(--wash-strength-invert), transparent),
+      transparent 68%
+    ),
+    radial-gradient(
+      54% 46% at 2% -18%,
+      color-mix(in oklab, var(--color-accent) calc(var(--wash-strength-invert) * 0.5), transparent),
+      transparent 64%
+    );
+}
+
+/* Hairline that fades out at both ends instead of colliding with the container
+   edge — a small thing that separates considered layouts from boxy ones. */
+.rule-fade {
+  border: 0;
+  height: 1px;
+  background: var(--hairline-fade);
+}
+/* The vertical twin — a column separator that dissolves at top and bottom, so a
+   row of stats reads as one measured group rather than three boxed cells. */
+.rule-fade-y {
+  border: 0;
+  width: 1px;
+  background: var(--hairline-fade-y);
+}
+
+/* Edge dissolve for a scanning row: the strip fades into the page at both ends
+   instead of being sliced off by the container. Decorative paint only — the
+   masked nodes stay in the accessibility tree and in the DOM, so nothing that
+   carries meaning depends on this. */
+.mask-fade-x {
+  -webkit-mask-image: var(--mask-fade-x);
+  mask-image: var(--mask-fade-x);
+}
+
+/* --- pointer spotlight --------------------------------------------------
+   Clerk's signature card treatment: a soft highlight that follows the cursor
+   inside the card. --mx/--my are written by components/features/spotlight.tsx
+   (one shared listener per group, rAF-throttled). With no JS, no pointer, or
+   reduced motion the card simply never lights — the layer defaults to 0 opacity
+   and nothing is lost, so this degrades to the plain bordered card. */
+.spotlight {
+  position: relative;
+  isolation: isolate;
+}
+.spotlight::before {
+  content: "";
+  position: absolute;
+  inset: 0;
+  z-index: 0;
+  pointer-events: none;
+  border-radius: inherit;
+  opacity: 0;
+  transition: opacity var(--motion-slow) var(--ease-out);
+  background: radial-gradient(
+    22rem 22rem at var(--mx, 50%) var(--my, 0%),
+    color-mix(in oklab, var(--color-accent) calc(var(--spotlight-alpha) * 100%), transparent),
+    transparent 60%
+  );
+}
+@media (hover: hover) and (prefers-reduced-motion: no-preference) {
+  .spotlight:hover::before,
+  .spotlight:focus-within::before {
+    opacity: 1;
+  }
+}
+
+/* Hover lift for genuinely interactive cards (a card that IS a link). Static
+   content cards stay flat — depth is a signal that something is clickable, not
+   decoration. Transform+shadow only, and motion-gated. */
+@media (prefers-reduced-motion: no-preference) {
+  .lift {
+    transition:
+      transform var(--motion-base) var(--ease-out),
+      box-shadow var(--motion-base) var(--ease-out),
+      border-color var(--motion-base) var(--ease-out);
+  }
+  .lift:hover,
+  .lift:focus-within {
+    transform: translateY(-2px);
+    box-shadow: var(--shadow-lift);
+  }
+}
+
+/* --- button sheen -------------------------------------------------------
+   A single highlight pass across the primary button on hover. One traversal
+   per hover (not a loop), so it reads as material catching light rather than
+   an animated advert. */
+.sheen {
+  position: relative;
+  overflow: hidden;
+  isolation: isolate;
+}
+.sheen::after {
+  content: "";
+  position: absolute;
+  inset: 0;
+  z-index: 1;
+  pointer-events: none;
+  background: linear-gradient(
+    100deg,
+    transparent 32%,
+    rgb(255 255 255 / var(--sheen-alpha)) 50%,
+    transparent 68%
+  );
+  transform: translateX(-100%);
+}
+@media (prefers-reduced-motion: no-preference) {
+  .sheen:hover::after,
+  .sheen:focus-visible::after {
+    animation: sheen-pass var(--motion-slow) var(--ease-out) forwards;
+  }
+  @keyframes sheen-pass {
+    to {
+      transform: translateX(100%);
+    }
+  }
+}
+
+/* Staggered entrance for a group of siblings. The child sets --i; the delay is
+   derived from the shared token, so no component hand-types a millisecond and
+   the whole choreography retunes from one value. Capped at 6 so a long list
+   never crawls in. Gated with the rest of the reveal system below.
+
+   `--stagger-lead` shifts the WHOLE group later without disturbing its internal
+   rhythm — for a group that has to wait on something else finishing first (the
+   hero terminal's response waits out the prompt type-in). It defaults to 0ms, so
+   every existing stagger group is unchanged.
+
+   The `html.js` prefix is load-bearing beyond progressive enhancement: it raises
+   this rule's specificity above the single-class `.hero-item` below, whose
+   `animation` SHORTHAND would otherwise reset the delay this rule just set. */
+@media (prefers-reduced-motion: no-preference) {
+  html.js .reveal-stagger > * {
+    animation-delay: calc(var(--stagger-lead, 0ms) + min(var(--i, 0), 6) * var(--stagger-step));
+  }
+
+  /* The universal `.reveal` above is transition-driven, and a transition cannot
+     be delayed per-sibling without that same delay later slowing every hover
+     transition on the node (a card that lifts 360ms after you point at it). So
+     inside a stagger group the reveal switches to a keyframe, which consumes the
+     animation-delay above and leaves interaction timing untouched.
+     Longhands, not the `animation` shorthand — the shorthand would reset the
+     animation-delay the rule above just set.
+     Rule of use: `.reveal` goes on the WRAPPER (the <li>), never on the card
+     itself, because `animation-fill-mode: both` holds `transform: none` after
+     the animation ends and would out-rank a `.lift` hover transform. */
+  html.js .reveal-stagger > .reveal {
+    transition: none;
+  }
+  html.js .reveal-stagger > .reveal.reveal-in {
+    animation-name: reveal-rise;
+    animation-duration: var(--motion-reveal);
+    animation-timing-function: var(--ease-out);
+    animation-fill-mode: both;
+  }
+  @keyframes reveal-rise {
+    from {
+      opacity: 0;
+      transform: translateY(12px);
+    }
+    to {
+      opacity: 1;
+      transform: none;
+    }
   }
 }
 
@@ -235,19 +527,33 @@ button:disabled,
    adds "wonderful" depth without ever touching legibility. Decorative; paints
    behind the relative Container content (same technique as .tone-invert::before).
    Purely static — nothing to gate under reduced-motion. */
+/* Clerk fills its hero with a faint printed-circuit trace field — orthogonal
+   runs, corner elbows, pads and vias — not a dot grid. It is the single most
+   recognisable thing about their hero after the type, and it suits an
+   engineering portfolio better than dots do. Drawn as one tiling SVG (a data
+   URI, so it costs no request) and masked to fade out before it reaches the
+   headline. `currentColor` is not available inside a data URI, so the stroke
+   is a literal here and the dark variant is overridden below — this is one of
+   the few places a literal colour is unavoidable. Purely static.
+   Stroke/pad alphas (.06/.075) re-tuned against the clerk.com screenshots:
+   theirs is fainter than our first pass, and over the lilac aurora ours read
+   lavender instead of grey — the texture should be FELT at the edges, never
+   quite read. */
 .hero-surface::before {
   content: "";
   position: absolute;
   inset: 0;
   z-index: 0;
   pointer-events: none;
-  background-image: radial-gradient(circle at 1px 1px, rgb(19 19 22 / 0.05) 1px, transparent 1.6px);
-  background-size: 26px 26px;
-  -webkit-mask-image: radial-gradient(85% 75% at 72% 42%, #000 6%, transparent 66%);
-  mask-image: radial-gradient(85% 75% at 72% 42%, #000 6%, transparent 66%);
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='240' height='240' viewBox='0 0 240 240'%3E%3Cg fill='none' stroke='%23131316' stroke-opacity='0.06' stroke-width='1'%3E%3Cpath d='M0 40h60l20-20h60M240 40h-40l-20 20h-40M0 140h40l24 24h76M240 150h-70l-22-22H60l-20 20H0'/%3E%3Cpath d='M40 0v28l20 20v52M140 240v-40l-20-20v-40M200 0v60l-20 20v40l20 20v60M90 240v-56l-30-30'/%3E%3Crect x='128' y='28' width='24' height='24' rx='3'/%3E%3Crect x='36' y='96' width='18' height='18' rx='3'/%3E%3Crect x='176' y='160' width='28' height='20' rx='3'/%3E%3C/g%3E%3Cg fill='%23131316' fill-opacity='0.075'%3E%3Ccircle cx='140' cy='20' r='2.5'/%3E%3Ccircle cx='60' cy='100' r='2.5'/%3E%3Ccircle cx='180' cy='80' r='2.5'/%3E%3Ccircle cx='64' cy='164' r='2.5'/%3E%3Ccircle cx='120' cy='180' r='2.5'/%3E%3C/g%3E%3C/svg%3E");
+  background-size: 240px 240px;
+  -webkit-mask-image: radial-gradient(120% 100% at 50% 42%, transparent 18%, #000 78%);
+  mask-image: radial-gradient(120% 100% at 50% 42%, transparent 18%, #000 78%);
 }
+/* Same trace field, inverted stroke — a data URI cannot read a custom property,
+   so the whole sheet is restated rather than recoloured. */
 :root[data-theme="dark"] .hero-surface::before {
-  background-image: radial-gradient(circle at 1px 1px, rgb(255 255 255 / 0.05) 1px, transparent 1.6px);
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='240' height='240' viewBox='0 0 240 240'%3E%3Cg fill='none' stroke='%23ffffff' stroke-opacity='0.075' stroke-width='1'%3E%3Cpath d='M0 40h60l20-20h60M240 40h-40l-20 20h-40M0 140h40l24 24h76M240 150h-70l-22-22H60l-20 20H0'/%3E%3Cpath d='M40 0v28l20 20v52M140 240v-40l-20-20v-40M200 0v60l-20 20v40l20 20v60M90 240v-56l-30-30'/%3E%3Crect x='128' y='28' width='24' height='24' rx='3'/%3E%3Crect x='36' y='96' width='18' height='18' rx='3'/%3E%3Crect x='176' y='160' width='28' height='20' rx='3'/%3E%3C/g%3E%3Cg fill='%23ffffff' fill-opacity='0.09'%3E%3Ccircle cx='140' cy='20' r='2.5'/%3E%3Ccircle cx='60' cy='100' r='2.5'/%3E%3Ccircle cx='180' cy='80' r='2.5'/%3E%3Ccircle cx='64' cy='164' r='2.5'/%3E%3Ccircle cx='120' cy='180' r='2.5'/%3E%3C/g%3E%3C/svg%3E");
 }
 
 /* --- hero on-load entrance: a quiet staggered fade + rise (Clerk-style) ---
@@ -273,6 +579,29 @@ button:disabled,
 /* --- capability card illustrations: bespoke SVG scenes that play on hover ---
    (Clerk-caliber — staggered, spring-accented; motion is transform/opacity/colour
    only and collapses under prefers-reduced-motion). */
+
+/* The illustration vignette inside a dark bento card. Sampled off clerk.com's
+   session-management card: the inner panel is RAISED off the card (#27272c on
+   #212126 — a few percent of white, top-lit), never recessed into it, and its
+   border runs quieter than the token hairline because the lift already
+   separates it — a full-strength border double-outlined the panel and was a
+   large part of why our cards read busier than theirs. color-mix over the
+   scoped surface token, so the treatment is derived, not a literal. Only ever
+   rendered inside `.tone-invert`, where --shadow-card-invert resolves to the
+   dark ring + inset top highlight.
+   The mix is contrast-bound, not taste-bound: ink-tertiary (#9394a1) over the
+   TOP stop measures ~4.8:1 at 4.5% white and drops under AA past ~6% — the
+   scene chrome inside these wells is tertiary, so the top stop is a ceiling. */
+.cap-well {
+  background: linear-gradient(
+    180deg,
+    color-mix(in oklab, var(--color-surface) 95.5%, white),
+    color-mix(in oklab, var(--color-surface) 98%, white) 60%
+  );
+  border: 1px solid color-mix(in oklab, var(--color-border) 60%, transparent);
+  box-shadow: var(--shadow-card-invert);
+}
+
 .illo {
   color: var(--color-ink-tertiary);
 }
@@ -457,39 +786,72 @@ button:disabled,
   }
 }
 
-/* Stack-band cells crossfade to the next tool on each swap (Clerk's cycling
-   company wall). The keyed remount replays this; reduced-motion holds the item. */
-.stack-cell {
-  animation: stack-swap 520ms var(--ease-out);
+/* --- stack band: a true crossfade (Clerk's cycling company wall, our tools) ---
+   Every tool a cell can show is rendered, stacked in ONE grid area, and only the
+   active one is opaque. Two consequences, both of which were the old version's
+   problems: the outgoing word fades OUT while the incoming one fades IN (a real
+   crossfade, not a hard cut followed by a fade), and the cell is permanently as
+   wide as its widest tool, so the hairline grid stops twitching on every swap.
+   The rise is an animation rather than a transition because it must replay each
+   time `.stack-item-on` lands on a different node; the fade-out is a transition
+   on the node losing the class, so the two halves overlap. */
+.stack-item {
+  grid-area: 1 / 1;
+  opacity: 0;
+  transition: opacity var(--motion-slow) var(--ease-out);
 }
-@keyframes stack-swap {
-  from {
-    opacity: 0;
-    transform: translateY(5px);
-  }
-  to {
-    opacity: 1;
-    transform: none;
-  }
+.stack-item-on {
+  opacity: 1;
 }
-@media (prefers-reduced-motion: reduce) {
-  .stack-cell {
-    animation: none;
+@media (prefers-reduced-motion: no-preference) {
+  .stack-item-on {
+    animation: stack-swap var(--motion-reveal) var(--ease-emphasized);
+  }
+  @keyframes stack-swap {
+    from {
+      opacity: 0;
+      transform: translateY(0.45em);
+    }
+    to {
+      opacity: 1;
+      transform: none;
+    }
   }
 }
 
-/* --- terminal caret (component showcase) --- */
-.caret-blink {
-  animation: caret-blink 1.05s steps(1) infinite;
+/* --- hero terminal: the prompt types itself in --------------------------
+   A clip, not a width — the text keeps its natural box, so nothing can be
+   truncated by a font-metric mismatch, and the character count is the only
+   input. Duration and step count both derive from `--ch` (set by the component
+   from the prompt's own length) and the `--motion-type-step` token.
+
+   This is deliberately CSS-only and additive. The prompt is real text in the
+   markup on first paint, so the panel is complete for a crawler, for a visitor
+   whose JS never arrives, and under reduced motion — the animation only decides
+   how the already-present text is UNCOVERED. The `html.js` gate means the clip
+   can never be what hides it. If a browser rejects `steps(var(--ch))` the whole
+   shorthand is invalid and the text simply renders, which is the same safe end
+   state. Total run is well under five seconds and fires once, so WCAG 2.2.2
+   needs no pause control here. */
+.term-type {
+  display: inline-block;
 }
-@keyframes caret-blink {
-  50% {
-    opacity: 0;
+@media (prefers-reduced-motion: no-preference) {
+  html.js .term-type {
+    animation: term-type calc(var(--ch, 0) * var(--motion-type-step)) steps(var(--ch, 1)) both;
   }
-}
-@media (prefers-reduced-motion: reduce) {
-  .caret-blink {
-    animation: none;
+  @keyframes term-type {
+    from {
+      clip-path: inset(0 100% 0 0);
+    }
+    to {
+      clip-path: inset(0 0 0 0);
+    }
+  }
+  /* The response waits out the type-in, then plays on the shared stagger. Both
+     halves are derived — no millisecond is named in a component. */
+  .term-body {
+    --stagger-lead: calc(var(--ch, 0) * var(--motion-type-step));
   }
 }
 
@@ -510,5 +872,115 @@ button:disabled,
 :root[data-theme="dark"] .shiki,
 :root[data-theme="dark"] .shiki span {
   color: var(--shiki-dark) !important;
+}
+
+/* --- floating header: elevation earned by scrolling ----------------------
+   At the top of a page the nav pill is sitting ON the hero, not covering
+   anything, so a border and a drop shadow are weight it has not earned. The
+   moment content starts sliding underneath it, it needs both to stay readable.
+   That is a scroll-POSITION state, and CSS can read scroll position directly:
+   one scroll-driven animation over the first --scroll-cue-range of the document.
+   No listener, no React state, no hydration cost — which is the whole reason to
+   do it this way rather than with an onScroll handler.
+
+   Progressive enhancement: the Tailwind classes on the element are the resting
+   truth, so a browser without scroll-timeline support keeps today's always-
+   elevated pill — correct, just not animated. Keyframes outrank utilities, so
+   where it IS supported the animation takes over cleanly.
+
+   Motion: nothing moves. Only background-color, border-color and box-shadow
+   interpolate, so there is no vestibular motion to gate. If the global
+   reduced-motion rule collapses the duration, a progress-based timeline simply
+   snaps to "elevated" on the first pixel of scroll — still correct.
+   On a page too short to scroll the range is zero and the pill stays flat,
+   which is also correct: nothing can pass beneath it. */
+@supports (animation-timeline: scroll()) {
+  .header-pill {
+    animation: header-elevate linear both;
+    animation-timeline: scroll(root block);
+    animation-range: 0 var(--scroll-cue-range);
+  }
+  /* The pill is a VISIBLE object at rest — clerk.com's is a white bar with a
+     hairline and a soft shadow from the first pixel, and dissolving it to
+     nothing at scroll 0 left our nav floating loose on the page with no
+     container. What scroll actually earns is *more* separation (opaque surface,
+     deeper shadow) as content passes beneath, not the pill's existence. */
+  @keyframes header-elevate {
+    from {
+      background-color: color-mix(in oklab, var(--color-surface) 72%, transparent);
+      border-color: color-mix(in oklab, var(--color-border) 70%, transparent);
+      box-shadow: var(--shadow-sm);
+    }
+    to {
+      background-color: color-mix(in oklab, var(--color-surface) 94%, transparent);
+      border-color: var(--color-border);
+      box-shadow: var(--shadow-md);
+    }
+  }
+}
+
+/* --- system diagram -----------------------------------------------------
+   The flagship visual sits on a dark band, so its nodes have to read as real
+   cards rather than outlines drawn into the background. Two ingredients:
+
+   1. A top-lit surface. The gradient mixes 5% white into --color-surface at the
+      top stop and resolves to the flat token by mid-height, which is how a
+      physical card catches ambient light. Because it is a color-mix over a
+      token it works unchanged on the light page, the dark band, and full dark.
+      The highlight deliberately dies at 52% so the node's sublabel — the
+      lowest-contrast text in the diagram — always sits on the untouched
+      surface colour and its measured contrast is unchanged.
+   2. Resting elevation (--drop-node-rest) so every node is lifted OFF the band,
+      and a stronger lift + accent glow only on the active node — depth as a
+      state signal, not as decoration.
+
+   The ACTIVE node is deliberately NOT given a lightened fill: mixing white into
+   --color-accent-subtle on the dark band drops the sublabel to ~4.3:1, under
+   AA. Active-ness is carried by the accent stroke, the glow and the scale
+   instead, none of which sit behind text.
+
+   Connectors get rounded elbows and anchor to node EDGES rather than centres
+   (see system-diagram.tsx), which is what makes the arrowheads visible at all. */
+.sd-node-top {
+  stop-color: color-mix(in oklab, var(--color-surface) 95%, white);
+}
+.sd-node-base {
+  stop-color: var(--color-surface);
+}
+
+/* --- FAQ accordion ------------------------------------------------------
+   Honest note on the height animation. Growing to an UNKNOWN auto height means
+   animating a layout property (grid-template-rows / height / max-height) or
+   measuring in JS and animating a pixel value. grid-rows 0fr→1fr is the
+   least-bad of those: it is exact, needs no measurement, survives reflow, and
+   only one short panel is ever in flight. So it stays.
+
+   What was actually costing frames was `transition-all` on the grid container,
+   which put every animatable property into the transition alongside the layout
+   one. Two fixes: (1) transition ONLY grid-template-rows, and (2) let the
+   PERCEIVED motion be carried by opacity + translate on the answer itself.
+   Those two run on the compositor, so the eye follows the smooth layer and the
+   reflow stops being the thing you notice. */
+.faq-panel {
+  transition: grid-template-rows var(--motion-slow) var(--ease-out);
+}
+.faq-answer {
+  opacity: 0;
+  transform: translateY(-4px);
+  transition:
+    opacity var(--motion-base) var(--ease-out),
+    transform var(--motion-base) var(--ease-out);
+}
+/* Opening: let the panel start making room before the text fades in, so the
+   answer never appears to be clipped by its own container. */
+.faq-panel[data-open] .faq-answer {
+  opacity: 1;
+  transform: none;
+  transition-delay: var(--motion-fast);
+}
+@media (prefers-reduced-motion: reduce) {
+  .faq-answer {
+    transform: none;
+  }
 }
 

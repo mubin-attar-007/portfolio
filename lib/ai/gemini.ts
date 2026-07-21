@@ -3,7 +3,11 @@
 //
 // Uses `streamGenerateContent` with `alt=sse` to receive server-sent chunks and
 // yields plain text deltas. No SDK dependency. The API key is read from
-// process.env server-side only and is NEVER included in any thrown error or log.
+// process.env server-side only, sent as an `x-goog-api-key` header (never a
+// query parameter), and is NEVER included in any thrown error or log.
+//
+// `args.signal` is forwarded to fetch, so a client disconnect stops generation
+// upstream instead of burning quota on an answer nobody will read.
 // -----------------------------------------------------------------------------
 
 import type { ChatMessage } from "./guard";
@@ -51,7 +55,10 @@ export async function* streamGemini(args: StreamArgs): AsyncGenerator<string> {
     throw new GeminiError("Assistant is not configured.", 503);
   }
 
-  const url = `${BASE}/${MODEL}:streamGenerateContent?alt=sse&key=${encodeURIComponent(key)}`;
+  // The key goes in `x-goog-api-key`, never in the query string. Google accepts
+  // either, but a URL-borne key ends up in access logs, error traces, and proxy
+  // records — a header does not.
+  const url = `${BASE}/${MODEL}:streamGenerateContent?alt=sse`;
 
   const body = {
     systemInstruction: { parts: [{ text: args.systemInstruction }] },
@@ -71,18 +78,19 @@ export async function* streamGemini(args: StreamArgs): AsyncGenerator<string> {
   try {
     res = await fetch(url, {
       method: "POST",
-      headers: { "Content-Type": "application/json" },
+      headers: { "Content-Type": "application/json", "x-goog-api-key": key },
       body: JSON.stringify(body),
       signal: args.signal,
     });
   } catch {
-    // Network / abort — surface a generic message (never the URL, which holds the key).
+    // Network / abort — surface a generic message, never the upstream detail.
     throw new GeminiError("Upstream request failed.", 502);
   }
 
   if (!res.ok || !res.body) {
-    // Read a bounded amount of the error body for classification, but do NOT
-    // propagate provider text verbatim to the client.
+    // Classify on the HTTP status alone. The provider's error body is never
+    // read or propagated: it can echo request content back, and the caller only
+    // needs the status to decide between "retryable" and "fall back".
     let status = res.status;
     if (status === 0) status = 502;
     throw new GeminiError(`Upstream error (${status}).`, status || 502);

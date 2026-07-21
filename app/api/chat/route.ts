@@ -81,15 +81,18 @@ export async function POST(request: Request): Promise<Response> {
   const key = clientKeyFromHeaders(request.headers);
   const rl = checkRateLimit(key);
   if (!rl.allowed) {
-    return sseResponse(
-      staticStream({
-        text:
-          "You're sending messages a little too fast. Give it a few seconds and ask again — " +
-          "I'll be right here.",
-        citations: [],
-        mode: "fallback",
-        note: "rate-limited",
-      }),
+    // A refusal is not an answer, so it is not an SSE stream: 429 + Retry-After
+    // is the contract every HTTP client already understands. The UI reads the
+    // header to tell the visitor exactly how long to wait.
+    return Response.json(
+      { error: "rate_limited", retryAfterSec: rl.retryAfterSec },
+      {
+        status: 429,
+        headers: {
+          "Retry-After": String(rl.retryAfterSec),
+          "Cache-Control": "no-store",
+        },
+      },
     );
   }
 
@@ -173,7 +176,15 @@ export async function POST(request: Request): Promise<Response> {
       let produced = false;
       try {
         controller.enqueue(sse("meta", { mode: "live", note: null }));
-        for await (const delta of streamGemini({ systemInstruction, messages })) {
+        // Hand the request's abort signal to the upstream call. When the visitor
+        // closes the panel or navigates away, Gemini stops generating instead of
+        // running to completion against a socket nobody is reading — real quota
+        // and real money on a shared key.
+        for await (const delta of streamGemini({
+          systemInstruction,
+          messages,
+          signal: request.signal,
+        })) {
           if (delta) {
             produced = true;
             controller.enqueue(sse("token", { text: delta }));
@@ -184,6 +195,16 @@ export async function POST(request: Request): Promise<Response> {
         controller.enqueue(sse("done", {}));
         controller.close();
       } catch {
+        // Client gone: the abort we propagated is what threw. There is nobody
+        // to serve a fallback to, and the controller is already tearing down.
+        if (request.signal.aborted) {
+          try {
+            controller.close();
+          } catch {
+            // Already closed by the platform on disconnect — nothing to do.
+          }
+          return;
+        }
         // GRACEFUL FALLBACK. If nothing was streamed yet, emit the best FAQ
         // answer verbatim + its citation. If some tokens already went out, we
         // still close cleanly with whatever citations we have.

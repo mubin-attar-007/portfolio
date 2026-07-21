@@ -67,7 +67,9 @@ export function MobileNav() {
         type="button"
         aria-label={open ? "Close menu" : "Open menu"}
         aria-expanded={open}
-        aria-controls="mobile-menu"
+        // Only while open: the drawer is portalled on demand, so a permanent
+        // aria-controls would point at an element that isn't in the document.
+        aria-controls={open ? "mobile-menu" : undefined}
         onClick={() => setOpen((v) => !v)}
         className="icon-btn inline-flex h-9 w-9 items-center justify-center rounded-[var(--radius-md)] text-ink-secondary hover:text-ink"
       >

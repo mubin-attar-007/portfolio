@@ -5,9 +5,11 @@ export const NAV = [
   { label: "Notes", href: "/notes" },
   { label: "About", href: "/about" },
   { label: "Hire me", href: "/hire" },
+  { label: "Trust", href: "/trust" },
+  { label: "Changelog", href: "/changelog" },
 ] as const;
-// Note: Evals is surfaced via the homepage "Measured" band + the footer (not the header) —
-// the band already elevates it, so the menu stays lean (F-07 satisfied without a 6th item).
+// Note: Evals remains in the footer + homepage measured band; header includes
+// Trust/Changelog as flagship trust surfaces.
 
 export type NavItem = (typeof NAV)[number];
 
@@ -25,6 +27,8 @@ export const FOOTER_NAV = [
       { label: "Notes", href: "/notes" },
       { label: "Now", href: "/now" },
       { label: "Evals", href: "/evals" },
+      { label: "Trust", href: "/trust" },
+      { label: "Changelog", href: "/changelog" },
     ],
   },
   {

@@ -1,75 +1,105 @@
 import type { Metadata } from "next";
 import Link from "next/link";
-import { ArrowUpRight } from "lucide-react";
 import { Section } from "@/components/layout/section";
-import { buttonVariants } from "@/components/ui/button";
+import { PageHeader } from "@/components/ui/page-header";
+import { TextLink } from "@/components/ui/text-link";
+import { AuditLane } from "@/components/features/audit-lane";
+import { buttonVariants, ButtonGlyph } from "@/components/ui/button";
 import { SITE } from "@/config/site";
-import { talks } from "@/content/site";
+import { home, talks, talksIntro } from "@/content/site";
 import { formatDate } from "@/lib/format";
+import { LABEL, PAGE_BODY_BAND, PAGE_HEADER_BAND, PANEL, PANEL_RAISED, stagger } from "@/constants/page";
 
 export const metadata: Metadata = {
   title: "Talks",
-  description: "Talks and appearances on evals, LLM safety boundaries, RAG, and shipping AI on a $0 stack.",
+  description:
+    "Talks and appearances on evals, LLM safety boundaries, RAG, and shipping AI on a $0 stack.",
   alternates: { canonical: `${SITE.url}/talks` },
 };
 
 /**
- * /talks — talks & appearances. The list is ready for real entries; until the
- * first one, it shows an honest empty state that routes to /hire (never an
- * invented lineup).
+ * /talks — talks & appearances.
+ *
+ * The list is ready for real entries; until the first one, it shows an honest
+ * empty state that routes to /hire. It never invents a lineup — an empty page
+ * that says so is worth more than a padded one, and the same rule governs every
+ * number on this site.
+ *
+ * Design: the shared PageHeader on an `aurora` band, then either the hairline-
+ * divided list (the same divided-list vocabulary as /about's principles) or the
+ * empty-state panel. The panel uses the site's ordinary card treatment rather
+ * than a dashed "placeholder" border: the state is honest, so it should look
+ * finished, not like something failed to load.
+ *
+ * A11y: one `<h1>` (PageHeader); each entry's title is an `<h2>` so the list is
+ * navigable by heading, and `<time dateTime>` carries the machine-readable date.
+ * External artifact links use the shared TextLink, which supplies the outward
+ * arrow and `rel="noopener noreferrer"`.
  */
 export default function TalksPage() {
   return (
-    <Section space="lg">
-      <p className="font-mono text-xs uppercase tracking-[0.04em] text-ink-tertiary">Talks</p>
-      <h1 className="mt-6 max-w-[18ch] text-4xl font-bold tracking-[-0.03em] text-ink sm:text-5xl">
-        Talks &amp; appearances
-      </h1>
-      <p className="mt-6 max-w-[var(--width-prose)] text-lg text-ink-secondary">
-        On building grounded, honest AI systems — evals, deterministic safety boundaries, retrieval,
-        and shipping products on a $0 stack.
-      </p>
+    <>
+      <Section space="md" aurora className={PAGE_HEADER_BAND}>
+        <PageHeader kicker={talksIntro.kicker} title={talksIntro.title} lede={talksIntro.lede}>
+          {/* `quiet`: the uniform header-link treatment — ink-secondary keeps AA on
+              the `aurora` band where accent text would not, and it keeps the header
+              from competing with the empty-state's primary CTA to the same place. */}
+          <TextLink href={talksIntro.empty.cta.href} tone="quiet">
+            {talksIntro.empty.cta.label}
+          </TextLink>
+        </PageHeader>
+      </Section>
+      <AuditLane
+        title="Audit lane"
+        items={[
+          ...home.proof.stats.map((stat) => ({
+            href: stat.href,
+            value: stat.value,
+            label: stat.label,
+          })),
+          { href: "/trust", label: "trust policy" },
+          { href: "/changelog", label: "changelog" },
+        ]}
+        className="mt-8"
+      />
 
-      {talks.length > 0 ? (
-        <ul className="reveal mt-12 divide-y divide-border border-y border-border">
-          {talks.map((t) => (
-            <li key={`${t.date}-${t.title}`} className="grid gap-2 py-6 sm:grid-cols-[8rem_1fr] sm:gap-8">
-              <time dateTime={t.date} className="font-mono text-xs text-ink-tertiary">
-                {formatDate(t.date)}
-              </time>
-              <div>
-                <h2 className="text-lg text-ink">{t.title}</h2>
-                <p className="mt-1 text-sm text-ink-secondary">{t.venue}</p>
-                {t.href ? (
-                  <a
-                    href={t.href}
-                    target="_blank"
-                    rel="noopener noreferrer"
-                    className="mt-2 inline-flex items-center gap-1 font-mono text-xs text-ink-tertiary underline decoration-border-strong underline-offset-4 hover:text-accent hover:decoration-accent"
-                  >
-                    slides / recording <ArrowUpRight size={12} strokeWidth={1.6} aria-hidden />
-                  </a>
-                ) : null}
-              </div>
-            </li>
-          ))}
-        </ul>
-      ) : (
-        <div className="reveal mt-12 max-w-[var(--width-prose)] rounded-[var(--radius-md)] border border-dashed border-border-strong bg-bg-subtle p-8">
-          <p className="text-lg text-ink">No talks yet — this is where they&apos;ll live.</p>
-          <p className="mt-3 text-ink-secondary">
-            If you&apos;re organizing a meetup, podcast, or conference and think I&apos;d be a fit —
-            on evals, LLM safety boundaries, retrieval, or shipping AI on a free tier — I&apos;d love
-            to hear from you.
-          </p>
-          <div className="mt-6">
-            <Link href="/hire" className={buttonVariants("secondary", "sm")}>
-              Get in touch
-              <ArrowUpRight size={14} strokeWidth={1.6} />
-            </Link>
-          </div>
-        </div>
-      )}
-    </Section>
+      <Section space="md" className={PAGE_BODY_BAND}>
+        {talks.length > 0 ? (
+          <ul className="reveal-stagger divide-y divide-border border-y border-border">
+            {talks.map((t, i) => (
+              <li
+                key={`${t.date}-${t.title}`}
+                className="reveal grid gap-2 py-6 sm:grid-cols-[8rem_1fr] sm:gap-8"
+                style={stagger(i)}
+              >
+                <time dateTime={t.date} className={LABEL}>
+                  {formatDate(t.date)}
+                </time>
+                <div>
+                  <h2 className="text-lg text-ink">{t.title}</h2>
+                  <p className="mt-1 text-sm text-ink-secondary">{t.venue}</p>
+                  {t.href ? (
+                    <TextLink href={t.href} external tone="quiet" className="mt-3">
+                      {talksIntro.entryCta}
+                    </TextLink>
+                  ) : null}
+                </div>
+              </li>
+            ))}
+          </ul>
+        ) : (
+          <section className={`reveal max-w-[var(--width-prose)] ${PANEL} ${PANEL_RAISED}`}>
+            <h2 className="text-lg text-ink">{talksIntro.empty.title}</h2>
+            <p className="mt-3 text-ink-secondary">{talksIntro.empty.body}</p>
+            <div className="mt-6">
+              <Link href={talksIntro.empty.cta.href} className={buttonVariants("primary")}>
+                <ButtonGlyph />
+                {talksIntro.empty.cta.label}
+              </Link>
+            </div>
+          </section>
+        )}
+      </Section>
+    </>
   );
 }

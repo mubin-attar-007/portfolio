@@ -39,34 +39,63 @@
   --text-2xl: 1.5rem;      --text-2xl--line-height: 1.4;  --text-2xl--letter-spacing: -0.015em;
   --text-3xl: 1.875rem;    --text-3xl--line-height: 1.3;  --text-3xl--letter-spacing: -0.02em;
   --text-4xl: 2.25rem;     --text-4xl--line-height: 1.2;  --text-4xl--letter-spacing: -0.022em;
+  /* Clerk's centred dark-band h2 measures 40px/700 — between the 4xl and 5xl
+     steps. A named step rather than an arbitrary value so the band headers
+     stay retunable from here (used by SectionHeading's centred variant). */
+  --text-band-title: 2.5rem; --text-band-title--line-height: 1.15; --text-band-title--letter-spacing: -0.022em;
   --text-5xl: 3rem;        --text-5xl--line-height: 1.1;  --text-5xl--letter-spacing: -0.025em;
   --text-6xl: 3.75rem;     --text-6xl--line-height: 1.05; --text-6xl--letter-spacing: -0.028em;
   --text-7xl: 4.75rem;     --text-7xl--line-height: 1.0;  --text-7xl--letter-spacing: -0.032em;
 
   /* ---- spacing: section rhythm (fluid, mobile→desktop per §1.4) ---- */
   /* +~18% over the base scale — more breathing room reads as more confident. */
-  --space-section-sm: clamp(4.75rem, 9.5vw, 7rem);   /* 76 → 112 */
-  --space-section-md: clamp(7rem, 11.5vw, 9.5rem);   /* 112 → 152 */
-  --space-section-lg: clamp(9.5rem, 15vw, 13rem);    /* 152 → 208 */
+  /* Measured off clerk.com: their band rhythm is ASYMMETRIC — 128px top,
+     172px bottom (the hero runs 192/128). The extra weight underneath is what
+     makes a section read as a finished block rather than a floating one, and it
+     stops adjacent bands from pooling into one dead gap the way two equal
+     paddings do. Kept fluid; the desktop ceiling matches Clerk's fixed values. */
+  /* The header→body SEAM: on Clerk's interior pages the gap from a header's
+     lede to the first row of real content measures ~96px total (pricing:
+     subhead ~243 → plan cards ~337). Split across the two bands (header pb +
+     body pt) that is 48 each — half of `sm`, which was tuned for joining two
+     CONTENT bands, not for the seam under a header. Spending `sm` on both
+     sides doubled Clerk's gap and pushed first content out of the fold. */
+  --space-section-xs: clamp(2.5rem, 4vw, 3rem);      /* 40  → 48 (half the seam) */
+  --space-section-sm: clamp(4rem, 8vw, 5.5rem);      /* 64  → 88  */
+  --space-section-md: clamp(5.5rem, 10vw, 8rem);     /* 88  → 128 (Clerk's top) */
+  --space-section-lg: clamp(7.5rem, 13vw, 12rem);    /* 120 → 192 (Clerk's hero top) */
+  --space-section-md-end: clamp(7rem, 12vw, 10.75rem);  /* 112 → 172 (Clerk's bottom) */
+  --space-section-lg-end: clamp(8.5rem, 14vw, 13rem);   /* 136 → 208 */
 
   /* prose + container measures */
   --width-prose: 68ch;
-  --width-container: 1120px;
+  --width-container: 1216px; /* measured off clerk.com (their dominant content width) */
 
   /* ---- radius (§1.5) ---- */
   --radius-sm: 4px;   /* tags, inline code */
-  --radius-md: 8px;   /* cards, inputs, buttons */
+  --radius-md: 6px;   /* cards, inputs, buttons — clerk.com's dominant radius */
+  --radius-pill: 9999px; /* the floating header pill, tags */
   --radius-lg: 12px;  /* figures, terminal frames */
 
   /* ---- borders ---- */
   --stripe-width: 3px; /* accent left-rule on callouts / pull-quotes (token, not a raw value) */
 
   /* ---- motion (§1.6) — Clerk's signature curves (adopted verbatim) ---- */
-  --motion-fast: 140ms;
-  --motion-base: 200ms;
-  --motion-slow: 300ms;
+  /* Durations measured off clerk.com — 150ms and 500ms are their two most
+     common by a wide margin, with 300ms in between. The long 500ms on hover
+     states is a large part of why the site feels unhurried rather than snappy. */
+  --motion-fast: 150ms;
+  --motion-base: 300ms;
+  --motion-slow: 500ms;
   --motion-reveal: 600ms;                          /* scroll/entrance fade-ups */
   --drop-node: drop-shadow(0 6px 14px rgb(17 17 26 / 0.20)); /* diagram node lift (single-shadow filter) */
+  /* Diagram nodes are SVG, so elevation is a filter rather than a box-shadow.
+     --drop-node-rest is the filter-space equivalent of --shadow-sm: it is what
+     makes a node read as a card sitting ON the band instead of an outline drawn
+     into it. --drop-node-glow reads --color-accent lazily, so it re-tints itself
+     inside .tone-invert / [data-theme=dark] with no separate override. */
+  --drop-node-rest: drop-shadow(0 1px 1.5px rgb(17 17 26 / 0.14));
+  --drop-node-glow: drop-shadow(0 0 9px color-mix(in oklab, var(--color-accent) 30%, transparent));
   --ease-out: cubic-bezier(0.4, 0.36, 0, 1);      /* Clerk primary — smooth settle */
   --ease-emphasized: cubic-bezier(0.33, 1, 0.68, 1); /* Clerk secondary — gentle overshoot for reveals */
   --ease-spring: cubic-bezier(0.34, 1.56, 0.64, 1);  /* back-out overshoot — the Framer-spring "pop" for accent moments */
@@ -84,11 +113,110 @@
   --transition-duration-slow: var(--motion-slow);
 
   /* ---- elevation: tactile surfaces (hairline ring + inset top-highlight + soft drop) ---- */
-  --shadow-sm: 0 0 0 0.5px rgb(17 17 26 / 0.05), 0 1px 2px rgb(17 17 26 / 0.05), 0 2px 5px -1px rgb(17 17 26 / 0.04);
-  --shadow-md: 0 0 0 0.5px rgb(17 17 26 / 0.06), 0 1px 2px rgb(17 17 26 / 0.05), 0 8px 20px -6px rgb(17 17 26 / 0.10);
-  --shadow-lg: 0 0 0 0.5px rgb(17 17 26 / 0.06), 0 2px 6px rgb(17 17 26 / 0.06), 0 16px 38px -10px rgb(17 17 26 / 0.16);
-  --shadow-btn: inset 0 1px 0 rgb(255 255 255 / 0.22), 0 1px 2px rgb(17 17 26 / 0.24), 0 2px 5px -1px rgb(17 17 26 / 0.12);
+  /* Measured off clerk.com. The character comes from stacking a hairline ring,
+     a tight contact shadow and a wide soft one — the wide layer is the piece we
+     were missing, and it is what makes a card read as sitting ABOVE the page
+     rather than drawn onto it. --shadow-btn carries their inset top highlight,
+     which is what gives the primary button its moulded look. */
+  --shadow-sm: 0 0 0 0.5px rgb(217 217 222), 0 1px 2px rgb(0 0 0 / 0.06), 0 0 2px rgb(0 0 0 / 0.08);
+  --shadow-md: 0 0 0 1px rgb(0 0 0 / 0.06), 0 5px 15px rgb(0 0 0 / 0.08), 0 15px 35px -5px rgb(47 48 55 / 0.2);
+  --shadow-lg: 0 0 0 1px rgb(0 0 0 / 0.06), 0 10px 19px 4px rgb(0 0 0 / 0.12), 0 24px 48px -8px rgb(47 48 55 / 0.28);
+  --shadow-btn: 0 1px 1px rgb(0 0 0 / 0.24), 0 2px 3px rgb(0 0 0 / 0.2), inset 0 1px 1px rgb(255 255 255 / 0.07);
+  /* The 1px top highlight Clerk puts on dark surfaces so they catch light. */
+  --shadow-inset-top: inset 0 1px 0 0 rgb(255 255 255 / 0.05);
+  /* Dark-band card (the bento). Clerk stacks the top-edge highlight ON TOP of
+     the surface's own elevation, which is what stops a dark card on a dark band
+     from reading as a flat rectangle — the top edge catches light, the bottom
+     falls away. Composite rather than two utilities so the whole treatment
+     retunes from one place; --shadow-sm is re-scoped inside .tone-invert and
+     resolves lazily at the use site, so this token adapts with the band. */
+  --shadow-card-invert: var(--shadow-inset-top), var(--shadow-sm);
+  /* What a `.lift` card rises TO. Resting elevation on light cards is now
+     --shadow-md (Clerk's real card shadow), so hover has to clear it or the
+     lift reads as movement with no change in depth. */
+  --shadow-lift: var(--shadow-lg);
   --shadow-overlay: var(--shadow-lg); /* legacy alias (menus, dialogs, assistant) */
+
+  /* ---- ambient depth ----------------------------------------------------
+     Clerk's pages are never flat: a soft accent-tinted wash sits behind the
+     hero and the dark bands, and hairlines fade out at their ends instead of
+     hitting the container edge. These are the knobs for that depth, kept as
+     tokens so the intensity is tunable in ONE place (and so a future accent
+     change carries the ambience with it automatically).
+     Alphas are deliberately low — the wash must never move body text below
+     AA. The a11y gate audits every route in both themes, so raising these
+     is a contrast decision, not a taste decision.
+
+     Concretely: these two numbers are CONTRAST-BOUND, not taste-bound. The wash
+     peaks at the top-left of a band, which is exactly where every kicker / meta
+     line sits — and those are --color-ink-tertiary, the lowest-contrast text we
+     ship (5.14:1 on the light page, 6.17:1 on a dark band: barely any headroom
+     over AA's 4.5:1). Measured at the gradient's peak, tertiary text lands at:
+         light:  14% → 4.23:1 (FAIL)    8% → 4.60:1 (pass)
+         invert: 22% → 4.46:1 (FAIL)   14% → 5.12:1 (pass)
+     So 8/14 is a ceiling, not a starting point: raise either value and the peak
+     of the wash pushes kickers under AA. Any change here must be re-verified
+     against ink-tertiary at full gradient strength, then run through
+     `npm run test:a11y`. */
+  /* SUPERSEDES the arithmetic above: those numbers were derived with the
+     dominant radial centred at 12% -4%, i.e. on top of the text column, where
+     any alpha at all eats ink-tertiary's headroom. The radials have since been
+     moved off the text (globals.css .wash) — dominant light over the right-hand
+     imagery half, secondary light pushed off-canvas above the fold. With the
+     peak no longer over type, the alpha can carry the depth the design wants.
+     Still contrast-bound, just bound at a higher ceiling: verified by sampling
+     the ACTUAL rendered pixel behind the lowest-contrast text on each washed
+     route, not by the analytic peak. Re-verify by sampling if these move. */
+  --wash-strength: 18%;        /* accent mixed into the ambient wash (light) */
+  /* 24%, down from 30%: sampled against clerk.com's dark bands, whose violet
+     bloom sits just above the threshold of notice — at 30% ours read as a
+     purple haze the band was lit BY rather than ambient light falling ON it.
+     Lowering alpha only raises contrast headroom, so no re-verification cost. */
+  --wash-strength-invert: 24%; /* dark bands carry more before it reads as haze */
+
+  /* Aurora — the multi-hue hero gradient (globals.css `.aurora`), matched to
+     clerk.com's stops. The two secondary hues appear ONLY in this decorative
+     wash, never as UI colour, so "one accent" still governs anything
+     interactive. Weakened from Clerk's own alphas (.3/.24) because our hero
+     text is centred ON the gradient where theirs clears it. */
+  /* The warm stop is held well below Clerk's own .24: their gradient clears the
+     fold before the warm band lands, ours does not, and at 14% it tinted the
+     page visibly yellow-green behind the CTAs. The violet is the hue that
+     should read; warm and cool exist only to keep the falloff from looking
+     like a flat purple fade. */
+  /* Re-tuned against the clerk.com screenshot pair: at 22/5/7 our whole fold
+     rendered visibly lilac and the cool stop left a teal band under the
+     terminal, where Clerk's page reads near-white with the tint only at the
+     very top. Lowering alphas only ADDS contrast headroom for the hero meta
+     line, so this is a11y-safe by direction. */
+  --aurora-violet: 12%;
+  --aurora-warm: 3%;
+  --aurora-cool: 4%;
+  --aurora-warm-hue: #fff963;
+  --aurora-cool-hue: #38dbd0;
+  --sheen-alpha: 0.14;         /* travelling highlight on the primary button */
+  --spotlight-alpha: 0.10;     /* pointer-follow glow inside interactive cards */
+  --hairline-fade: linear-gradient(90deg, transparent, var(--color-border) 12%, var(--color-border) 88%, transparent);
+  /* Vertical twin of the above — column separators (proof strip) fade out at the
+     top and bottom instead of butting into their neighbours' padding. */
+  --hairline-fade-y: linear-gradient(180deg, transparent, var(--color-border) 18%, var(--color-border) 82%, transparent);
+  /* Edge dissolve for a horizontally scanning row (the stack band): the row
+     fades into the page at both ends rather than being sliced off by the
+     container. Mask alpha only — the colour channel is irrelevant. */
+  --mask-fade-x: linear-gradient(90deg, transparent, #000 6%, #000 94%, transparent);
+
+  /* Stagger step for entrance choreography. Components must derive their delay
+     from this (--i multiplied by the step), never hand-type a millisecond. */
+  --stagger-step: 60ms;
+  /* Per-character dwell for the hero terminal's type-in. The prompt's length is
+     the only other input, so the typing duration and the delay the response
+     lines wait for are both DERIVED — no component ever names a millisecond. */
+  --motion-type-step: 30ms;
+
+  /* Scroll distance over which the floating header trades "weightless" for
+     "elevated" (see .header-pill in globals.css). A token, because it is the
+     one number that decides when the chrome starts asserting itself. */
+  --scroll-cue-range: 96px;
 }
 
 /* ---- color: dark (preference, not the brand) — Clerk's exact dark palette ---- */
@@ -114,6 +242,7 @@
   --shadow-btn: inset 0 1px 0 rgb(255 255 255 / 0.12), 0 1px 2px rgb(0 0 0 / 0.5);
   --shadow-overlay: var(--shadow-lg);
   --drop-node: drop-shadow(0 6px 14px rgb(0 0 0 / 0.55));
+  --drop-node-rest: drop-shadow(0 1px 2px rgb(0 0 0 / 0.45));
 }
 
 /* Brand default is the light page with dark section-bands (Clerk's rhythm) — it
