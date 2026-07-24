@@ -23,6 +23,7 @@ import { DBWHISPER_SECTIONS, DBWhisperBody } from "@/components/case-studies/dbw
 import { GENERIC_CASE_STUDY_SECTIONS, GenericBody } from "@/components/case-studies/generic";
 import { LLM_STUDIO_SECTIONS, LlmStudioBody } from "@/components/case-studies/llm-studio";
 import { TRADEPULSE_SECTIONS, TradePulseBody } from "@/components/case-studies/tradepulse";
+import { DemoPosterPreload } from "@/components/case-studies/demo-poster-preload";
 import { CaseStudyReadingOutline } from "@/components/case-studies/reading-outline";
 import { type CaseStudySection } from "@/components/case-studies/section";
 import { ProjectJsonLd } from "@/components/seo/json-ld";
@@ -81,22 +82,33 @@ const BODIES: Record<string, CaseStudyTemplate> = {
  * auth-gated, so its tour is signed into a real account (the chat UI, streaming,
  * and model switching), not a login screen. Rendered once, below the metrics row.
  */
-const DEMO_SHOTS: Record<string, { alt: string; caption: string }> = {
+const DEMO_SHOTS: Record<
+  string,
+  { alt: string; caption: string; width: number; height: number }
+> = {
   dbwhisper: {
     alt: "Silent screen tour of DBWhisper's live site — plain-English questions turned into validated read-only SQL, run, and answered.",
     caption: "Silent tour of the live product — plain English in, a fail-closed read-only query and answer out.",
+    width: 768,
+    height: 456,
   },
   crownwager: {
     alt: "Silent screen tour of CrownWager's live site — model-vs-market best bets with edge, expected value, and model win probability.",
     caption: "Silent tour of the live product — model probabilities turned into +EV picks (informational only, no real-money wagering).",
+    width: 1280,
+    height: 760,
   },
   tradepulse: {
     alt: "Silent screen tour of TradePulse's live site — an honest backtesting terminal for building and running trading strategies.",
     caption: "Silent tour of the live product — an honest backtesting terminal, “no cherry-picked numbers.”",
+    width: 1280,
+    height: 760,
   },
   "llm-studio": {
     alt: "Silent screen tour of LLM Studio's live app — a private multi-model chat workspace with token streaming and model switching.",
     caption: "Silent tour of the live app — a private, multi-model chat workspace: streaming answers, model switching, and per-user quotas.",
+    width: 1280,
+    height: 720,
   },
 };
 
@@ -106,6 +118,7 @@ export default async function CaseStudyPage({ params }: { params: Promise<{ slug
   if (!p) notFound();
   const template = BODIES[slug];
   const sections = template?.sections ?? GENERIC_CASE_STUDY_SECTIONS;
+  const demo = DEMO_SHOTS[slug];
   const { previous, next } = projectNeighbours(slug);
 
   return (
@@ -122,6 +135,7 @@ export default async function CaseStudyPage({ params }: { params: Promise<{ slug
           links={p.links}
           changelog={p.changelog}
         />
+        {demo ? <DemoPosterPreload href={`/demos/${slug}.webp`} /> : null}
         <nav
           aria-label="Breadcrumb"
           className="relative z-10 mb-8 font-mono text-xs text-ink-tertiary"
@@ -184,12 +198,12 @@ export default async function CaseStudyPage({ params }: { params: Promise<{ slug
               ))}
             </MetricsRow>
 
-            {DEMO_SHOTS[slug] ? (
+            {demo ? (
               <div className="mt-10 max-w-[var(--width-prose)]">
                 <Figure
                   caption={
                     <>
-                      {DEMO_SHOTS[slug]!.caption}
+                      {demo.caption}
                       {p.links.live ? (
                         <>
                           {" "}
@@ -208,7 +222,9 @@ export default async function CaseStudyPage({ params }: { params: Promise<{ slug
                 >
                   <video
                     poster={`/demos/${slug}.webp`}
-                    aria-label={DEMO_SHOTS[slug]!.alt}
+                    aria-label={demo.alt}
+                    width={demo.width}
+                    height={demo.height}
                     controls
                     muted
                     playsInline

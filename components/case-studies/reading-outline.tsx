@@ -47,6 +47,7 @@ export function CaseStudyReadingOutline({
     if (!root) return;
 
     let frame = 0;
+    const tocQuery = window.matchMedia("(min-width: 80rem)");
 
     const onScroll = () => {
       if (frame !== 0) return;
@@ -76,28 +77,39 @@ export function CaseStudyReadingOutline({
           }
         }
 
-        let nextActive = sections[0]?.id;
-        for (const section of sections) {
-          const node = document.getElementById(section.id);
-          if (!node) continue;
-          const offset = node.getBoundingClientRect().top;
-          if (offset <= 120) {
-            nextActive = section.id;
-          } else {
-            break;
+        // The section outline is hidden below Tailwind's xl breakpoint. Avoid
+        // forcing layout for every heading on phones and tablets, where only
+        // the inexpensive progress calculation is visible.
+        if (tocQuery.matches) {
+          let nextActive = sections[0]?.id;
+          for (const section of sections) {
+            const node = document.getElementById(section.id);
+            if (!node) continue;
+            const offset = node.getBoundingClientRect().top;
+            if (offset <= 120) {
+              nextActive = section.id;
+            } else {
+              break;
+            }
           }
-        }
-        if (nextActive && nextActive !== activeRef.current) {
-          activeRef.current = nextActive;
-          setActive(nextActive);
+          if (nextActive && nextActive !== activeRef.current) {
+            activeRef.current = nextActive;
+            setActive(nextActive);
+          }
         }
       });
     };
 
-    onScroll();
+    // At the document top both initial values are already correct: zero
+    // progress and the first section active. Skipping the mount-time read keeps
+    // this enhancement off the first-paint path while preserving scroll
+    // restoration and deep-link behavior.
+    if (window.scrollY > 0) onScroll();
     window.addEventListener("scroll", onScroll, { passive: true });
+    tocQuery.addEventListener("change", onScroll);
     return () => {
       window.removeEventListener("scroll", onScroll);
+      tocQuery.removeEventListener("change", onScroll);
       if (frame !== 0) cancelAnimationFrame(frame);
     };
   }, [slug, sections, contentId]);

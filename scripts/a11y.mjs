@@ -107,6 +107,21 @@ async function open(page, route, expectedTheme) {
   // let on-load entrance animations (e.g. the hero) settle before auditing, so
   // contrast is checked on the state users see, not a mid-fade frame
   await page.waitForTimeout(1300);
+
+  // Horizontal page scrolling is a responsive-layout failure (WCAG 1.4.10)
+  // that axe cannot reliably infer from otherwise valid descendants. Keep
+  // intentional code/diagram overflow scoped to their own scroll containers;
+  // the document itself must always fit the supported viewport.
+  const inlineSize = await page.evaluate(() => ({
+    client: document.documentElement.clientWidth,
+    scroll: document.documentElement.scrollWidth,
+  }));
+  if (inlineSize.scroll > inlineSize.client + 1) {
+    throw new Error(
+      `horizontal document overflow on ${route}: ` +
+        `${inlineSize.scroll}px content in a ${inlineSize.client}px viewport`,
+    );
+  }
 }
 
 function report(tag, violations) {

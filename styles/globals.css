@@ -255,8 +255,8 @@ button:disabled,
 .progress-track .progress-fill {
   height: 100%;
   background: color-mix(in oklab, var(--color-ink) 20%, transparent);
-  transition: width var(--motion-base) var(--ease-out);
-  will-change: width;
+  transition: transform var(--motion-base) var(--ease-out);
+  will-change: transform;
 }
 
 /* Shiki code highlighting — transparent bg (use our surface), our mono face,

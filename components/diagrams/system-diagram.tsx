@@ -240,16 +240,16 @@ export function SystemDiagram({
           <p className="text-sm font-medium text-ink">System map</p>
           <p className="font-mono text-xs text-ink-tertiary">Tap to inspect</p>
         </div>
-        <ol className="flex flex-col">
+        <ol className="flex min-w-0 flex-col">
           {stages.map((stage, stageIndex) => (
-            <li key={stage.col}>
+            <li key={stage.col} className="min-w-0">
               <div className="mb-2 flex items-center gap-2 px-1">
                 <span className="font-mono text-xs text-ink-tertiary">
                   {String(stageIndex + 1).padStart(2, "0")}
                 </span>
                 <span className="h-px flex-1 bg-border" aria-hidden />
               </div>
-              <ul className="grid gap-2">
+              <ul className="grid min-w-0 gap-2">
                 {stage.nodes.map((node) => {
                   const selected = mobileSelected === node.id;
                   const targets = spec.edges
@@ -259,7 +259,7 @@ export function SystemDiagram({
                   const panelId = `${uid}-${node.id}-mobile-panel`;
 
                   return (
-                    <li key={node.id}>
+                    <li key={node.id} className="min-w-0">
                       <button
                         type="button"
                         aria-expanded={selected}
@@ -269,7 +269,7 @@ export function SystemDiagram({
                             current === node.id ? null : node.id,
                           )
                         }
-                        className={`flex min-h-14 w-full items-center justify-between gap-3 rounded-[var(--radius-md)] border bg-surface px-3 py-2 text-left transition-colors ${
+                        className={`flex min-h-14 w-full min-w-0 items-center justify-between gap-3 rounded-[var(--radius-md)] border bg-surface px-3 py-2 text-left transition-colors ${
                           selected
                             ? "border-border-strong"
                             : "border-border hover:border-border-strong"
