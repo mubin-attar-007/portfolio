@@ -7,12 +7,13 @@ import { routableNoteSlugs, loadNote, noteNeighbours } from "@/lib/notes";
 import { formatDate } from "@/lib/format";
 import { SITE } from "@/config/site";
 import { ArticleJsonLd } from "@/components/seo/json-ld";
-import { NewsletterForm } from "@/components/features/newsletter-form";
+import {
+  NewsletterForm,
+  NEWSLETTER_ENABLED,
+} from "@/components/features/newsletter-form";
 import { ArticleHeader } from "@/components/ui/article-header";
 import { ArticleFooter } from "@/components/ui/article-footer";
 import { ARTICLE_KICKER, ARTICLE_META } from "@/content/article";
-import { home } from "@/content/site";
-import { AuditLane } from "@/components/features/audit-lane";
 
 export const dynamicParams = false;
 
@@ -36,7 +37,16 @@ export async function generateMetadata({
     title: n.meta.title,
     description,
     alternates: { canonical: url },
-    openGraph: { type: "article", title: n.meta.title, description, url },
+    openGraph: {
+      type: "article",
+      siteName: SITE.name,
+      title: n.meta.title,
+      description,
+      url,
+      publishedTime: n.meta.date,
+      tags: n.meta.tags,
+      authors: [SITE.name],
+    },
   };
 }
 
@@ -93,24 +103,13 @@ export default async function NotePost({ params }: { params: Promise<{ slug: str
             ) : null,
           ]}
         />
-        <AuditLane
-          title="Audit lane"
-          items={[
-            ...home.proof.stats.map((stat) => ({
-              href: stat.href,
-              value: stat.value,
-              label: stat.label,
-            })),
-            { href: "/trust", label: "trust policy" },
-            { href: "/changelog", label: "changelog" },
-          ]}
-          className="mt-8"
-        />
         <div className="mt-10">{content}</div>
       </article>
-      <div className="mt-20 max-w-[var(--width-prose)] border-t border-border pt-8">
-        <NewsletterForm />
-      </div>
+      {NEWSLETTER_ENABLED ? (
+        <div className="mt-20 max-w-[var(--width-prose)] border-t border-border pt-8">
+          <NewsletterForm />
+        </div>
+      ) : null}
       <ArticleFooter collection="notes" previous={newer} next={older} />
     </Section>
   );

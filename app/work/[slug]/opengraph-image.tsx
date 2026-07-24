@@ -1,4 +1,4 @@
-import { renderOg, OG_SIZE, OG_CONTENT_TYPE } from "@/lib/og";
+import { formatOgEyebrow, renderOg, OG_SIZE, OG_CONTENT_TYPE } from "@/lib/og";
 import { projects, projectBySlug } from "@/content/projects";
 
 export const alt = "Case study — Mubin Attar";
@@ -23,7 +23,7 @@ export default async function OG({ params }: { params: Promise<{ slug: string }>
   const p = projectBySlug(slug);
   const category = CATEGORY[slug] ?? "case study";
   return renderOg({
-    eyebrow: `${category} · live`,
+    eyebrow: formatOgEyebrow(`${category} · live`),
     title: p?.title ?? "Case study",
     subtitle: p?.summary,
     footerRight: `/work/${slug}`,

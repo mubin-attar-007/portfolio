@@ -44,26 +44,21 @@ config. Accepted: a single source of truth is worth more than familiarity.
 
 ## No animation library
 
-**Decision.** Motion is CSS transitions and keyframes, plus exactly one
-`IntersectionObserver` in `components/features/reveal-observer.tsx` that adds a
-`.reveal-in` class. There is no framer-motion, no GSAP, no motion library of any
-kind in `package.json`.
+**Decision.** Motion is limited to short, interaction-triggered CSS transitions.
+There is no scroll-reveal observer, framer-motion, GSAP, or other motion library
+in the runtime.
 
-**Why.** Every motion this site actually needs — hover states, a fade-and-rise on
-scroll, a disclosure expand, a dashed diagram edge — is expressible in CSS. A
-motion library would add runtime JS to every page that uses it, for effects the
-platform already does on the compositor. The observer approach also degrades
-correctly: the hidden start state is gated behind `html.js`, so crawlers and
-no-JS visitors get fully visible content.
+**Why.** The motion the site needs — hover feedback, menu/panel entry, and
+disclosure expansion — is expressible in CSS. Content paints immediately rather
+than waiting for JavaScript and an intersection callback, which keeps the calm
+typography-first direction intact and removes a root client boundary.
 
 **Reduced motion is structural, not a patch.** `globals.css` collapses all
-animation and transition durations under `prefers-reduced-motion: reduce`, and
-the reveal and hero-rise rules are wrapped in `prefers-reduced-motion:
-no-preference` so reduced-motion users never receive a hidden start state that
-could fail to un-hide.
+transition durations under `prefers-reduced-motion: reduce`; no content begins
+hidden, so reduced-motion and no-JavaScript visitors receive the same information.
 
-**Cost.** Complex sequencing and interruptible spring physics are off the table.
-Nothing on this site needs them.
+**Cost.** Scroll choreography, complex sequencing, and spring physics are off
+the table. Nothing on this site needs them.
 
 ---
 

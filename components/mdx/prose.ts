@@ -104,6 +104,6 @@ export const PROSE = {
  */
 export const EVIDENCE_SPACING = "my-6";
 
-/** The shared evidence-block frame: hairline, large radius, quiet lift. */
+/** The shared evidence-block frame: hairline, large radius, flat surface. */
 export const EVIDENCE_FRAME =
-  "overflow-hidden rounded-[var(--radius-lg)] border border-border bg-surface shadow-[var(--shadow-sm)]";
+  "overflow-hidden rounded-[var(--radius-lg)] border border-border bg-surface";

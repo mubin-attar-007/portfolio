@@ -1,11 +1,12 @@
 "use client";
 
 import { Suspense, lazy, useCallback, useEffect, useState } from "react";
-import { ASSISTANT_LAUNCHER_ATTR } from "./mobile-assistant-launcher";
+import { Sparkles } from "lucide-react";
 
 const AssistantPanel = lazy(() =>
   import("./assistant-panel").then((m) => ({ default: m.AssistantPanel })),
 );
+const ASSISTANT_LAUNCHER_ATTR = "data-assistant-launcher";
 
 /**
  * Assistant — the "Ask about my work" launcher. Renders a quiet trigger and,
@@ -17,10 +18,8 @@ const AssistantPanel = lazy(() =>
 export function Assistant() {
   const [open, setOpen] = useState(false);
 
-  // This trigger is display:none below md, and focusing a display:none element
-  // silently strands focus on <body>. So restore to the first launcher that is
-  // actually rendered — getClientRects() rather than offsetParent, because the
-  // mobile launcher is position:fixed and always reports a null offsetParent.
+  // Restore to the launcher that is actually visible at the current breakpoint.
+  // getClientRects() is robust for both fixed and in-flow controls.
   const close = useCallback(() => {
     setOpen(false);
     const launchers = document.querySelectorAll<HTMLElement>(`[${ASSISTANT_LAUNCHER_ATTR}]`);
@@ -51,8 +50,7 @@ export function Assistant() {
       e.preventDefault();
       setOpen(true);
     };
-    // Mobile nav (and any other trigger) opens the assistant via this event,
-    // since the header trigger + "/" hotkey are desktop/keyboard only.
+    // Mobile nav (and any other trigger) can open the same panel via this event.
     const onOpen = () => setOpen(true);
     document.addEventListener("keydown", onKey);
     window.addEventListener("open-assistant", onOpen);
@@ -68,12 +66,15 @@ export function Assistant() {
         {...{ [ASSISTANT_LAUNCHER_ATTR]: "" }}
         type="button"
         onClick={() => setOpen(true)}
+        aria-expanded={open}
+        aria-controls={open ? "assistant-panel-dialog" : undefined}
         title="Friday — an AI assistant that answers only from this site's content (case studies, writing, résumé). Press ⌘K or / to open."
         aria-label="Ask Friday — an AI assistant grounded on this site. Press command-K or slash to open."
-        className="hidden items-center gap-2 rounded-[var(--radius-md)] border border-border-strong px-3 py-1.5 text-sm text-ink transition-colors hover:border-accent hover:text-accent md:inline-flex"
+        className="icon-btn inline-flex h-11 w-11 items-center justify-center rounded-[var(--radius-md)] text-ink-secondary hover:text-ink lg:h-auto lg:w-auto lg:gap-2 lg:border lg:border-border-strong lg:px-3 lg:py-1.5 lg:text-sm lg:text-ink lg:hover:border-accent"
       >
-        Ask Friday
-        <kbd className="rounded-[var(--radius-sm)] border border-border bg-bg-subtle px-1.5 font-mono text-[0.7rem] text-ink-tertiary">
+        <Sparkles size={18} strokeWidth={1.5} className="lg:hidden" aria-hidden />
+        <span className="hidden lg:inline">Ask Friday</span>
+        <kbd className="hidden rounded-[var(--radius-sm)] border border-border bg-bg-subtle px-1.5 font-mono text-[0.7rem] text-ink-tertiary lg:inline">
           ⌘K
         </kbd>
       </button>

@@ -126,7 +126,6 @@ export function SplitFeature({
   media,
   side = "right",
   tone = "page",
-  wash = false,
   space = "md",
   ariaLabel,
   className = "",
@@ -139,7 +138,6 @@ export function SplitFeature({
   media: ReactNode;
   side?: Side;
   tone?: "page" | "subtle" | "invert";
-  wash?: boolean;
   space?: "sm" | "md" | "lg";
   ariaLabel?: string;
   className?: string;
@@ -152,7 +150,6 @@ export function SplitFeature({
     <Section
       space={space}
       tone={tone}
-      wash={wash}
       bleed
       ariaLabel={ariaLabel}
       className={`overflow-x-clip ${className}`}

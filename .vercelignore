@@ -1,0 +1,9 @@
+.next
+.open-next
+dist
+node_modules
+.vercel
+.env*
+!.env.example
+.next-dev.log
+tsconfig.tsbuildinfo

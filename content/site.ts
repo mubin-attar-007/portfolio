@@ -11,7 +11,7 @@
 import { SITE } from "@/config/site";
 
 export const home = {
-  metaLine: "Mubin Attar · AI/ML Engineer · Ahmedabad, India",
+  metaLine: "Mubin Attar · AI Software Engineer · Ahmedabad, India",
   headline: "I build grounded AI systems — and show how they actually work.",
   // The hero lede is now CENTRED under the headline and capped at ~62ch, so it
   // has to resolve in two even lines — the previous four-line version read as a
@@ -28,7 +28,7 @@ export const home = {
     primary: "Read the flagship case study",
     secondary: "Get in touch",
   },
-  availability: "Open to AI/ML roles — remote or Ahmedabad, India.",
+  availability: "Open to AI software engineering roles — remote or Ahmedabad, India.",
   // A single quiet fact line — the facts survive; the hollow stat cards don't.
   facts: ["4 live products", "production AI since 2024", "$0 free-tier stack"],
 
@@ -298,7 +298,7 @@ export const home = {
     items: [
       {
         q: "Are you available for work?",
-        a: "Open to AI/ML roles — remote, or in Ahmedabad, India. The fastest way to reach me is email; I read and answer every one myself.",
+        a: "Open to AI software engineering roles — remote, or in Ahmedabad, India. The fastest way to reach me is email; I read and answer every one myself.",
       },
       {
         q: "How do you work?",
@@ -366,7 +366,7 @@ export const pages = {
       "A running notebook — short notes on the decisions behind the work: retrieval, evals, agents, and the infrastructure that keeps four products live.",
     feedCta: "RSS",
     feedHref: "/rss.xml",
-    crossCta: "Longer essays and guides",
+    crossCta: "Essays and implementation guides",
     crossHref: "/writing",
   },
 } as const;
@@ -375,7 +375,7 @@ export const about = {
   kicker: "About",
   headline: "Solo engineer, real products.",
   body: [
-    "I'm an AI/ML engineer — shipping software since 2022 and focused on production AI since 2024: GenAI/LLM applications, agentic and RAG systems, and predictive ML. I work across the stack: FastAPI, Next.js, Postgres, and Docker, with auth, CI/CD, and security hardening baked in.",
+    "I'm an AI software engineer — shipping software since 2022 and focused on production AI since 2024: GenAI/LLM applications, agentic and RAG systems, and predictive ML. I work across the stack: FastAPI, Next.js, Postgres, and Docker, with auth, CI/CD, and security hardening baked in.",
     "By day I build healthcare-AI automation at Sevina Technologies — clinical-compliance and reimbursement pipelines (constrained by HIPAA, so shown here only in the abstract). On my own time I ship live AI products on a $0 free-tier stack, which forces discipline: no waste, real engineering, shipped.",
     "The one rule across all of it: every number a user sees is genuinely computed — never faked.",
   ],

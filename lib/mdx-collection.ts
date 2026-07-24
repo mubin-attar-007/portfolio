@@ -91,7 +91,7 @@ export type MdxCollection<T extends CollectionMeta> = {
 /**
  * Build the loader for one MDX collection.
  *
- * @param dir     Directory relative to the repo root, e.g. "content/writing".
+ * @param dir     Directory relative to the content root, e.g. "writing".
  * @param schema  Zod schema for the collection's frontmatter. Parsed eagerly so
  *                an invalid file fails the build rather than rendering blank.
  */
@@ -99,7 +99,11 @@ export function createMdxCollection<T extends CollectionMeta>(
   dir: string,
   schema: Validator<T>,
 ): MdxCollection<T> {
-  const root = path.join(process.cwd(), dir);
+  // Keep the dynamic segment below a static content root. Besides preventing
+  // path traversal outside the content boundary, this lets Next's output-file
+  // tracer include only authored content instead of conservatively tracing the
+  // entire project.
+  const root = path.join(process.cwd(), "content", dir);
 
   const fileSlugs = (): string[] => {
     if (!fs.existsSync(root)) return [];
@@ -120,7 +124,9 @@ export function createMdxCollection<T extends CollectionMeta>(
     const source = sourceOf(slug);
     // The slug came from readdir, so this is unreachable short of a concurrent
     // delete — fail loudly rather than parsing an empty document.
-    if (source === null) throw new Error(`Missing MDX source: ${dir}/${slug}${MDX_EXTENSION}`);
+    if (source === null) {
+      throw new Error(`Missing MDX source: content/${dir}/${slug}${MDX_EXTENSION}`);
+    }
     const { frontmatter } = await compileMDX({ source, options: { parseFrontmatter: true } });
     return schema.parse({ ...(frontmatter as Record<string, unknown>), slug });
   };

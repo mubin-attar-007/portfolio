@@ -9,10 +9,8 @@ import { FOOTER_NAV } from "@/config/nav";
 /**
  * Footer — Clerk's footer anatomy adapted to a personal brand: an identity
  * column on the left (Clerk parks its logo there; we spend it on a serif
- * sign-off, one clear way to reach me, and the availability line), the complete
- * link map packed into tight adjacent columns on the right — NOT columns
- * scattered across the full container width, which is what made the old map
- * read sparse instead of ordered — then ONE hairline and a colophon bar.
+ * sign-off, one clear way to reach me, and the availability line), a concise
+ * hiring-oriented link map on the right, then ONE hairline and a colophon bar.
  * Like Clerk's, the footer carries no background of its own and no top border:
  * it is the quiet end of the page surface, separated by whitespace (and, on the
  * homepage, by the dark close's chamfered bottom seam).
@@ -49,10 +47,11 @@ export function Footer({ year }: { year: number }) {
           <div className="max-w-[40ch]">
             <Link
               href="/"
+              prefetch={false}
               className="inline-flex items-center gap-2 font-mono text-sm font-medium tracking-tight text-ink"
             >
               <BoundaryMark size={17} className="text-ink" />
-              {SITE.name.toLowerCase()}
+              {SITE.name}
             </Link>
             <p className="mt-5 font-serif text-2xl italic leading-snug text-ink">
               {FOOTER.signoff}
@@ -67,7 +66,7 @@ export function Footer({ year }: { year: number }) {
                 <ArrowUpRight
                   size={16}
                   strokeWidth={1.5}
-                  className="text-ink-tertiary transition-transform group-hover:-translate-y-0.5 group-hover:translate-x-0.5"
+                  className="text-ink-tertiary transition-colors duration-fast ease-[var(--ease-out)] group-hover:text-accent"
                   aria-hidden
                 />
               </a>
@@ -78,9 +77,9 @@ export function Footer({ year }: { year: number }) {
             </p>
           </div>
 
-          {/* The link map — grouped so nothing is orphaned (Explore · Me ·
-              Elsewhere), columns adjacent at Clerk's pitch instead of stretched
-              to the container's thirds. */}
+          {/* The link map is a shortlist, not a sitemap. Secondary profile and
+              process routes remain available contextually from the pages where
+              they make sense. */}
           <div className="grid grid-cols-2 gap-x-8 gap-y-10 sm:grid-cols-3 md:gap-x-14 lg:gap-x-16">
             {FOOTER_NAV.map((group) => (
               <nav key={group.heading} aria-label={group.heading}>
@@ -88,7 +87,7 @@ export function Footer({ year }: { year: number }) {
                 <ul className="mt-5 flex flex-col gap-2">
                   {group.links.map((l) => (
                     <li key={l.href}>
-                      <Link href={l.href} className={FOOTER_LINK}>
+                      <Link href={l.href} prefetch={false} className={FOOTER_LINK}>
                         {l.label}
                       </Link>
                     </li>
@@ -127,14 +126,15 @@ export function Footer({ year }: { year: number }) {
           </span>
           <span className="flex flex-wrap items-center gap-x-5 gap-y-1">
             <span>Built with Next.js, TypeScript &amp; Tailwind</span>
-            <a
-              href={SITE.socials.github}
-              target="_blank"
-              rel="noopener noreferrer"
-              className="transition-colors hover:text-ink"
-            >
-              GitHub
-            </a>
+            <Link href="/trust" prefetch={false} className="transition-colors hover:text-ink">
+              Trust
+            </Link>
+            <Link href="/changelog" prefetch={false} className="transition-colors hover:text-ink">
+              Changelog
+            </Link>
+            <Link href="/privacy" prefetch={false} className="transition-colors hover:text-ink">
+              Privacy
+            </Link>
             <a href="/llms.txt" className="transition-colors hover:text-ink">
               llms.txt
             </a>

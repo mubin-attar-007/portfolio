@@ -1,3 +1,5 @@
+import { ASSISTANT_DAILY_CAP } from "@/lib/env";
+
 // -----------------------------------------------------------------------------
 // In-memory sliding-window rate limiter, keyed by client IP.
 //
@@ -54,7 +56,7 @@ export type RateResult = {
 // -----------------------------------------------------------------------------
 
 /** Max Gemini generation calls per UTC day, per instance. Tuned to free-tier. */
-export const GEMINI_DAILY_BUDGET = 500;
+export const GEMINI_DAILY_BUDGET = ASSISTANT_DAILY_CAP;
 
 let dailyCount = 0;
 let dailyEpochDay = -1; // floor(now / 86_400_000); -1 forces first-call init

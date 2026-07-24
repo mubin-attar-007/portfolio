@@ -14,20 +14,22 @@ Root-level, no `src/`. The `@/*` path alias points at the repo root.
 | `app/` | Routes, layout, metadata, OG images, feeds, the one API route |
 | `components/ui/` | Primitives: button, card, callout, metric, code-block, tag, figure, pull-quote, section-heading, page-header, before-after, boundary-mark |
 | `components/layout/` | Container, section, header, footer, nav (desktop + mobile), logo |
-| `components/features/` | Interactive units: assistant, theme toggle, FAQ, reveal observer, copy buttons, list filters, hero terminal, capability grid |
-| `components/diagrams/` | `system-diagram.tsx` — a typed, hand-rolled SVG renderer; node/edge data in `diagrams/data/` |
+| `components/features/` | Focused feature units: assistant, theme toggle, FAQ, copy controls, archive filters, newsletter form, proof strip, and résumé download |
+| `components/diagrams/` | `system-diagram.tsx` — a typed SVG topology on wide screens and staged HTML map on narrow screens; shared node/edge data in `diagrams/data/` |
 | `components/mdx/` | MDX component map + MDX-only blocks (decision log, failure log) |
 | `components/case-studies/` | Per-project layout modules, one per project + a generic fallback |
 | `components/seo/` | JSON-LD structured data |
 | `content/` | All copy: MDX bodies, typed `.ts`/`.json` data, and `schema.ts` |
 | `lib/` | Content loaders (`writing`, `notes`, `now`), `format`, `og.tsx`, and `lib/ai/*` |
 | `config/` | `site.ts` (identity, URL, socials), `nav.ts` |
+| `constants/` | Shared page-shell class constants used across route templates |
 | `styles/` | `tokens.css` (design tokens), `globals.css` (base + effects) |
 | `scripts/` | `a11y.mjs` (axe gate), `build-resume-pdf.mts` |
 | `test/` | `node --test` suites over `lib/` and content schemas |
 
-There is no `constants/`, no `types/`, and no route group. Types live beside the
-code that owns them; constants sit at the top of their module.
+There is no general-purpose `types/` dumping ground and no route group. Domain
+types live beside the code that owns them; only cross-route page-shell values
+belong in `constants/`.
 
 ---
 
@@ -39,7 +41,7 @@ code that owns them; constants sit at the top of their module.
 | `/work`, `/work/[slug]` | static, `dynamicParams = false` |
 | `/writing`, `/writing/[slug]` | static, `dynamicParams = false` |
 | `/notes`, `/notes/[slug]` | static, `dynamicParams = false` |
-| `/about` `/hire` `/resume` `/timeline` `/now` `/uses` `/talks` `/evals` | static |
+| `/about` `/hire` `/resume` `/skills` `/timeline` `/now` `/uses` `/talks` `/evals` | static |
 | `/dev/components` | static kitchen sink, noindex |
 | `/sitemap.xml` `/robots.txt` | generated (`sitemap.ts`, `robots.ts`) |
 | `/rss.xml` `/writing/feed.xml` | `dynamic = "force-static"` |
@@ -145,9 +147,8 @@ The Gemini key is server-side only and is never logged, thrown, or returned.
   Newsreader (italic display) via `next/font/google`. Both are self-hosted at
   build, so no font request leaves the origin at runtime.
 - **Icons**: `lucide-react`, imported per icon.
-- **Animations**: CSS only, plus one `IntersectionObserver`
-  (`components/features/reveal-observer.tsx`) that adds `.reveal-in`. No
-  animation library is installed.
+- **Animations**: short, interaction-triggered CSS transitions only. Content
+  paints immediately; there is no root scroll observer or animation library.
 - **Security headers**: CSP and friends are set in `next.config.ts`.
 
 ---

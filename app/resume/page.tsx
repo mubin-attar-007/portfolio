@@ -4,24 +4,23 @@ import { Section } from "@/components/layout/section";
 import { PageHeader } from "@/components/ui/page-header";
 import { TextLink } from "@/components/ui/text-link";
 import { buttonVariants } from "@/components/ui/button";
-import { AuditLane } from "@/components/features/audit-lane";
+import { ResumeDownloadLink } from "@/components/features/resume-download-link";
 import { SITE } from "@/config/site";
 import { resume } from "@/content/resume";
-import { home } from "@/content/site";
 import { LABEL, PAGE_BODY_BAND, PAGE_HEADER_BAND, PANEL, PANEL_REST } from "@/constants/page";
 
 const RESUME_PATH = "/resume";
 
 export const metadata: Metadata = {
   title: "Résumé",
-  description: "Mubin Attar — AI/ML Engineer. Experience, skills, and education.",
+  description: "Mubin Attar — AI Software Engineer. Experience, skills, and education.",
   alternates: { canonical: `${SITE.url}${RESUME_PATH}` },
   openGraph: {
+    siteName: SITE.name,
     title: "Résumé — Mubin Attar",
-    description: "Mubin Attar — AI/ML Engineer. Experience, skills, and education.",
+    description: "Mubin Attar — AI Software Engineer. Experience, skills, and education.",
     url: `${SITE.url}${RESUME_PATH}`,
     type: "website",
-    images: [{ url: `${SITE.url}${RESUME_PATH}/opengraph-image.png` }],
   },
 };
 
@@ -29,7 +28,7 @@ export const metadata: Metadata = {
  * /resume — the same facts as /public/Mubin_Attar_Resume.pdf and LinkedIn, from
  * one source (content/resume.ts). Site, PDF and LinkedIn must never disagree.
  *
- * Design: the shared PageHeader on an `aurora` band carries the name as the h1
+ * Design: the shared PageHeader carries the name as the h1
  * (on a résumé the person IS the title), the role/location as its `meta` line,
  * and the PDF download as the primary action — so the thing a recruiter came for
  * is in the header rather than floated opposite it, which is where it used to sit
@@ -48,16 +47,16 @@ export const metadata: Metadata = {
 export default function ResumePage() {
   return (
     <>
-      <Section space="md" aurora className={PAGE_HEADER_BAND}>
+      <Section space="md" className={PAGE_HEADER_BAND}>
         <PageHeader
           kicker={resume.kicker}
           meta={`${SITE.role} · ${SITE.location}`}
           title={SITE.name}
           lede={resume.summary}
         >
-          <a href={resume.pdf} className={buttonVariants("primary")}>
+          <ResumeDownloadLink href={resume.pdf} className={buttonVariants("primary")}>
             {resume.download}
-          </a>
+          </ResumeDownloadLink>
           {/* `quiet`: the kicker's accent mark and the primary button have already
               spent this viewport's two-accent budget (DESIGN §9). */}
           <TextLink href={resume.cta.href} tone="quiet">
@@ -65,20 +64,6 @@ export default function ResumePage() {
           </TextLink>
         </PageHeader>
       </Section>
-
-      <AuditLane
-        title="Audit lane"
-        items={[
-          ...home.proof.stats.map((stat) => ({
-            href: stat.href,
-            value: stat.value,
-            label: stat.label,
-          })),
-          { href: "/trust", label: "trust policy" },
-          { href: "/changelog", label: "changelog" },
-        ]}
-        className="mt-8"
-      />
 
       <Section space="md" className={PAGE_BODY_BAND}>
         <div className="reveal grid gap-12 lg:grid-cols-[1fr_20rem] lg:gap-16">

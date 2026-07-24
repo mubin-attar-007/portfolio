@@ -1,10 +1,23 @@
-import { CS } from "./section";
+import { CS, type CaseStudySection } from "./section";
 import { SystemDiagram } from "@/components/diagrams/system-diagram";
 import { DecisionLog } from "@/components/mdx/decision-log";
 import { FailureLog } from "@/components/mdx/failure-log";
 import { MetricsTable } from "@/components/ui/metric";
 import { Callout } from "@/components/ui/callout";
 import { tradepulseDiagram } from "@/components/diagrams/data/tradepulse";
+
+export const TRADEPULSE_SECTIONS: readonly CaseStudySection[] = [
+  { id: "context", title: "Context" },
+  { id: "constraints", title: "Constraints" },
+  { id: "architecture", title: "System architecture" },
+  { id: "data-flow", title: "Data flow" },
+  { id: "key-decisions", title: "Key decisions" },
+  { id: "what-failed", title: "What failed" },
+  { id: "performance-cost", title: "Performance & cost" },
+  { id: "operations", title: "Operations" },
+  { id: "what-id-do-differently", title: "What I'd do differently" },
+  { id: "evidence", title: "Evidence" },
+] as const;
 
 /** TradePulse — case study authored from the real system. No invented numbers. */
 export function TradePulseBody() {

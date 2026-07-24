@@ -1,4 +1,4 @@
-import { CS } from "./section";
+import { CS, type CaseStudySection } from "./section";
 import { TextLink } from "@/components/ui/text-link";
 import { CodeBlock } from "@/components/ui/code-block";
 import { SystemDiagram } from "@/components/diagrams/system-diagram";
@@ -7,6 +7,19 @@ import { FailureLog } from "@/components/mdx/failure-log";
 import { MetricsTable } from "@/components/ui/metric";
 import { dbwhisperDiagram } from "@/components/diagrams/data/dbwhisper";
 import { evals } from "@/content/evals";
+
+export const DBWHISPER_SECTIONS: readonly CaseStudySection[] = [
+  { id: "context", title: "Context" },
+  { id: "constraints", title: "Constraints" },
+  { id: "architecture", title: "System architecture" },
+  { id: "data-flow", title: "Data flow" },
+  { id: "key-decisions", title: "Key decisions" },
+  { id: "what-failed", title: "What failed" },
+  { id: "performance-cost", title: "Performance & cost" },
+  { id: "operations", title: "Operations" },
+  { id: "what-id-do-differently", title: "What I'd do differently" },
+  { id: "evidence", title: "Evidence" },
+] as const;
 
 /**
  * DBWhisper — the flagship case study body, authored from the real system.

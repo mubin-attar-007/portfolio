@@ -2,48 +2,58 @@
 
 import Link from "next/link";
 import { usePathname } from "next/navigation";
+import { useState } from "react";
 import { NAV } from "@/config/nav";
+
+function NavLink({
+  href,
+  label,
+  active,
+}: {
+  href: string;
+  label: string;
+  active: boolean;
+}) {
+  const [intent, setIntent] = useState(false);
+
+  return (
+    <Link
+      href={href}
+      // These routes are static but several carry long case-study/article RSC
+      // payloads. Prefetch on demonstrated intent instead of downloading every
+      // visible destination during the initial Lighthouse/user visit.
+      prefetch={!active && intent ? null : false}
+      onMouseEnter={() => setIntent(true)}
+      onFocus={() => setIntent(true)}
+      aria-current={active ? "page" : undefined}
+      className={`text-sm font-medium transition-colors ${
+        active ? "text-accent" : "text-ink-secondary hover:text-ink"
+      }`}
+    >
+      {label}
+    </Link>
+  );
+}
 
 /**
  * NavLinks — desktop primary nav with an active state (the one accent this
- * region is allowed). A11y: `aria-current="page"` on the active route.
+ * region is allowed). Routes prefetch on pointer/keyboard intent, not merely
+ * because all five links entered the viewport. A11y: `aria-current="page"` on
+ * the active route.
  */
 export function NavLinks() {
   const pathname = usePathname();
   return (
-    <nav aria-label="Primary" className="hidden items-center gap-7 md:flex">
+    <nav aria-label="Primary" className="hidden items-center gap-7 lg:flex">
       {NAV.map((item) => {
         const active = pathname === item.href || pathname.startsWith(`${item.href}/`);
-        // "Hire me" is the conversion action for a hiring audience — promote it to
-        // a filled accent control so it clearly leads (the assistant keeps its own
-        // bordered pill; both stay, the hire action just ranks above it).
-        if (item.href === "/hire") {
-          return (
-            <Link
-              key={item.href}
-              href={item.href}
-              aria-current={active ? "page" : undefined}
-              // A pill CTA inside a pill bar — a 6px-radius key inside a fully
-              // rounded container reads as a mismatched part.
-              className="rounded-[var(--radius-pill)] bg-accent px-4 py-1.5 text-sm font-medium text-on-accent shadow-[var(--shadow-btn)] transition-colors hover:bg-accent-hover active:translate-y-px"
-            >
-              {item.label}
-            </Link>
-          );
-        }
         return (
-          <Link
+          <NavLink
             key={item.href}
             href={item.href}
-            aria-current={active ? "page" : undefined}
-            // font-medium at 14px: Clerk's nav sits a notch heavier than body
-            // text so it holds its own against the logo at small size.
-            className={`text-sm font-medium transition-colors ${
-              active ? "text-accent" : "text-ink-secondary hover:text-ink"
-            }`}
-          >
-            {item.label}
-          </Link>
+            label={item.label}
+            active={active}
+          />
         );
       })}
     </nav>

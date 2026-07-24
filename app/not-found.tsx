@@ -1,5 +1,12 @@
 import Link from "next/link";
 import { Section } from "@/components/layout/section";
+import type { Metadata } from "next";
+
+export const metadata: Metadata = {
+  title: "404 — Not Found",
+  description: "The page could not be found. Use one of these routes to continue.",
+  robots: { index: false, follow: true },
+};
 
 /**
  * 404 — one honest sentence + routes back into the site. Never a dead end.

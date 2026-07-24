@@ -6,7 +6,7 @@ import { createMdxCollection } from "@/lib/mdx-collection";
  * collection loader to this collection's directory and schema — draft handling,
  * validation, and sorting all live in lib/mdx-collection.ts.
  */
-const writing = createMdxCollection<WritingMeta>("content/writing", WritingSchema);
+const writing = createMdxCollection<WritingMeta>("writing", WritingSchema);
 
 /** Slugs of published essays, newest first. Excludes drafts everywhere. */
 export const publishedWritingSlugs = writing.publishedSlugs;

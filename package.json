@@ -5,16 +5,19 @@
   "scripts": {
     "dev": "next dev",
     "build": "next build",
+    "build:sites": "npm run build && opennextjs-cloudflare build --skipNextBuild && node scripts/stage-sites-build.mjs",
     "start": "next start",
     "lint": "eslint",
     "test": "node --disable-warning=MODULE_TYPELESS_PACKAGE_JSON --import ./test/alias-loader.mjs --test \"test/**/*.test.mts\"",
-    "test:a11y": "node scripts/a11y.mjs"
+    "test:a11y": "node scripts/a11y.mjs",
+    "test:metadata": "node scripts/lighthouse-budget.mjs --metadata-only",
+    "test:lighthouse": "node scripts/lighthouse-budget.mjs"
   },
   "dependencies": {
+    "@opennextjs/cloudflare": "^1.20.2",
     "@vercel/analytics": "^2.0.1",
-    "geist": "^1.7.2",
     "lucide-react": "^1.23.0",
-    "next": "16.2.10",
+    "next": "^16.2.11",
     "next-mdx-remote": "^6.0.0",
     "react": "19.2.4",
     "react-dom": "19.2.4",
@@ -28,9 +31,11 @@
     "@types/react-dom": "^19",
     "axe-core": "^4.12.1",
     "eslint": "^9",
-    "eslint-config-next": "16.2.10",
+    "eslint-config-next": "^16.2.11",
+    "lighthouse": "13.4.1",
     "playwright": "^1.61.1",
     "tailwindcss": "^4",
-    "typescript": "^5"
+    "typescript": "^5",
+    "wrangler": "^4.113.0"
   }
 }

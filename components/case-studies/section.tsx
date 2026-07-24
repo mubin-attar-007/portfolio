@@ -40,3 +40,8 @@ export function CS({ id, title, children }: { id: string; title: string; childre
     </section>
   );
 }
+
+export type CaseStudySection = {
+  id: string;
+  title: string;
+};

@@ -5,8 +5,7 @@ import { Section } from "@/components/layout/section";
 import { PageHeader } from "@/components/ui/page-header";
 import { SectionHeading } from "@/components/ui/section-heading";
 import { TextLink } from "@/components/ui/text-link";
-import { buttonVariants, ButtonGlyph } from "@/components/ui/button";
-import { AuditLane } from "@/components/features/audit-lane";
+import { buttonVariants } from "@/components/ui/button";
 import { ProofStrip } from "@/components/features/proof-strip";
 import { about, home } from "@/content/site";
 import { SITE } from "@/config/site";
@@ -17,23 +16,22 @@ const ABOUT_PATH = "/about";
 export const metadata: Metadata = {
   title: "About",
   description:
-    "Mubin Attar — AI/ML engineer. Who I am, how I think, and the one rule across all of it.",
+    "Mubin Attar — AI software engineer. Who I am, how I think, and the one rule across all of it.",
   alternates: { canonical: `${SITE.url}${ABOUT_PATH}` },
   openGraph: {
+    siteName: SITE.name,
     title: "About — Mubin Attar",
     description:
-      "Mubin Attar — AI/ML engineer. Who I am, how I think, and the one rule across all of it.",
+      "Mubin Attar — AI software engineer. Who I am, how I think, and the one rule across all of it.",
     url: `${SITE.url}${ABOUT_PATH}`,
     type: "website",
-    images: [{ url: `${SITE.url}${ABOUT_PATH}/opengraph-image.png` }],
   },
 };
 
 /**
  * /about — identity, then "how I think".
  *
- * Structure: the shared PageHeader on an `aurora` band (the same entrance every
- * route now opens with) beside a framed portrait → the honest proof strip → the
+ * Structure: the shared PageHeader beside a framed portrait → the honest proof strip → the
  * biography prose → the three principles (home.principles) as a hairline-divided
  * list rather than a card grid (DESIGN §9).
  *
@@ -57,7 +55,7 @@ export const metadata: Metadata = {
 export default function AboutPage() {
   return (
     <>
-      <Section space="md" aurora className={PAGE_HEADER_BAND}>
+      <Section space="md" className={PAGE_HEADER_BAND}>
         {/* `items-center` (not `items-start`): the portrait is shorter than the
             text column, and top-aligning it left a heavy block of white under the
             frame. Vertically centring the two is the split-layout rule the rest of
@@ -66,7 +64,6 @@ export default function AboutPage() {
           <div className="min-w-0">
             <PageHeader kicker={about.kicker} title={about.headline} lede={about.body[0]}>
               <Link href="/hire" className={buttonVariants("primary")}>
-                <ButtonGlyph />
                 {about.ctas.primary}
               </Link>
               <Link href="/resume" className={buttonVariants("secondary")}>
@@ -103,19 +100,6 @@ export default function AboutPage() {
 
       {/* Honest proof anchor — the same credibility strip as the home page. */}
       <ProofStrip />
-      <AuditLane
-        title="Audit lane"
-        items={[
-          ...home.proof.stats.map((stat) => ({
-            href: stat.href,
-            value: stat.value,
-            label: stat.label,
-          })),
-          { href: "/trust", label: "trust policy" },
-          { href: "/changelog", label: "changelog" },
-        ]}
-        className="mt-8"
-      />
 
       <Section space="md" className={PAGE_BODY_BAND}>
         {/* The rest of the biography. It sits BELOW the proof strip rather than in

@@ -51,34 +51,24 @@ export const PAGE_BODY_BAND = "!pt-[var(--space-section-xs)]";
 /**
  * One panel treatment for the whole site: surface fill, hairline, `radius-md`.
  *
- * Elevation is deliberately NOT baked in. Two `shadow-[…]` utilities on one
- * element resolve by generated-stylesheet order rather than by class order, so a
- * panel wanting --shadow-md could not reliably override a --shadow-sm bundled in
- * here. Each call site states its own elevation with one of the two constants
- * below. (Same split /hire arrived at; hoisted here so the six utility routes
- * share the definition instead of re-deriving it.)
+ * Static panels stay flat: hierarchy comes from surface, border, spacing, and
+ * type. Elevation belongs to true overlays only (DESIGN §1.5).
  */
 export const PANEL = "rounded-[var(--radius-md)] border border-border bg-surface p-6 sm:p-7";
 
-/** Resting elevation for a supporting panel — present, not asserting. */
-export const PANEL_REST = "shadow-[var(--shadow-sm)]";
-
-/**
- * Clerk's measured card shadow (hairline ring + tight contact + wide soft drop).
- * Reserved for the panel a band actually exists to produce, so that depth still
- * carries information when it appears.
- */
-export const PANEL_RAISED = "shadow-[var(--shadow-md)]";
+/** Compatibility aliases while page call sites converge on the flat panel. */
+export const PANEL_REST = "";
+export const PANEL_RAISED = "";
 
 /**
  * A framed figure — an image or product surface that must read as a deliberate
  * object rather than as a picture floating on the page. `radius-lg` (12px) is the
- * token for figures, one step above the 6px used by cards and controls.
+ * figure token.
  * `overflow-hidden` is load-bearing: without it a child image's square corners
  * paint over the frame's rounded ones.
  */
 export const FIGURE =
-  "overflow-hidden rounded-[var(--radius-lg)] border border-border bg-surface shadow-[var(--shadow-md)]";
+  "overflow-hidden rounded-[var(--radius-lg)] border border-border bg-surface";
 
 /**
  * The small mono label that titles a group inside a band (Experience, Skills,

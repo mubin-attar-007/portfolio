@@ -3,33 +3,31 @@ import { Section } from "@/components/layout/section";
 import { PageHeader } from "@/components/ui/page-header";
 import { SectionHeading } from "@/components/ui/section-heading";
 import { TextLink } from "@/components/ui/text-link";
-import { AuditLane } from "@/components/features/audit-lane";
 import { LABEL, PAGE_BODY_BAND, PAGE_HEADER_BAND, PANEL, PANEL_RAISED, stagger } from "@/constants/page";
 import { changelog } from "@/content/site";
-import { home } from "@/content/site";
 import { SITE } from "@/config/site";
 
 const CHANGELOG_PATH = "/changelog";
 
 export const metadata: Metadata = {
-  title: "Changelog | Mubin Attar",
+  title: "Changelog",
   description:
     "Chronological updates for portfolio changes, launches, and engineering decisions.",
   alternates: { canonical: `${SITE.url}${CHANGELOG_PATH}` },
   openGraph: {
+    siteName: SITE.name,
     title: "Changelog — Mubin Attar",
     description:
       "Chronological updates for portfolio changes, launches, and engineering decisions.",
     url: `${SITE.url}${CHANGELOG_PATH}`,
     type: "website",
-    images: [{ url: `${SITE.url}${CHANGELOG_PATH}/opengraph-image.png` }],
   },
 };
 
 export default function ChangelogPage() {
   return (
     <>
-      <Section space="md" aurora className={PAGE_HEADER_BAND}>
+      <Section space="md" className={PAGE_HEADER_BAND}>
         <PageHeader
           kicker={changelog.kicker}
           title={changelog.title}
@@ -41,20 +39,6 @@ export default function ChangelogPage() {
           <TextLink href="/hire">Need this level of rigor on your team?</TextLink>
         </PageHeader>
       </Section>
-      <AuditLane
-        title="Audit lane"
-        items={[
-          ...home.proof.stats.map((stat) => ({
-            href: stat.href,
-            value: stat.value,
-            label: stat.label,
-          })),
-          { href: "/trust", label: "trust policy" },
-          { href: "/changelog", label: "changelog" },
-        ]}
-        className="mt-8"
-      />
-
       <Section space="md" className={PAGE_BODY_BAND}>
         <SectionHeading kicker="Release history" size="compact">
           What changed, when, and why

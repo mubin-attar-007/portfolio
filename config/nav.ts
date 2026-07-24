@@ -4,42 +4,38 @@ export const NAV = [
   { label: "Writing", href: "/writing" },
   { label: "Notes", href: "/notes" },
   { label: "About", href: "/about" },
-  { label: "Hire me", href: "/hire" },
-  { label: "Trust", href: "/trust" },
-  { label: "Changelog", href: "/changelog" },
+  { label: "Contact", href: "/hire" },
 ] as const;
-// Note: Evals remains in the footer + homepage measured band; header includes
-// Trust/Changelog as flagship trust surfaces.
+// Evals, Trust, and Changelog remain discoverable without competing with the
+// primary hiring path. They are supporting proof surfaces, not wayfinding.
 
 export type NavItem = (typeof NAV)[number];
 
 /**
- * Footer navigation — the complete site map, grouped so nothing is orphaned.
- * "Explore" is the work/writing surface; "Me" is the person + how to reach them.
- * The header carries only the five primary items; the footer carries everything.
+ * Footer navigation — a deliberate shortlist, not a second sitemap.
+ *
+ * Skills and Uses are supporting reference routes; Timeline is already linked
+ * contextually from About. Keeping those pages out of the global footer removes
+ * three competing versions of the same profile story without deleting content.
+ * Talks stays unpromoted until it has a real entry.
  */
 export const FOOTER_NAV = [
   {
     heading: "Explore",
     links: [
       { label: "Work", href: "/work" },
+      { label: "Evals", href: "/evals" },
       { label: "Writing", href: "/writing" },
       { label: "Notes", href: "/notes" },
-      { label: "Now", href: "/now" },
-      { label: "Evals", href: "/evals" },
-      { label: "Trust", href: "/trust" },
-      { label: "Changelog", href: "/changelog" },
     ],
   },
   {
-    heading: "Me",
+    heading: "Profile",
     links: [
       { label: "About", href: "/about" },
       { label: "Résumé", href: "/resume" },
-      { label: "Timeline", href: "/timeline" },
-      { label: "Uses", href: "/uses" },
-      { label: "Talks", href: "/talks" },
-      { label: "Hire me", href: "/hire" },
+      { label: "Now", href: "/now" },
+      { label: "Contact", href: "/hire" },
     ],
   },
 ] as const;

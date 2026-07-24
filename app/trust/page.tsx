@@ -4,25 +4,24 @@ import { Section } from "@/components/layout/section";
 import { PageHeader } from "@/components/ui/page-header";
 import { SectionHeading } from "@/components/ui/section-heading";
 import { TextLink } from "@/components/ui/text-link";
-import { AuditLane } from "@/components/features/audit-lane";
-import { LABEL, PAGE_BODY_BAND, PAGE_HEADER_BAND, PANEL, PANEL_RAISED, stagger } from "@/constants/page";
-import { home, trust } from "@/content/site";
+import { LABEL, PAGE_BODY_BAND, PAGE_HEADER_BAND, PANEL, stagger } from "@/constants/page";
+import { trust } from "@/content/site";
 import { SITE } from "@/config/site";
 
 const TRUST_PATH = "/trust";
 
 export const metadata: Metadata = {
-  title: "Trust | Mubin Attar",
+  title: "Trust",
   description:
     "Evidence-first trust page for Mubin Attar: safety controls, engineering discipline, and quality standards.",
   alternates: { canonical: `${SITE.url}${TRUST_PATH}` },
   openGraph: {
+    siteName: SITE.name,
     title: "Trust — Mubin Attar",
     description:
       "Evidence-first trust page for Mubin Attar: safety controls, engineering discipline, and quality standards.",
     url: `${SITE.url}${TRUST_PATH}`,
     type: "website",
-    images: [{ url: `${SITE.url}${TRUST_PATH}/opengraph-image.png` }],
   },
 };
 
@@ -35,7 +34,7 @@ const TRUST_METRICS = [
 export default function TrustPage() {
   return (
     <>
-      <Section space="md" aurora className={PAGE_HEADER_BAND}>
+      <Section space="md" className={PAGE_HEADER_BAND}>
         <PageHeader
           kicker={trust.kicker}
           title={trust.title}
@@ -47,33 +46,21 @@ export default function TrustPage() {
           <TextLink href="/hire">Talk about trust in production</TextLink>
         </PageHeader>
       </Section>
-      <AuditLane
-        title="Audit lane"
-        items={[
-          ...home.proof.stats.map((stat) => ({
-            href: stat.href,
-            value: stat.value,
-            label: stat.label,
-          })),
-          { href: "/trust", label: "trust policy" },
-          { href: "/changelog", label: "changelog" },
-        ]}
-        className="mt-8"
-      />
-
       <Section space="md" className={PAGE_BODY_BAND}>
-        <div className="reveal-stagger grid gap-4 md:grid-cols-3">
+        <dl className="divide-y divide-border border-y border-border">
           {TRUST_METRICS.map((metric, i) => (
-            <article
+            <div
               key={metric.value}
-              className={`${PANEL} ${PANEL_RAISED} reveal`}
+              className="grid gap-2 py-5 sm:grid-cols-[8rem_1fr] sm:items-baseline sm:gap-8"
               style={stagger(i + 1)}
             >
-              <p className={LABEL}>{metric.label} {i + 1}</p>
-              <p className="mt-2 text-sm leading-6 text-ink-secondary">{metric.value}</p>
-            </article>
+              <dt className={LABEL}>
+                {metric.label} {i + 1}
+              </dt>
+              <dd className="text-sm leading-6 text-ink-secondary">{metric.value}</dd>
+            </div>
           ))}
-        </div>
+        </dl>
 
         <div className="mt-16">
           <SectionHeading kicker="Operating principles" size="compact">
@@ -84,7 +71,7 @@ export default function TrustPage() {
             {trust.principles.map((principle, i) => (
               <article
                 key={principle.title}
-                className={`${PANEL} bg-bg-subtle reveal transition-all duration-fast ease-[var(--ease-out)] hover:-translate-y-0.5`}
+                className={`${PANEL} bg-bg-subtle reveal transition-colors duration-fast ease-[var(--ease-out)] hover:border-border-strong`}
                 style={stagger(i + 1)}
               >
                 <h3 className="text-base font-semibold text-ink">{principle.title}</h3>
@@ -105,7 +92,7 @@ export default function TrustPage() {
             {trust.controls.map((group, i) => (
               <article
                 key={group.title}
-                className="rounded-[var(--radius-md)] border-l-[length:var(--stripe-width)] border-l-ink py-1 transition-[border-color,transform] duration-fast hover:border-l-accent hover:-translate-x-0.5"
+                className="rounded-[var(--radius-md)] border-l-[length:var(--stripe-width)] border-l-ink py-1 transition-colors duration-fast hover:border-l-accent"
                 style={stagger(i + 1)}
               >
                 <div className="border border-border/80 bg-surface p-6">

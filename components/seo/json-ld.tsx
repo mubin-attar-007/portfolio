@@ -1,10 +1,26 @@
 import { SITE } from "@/config/site";
 
+type ProjectLinkMap = {
+  live?: string;
+  repo?: string;
+};
+
 /** Serialize a JSON-LD graph into an inert <script>. */
 function LdScript({ data }: { data: unknown }) {
   return (
     <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: JSON.stringify(data) }} />
   );
+}
+
+function yearFromTimeline(timeline: string): string | undefined {
+  const match = timeline.match(/\b(19|20)\d{2}\b/);
+  return match ? `${match[0]}-01-01` : undefined;
+}
+
+function safeIsoDate(value?: string): string | undefined {
+  if (!value) return undefined;
+  const parsed = new Date(value);
+  return Number.isNaN(parsed.valueOf()) ? undefined : parsed.toISOString().slice(0, 10);
 }
 
 /**
@@ -38,6 +54,65 @@ export function ArticleJsonLd({
         author: { "@type": "Person", name: SITE.name, url: SITE.url },
         publisher: { "@id": `${SITE.url}/#person` },
         inLanguage: "en",
+      }}
+    />
+  );
+}
+
+/**
+ * ProjectJsonLd — CreativeWork structured data for a case-study page.
+ * Kept lightweight and factual: only fields that map to verifiable source
+ * values are emitted, with timeline fallback for dates.
+ */
+export function ProjectJsonLd({
+  title,
+  description,
+  url,
+  timeline,
+  role,
+  systems,
+  links,
+  changelog,
+}: {
+  title: string;
+  description: string;
+  url: string;
+  timeline: string;
+  role: string;
+  systems: string[];
+  links: ProjectLinkMap;
+  changelog?: { date: string; summary: string }[];
+}) {
+  const dateCreated = yearFromTimeline(timeline);
+  const dateModified = safeIsoDate(changelog?.[0]?.date) ?? dateCreated;
+
+  return (
+    <LdScript
+      data={{
+        "@context": "https://schema.org",
+        "@type": "CreativeWork",
+        "@id": url,
+        name: title,
+        description,
+        url,
+        inLanguage: "en",
+        keywords: systems.join(", "),
+        text: role,
+        author: {
+          "@type": "Person",
+          "@id": `${SITE.url}/#person`,
+          name: SITE.name,
+          url: SITE.url,
+        },
+        creator: {
+          "@type": "Person",
+          "@id": `${SITE.url}/#person`,
+          name: SITE.name,
+          url: SITE.url,
+        },
+        dateCreated,
+        dateModified,
+        sameAs: [links.live, links.repo].filter(Boolean),
       }}
     />
   );

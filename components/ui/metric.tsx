@@ -1,4 +1,5 @@
 import type { ReactNode } from "react";
+import Link from "next/link";
 import { deltaArrow, deltaTone, type DeltaTone, type MetricDirection } from "@/lib/format";
 
 /**
@@ -19,12 +20,14 @@ export function Metric({
   before,
   direction = "down-good",
   method,
+  methodHref,
 }: {
   label: string;
   after: string;
   before?: string;
   direction?: MetricDirection;
   method?: string;
+  methodHref?: string;
 }) {
   const tone = deltaTone(before, after, direction);
   return (
@@ -38,7 +41,18 @@ export function Metric({
         ) : null}
       </div>
       <figcaption className="text-sm text-ink-secondary">{label}</figcaption>
-      {method ? <p className="max-w-[52ch] text-xs text-ink-tertiary">Method: {method}</p> : null}
+      {method ? (
+        <p className="max-w-[52ch] text-xs text-ink-tertiary">
+          Method:{" "}
+          {methodHref ? (
+            <Link href={methodHref} className="link-underline text-ink-secondary">
+              {method}
+            </Link>
+          ) : (
+            method
+          )}
+        </p>
+      ) : null}
     </figure>
   );
 }

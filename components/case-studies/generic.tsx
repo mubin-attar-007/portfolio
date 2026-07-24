@@ -1,5 +1,11 @@
 import { CS } from "./section";
+import type { CaseStudySection } from "./section";
 import type { Project } from "@/content/schema";
+
+export const GENERIC_CASE_STUDY_SECTIONS: readonly CaseStudySection[] = [
+  { id: "systems", title: "Systems" },
+  { id: "write-up", title: "Full write-up" },
+];
 
 /**
  * GenericBody — the honest interim body for a project without a full write-up

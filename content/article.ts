@@ -25,6 +25,13 @@ export const PROJECT_STATUS_LABEL: Record<Project["status"], string> = {
 /** Kickers that name what KIND of page the reader has landed on. */
 export const ARTICLE_KICKER = {
   note: "Note",
+  writing: (
+    category: "essay" | "guide" | "note",
+    readingMinutes: number,
+  ) =>
+    `${readingMinutes === 1 ? "Brief " : ""}${
+      { essay: "Essay", guide: "Guide", note: "Note" }[category]
+    }`,
 } as const;
 
 export const ARTICLE_META = {

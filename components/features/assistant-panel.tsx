@@ -1,6 +1,6 @@
 "use client";
 
-import { useCallback, useEffect, useRef, useState } from "react";
+import { useCallback, useEffect, useId, useRef, useState } from "react";
 import { createPortal } from "react-dom";
 import { X } from "lucide-react";
 
@@ -31,7 +31,7 @@ type Msg = {
 
 /**
  * A short, honest label for a non-live turn — so the UI never dresses a
- * rate-limit or input prompt up as a retrieved answer. Live answers get none.
+ * rate-limit or input prompt as a retrieved answer. Live answers get none.
  * "from site search" is shown only when the turn actually carries retrieved
  * citations (the graceful FAQ fallback), keyed off real sources, not a guess.
  */
@@ -101,7 +101,7 @@ function tabbables(root: HTMLElement): HTMLElement[] {
     root.querySelectorAll<HTMLElement>(
       'a[href],button:not([disabled]),textarea:not([disabled]),[tabindex]:not([tabindex="-1"])',
     ),
-  ).filter((el) => el.offsetParent !== null);
+  ).filter((el) => el.getClientRects().length > 0);
 }
 
 export function AssistantPanel({ onClose }: { onClose: () => void }) {
@@ -111,6 +111,52 @@ export function AssistantPanel({ onClose }: { onClose: () => void }) {
   const panelRef = useRef<HTMLDivElement>(null);
   const inputRef = useRef<HTMLTextAreaElement>(null);
   const logRef = useRef<HTMLDivElement>(null);
+  const messagesRef = useRef<Msg[]>([]);
+  const mountedRef = useRef(true);
+  const dialogTitleId = useId();
+  const dialogDescId = useId();
+  const chatLogId = useId();
+  const streamingIndexRef = useRef<number | null>(null);
+  const streamingTextRef = useRef("");
+  const streamFrameRef = useRef<number | null>(null);
+  const activeRequestRef = useRef<AbortController | null>(null);
+
+  const updateStreamingMessage = useCallback((patch: Partial<Msg>) => {
+    const idx = streamingIndexRef.current;
+    if (idx === null) return;
+    setMessages((prev) => {
+      const next = [...prev];
+      const message = next[idx];
+      if (!message) return prev;
+      next[idx] = { ...message, ...patch };
+      return next;
+    });
+  }, []);
+
+  const flushStreamingMessage = useCallback(
+    (patch: Partial<Msg> = {}) => {
+      if (streamFrameRef.current !== null) {
+        cancelAnimationFrame(streamFrameRef.current);
+        streamFrameRef.current = null;
+      }
+      updateStreamingMessage({
+        content: streamingTextRef.current,
+        ...patch,
+      });
+    },
+    [updateStreamingMessage],
+  );
+
+  const scheduleStreamingMessage = useCallback(() => {
+    if (streamFrameRef.current !== null) {
+      return;
+    }
+    streamFrameRef.current = requestAnimationFrame(() => {
+      streamFrameRef.current = null;
+      if (!mountedRef.current) return;
+      updateStreamingMessage({ content: streamingTextRef.current });
+    });
+  }, [updateStreamingMessage]);
 
   // Single close path: Escape, the X button, and the backdrop all call the
   // owner's `onClose`, which unmounts the panel AND restores focus to a visible
@@ -119,7 +165,9 @@ export function AssistantPanel({ onClose }: { onClose: () => void }) {
   //
   // focus the input on open; trap focus + Escape while open
   useEffect(() => {
-    const t = setTimeout(() => inputRef.current?.focus(), 30);
+    const raf = requestAnimationFrame(() => {
+      inputRef.current?.focus();
+    });
     const onKey = (e: KeyboardEvent) => {
       if (e.key === "Escape") {
         e.preventDefault();
@@ -127,6 +175,9 @@ export function AssistantPanel({ onClose }: { onClose: () => void }) {
         return;
       }
       if (e.key === "Tab" && panelRef.current) {
+        // The assistant changes its interactive controls as a conversation
+        // starts and the submit button enables/disables. Recompute the live
+        // tab order instead of trapping focus against detached controls.
         const items = tabbables(panelRef.current);
         if (items.length === 0) return;
         const first = items[0]!;
@@ -142,7 +193,14 @@ export function AssistantPanel({ onClose }: { onClose: () => void }) {
     };
     document.addEventListener("keydown", onKey);
     return () => {
-      clearTimeout(t);
+      cancelAnimationFrame(raf);
+      if (streamFrameRef.current) {
+        cancelAnimationFrame(streamFrameRef.current);
+        streamFrameRef.current = null;
+      }
+      if (activeRequestRef.current) {
+        activeRequestRef.current.abort();
+      }
       document.removeEventListener("keydown", onKey);
     };
   }, [onClose]);
@@ -150,10 +208,28 @@ export function AssistantPanel({ onClose }: { onClose: () => void }) {
   // autoscroll the transcript as tokens arrive (not on the empty state, which
   // would shove the starter questions out of view)
   useEffect(() => {
+    messagesRef.current = messages;
     if (messages.length === 0) return;
     const el = logRef.current;
     if (el) el.scrollTop = el.scrollHeight;
   }, [messages]);
+
+  useEffect(
+    () => () => {
+      mountedRef.current = false;
+      if (activeRequestRef.current) {
+        activeRequestRef.current.abort();
+        activeRequestRef.current = null;
+      }
+      if (streamFrameRef.current) {
+        cancelAnimationFrame(streamFrameRef.current);
+        streamFrameRef.current = null;
+      }
+      streamingIndexRef.current = null;
+      streamingTextRef.current = "";
+    },
+    [],
+  );
 
   // collapse the input back to one line once it's cleared (after send)
   useEffect(() => {
@@ -164,17 +240,23 @@ export function AssistantPanel({ onClose }: { onClose: () => void }) {
     async (question: string) => {
       const q = question.trim();
       if (!q || busy) return;
-      setBusy(true);
-      const history: Msg[] = [...messages, { role: "user", content: q }];
-      setMessages([...history, { role: "assistant", content: "", streaming: true }]);
 
-      const update = (patch: Partial<Msg>) =>
-        setMessages((prev) => {
-          const next = [...prev];
-          const last = next[next.length - 1]!; // an assistant message was just appended
-          next[next.length - 1] = { ...last, ...patch };
-          return next;
-        });
+      const history: Msg[] = [...messagesRef.current, { role: "user", content: q }];
+      setMessages((prev) => {
+        const next: Msg[] = [
+          ...prev,
+          { role: "user", content: q },
+          { role: "assistant", content: "", streaming: true },
+        ];
+        streamingIndexRef.current = next.length - 1;
+        streamingTextRef.current = "";
+        return next;
+      });
+      setBusy(true);
+
+      const update = (patch: Partial<Msg>) => updateStreamingMessage({ ...patch });
+      const controller = new AbortController();
+      activeRequestRef.current = controller;
 
       try {
         const res = await fetch("/api/chat", {
@@ -183,6 +265,7 @@ export function AssistantPanel({ onClose }: { onClose: () => void }) {
           body: JSON.stringify({
             messages: history.map((m) => ({ role: m.role, content: m.content })),
           }),
+          signal: controller.signal,
         });
         // The rate limiter answers 429 + Retry-After, not a stream — surface the
         // real wait instead of letting the body reader fail into the generic
@@ -201,7 +284,8 @@ export function AssistantPanel({ onClose }: { onClose: () => void }) {
         if (!reader) throw new Error("no stream");
         const decoder = new TextDecoder();
         let buffer = "";
-        let text = "";
+        streamingTextRef.current = "";
+
         for (;;) {
           const { done, value } = await reader.read();
           if (done) break;
@@ -219,18 +303,24 @@ export function AssistantPanel({ onClose }: { onClose: () => void }) {
               });
             } else if (event === "token") {
               if (typeof data.text === "string") {
-                text += data.text;
-                update({ content: text });
+                streamingTextRef.current = `${streamingTextRef.current}${data.text}`;
+                scheduleStreamingMessage();
               }
             } else if (event === "sources") {
               update({ sources: asSources(data.citations) });
             } else if (event === "done") {
+              flushStreamingMessage();
               update({ streaming: false });
             }
           }
         }
-        update({ streaming: false });
-      } catch {
+        flushStreamingMessage({ streaming: false });
+      } catch (error) {
+        if (!mountedRef.current) return;
+        if (error instanceof DOMException && error.name === "AbortError") {
+          return;
+        }
+        flushStreamingMessage();
         update({
           content:
             "The assistant is resting. Everything it would say is on the page — try the work and writing.",
@@ -238,44 +328,72 @@ export function AssistantPanel({ onClose }: { onClose: () => void }) {
           mode: "fallback",
         });
       } finally {
-        setBusy(false);
+        if (streamFrameRef.current) {
+          cancelAnimationFrame(streamFrameRef.current);
+          streamFrameRef.current = null;
+        }
+        if (activeRequestRef.current === controller) {
+          activeRequestRef.current = null;
+        }
+        streamingIndexRef.current = null;
+        streamingTextRef.current = "";
+        if (mountedRef.current) {
+          setBusy(false);
+        }
       }
     },
-    [busy, messages],
+    [busy, flushStreamingMessage, scheduleStreamingMessage, updateStreamingMessage],
   );
 
   const empty = messages.length === 0;
+  const statusText = busy ? "Friday is generating a response." : "Friday is ready.";
 
   // Portal to <body>: the header pill has backdrop-filter, which would otherwise
   // make it the containing block for this fixed panel and mis-anchor it.
   return createPortal(
     <>
-      <div className="fixed inset-0 z-50 bg-ink/15" onClick={onClose} aria-hidden />
+      <div className="fixed inset-0 z-50 bg-ink/15" onClick={onClose} aria-hidden="true" />
       <div
+        id="assistant-panel-dialog"
         ref={panelRef}
         role="dialog"
         aria-modal="true"
-        aria-label="Ask about Mubin's work"
+        aria-labelledby={dialogTitleId}
+        aria-describedby={dialogDescId}
         className="fixed inset-x-0 bottom-0 z-50 flex h-[85dvh] flex-col overflow-hidden rounded-t-[var(--radius-lg)] border border-border bg-surface shadow-[var(--shadow-overlay)] sm:inset-x-auto sm:bottom-6 sm:right-6 sm:h-[min(38rem,calc(100dvh-6rem))] sm:w-[408px] sm:rounded-[var(--radius-lg)]"
       >
         <header className="flex items-center justify-between border-b border-border px-5 py-3">
-          <div>
-            <p className="text-sm font-medium text-ink">Friday</p>
+            <div>
+            <p id={dialogTitleId} className="text-sm font-medium text-ink">
+              Ask about my work
+            </p>
             <p className="font-mono text-xs text-ink-tertiary">
               BM25 keyword search over my case studies, writing &amp; résumé
+            </p>
+            <p id={dialogDescId} className="sr-only">
+              Use this panel to ask questions about case studies, writing, and résumé details. Press Escape
+              to close.
             </p>
           </div>
           <button
             type="button"
             onClick={onClose}
             aria-label="Close"
-            className="inline-flex h-8 w-8 items-center justify-center rounded-[var(--radius-md)] text-ink-secondary hover:text-ink"
+            className="inline-flex h-11 w-11 items-center justify-center rounded-[var(--radius-md)] text-ink-secondary hover:text-ink"
           >
-            <X size={18} strokeWidth={1.5} />
+            <X size={18} strokeWidth={1.5} aria-hidden />
           </button>
         </header>
 
-        <div ref={logRef} className="flex-1 overflow-y-auto px-5 py-4">
+        <div
+          ref={logRef}
+          id={chatLogId}
+          className="flex-1 overflow-y-auto px-5 py-4"
+          role="log"
+          aria-live="polite"
+          aria-relevant="additions text"
+          aria-atomic="true"
+        >
           {empty ? (
             <div>
               <p className="text-sm leading-relaxed text-ink-secondary">
@@ -291,7 +409,7 @@ export function AssistantPanel({ onClose }: { onClose: () => void }) {
                     <button
                       type="button"
                       onClick={() => ask(s)}
-                      className="w-full rounded-[var(--radius-md)] border border-border bg-bg-subtle px-3 py-2 text-left text-sm text-ink transition-colors hover:border-border-strong"
+                      className="min-h-11 w-full rounded-[var(--radius-md)] border border-border bg-bg-subtle px-3 py-2 text-left text-sm text-ink transition-colors hover:border-border-strong"
                     >
                       {s}
                     </button>
@@ -313,12 +431,11 @@ export function AssistantPanel({ onClose }: { onClose: () => void }) {
                     ) : null}
                     <div
                       className="whitespace-pre-wrap text-sm leading-relaxed text-ink-secondary"
-                      aria-live="polite"
                       aria-busy={m.streaming || undefined}
                     >
                       {m.content}
                       {m.streaming && !m.content ? (
-                        <span className="font-mono text-xs text-ink-tertiary" aria-label="Searching">
+                        <span className="font-mono text-xs text-ink-tertiary">
                           searching<span className="motion-safe:animate-pulse">…</span>
                         </span>
                       ) : null}
@@ -342,14 +459,15 @@ export function AssistantPanel({ onClose }: { onClose: () => void }) {
           )}
         </div>
 
-        <form
-          onSubmit={(e) => {
-            e.preventDefault();
-            ask(draft);
-            setDraft("");
-          }}
-          className="flex items-end gap-2 border-t border-border px-5 py-3"
-        >
+            <form
+              onSubmit={(e) => {
+                e.preventDefault();
+                ask(draft);
+                setDraft("");
+              }}
+              aria-label="Ask Friday a question"
+              className="flex items-end gap-2 border-t border-border px-5 py-3"
+            >
           <textarea
             ref={inputRef}
             rows={1}
@@ -368,20 +486,22 @@ export function AssistantPanel({ onClose }: { onClose: () => void }) {
               }
             }}
             placeholder="Ask about a project or a decision…"
+            aria-describedby={`${chatLogId} ${dialogDescId}`}
             aria-label="Your question"
             className="max-h-28 flex-1 resize-none overflow-y-auto rounded-[var(--radius-md)] border border-border bg-bg px-3 py-2 text-sm text-ink focus-visible:border-border-strong"
           />
           <button
             type="submit"
             disabled={busy || !draft.trim()}
-            className="inline-flex h-9 items-center rounded-[var(--radius-md)] bg-accent px-3 text-sm font-medium text-on-accent transition-colors hover:bg-accent-hover disabled:opacity-50"
+            className="inline-flex h-11 items-center rounded-[var(--radius-md)] bg-accent px-3 text-sm font-medium text-on-accent transition-colors hover:bg-accent-hover disabled:opacity-50"
           >
             Ask
           </button>
         </form>
-        <p className="px-5 pb-3 font-mono text-xs text-ink-tertiary">
-          Cited · may be imperfect · not stored.
-        </p>
+        <span className="sr-only" role="status" aria-live="polite" aria-atomic="true">
+          {statusText}
+        </span>
+        <p className="px-5 pb-3 font-mono text-xs text-ink-tertiary">Cited · may be imperfect · not stored.</p>
       </div>
     </>,
     document.body,

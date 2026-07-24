@@ -1,5 +1,4 @@
 import type { ReactNode } from "react";
-import { stagger } from "@/constants/page";
 
 /**
  * PageHeader — the ONE page-top used by every route, so a visitor arriving on
@@ -11,7 +10,7 @@ import { stagger } from "@/constants/page";
  * Structure, top to bottom: kicker → h1 → lede → actions.
  *
  * Props:
- * - `kicker` — the branded page eyebrow: an accent mark plus a short mono label.
+ * - `kicker` — the branded page eyebrow: a short mono label.
  *   Use on index/landing routes.
  * - `meta` — a factual metadata line (status · role · timeline) for case
  *   studies. Deliberately a SEPARATE slot from `kicker` rather than one prop
@@ -30,23 +29,8 @@ import { stagger } from "@/constants/page";
  * hero's 64px ceiling, deliberately: the hero stays the largest type on the
  * site, so arriving on an index route still reads as going one level in.
  *
- * A11y: renders the page's single `<h1>`. The accent mark beside the kicker is
- * `aria-hidden` decoration and carries no meaning that the label does not.
- * The kicker's TEXT is `ink-secondary`, not accent, and that is a correctness
- * decision rather than a stylistic one: these headers sit on an `aurora` band,
- * whose violet stop is strongest exactly where the eyebrow sits, and accent text
- * composited over that tint measures ~3.6:1 — below AA for body-size text. The
- * homepage hero already had to make the same swap at the same position in the
- * same gradient. The accent survives as the mark, which is a non-text element
- * and clears the 3:1 bar it is held to.
- *
- * Performance: the h1 is the LCP element on these routes, so it is the one child
- * with NO entrance animation and no `--i` — it paints immediately while the
- * elements around it fade in. This is why the stagger runs 1, (skip 2), 3, 4.
- * The same rule is honoured by the homepage hero. No client boundary; the whole
- * entrance is CSS, and `.hero-item` is defined only inside a
- * `prefers-reduced-motion: no-preference` block, so reduced motion renders the
- * header at rest rather than hidden.
+ * A11y: renders the page's single `<h1>`. Performance: the entire header paints
+ * immediately; the h1 is commonly the LCP element on index routes.
  */
 export function PageHeader({
   kicker,
@@ -66,40 +50,27 @@ export function PageHeader({
   const centered = align === "center";
   const eyebrow = kicker ?? meta;
   return (
-    // `relative z-10`: on an `aurora` band the gradient is painted by an ::after
-    // that follows the container in DOM order, so header content needs its own
-    // layer or the wash tints the type instead of the ground behind it.
     <header
-      className={`reveal-stagger relative z-10 flex flex-col ${
+      className={`flex flex-col ${
         centered ? "items-center text-center" : ""
       }`}
     >
       {kicker ? (
-        <p
-          className="hero-item inline-flex w-fit items-center gap-2.5 font-mono text-xs uppercase tracking-[0.04em] text-ink-secondary"
-          style={stagger(1)}
-        >
-          <span
-            className="h-1.5 w-1.5 shrink-0 rounded-full bg-accent"
-            aria-hidden
-          />
+        <p className="w-fit font-mono text-xs uppercase tracking-[0.04em] text-ink-tertiary">
           {kicker}
         </p>
       ) : null}
       {meta ? (
-        <p
-          className={`hero-item font-mono text-xs uppercase tracking-[0.04em] text-ink-tertiary ${
-            kicker ? "mt-3" : ""
-          }`}
-          style={stagger(1)}
-        >
+        <p className={`font-mono text-xs uppercase tracking-[0.04em] text-ink-tertiary ${
+          kicker ? "mt-3" : ""
+        }`}>
           {meta}
         </p>
       ) : null}
       <h1
         className={`${
           eyebrow ? "mt-6" : ""
-        } max-w-[20ch] text-balance text-[clamp(2.25rem,5vw,3.5rem)] font-bold leading-[1.1] tracking-[-0.025em] text-ink`}
+        } max-w-[20ch] text-balance text-[clamp(2.25rem,5vw,3.5rem)] font-semibold leading-[1.1] tracking-[-0.025em] text-ink`}
       >
         {title}
       </h1>
@@ -107,20 +78,14 @@ export function PageHeader({
           paragraph, and balancing it would leave a short orphan line under a
           headline that is already balanced. */}
       {lede ? (
-        <p
-          className="hero-item mt-6 max-w-[62ch] text-pretty text-lg text-ink-secondary"
-          style={stagger(3)}
-        >
+        <p className="mt-6 max-w-[62ch] text-pretty text-lg text-ink-secondary">
           {lede}
         </p>
       ) : null}
       {children ? (
-        <div
-          className={`hero-item mt-8 flex flex-wrap items-center gap-x-6 gap-y-3 ${
-            centered ? "justify-center" : ""
-          }`}
-          style={stagger(4)}
-        >
+        <div className={`mt-8 flex flex-wrap items-center gap-x-6 gap-y-3 ${
+          centered ? "justify-center" : ""
+        }`}>
           {children}
         </div>
       ) : null}

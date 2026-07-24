@@ -3,10 +3,9 @@ import Link from "next/link";
 import { Section } from "@/components/layout/section";
 import { PageHeader } from "@/components/ui/page-header";
 import { TextLink } from "@/components/ui/text-link";
-import { AuditLane } from "@/components/features/audit-lane";
-import { buttonVariants, ButtonGlyph } from "@/components/ui/button";
+import { buttonVariants } from "@/components/ui/button";
 import { SITE } from "@/config/site";
-import { home, talks, talksIntro } from "@/content/site";
+import { talks, talksIntro } from "@/content/site";
 import { formatDate } from "@/lib/format";
 import { LABEL, PAGE_BODY_BAND, PAGE_HEADER_BAND, PANEL, PANEL_RAISED, stagger } from "@/constants/page";
 
@@ -15,6 +14,15 @@ export const metadata: Metadata = {
   description:
     "Talks and appearances on evals, LLM safety boundaries, RAG, and shipping AI on a $0 stack.",
   alternates: { canonical: `${SITE.url}/talks` },
+  robots: { index: false, follow: false },
+  openGraph: {
+    siteName: SITE.name,
+    title: "Talks — Mubin Attar",
+    description:
+      "Talks and appearances on evals, LLM safety boundaries, RAG, and shipping AI on a $0 stack.",
+    url: `${SITE.url}/talks`,
+    type: "website",
+  },
 };
 
 /**
@@ -25,7 +33,7 @@ export const metadata: Metadata = {
  * that says so is worth more than a padded one, and the same rule governs every
  * number on this site.
  *
- * Design: the shared PageHeader on an `aurora` band, then either the hairline-
+ * Design: the shared PageHeader, then either the hairline-
  * divided list (the same divided-list vocabulary as /about's principles) or the
  * empty-state panel. The panel uses the site's ordinary card treatment rather
  * than a dashed "placeholder" border: the state is honest, so it should look
@@ -39,30 +47,13 @@ export const metadata: Metadata = {
 export default function TalksPage() {
   return (
     <>
-      <Section space="md" aurora className={PAGE_HEADER_BAND}>
+      <Section space="md" className={PAGE_HEADER_BAND}>
         <PageHeader kicker={talksIntro.kicker} title={talksIntro.title} lede={talksIntro.lede}>
-          {/* `quiet`: the uniform header-link treatment — ink-secondary keeps AA on
-              the `aurora` band where accent text would not, and it keeps the header
-              from competing with the empty-state's primary CTA to the same place. */}
           <TextLink href={talksIntro.empty.cta.href} tone="quiet">
             {talksIntro.empty.cta.label}
           </TextLink>
         </PageHeader>
       </Section>
-      <AuditLane
-        title="Audit lane"
-        items={[
-          ...home.proof.stats.map((stat) => ({
-            href: stat.href,
-            value: stat.value,
-            label: stat.label,
-          })),
-          { href: "/trust", label: "trust policy" },
-          { href: "/changelog", label: "changelog" },
-        ]}
-        className="mt-8"
-      />
-
       <Section space="md" className={PAGE_BODY_BAND}>
         {talks.length > 0 ? (
           <ul className="reveal-stagger divide-y divide-border border-y border-border">
@@ -93,7 +84,6 @@ export default function TalksPage() {
             <p className="mt-3 text-ink-secondary">{talksIntro.empty.body}</p>
             <div className="mt-6">
               <Link href={talksIntro.empty.cta.href} className={buttonVariants("primary")}>
-                <ButtonGlyph />
                 {talksIntro.empty.cta.label}
               </Link>
             </div>

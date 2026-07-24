@@ -11,15 +11,8 @@ import { TextLink } from "./text-link";
  * same section with its colours flipped. Centring every heading (or none) flattens
  * the rhythm the light/dark bands are there to create.
  *
- * The kicker is ALWAYS accent — Clerk's signature: every section eyebrow on
- * clerk.com is set in colour, light band or dark, and it is the one temperature
- * cue that marks "a new section starts here". No `.tone-invert` conditional is
- * needed because `--color-accent` itself re-scopes inside a dark band (the
- * lightened purple, 6.1:1 — AA at any size). On light bands the brand purple
- * measures 4.95:1 on `--color-bg` and 4.57:1 on `--color-bg-subtle` — AA for
- * the 12px kicker. SectionHeading never sits on an `aurora` band (PageHeader
- * owns those, and keeps its secondary kicker precisely because accent fails AA
- * over the violet stop of that gradient).
+ * The kicker is quiet metadata, not decorative accent. Links and the one
+ * primary action own the accent budget.
  *
  * Props:
  * - `kicker` — short mono label above the heading.
@@ -39,9 +32,7 @@ import { TextLink } from "./text-link";
  *
  * A11y: renders a real heading element at the level the caller asks for; the
  * kicker is decorative text above it (not a heading), so it never pollutes the
- * outline. Centred text keeps the same tokens as left-aligned text — the ambient
- * wash peaks away from the heading column, and the a11y gate audits contrast on
- * every route in both themes.
+ * outline. The a11y gate audits contrast on every route in both themes.
  */
 export function SectionHeading({
   kicker,
@@ -72,7 +63,7 @@ export function SectionHeading({
   const headingScale =
     Tag === "h2"
       ? centered
-        ? "text-4xl font-bold text-ink sm:text-band-title"
+        ? "text-4xl font-semibold text-ink sm:text-band-title"
         : size === "compact"
           ? "text-3xl text-ink sm:text-4xl"
           : "text-4xl text-ink sm:text-5xl"
@@ -80,10 +71,7 @@ export function SectionHeading({
   return (
     <div className={centered ? "flex flex-col items-center text-center" : "flex flex-col"}>
       {kicker ? (
-        // Inside a dark band the kicker also steps up to text-sm: Clerk's
-        // centred band kickers measure ~15px against ~12px for their in-page
-        // labels, and at text-xs ours disappeared into the band.
-        <p className="font-mono text-xs uppercase text-accent [.tone-invert_&]:text-sm">
+        <p className="font-mono text-xs uppercase text-ink-tertiary">
           {kicker}
         </p>
       ) : null}

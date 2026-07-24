@@ -10,6 +10,9 @@ lightweight) are a core differentiator per the design brief.
 Build `SystemDiagram`: typed node/edge data files, HTML nodes + SVG orthogonal
 connectors, CSS-grid/absolute layout per diagram, hover/focus → description panel,
 arrow-key navigation, server-rendered list fallback (the narration) for no-JS/SEO/a11y.
+At narrow viewports the same graph data renders as a staged HTML map with every
+node visible and details expanding in place; the wide SVG canvas is reserved for
+viewports where its topology and labels remain legible.
 
 ## Alternatives considered
 - **React Flow** — 40–70 KB+ gz, physics/pan/zoom we don't want; generic look. Rejected.

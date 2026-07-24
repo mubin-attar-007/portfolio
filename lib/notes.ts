@@ -6,7 +6,7 @@ import { createMdxCollection } from "@/lib/mdx-collection";
  * loader to this collection's directory and schema — draft handling,
  * validation, and sorting all live in lib/mdx-collection.ts.
  */
-const notes = createMdxCollection<NoteMeta>("content/notes", NoteSchema);
+const notes = createMdxCollection<NoteMeta>("notes", NoteSchema);
 
 /** Slugs of published notes, newest first. Excludes drafts everywhere. */
 export const publishedNoteSlugs = notes.publishedSlugs;

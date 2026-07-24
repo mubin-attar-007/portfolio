@@ -1,4 +1,5 @@
 import { ImageResponse } from "next/og";
+import { SITE } from "@/config/site";
 
 /**
  * Shared Open Graph image renderer — the light brand as a shareable card.
@@ -18,9 +19,12 @@ const INK_2 = "#5e5f6e"; // --color-ink-secondary
 const INK_3 = "#676876"; // --color-ink-tertiary
 const BORDER = "#d9d9de"; // --color-border-strong
 const ACCENT = "#6c47ff"; // --color-accent
+export function formatOgEyebrow(label: string) {
+  return `${SITE.name} · ${label}`;
+}
 
 export function renderOg(opts: {
-  /** mono meta line, e.g. "mubin attar · ai/ml engineer" */
+  /** mono meta line, e.g. "Mubin Attar · AI Software Engineer" */
   eyebrow: string;
   /** large sentence-case title */
   title: string;
@@ -80,7 +84,7 @@ export function renderOg(opts: {
           </div>
 
           <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center" }}>
-            <div style={{ fontSize: 27, fontWeight: 600, color: INK }}>Mubin Attar</div>
+            <div style={{ fontSize: 27, fontWeight: 600, color: INK }}>{SITE.name}</div>
             {opts.footerRight ? (
               <div style={{ fontFamily: "monospace", fontSize: 22, color: INK_3 }}>
                 {opts.footerRight}

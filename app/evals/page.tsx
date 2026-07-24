@@ -3,12 +3,10 @@ import Link from "next/link";
 import { ArrowUpRight } from "lucide-react";
 import { Section } from "@/components/layout/section";
 import { PageHeader } from "@/components/ui/page-header";
-import { AuditLane } from "@/components/features/audit-lane";
 import { PAGE_BODY_BAND, PAGE_HEADER_BAND } from "@/constants/page";
 import { SITE } from "@/config/site";
 import { formatDate } from "@/lib/format";
 import { evals, evalsIntro } from "@/content/evals";
-import { home } from "@/content/site";
 import type { EvalRow } from "@/content/schema";
 
 export const metadata: Metadata = {
@@ -16,6 +14,14 @@ export const metadata: Metadata = {
   description:
     "The eval registry — how each system is measured, the method, and the honest current state.",
   alternates: { canonical: `${SITE.url}/evals` },
+  openGraph: {
+    siteName: SITE.name,
+    title: "Evals — Mubin Attar",
+    description:
+      "The eval registry — how each system is measured, the method, and the honest current state.",
+    url: `${SITE.url}/evals`,
+    type: "website",
+  },
 };
 
 /** Status pill — muted for in-progress/planned (never fake-green before a run). */
@@ -36,7 +42,7 @@ function Status({
   const dashed = status === "planned";
   return (
     <span
-      className={`inline-flex items-center gap-1.5 rounded-full border px-2.5 py-0.5 font-mono text-xs tabular-nums text-ink-tertiary ${
+      className={`inline-flex items-center gap-1.5 rounded-[var(--radius-sm)] border px-2.5 py-0.5 font-mono text-xs tabular-nums text-ink-tertiary ${
         dashed ? "border-dashed border-border-strong" : "border-border-strong"
       }`}
     >
@@ -67,17 +73,21 @@ function ResultLink({
   );
 }
 
-/* Table cells follow Clerk's table language (their pricing feature lists):
-   quiet uppercase-mono column heads, uniform hairline row rules, and GENEROUS
-   cell padding — py-5 rows are what make a data table read as designed rather
-   than as a spreadsheet dropped on the page. */
-const TH =
-  "py-3 pr-5 font-mono text-xs font-normal uppercase tracking-[0.06em] text-ink-tertiary";
-const TD = "py-5 pr-5 align-top";
+const REGISTRY_GRID =
+  "md:grid-cols-[minmax(6.5rem,0.85fr)_minmax(10rem,1.45fr)_minmax(8rem,1fr)_minmax(6.5rem,0.75fr)_minmax(5rem,0.6fr)_minmax(12rem,1.6fr)]";
+const MOBILE_LABEL =
+  "font-mono text-xs uppercase tracking-[0.06em] text-ink-tertiary md:hidden";
+
+function evalId(e: EvalRow) {
+  return `${e.system}-${e.benchmark}`
+    .toLowerCase()
+    .replace(/[^a-z0-9]+/g, "-")
+    .replace(/(^-|-$)/g, "");
+}
 
 /**
- * /evals — the eval registry. Opens with the shared `PageHeader` on an `aurora`
- * band like every other index route, and the REGISTRY itself is the first thing
+ * /evals — the eval registry. Opens with the shared `PageHeader`, and the
+ * REGISTRY itself is the first thing
  * in the body band — the same fold economy as Clerk's pricing page, where the
  * plans are visible inside the first viewport and the fine print sits under
  * them. The two method paragraphs (`evalsIntro.body`) follow the table: they
@@ -87,133 +97,77 @@ const TD = "py-5 pr-5 align-top";
 export default function EvalsPage() {
   return (
     <>
-      <Section space="lg" aurora className={PAGE_HEADER_BAND}>
+      <Section space="lg" className={PAGE_HEADER_BAND}>
         <PageHeader
           kicker={evalsIntro.kicker}
           title={evalsIntro.title}
           lede={evalsIntro.lede}
         />
       </Section>
-      <AuditLane
-        title="Audit lane"
-        items={[
-          ...home.proof.stats.map((stat) => ({
-            href: stat.href,
-            value: stat.value,
-            label: stat.label,
-          })),
-          { href: "/trust", label: "trust policy" },
-          { href: "/changelog", label: "changelog" },
-        ]}
-        className="mt-8"
-      />
-
       <Section space="md" className={PAGE_BODY_BAND}>
-        {/* Mobile (< md): each eval as a stacked card so Result/Date/Notes never
-          scroll off-screen. Desktop keeps the scannable table below. */}
-        <ul className="reveal flex flex-col gap-4 md:hidden">
-          {evals.map((e) => (
-            <li
-              key={`${e.system}-${e.benchmark}`}
-              className="rounded-[var(--radius-md)] border border-border bg-surface p-5 shadow-[var(--shadow-sm)]"
-            >
-              <div className="flex items-center justify-between gap-3">
-                <span className="font-medium text-ink">{e.system}</span>
-                <Status status={e.status} result={e.result} />
-              </div>
-              <p className="mt-1 text-sm text-ink-secondary">{e.benchmark}</p>
-              <dl className="mt-4 flex flex-col gap-2 border-t border-border pt-4 text-sm">
-                <div className="flex justify-between gap-6">
-                  <dt className="font-mono text-xs uppercase tracking-[0.06em] text-ink-tertiary">
-                    Metric
-                  </dt>
-                  <dd className="text-right text-ink-secondary">{e.metric}</dd>
+        {/* One responsive registry, not separate mobile and desktop DOM trees.
+            Each claim now has one exact, stable hash target at the visible row. */}
+        <div className="overflow-x-auto" role="table" aria-label="Evaluation registry">
+          <div
+            role="row"
+            className={`${REGISTRY_GRID} hidden min-w-[60rem] border-b border-border py-3 text-left md:grid md:gap-5`}
+          >
+            {["System", "Benchmark / Method", "Metric", "Result", "Date", "Notes"].map(
+              (label) => (
+                <span
+                  key={label}
+                  role="columnheader"
+                  className="font-mono text-xs uppercase tracking-[0.06em] text-ink-tertiary"
+                >
+                  {label}
+                </span>
+              ),
+            )}
+          </div>
+          <ul role="rowgroup" className="divide-y divide-border border-y border-border md:border-t-0">
+            {evals.map((e) => (
+              <li
+                key={`${e.system}-${e.benchmark}`}
+                id={evalId(e)}
+                role="row"
+                className={`${REGISTRY_GRID} grid scroll-mt-28 gap-4 py-5 text-sm md:min-w-[60rem] md:gap-5`}
+              >
+                <div role="cell" className="flex items-center justify-between gap-4 md:block">
+                  <span className="font-medium text-ink">{e.system}</span>
+                  <span className="md:hidden">
+                    <Status status={e.status} result={e.result} />
+                  </span>
                 </div>
-                <div className="flex justify-between gap-6">
-                  <dt className="font-mono text-xs uppercase tracking-[0.06em] text-ink-tertiary">
-                    Date
-                  </dt>
-                  <dd className="text-right font-mono text-xs text-ink-tertiary">
-                    {e.date ? formatDate(e.date) : "—"}
-                  </dd>
+                <div role="cell" className="text-ink-secondary">
+                  <span className={MOBILE_LABEL}>Benchmark / method</span>
+                  <p className="mt-1 md:mt-0">{e.benchmark}</p>
                 </div>
-              </dl>
-              {e.note ? (
-                <p className="mt-3 text-sm text-ink-secondary">
-                  {e.note}
+                <div role="cell" className="text-ink-secondary">
+                  <span className={MOBILE_LABEL}>Metric</span>
+                  <p className="mt-1 md:mt-0">{e.metric}</p>
+                </div>
+                <div role="cell" className="hidden md:block">
+                  <Status status={e.status} result={e.result} />
+                </div>
+                <div
+                  role="cell"
+                  className="font-mono text-xs text-ink-tertiary"
+                >
+                  <span className={MOBILE_LABEL}>Date</span>
+                  <p className="mt-1 md:mt-0">{e.date ? formatDate(e.date) : "—"}</p>
+                </div>
+                <div role="cell" className="max-w-[32ch] text-ink-secondary">
+                  <span className={MOBILE_LABEL}>Notes</span>
+                  <p className="mt-1 md:mt-0">{e.note}</p>
                   {e.link ? (
                     <span className="mt-1.5 block">
                       <ResultLink href={e.link}>method</ResultLink>
                     </span>
                   ) : null}
-                </p>
-              ) : null}
-            </li>
-          ))}
-        </ul>
-
-        <div className="reveal hidden overflow-x-auto md:block">
-          <table className="w-full min-w-[48rem] border-collapse text-sm">
-            <caption className="sr-only">
-              Eval registry — system, method, metric, result, and date.
-            </caption>
-            <thead>
-              {/* `border-border`, not `-strong`: Clerk's tables keep ONE hairline
-                  weight everywhere and let the mono heads differentiate the row. */}
-              <tr className="border-b border-border text-left">
-                <th scope="col" className={TH}>
-                  System
-                </th>
-                <th scope="col" className={TH}>
-                  Benchmark / Method
-                </th>
-                <th scope="col" className={TH}>
-                  Metric
-                </th>
-                <th scope="col" className={TH}>
-                  Result
-                </th>
-                <th scope="col" className={TH}>
-                  Date
-                </th>
-                <th scope="col" className={TH}>
-                  Notes
-                </th>
-              </tr>
-            </thead>
-            <tbody>
-              {evals.map((e) => (
-                <tr
-                  key={`${e.system}-${e.benchmark}`}
-                  className="border-b border-border"
-                >
-                  <td
-                    className={`${TD} whitespace-nowrap font-medium text-ink`}
-                  >
-                    {e.system}
-                  </td>
-                  <td className={`${TD} text-ink-secondary`}>{e.benchmark}</td>
-                  <td className={`${TD} text-ink-secondary`}>{e.metric}</td>
-                  <td className={TD}>
-                    <Status status={e.status} result={e.result} />
-                  </td>
-                  <td
-                    className={`${TD} whitespace-nowrap font-mono text-xs text-ink-tertiary`}
-                  >
-                    {e.date ? formatDate(e.date) : "—"}
-                  </td>
-                  <td className={`${TD} max-w-[32ch] text-ink-secondary`}>
-                    {e.note}
-                    {e.link ? (
-                      <span className="mt-1.5 block">
-                        <ResultLink href={e.link}>method</ResultLink>
-                      </span>
-                    ) : null}
-                  </td>
-                </tr>
-              ))}
-            </tbody>
-          </table>
+                </div>
+              </li>
+            ))}
+          </ul>
         </div>
 
         {/* The fine print — what counts as a measurement here. Below the data,

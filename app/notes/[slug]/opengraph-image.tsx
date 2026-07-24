@@ -1,4 +1,4 @@
-import { renderOg, OG_SIZE, OG_CONTENT_TYPE } from "@/lib/og";
+import { formatOgEyebrow, renderOg, OG_SIZE, OG_CONTENT_TYPE } from "@/lib/og";
 import { routableNoteSlugs, loadNote } from "@/lib/notes";
 
 export const alt = "Note — Mubin Attar";
@@ -13,8 +13,9 @@ export async function generateStaticParams() {
 export default async function OG({ params }: { params: Promise<{ slug: string }> }) {
   const { slug } = await params;
   const n = await loadNote(slug);
+  const tags = n?.meta.tags?.slice(0, 3).join(" · ") ?? "";
   return renderOg({
-    eyebrow: `note · ${n?.meta.tags.slice(0, 3).join(" · ") ?? ""}`,
+    eyebrow: formatOgEyebrow(`note · ${tags}`),
     title: n?.meta.title ?? "Note",
     footerRight: `/notes/${slug}`,
   });

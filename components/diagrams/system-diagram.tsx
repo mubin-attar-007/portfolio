@@ -17,15 +17,11 @@ import type { DiagramNode, DiagramSpec } from "./types";
  * Home / End move between nodes. Making every node tabbable would force a
  * keyboard user through the entire graph just to reach the next control.
  *
- * Depth: nodes are top-lit gradient surfaces with resting elevation, so they
- * read as cards sitting ON the band rather than outlines drawn into it; the
- * active node adds a lift and an accent glow. Connectors anchor to node EDGES
- * (not centres, which hid every arrowhead under the target) and turn through
- * rounded elbows. The active fill is deliberately NOT lightened — see the
- * .sd-node-* note in globals.css for the AA arithmetic.
+ * Nodes are flat documentation surfaces: active state changes the border and
+ * label colour, never scale, shadow, glow, or gradient. Connectors anchor to
+ * node edges and turn through rounded elbows.
  *
- * Performance: all state changes are transform / filter / opacity / colour, and
- * the geometry is computed from data, so nothing measures the DOM.
+ * Performance: geometry is computed from data, so nothing measures the DOM.
  */
 
 // geometry (named constants — no magic numbers). These are SVG user units, not
@@ -129,10 +125,25 @@ export function SystemDiagram({
   );
   const [hover, setHover] = useState<string | null>(null);
   const [pinned, setPinned] = useState<string | null>(null);
+  const [mobileSelected, setMobileSelected] = useState<string | null>(null);
   const active = hover ?? pinned; // what lights the graph
   const shownId = pinned ?? hover; // what the panel shows
   const shown = shownId ? byId[shownId] : null;
   const hasDecisions = spec.nodes.some((n) => n.decision);
+  const stages = useMemo(() => {
+    const grouped = new Map<number, DiagramNode[]>();
+    for (const node of spec.nodes) {
+      const stage = grouped.get(node.col);
+      if (stage) stage.push(node);
+      else grouped.set(node.col, [node]);
+    }
+    return Array.from(grouped.entries())
+      .sort(([a], [b]) => a - b)
+      .map(([col, nodes]) => ({
+        col,
+        nodes: [...nodes].sort((a, b) => a.row - b.row),
+      }));
+  }, [spec.nodes]);
 
   // On hover/pin, light the active node + its directly-connected neighbours and
   // dim the rest — so hovering a node traces its slice of the system (the Clerk/
@@ -187,7 +198,7 @@ export function SystemDiagram({
     return out;
   }, [spec.edges]);
 
-  function onKey(e: KeyboardEvent<SVGGElement>, i: number) {
+  function onKey(e: KeyboardEvent<SVGGElement>, i: number, canPin: boolean) {
     const n = spec.nodes.length;
     // Moving focus is enough to rove the tab stop: each node's onFocus records
     // its index, so there is one source of truth for "which node is tabbable".
@@ -203,7 +214,7 @@ export function SystemDiagram({
       move(0);
     } else if (e.key === "End") {
       move(n - 1);
-    } else if (e.key === "Enter" || e.key === " ") {
+    } else if ((e.key === "Enter" || e.key === " ") && canPin) {
       e.preventDefault();
       const id = spec.nodes[i]!.id; // i is a valid node index
       setPinned((p) => (p === id ? null : id));
@@ -216,18 +227,133 @@ export function SystemDiagram({
 
   return (
     <figure className="my-6">
-      {/* On phones the graph keeps its NATIVE size and the bordered container
-          scrolls, so node labels stay legible instead of shrinking to ~5px to
-          fit a 360px viewport. It scales-to-fit only from md up (where it fits). */}
-      <p className="mb-2 font-mono text-xs text-ink-tertiary md:hidden">Swipe the diagram to explore →</p>
-      {/* The canvas is bg-subtle, NOT surface. Surface-on-surface was the real
-          reason the graph read flat: the nodes were exactly the same colour as
-          the panel they sat on, so only their 1px outline distinguished them.
-          bg-subtle puts a step between canvas and node in both themes (#eeeef0
-          under white; #1a1a1f under #212126) and gives the resting drop-shadow
-          something to fall onto. shadow-md, not -sm: on the dark band this frame
-          is the flagship object on the page and should sit above it. */}
-      <div className="overflow-x-auto rounded-[var(--radius-lg)] border border-border bg-bg-subtle p-4 shadow-[var(--shadow-md)]">
+      {/* A wide topology is not legible when squeezed into a phone and looks
+          broken when it opens halfway through a horizontal canvas. Phones get
+          the same data as a compact stage map: every node is visible at once,
+          connections remain explicit, and details expand directly in place. */}
+      <div
+        className="rounded-[var(--radius-lg)] border border-border bg-bg-subtle p-3 md:hidden"
+        role="group"
+        aria-label={caption ?? "System architecture diagram"}
+      >
+        <div className="flex items-baseline justify-between gap-3 px-1 pb-3">
+          <p className="text-sm font-medium text-ink">System map</p>
+          <p className="font-mono text-xs text-ink-tertiary">Tap to inspect</p>
+        </div>
+        <ol className="flex flex-col">
+          {stages.map((stage, stageIndex) => (
+            <li key={stage.col}>
+              <div className="mb-2 flex items-center gap-2 px-1">
+                <span className="font-mono text-xs text-ink-tertiary">
+                  {String(stageIndex + 1).padStart(2, "0")}
+                </span>
+                <span className="h-px flex-1 bg-border" aria-hidden />
+              </div>
+              <ul className="grid gap-2">
+                {stage.nodes.map((node) => {
+                  const selected = mobileSelected === node.id;
+                  const targets = spec.edges
+                    .filter((edge) => edge.from === node.id)
+                    .map((edge) => byId[edge.to]?.label)
+                    .filter((label): label is string => Boolean(label));
+                  const panelId = `${uid}-${node.id}-mobile-panel`;
+
+                  return (
+                    <li key={node.id}>
+                      <button
+                        type="button"
+                        aria-expanded={selected}
+                        aria-controls={panelId}
+                        onClick={() =>
+                          setMobileSelected((current) =>
+                            current === node.id ? null : node.id,
+                          )
+                        }
+                        className={`flex min-h-14 w-full items-center justify-between gap-3 rounded-[var(--radius-md)] border bg-surface px-3 py-2 text-left transition-colors ${
+                          selected
+                            ? "border-border-strong"
+                            : "border-border hover:border-border-strong"
+                        }`}
+                      >
+                        <span className="min-w-0">
+                          <span className="block text-sm font-medium text-ink">
+                            {node.label}
+                          </span>
+                          <span className="block truncate font-mono text-xs text-ink-tertiary">
+                            {node.sublabel ?? "System node"}
+                          </span>
+                          {targets.length > 0 ? (
+                            <span className="mt-0.5 block truncate font-mono text-xs text-ink-tertiary">
+                              → {targets.join(" · ")}
+                            </span>
+                          ) : null}
+                        </span>
+                        <span className="shrink-0 font-mono text-xs text-ink-tertiary">
+                          {selected ? "Close" : "Inspect"}
+                        </span>
+                      </button>
+
+                      <div
+                        id={panelId}
+                        hidden={!selected}
+                        className="mx-2 rounded-b-[var(--radius-md)] border-x border-b border-border bg-surface px-3 py-3 text-sm"
+                      >
+                        <p className="text-ink-secondary">{node.description}</p>
+                        {node.decision && compact ? (
+                          <Link
+                            href={deepLink}
+                            className="mt-3 inline-flex items-center gap-1.5 font-medium text-accent hover:text-accent-hover"
+                          >
+                            Read the decision
+                            <span aria-hidden>→</span>
+                          </Link>
+                        ) : null}
+                        {node.decision && !compact ? (
+                          <dl className="mt-3 flex flex-col gap-3 border-t border-border pt-3">
+                            {node.decision.rejected ? (
+                              <div>
+                                <dt className="font-mono text-xs text-ink-tertiary">
+                                  Instead of
+                                </dt>
+                                <dd className="mt-0.5 text-ink-secondary">
+                                  {node.decision.rejected}
+                                </dd>
+                              </div>
+                            ) : null}
+                            {node.decision.why ? (
+                              <div>
+                                <dt className="font-mono text-xs text-ink-tertiary">Why</dt>
+                                <dd className="mt-0.5 text-ink-secondary">
+                                  {node.decision.why}
+                                </dd>
+                              </div>
+                            ) : null}
+                            {node.decision.tradeoff ? (
+                              <div>
+                                <dt className="font-mono text-xs text-ink-tertiary">
+                                  Tradeoff
+                                </dt>
+                                <dd className="mt-0.5 text-ink-secondary">
+                                  {node.decision.tradeoff}
+                                </dd>
+                              </div>
+                            ) : null}
+                          </dl>
+                        ) : null}
+                      </div>
+                    </li>
+                  );
+                })}
+              </ul>
+              {stageIndex < stages.length - 1 ? (
+                <div className="ml-5 h-5 w-px bg-border-strong" aria-hidden />
+              ) : null}
+            </li>
+          ))}
+        </ol>
+      </div>
+
+      <div className="hidden overflow-x-auto rounded-[var(--radius-lg)] border border-border bg-bg-subtle p-4 md:block">
         <svg
           viewBox={`0 0 ${width} ${height}`}
           width={width}
@@ -264,13 +390,6 @@ export function SystemDiagram({
             >
               <path d="M0,1 L7,4.5 L0,8 Z" fill="var(--color-accent)" />
             </marker>
-            {/* Top-lit card surface. Stops carry their colour from globals.css so
-                the whole thing is token-derived and adapts to the dark band. */}
-            <linearGradient id={`${uid}-node`} x1="0" y1="0" x2="0" y2="1">
-              <stop offset="0%" className="sd-node-top" />
-              <stop offset="52%" className="sd-node-base" />
-              <stop offset="100%" className="sd-node-base" />
-            </linearGradient>
           </defs>
 
           {spec.edges.map((edge, i) => {
@@ -289,9 +408,7 @@ export function SystemDiagram({
                 strokeLinecap="round"
                 stroke={lit ? "var(--color-accent)" : "var(--color-border-strong)"}
                 strokeWidth={lit ? 1.6 : 1.2}
-                // active edges show a flowing "current"; others keep their style
-                strokeDasharray={lit ? "6 4" : edge.dashed ? "4 4" : undefined}
-                className={lit ? "sd-flow" : undefined}
+                strokeDasharray={edge.dashed ? "4 4" : undefined}
                 markerEnd={`url(#${uid}-arrow${lit ? "-lit" : ""})`}
                 opacity={active && !lit ? 0.35 : 1}
                 style={{
@@ -307,6 +424,8 @@ export function SystemDiagram({
             const on = active === n.id;
             const isPinned = pinned === n.id;
             const dimmed = litNodes != null && !litNodes.has(n.id);
+            const canPin = Boolean(n.decision);
+            const descriptionId = `${uid}-${n.id}-description`;
             return (
               <g
                 key={n.id}
@@ -314,11 +433,10 @@ export function SystemDiagram({
                   refs.current[i] = el;
                 }}
                 tabIndex={i === rovingIdx ? 0 : -1}
-                role="button"
-                aria-pressed={n.decision ? isPinned : undefined}
-                aria-label={`${n.label}${n.sublabel ? `, ${n.sublabel}` : ""}. ${n.description}${
-                  !compact && n.decision?.why ? ` Why: ${n.decision.why}` : ""
-                }`}
+                role={n.decision ? "button" : "group"}
+                aria-pressed={canPin ? isPinned : undefined}
+                aria-label={`${n.label}${n.sublabel ? ` ${n.sublabel}` : ""}`}
+                aria-describedby={`${descriptionId}${n.decision ? ` ${hintId}` : ""}`}
                 onMouseEnter={() => setHover(n.id)}
                 onMouseLeave={() => setHover((h) => (h === n.id ? null : h))}
                 onFocus={() => {
@@ -326,22 +444,14 @@ export function SystemDiagram({
                   setFocusIdx(i);
                 }}
                 onBlur={() => setHover((h) => (h === n.id ? null : h))}
-                onClick={() => n.decision && setPinned((pv) => (pv === n.id ? null : n.id))}
-                onKeyDown={(e) => onKey(e, i)}
+                onClick={() => canPin && setPinned((pv) => (pv === n.id ? null : n.id))}
+                onKeyDown={(e) => onKey(e, i, canPin)}
                 className={`outline-none [&:focus-visible>rect]:stroke-[var(--color-accent)] ${
                   n.decision ? "cursor-pointer" : "cursor-default"
                 }`}
                 style={{
-                  transformBox: "fill-box",
-                  transformOrigin: "center",
-                  transform: on ? "scale(1.05)" : "scale(1)",
-                  // Every node carries resting elevation so it reads as a card
-                  // ON the band; the active one gains the full lift plus an
-                  // accent glow. Depth is the state signal, not decoration.
-                  filter: on ? "var(--drop-node) var(--drop-node-glow)" : "var(--drop-node-rest)",
                   opacity: dimmed ? 0.4 : 1,
-                  transition:
-                    "transform var(--motion-base) var(--ease-out), filter var(--motion-base) var(--ease-out), opacity var(--motion-base) var(--ease-out)",
+                  transition: "opacity var(--motion-base) var(--ease-out)",
                 }}
               >
                 <rect
@@ -350,43 +460,41 @@ export function SystemDiagram({
                   width={NODE_W}
                   height={NODE_H}
                   rx={NODE_RX}
-                  // The ACTIVE fill stays the flat accent-subtle token on purpose
-                  // — lightening it drops the sublabel under AA on the dark band
-                  // (see the .sd-node-* note in globals.css).
-                  fill={isPinned || on ? "var(--color-accent-subtle)" : `url(#${uid}-node)`}
+                  fill="var(--color-surface)"
                   stroke={
                     on
-                      ? "var(--color-accent)"
+                      ? "var(--color-border-strong)"
                       : isPinned
                         ? "var(--color-border-strong)"
                         : "var(--color-border)"
                   }
                   strokeWidth={on ? 1.5 : 1}
                   style={{
-                    transition:
-                      "fill var(--motion-base) var(--ease-out), stroke var(--motion-base) var(--ease-out), stroke-width var(--motion-base) var(--ease-out)",
+                    transition: "stroke var(--motion-base) var(--ease-out)",
                   }}
                 />
-                <text
-                  x={p.x + 14}
-                  y={p.y + (n.sublabel ? 26 : 38)}
-                  fill="var(--color-ink)"
-                  className="font-sans"
-                  style={{ fontSize: LABEL_SIZE, fontWeight: 500 }}
-                >
-                  {n.label}
-                </text>
-                {n.sublabel ? (
-                  <text
+                {/* One SVG text node keeps the visible label contiguous for
+                    WCAG 2.5.3 while tspans preserve the two-line typography. */}
+                <text fill={on ? "var(--color-accent)" : "var(--color-ink)"} className="font-sans">
+                  <tspan
                     x={p.x + 14}
-                    y={p.y + 44}
-                    fill="var(--color-ink-tertiary)"
-                    className="font-mono"
-                    style={{ fontSize: SUB_SIZE }}
+                    y={p.y + (n.sublabel ? 26 : 38)}
+                    style={{ fontSize: LABEL_SIZE, fontWeight: 500 }}
                   >
-                    {n.sublabel}
-                  </text>
-                ) : null}
+                    {n.label}
+                  </tspan>
+                  {n.sublabel ? (
+                    <tspan
+                      x={p.x + 14}
+                      y={p.y + 44}
+                      fill="var(--color-ink-tertiary)"
+                      className="font-mono"
+                      style={{ fontSize: SUB_SIZE }}
+                    >
+                      {` ${n.sublabel}`}
+                    </tspan>
+                  ) : null}
+                </text>
                 {/* affordance: a small accent tick marks an explorable node */}
                 {n.decision ? (
                   <circle
@@ -402,79 +510,88 @@ export function SystemDiagram({
         </svg>
       </div>
 
-      {hasDecisions ? (
-        <p className="mt-3 font-mono text-xs text-ink-tertiary">
-          Hover a node to preview · click one to see the decision behind it
-        </p>
-      ) : null}
+      <div className="hidden md:block">
+        {hasDecisions ? (
+          <p className="mt-3 font-mono text-xs text-ink-tertiary">
+            Hover a node to preview · click one to see the decision behind it
+          </p>
+        ) : null}
 
-      <div
-        className="mt-2 min-h-[7rem] rounded-[var(--radius-md)] border border-border bg-bg-subtle px-4 py-3 text-sm"
-        aria-live="polite"
-      >
-        {shown ? (
-          <div>
-            <div className="flex items-baseline justify-between gap-3">
-              <span className="font-medium text-ink">{shown.label}</span>
-              {shown.decision ? (
-                pinned === shown.id ? (
-                  <button
-                    type="button"
-                    onClick={() => setPinned(null)}
-                    // h-6 clears the 24×24 minimum target size (WCAG 2.5.8)
-                    className="inline-flex h-6 shrink-0 items-center rounded-[var(--radius-sm)] font-mono text-xs text-ink-tertiary hover:text-ink"
+        <div
+          className="mt-2 min-h-[7rem] rounded-[var(--radius-md)] border border-border bg-bg-subtle px-4 py-3 text-sm"
+          aria-live="polite"
+        >
+          {shown ? (
+            <div>
+              <div className="flex items-baseline justify-between gap-3">
+                <span className="font-medium text-ink">{shown.label}</span>
+                {shown.decision ? (
+                  pinned === shown.id ? (
+                    <button
+                      type="button"
+                      onClick={() => setPinned(null)}
+                      // h-6 clears the 24×24 minimum target size (WCAG 2.5.8)
+                      aria-label={`Release pinned decision for ${shown.label}`}
+                      className="inline-flex h-6 shrink-0 items-center gap-1 rounded-[var(--radius-sm)] font-mono text-xs text-ink-tertiary hover:text-ink"
+                    >
+                      <span>release</span>
+                      <span aria-hidden>×</span>
+                    </button>
+                  ) : (
+                    <span className="shrink-0 font-mono text-xs text-ink-tertiary">
+                      click to pin
+                    </span>
+                  )
+                ) : null}
+              </div>
+              <p className="mt-1 text-ink-secondary">{shown.description}</p>
+              {/* Homepage (compact): 1–2 line reveal + deep link. The full
+                  Instead-of/Why/Tradeoff essays live on the case study. */}
+              {shown.decision && compact ? (
+                <Link
+                  href={deepLink}
+                  className="group mt-3 inline-flex items-center gap-1.5 text-sm font-medium text-accent hover:text-accent-hover"
+                >
+                  Read the decision behind {shown.label}
+                  <span
+                    className="transition-transform duration-fast ease-[var(--ease-out)] group-hover:translate-x-0.5"
+                    aria-hidden
                   >
-                    release ✕
-                  </button>
-                ) : (
-                  <span className="shrink-0 font-mono text-xs text-ink-tertiary">click to pin</span>
-                )
+                    →
+                  </span>
+                </Link>
+              ) : null}
+              {shown.decision && !compact ? (
+                <dl className="mt-3 flex flex-col gap-2 border-t border-border pt-3">
+                  {shown.decision.rejected ? (
+                    <div className="grid gap-0.5 sm:grid-cols-[6.5rem_1fr] sm:gap-3">
+                      <dt className="font-mono text-xs text-ink-tertiary">Instead of</dt>
+                      <dd className="text-ink-secondary">{shown.decision.rejected}</dd>
+                    </div>
+                  ) : null}
+                  {shown.decision.why ? (
+                    <div className="grid gap-0.5 sm:grid-cols-[6.5rem_1fr] sm:gap-3">
+                      <dt className="font-mono text-xs text-ink-tertiary">Why</dt>
+                      <dd className="text-ink-secondary">{shown.decision.why}</dd>
+                    </div>
+                  ) : null}
+                  {shown.decision.tradeoff ? (
+                    <div className="grid gap-0.5 sm:grid-cols-[6.5rem_1fr] sm:gap-3">
+                      <dt className="font-mono text-xs text-ink-tertiary">Tradeoff</dt>
+                      <dd className="text-ink-secondary">{shown.decision.tradeoff}</dd>
+                    </div>
+                  ) : null}
+                </dl>
               ) : null}
             </div>
-            <p className="mt-1 text-ink-secondary">{shown.description}</p>
-            {/* Homepage (compact): 1–2 line reveal + deep link. The full
-                Instead-of/Why/Tradeoff essays live on the case study (fixes V2). */}
-            {shown.decision && compact ? (
-              <Link
-                href={deepLink}
-                className="group mt-3 inline-flex items-center gap-1.5 text-sm font-medium text-accent hover:text-accent-hover"
-              >
-                Read the decision behind {shown.label}
-                <span className="transition-transform group-hover:translate-x-0.5" aria-hidden>
-                  →
-                </span>
-              </Link>
-            ) : null}
-            {shown.decision && !compact ? (
-              <dl className="mt-3 flex flex-col gap-2 border-t border-border pt-3">
-                {shown.decision.rejected ? (
-                  <div className="grid gap-0.5 sm:grid-cols-[6.5rem_1fr] sm:gap-3">
-                    <dt className="font-mono text-xs text-ink-tertiary">Instead of</dt>
-                    <dd className="text-ink-secondary">{shown.decision.rejected}</dd>
-                  </div>
-                ) : null}
-                {shown.decision.why ? (
-                  <div className="grid gap-0.5 sm:grid-cols-[6.5rem_1fr] sm:gap-3">
-                    <dt className="font-mono text-xs text-ink-tertiary">Why</dt>
-                    <dd className="text-ink-secondary">{shown.decision.why}</dd>
-                  </div>
-                ) : null}
-                {shown.decision.tradeoff ? (
-                  <div className="grid gap-0.5 sm:grid-cols-[6.5rem_1fr] sm:gap-3">
-                    <dt className="font-mono text-xs text-ink-tertiary">Tradeoff</dt>
-                    <dd className="text-ink-secondary">{shown.decision.tradeoff}</dd>
-                  </div>
-                ) : null}
-              </dl>
-            ) : null}
-          </div>
-        ) : (
-          <span className="text-ink-tertiary">
-            {hasDecisions
-              ? "Hover or focus a node to trace the system — click one to read the decision behind it."
-              : "Hover or focus a node to trace how the system fits together."}
-          </span>
-        )}
+          ) : (
+            <span className="text-ink-tertiary">
+              {hasDecisions
+                ? "Hover or focus a node to trace the system — click one to read the decision behind it."
+                : "Hover or focus a node to trace how the system fits together."}
+            </span>
+          )}
+        </div>
       </div>
 
       {/* With one tab stop for the whole graph, the other nodes are only
@@ -484,20 +601,34 @@ export function SystemDiagram({
         node&apos;s decision, and Escape to release it.
       </p>
 
+      {/* SVG <desc> participates in some label-in-name implementations as if it
+          were visible button text. Hidden referenced HTML preserves the richer
+          screen-reader description without polluting the node's visible label. */}
+      <div hidden>
+        {spec.nodes.map((n) => (
+          <span id={`${uid}-${n.id}-description`} key={`${n.id}-description`}>
+            {n.description}
+            {!compact && n.decision?.why ? ` Why: ${n.decision.why}` : ""}
+          </span>
+        ))}
+      </div>
+
       {/* Text alternative / narration — screen readers and no-JS. On the compact
           homepage it narrates only the map (label + description); the full
           decision essays (why/instead-of/tradeoff) live on the case study
           (!compact), so they aren't duplicated into the homepage DOM (fixes V2). */}
-      <ul className="sr-only">
-        {spec.nodes.map((n) => (
-          <li key={n.id}>
-            {n.label}: {n.description}
-            {!compact && n.decision?.why ? ` Why: ${n.decision.why}` : ""}
-            {!compact && n.decision?.rejected ? ` Instead of: ${n.decision.rejected}.` : ""}
-            {!compact && n.decision?.tradeoff ? ` Tradeoff: ${n.decision.tradeoff}` : ""}
-          </li>
-        ))}
-      </ul>
+      <div className="hidden md:block">
+        <ul className="sr-only">
+          {spec.nodes.map((n) => (
+            <li key={n.id}>
+              {n.label}: {n.description}
+              {!compact && n.decision?.why ? ` Why: ${n.decision.why}` : ""}
+              {!compact && n.decision?.rejected ? ` Instead of: ${n.decision.rejected}.` : ""}
+              {!compact && n.decision?.tradeoff ? ` Tradeoff: ${n.decision.tradeoff}` : ""}
+            </li>
+          ))}
+        </ul>
+      </div>
 
       {caption ? <figcaption className="mt-2 text-sm text-ink-tertiary">{caption}</figcaption> : null}
     </figure>

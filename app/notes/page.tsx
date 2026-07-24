@@ -4,9 +4,8 @@ import { Section } from "@/components/layout/section";
 import { PageHeader } from "@/components/ui/page-header";
 import { TextLink } from "@/components/ui/text-link";
 import { PAGE_BODY_BAND, PAGE_HEADER_BAND } from "@/constants/page";
-import { AuditLane } from "@/components/features/audit-lane";
 import { SITE } from "@/config/site";
-import { home, pages } from "@/content/site";
+import { pages } from "@/content/site";
 import { allNotes } from "@/lib/notes";
 import { NoteList } from "@/components/features/note-list";
 import {
@@ -25,12 +24,12 @@ export const metadata: Metadata = {
     types: { "application/rss+xml": `${SITE.url}/rss.xml` },
   },
   openGraph: {
+    siteName: SITE.name,
     title: "Notes — Mubin Attar",
     description:
       "A running notebook — short notes on retrieval, evals, agents, and infrastructure.",
     url: `${SITE.url}${NOTES_PATH}`,
     type: "website",
-    images: [{ url: `${SITE.url}${NOTES_PATH}/opengraph-image.png` }],
   },
 };
 
@@ -39,9 +38,8 @@ export const metadata: Metadata = {
  * month (NoteList). Newsletter capture sits at the foot of the list, not the
  * hero.
  *
- * Shares its exact shell with /writing — the same `PageHeader` on the same
- * `aurora` band, the same feed + cross-reference pair in the actions slot, the
- * same `PAGE_BODY_BAND` content band underneath. The two pages are siblings, so
+ * Shares its exact shell with /writing — the same `PageHeader`, actions, and
+ * `PAGE_BODY_BAND` content band underneath. The two pages are siblings, so
  * the only thing that should differ between them is what they say.
  */
 export default async function NotesIndex() {
@@ -56,7 +54,7 @@ export default async function NotesIndex() {
 
   return (
     <>
-      <Section space="lg" aurora className={PAGE_HEADER_BAND}>
+      <Section space="lg" className={PAGE_HEADER_BAND}>
         <PageHeader kicker={copy.kicker} title={copy.title} lede={copy.lede}>
           <TextLink href={copy.crossHref}>{copy.crossCta}</TextLink>
           <a
@@ -68,20 +66,6 @@ export default async function NotesIndex() {
           </a>
         </PageHeader>
       </Section>
-      <AuditLane
-        title="Audit lane"
-        items={[
-          ...home.proof.stats.map((stat) => ({
-            href: stat.href,
-            value: stat.value,
-            label: stat.label,
-          })),
-          { href: "/trust", label: "trust policy" },
-          { href: "/changelog", label: "changelog" },
-        ]}
-        className="mt-8"
-      />
-
       <Section space="md" className={PAGE_BODY_BAND}>
         <NoteList notes={items} />
         {NEWSLETTER_ENABLED && (

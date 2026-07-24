@@ -4,8 +4,6 @@ import { Section } from "@/components/layout/section";
 import { PageHeader } from "@/components/ui/page-header";
 import { TextLink } from "@/components/ui/text-link";
 import { SITE } from "@/config/site";
-import { AuditLane } from "@/components/features/audit-lane";
-import { home } from "@/content/site";
 import { timeline, timelineIntro } from "@/content/timeline";
 import { LABEL, PAGE_BODY_BAND, PAGE_HEADER_BAND, PANEL, PANEL_RAISED, stagger } from "@/constants/page";
 
@@ -16,11 +14,11 @@ export const metadata: Metadata = {
   description: "What I built, learned, got wrong, and changed — phase by phase.",
   alternates: { canonical: `${SITE.url}${TIMELINE_PATH}` },
   openGraph: {
+    siteName: SITE.name,
     title: "Timeline — Mubin Attar",
     description: "What I built, learned, got wrong, and changed — phase by phase.",
     url: `${SITE.url}${TIMELINE_PATH}`,
     type: "website",
-    images: [{ url: `${SITE.url}${TIMELINE_PATH}/opengraph-image.png` }],
   },
 };
 
@@ -66,33 +64,17 @@ function PhaseRow({ label, children }: { label: string; children: ReactNode }) {
 export default function TimelinePage() {
   return (
     <>
-      <Section space="md" aurora className={PAGE_HEADER_BAND}>
+      <Section space="md" className={PAGE_HEADER_BAND}>
         <PageHeader
           kicker={timelineIntro.kicker}
           title={timelineIntro.title}
           lede={timelineIntro.lede}
         >
-          {/* `quiet`: the uniform header-link treatment — ink-secondary keeps AA on
-              the `aurora` band where accent text loses contrast against the tint. */}
           <TextLink href={timelineIntro.cta.href} tone="quiet">
             {timelineIntro.cta.label}
           </TextLink>
         </PageHeader>
       </Section>
-      <AuditLane
-        title="Audit lane"
-        items={[
-          ...home.proof.stats.map((stat) => ({
-            href: stat.href,
-            value: stat.value,
-            label: stat.label,
-          })),
-          { href: "/trust", label: "trust policy" },
-          { href: "/changelog", label: "changelog" },
-        ]}
-        className="mt-8"
-      />
-
       <Section space="md" className={PAGE_BODY_BAND}>
         <ol className="reveal-stagger flex flex-col gap-8">
           {timeline.map((phase, i) => (
