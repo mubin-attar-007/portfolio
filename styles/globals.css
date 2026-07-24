@@ -259,6 +259,15 @@ button:disabled,
   will-change: transform;
 }
 
+/* Case-study chapters are substantial, independently anchored documents.
+   Let the browser skip style, layout, and paint for chapters well below the
+   viewport while retaining a stable scroll estimate. `auto` keeps find-in-page,
+   deep links, focus, printing, and accessibility semantics available. */
+.case-study-section {
+  content-visibility: auto;
+  contain-intrinsic-size: auto 36rem;
+}
+
 /* Shiki code highlighting — transparent bg (use our surface), our mono face,
    dark palette activated under an explicit or OS dark preference. */
 .shiki {

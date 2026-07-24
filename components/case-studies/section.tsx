@@ -30,7 +30,7 @@ import { PROSE } from "@/components/mdx/prose";
  */
 export function CS({ id, title, children }: { id: string; title: string; children: ReactNode }) {
   return (
-    <section>
+    <section className="case-study-section">
       <h2 id={id} className={PROSE.h2}>
         {title}
       </h2>
