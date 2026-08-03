@@ -6,6 +6,7 @@ import { flagshipHome } from "@/content/home-visual";
 import { home } from "@/content/site";
 import { featuredProject, secondaryProjects } from "@/content/projects";
 import { formatDate } from "@/lib/format";
+import { Workbench } from "./workbench";
 import styles from "./flagship-home.module.css";
 
 type WritingPreview = {
@@ -66,6 +67,7 @@ export function FlagshipHome({ writing }: FlagshipHomeProps) {
             </div>
             <p className={styles.availability}>{STATUS.text}</p>
           </div>
+          <Workbench />
         </div>
       </section>
 
@@ -96,22 +98,6 @@ export function FlagshipHome({ writing }: FlagshipHomeProps) {
             <p className={styles.kicker}>Flagship case study</p>
             <h2 id="flagship-title">{featuredProject.title}</h2>
             <p>{featuredProject.summary}</p>
-            <dl className={styles.metricList}>
-              {featuredProject.metrics.slice(0, 3).map((metric) => (
-                <div key={metric.label}>
-                  <dt>{metric.label}</dt>
-                  <dd>
-                    <span>{metric.value}</span>
-                    <Link
-                      href={`/work/${featuredProject.slug}#performance-cost`}
-                      prefetch={false}
-                    >
-                      {metric.method}
-                    </Link>
-                  </dd>
-                </div>
-              ))}
-            </dl>
             <div className={styles.inlineActions}>
               <Link
                 href={`/work/${featuredProject.slug}`}
@@ -133,29 +119,25 @@ export function FlagshipHome({ writing }: FlagshipHomeProps) {
             </div>
           </div>
 
-          <figure className={styles.systemFigure}>
-            <figcaption>
-              <span className={styles.microLabel}>Controlled execution path</span>
-              <strong>Natural language in. Inspected result out.</strong>
-            </figcaption>
-            <ol>
-              {[
-                ["01", "Retrieve schema", "Only relevant tables enter context."],
-                ["02", "Generate candidate", "The model proposes Postgres SQL."],
-                ["03", "Validate boundary", "Read-only and enrolled-table rules gate it."],
-                ["04", "Execute safely", "A constrained connection runs accepted SQL."],
-                ["05", "Measure behavior", "Golden queries score the deployed path."],
-              ].map(([n, title, detail]) => (
-                <li key={n}>
-                  <span>{n}</span>
-                  <div>
-                    <strong>{title}</strong>
-                    <p>{detail}</p>
-                  </div>
-                </li>
+          <div className={styles.evidence}>
+            <p className={styles.evidenceLabel}>Measured outcomes</p>
+            <dl className={styles.metricList}>
+              {featuredProject.metrics.slice(0, 3).map((metric) => (
+                <div key={metric.label}>
+                  <dt>{metric.label}</dt>
+                  <dd>{metric.value}</dd>
+                </div>
               ))}
-            </ol>
-          </figure>
+            </dl>
+            <Link
+              href={`/work/${featuredProject.slug}#performance-cost`}
+              prefetch={false}
+              className={styles.textCta}
+            >
+              See how each was measured
+              <ArrowRight aria-hidden size={15} />
+            </Link>
+          </div>
         </div>
       </section>
 
@@ -167,35 +149,26 @@ export function FlagshipHome({ writing }: FlagshipHomeProps) {
             title={flagshipHome.products.title}
             body={flagshipHome.products.body}
           />
-          <div className={styles.systemRows}>
-            {secondaryProjects.map((project, index) => (
-              <article key={project.slug}>
-                <span className={styles.rowIndex}>
-                  {String(index + 2).padStart(2, "0")}
-                </span>
-                <div className={styles.rowCopy}>
-                  <p className={styles.rowMeta}>
-                    {project.status} · {project.timeline}
-                  </p>
-                  <h3>{project.title}</h3>
-                  <p>{project.summary}</p>
-                </div>
-                <div className={styles.rowEvidence}>
+          <div className={styles.systemGrid}>
+            {secondaryProjects.map((project) => (
+              <article key={project.slug} className={styles.systemCard}>
+                <p className={styles.rowMeta}>
+                  {project.status} · {project.timeline}
+                </p>
+                <h3>{project.title}</h3>
+                <p className={styles.systemSummary}>{project.summary}</p>
+                <div className={styles.systemMetric}>
                   <strong>{project.metrics[0]?.value}</strong>
                   <span>{project.metrics[0]?.label}</span>
-                  <Link
-                    href={`/work/${project.slug}#performance-cost`}
-                    prefetch={false}
-                  >
-                    {project.metrics[0]?.method}
-                  </Link>
                 </div>
-                <div className={styles.rowLinks}>
+                <div className={styles.systemLinks}>
                   <Link href={`/work/${project.slug}`} prefetch={false}>
                     Case study
+                    <ArrowRight aria-hidden size={14} />
                   </Link>
                   <a href={project.links.live} target="_blank" rel="noreferrer">
-                    Live product
+                    Live
+                    <ArrowUpRight aria-hidden size={14} />
                   </a>
                 </div>
               </article>

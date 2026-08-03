@@ -26,7 +26,7 @@ import { TRADEPULSE_SECTIONS, TradePulseBody } from "@/components/case-studies/t
 import { DemoPosterPreload } from "@/components/case-studies/demo-poster-preload";
 import { CaseStudyReadingOutline } from "@/components/case-studies/reading-outline";
 import { type CaseStudySection } from "@/components/case-studies/section";
-import { ProjectJsonLd } from "@/components/seo/json-ld";
+import { BreadcrumbJsonLd, ProjectJsonLd } from "@/components/seo/json-ld";
 type CaseStudyTemplate = {
   Body: () => ReactNode;
   sections: readonly CaseStudySection[];
@@ -134,6 +134,12 @@ export default async function CaseStudyPage({ params }: { params: Promise<{ slug
           systems={p.systems}
           links={p.links}
           changelog={p.changelog}
+        />
+        <BreadcrumbJsonLd
+          items={[
+            { name: "Work", url: `${SITE.url}/work` },
+            { name: p.title, url: `${SITE.url}/work/${slug}` },
+          ]}
         />
         {demo ? <DemoPosterPreload href={`/demos/${slug}.webp`} /> : null}
         <nav

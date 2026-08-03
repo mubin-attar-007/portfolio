@@ -6,10 +6,8 @@
 }
 
 .kicker,
-.microLabel,
 .availability,
-.rowMeta,
-.rowIndex {
+.rowMeta {
   font-family: var(--font-mono);
   font-size: var(--text-xs);
   line-height: 1.5;
@@ -19,22 +17,27 @@
 }
 
 .hero {
-  padding-block: clamp(8.5rem, 15vw, 11rem) clamp(5.5rem, 9vw, 7.5rem);
-  background: var(--color-bg);
+  position: relative;
+  padding-block: clamp(4.5rem, 8vw, 6.5rem) clamp(5rem, 8vw, 7rem);
+  /* One soft ambient accent glow behind the workbench (design-system.md depth),
+     layered over the page background — a single radial, not a mesh. */
+  background: var(--glow-accent), var(--color-bg);
 }
 
 .heroLayout {
   display: grid;
-  grid-template-columns: minmax(0, 54rem) 1fr;
+  grid-template-columns: minmax(0, 1.05fr) minmax(20rem, 27rem);
+  align-items: center;
+  gap: clamp(2.5rem, 6vw, 5rem);
 }
 
 .heroCopy h1 {
-  max-width: 26ch;
-  margin-top: 1.5rem;
-  font-size: clamp(3rem, 6vw, var(--text-6xl));
-  font-weight: 620;
-  line-height: 1.02;
-  letter-spacing: -0.04em;
+  max-width: 15ch;
+  margin-top: 1.25rem;
+  font-size: clamp(2.75rem, 5vw, 3.5rem);
+  font-weight: 560;
+  line-height: 1.05;
+  letter-spacing: -0.03em;
   text-wrap: balance;
   color: var(--color-ink);
 }
@@ -63,9 +66,7 @@
 }
 
 .textCta,
-.emailLink,
-.systemRows a,
-.metricList a {
+.emailLink {
   color: var(--color-ink);
   text-decoration: underline;
   text-decoration-color: var(--color-border-strong);
@@ -84,9 +85,7 @@
 }
 
 .textCta:hover,
-.emailLink:hover,
-.systemRows a:hover,
-.metricList a:hover {
+.emailLink:hover {
   color: var(--color-accent);
   text-decoration-color: var(--color-accent);
 }
@@ -157,7 +156,7 @@
 .nowSection,
 .principlesSection,
 .closeSection {
-  padding-block: clamp(5.5rem, 10vw, 8rem);
+  padding-block: clamp(3.75rem, 6.5vw, 5.5rem);
 }
 
 .flagshipSection,
@@ -167,20 +166,36 @@
 
 .flagshipLayout {
   display: grid;
-  grid-template-columns: minmax(0, 0.9fr) minmax(25rem, 1.1fr);
+  grid-template-columns: minmax(0, 1.1fr) minmax(17rem, 0.7fr);
   align-items: start;
   gap: clamp(3rem, 8vw, 7rem);
+}
+
+.evidence {
+  padding: 1.35rem 1.5rem;
+  border: 0.0625rem solid var(--color-border);
+  border-radius: var(--radius-md);
+  background: var(--color-surface);
+  box-shadow: var(--shadow-surface);
+}
+
+.evidenceLabel {
+  font-family: var(--font-mono);
+  font-size: var(--text-xs);
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+  color: var(--color-ink-tertiary);
 }
 
 .flagshipCopy h2,
 .sectionIntro h2,
 .nowLayout h2,
 .closeCopy h2 {
-  margin-top: 1rem;
-  font-size: clamp(2.25rem, 5vw, var(--text-5xl));
-  font-weight: 600;
-  line-height: 1.08;
-  letter-spacing: -0.032em;
+  margin-top: 0.75rem;
+  font-size: clamp(1.875rem, 3.2vw, 2.5rem);
+  font-weight: 560;
+  line-height: 1.12;
+  letter-spacing: -0.025em;
   text-wrap: balance;
   color: var(--color-ink);
 }
@@ -195,124 +210,36 @@
   color: var(--color-ink-secondary);
 }
 
+/* A spec-sheet readout: a big mono figure over its label, one row each.
+   Values are short structural counts, so no wrapping/overflow. */
 .metricList {
-  margin-top: 2.25rem;
+  margin-top: 1.25rem;
   border-top: 0.0625rem solid var(--color-border);
 }
 
 .metricList > div {
-  display: grid;
   padding-block: 1rem;
-  grid-template-columns: minmax(0, 1fr) auto;
-  gap: 0.25rem 1rem;
   border-bottom: 0.0625rem solid var(--color-border);
 }
 
 .metricList dt {
   font-size: var(--text-sm);
+  line-height: 1.4;
   color: var(--color-ink-secondary);
 }
 
 .metricList dd {
-  display: flex;
-  min-width: 0;
-  flex-direction: column;
-  align-items: flex-end;
-  gap: 0.25rem;
+  margin-top: 0.35rem;
   font-family: var(--font-mono);
-  font-size: var(--text-sm);
-  text-align: right;
+  font-size: var(--text-3xl);
+  font-weight: 500;
+  line-height: 1;
+  font-variant-numeric: tabular-nums;
   color: var(--color-ink);
 }
 
-.metricList a {
-  display: block;
-  width: 100%;
-  min-width: 0;
-  max-width: 32rem;
-  overflow: hidden;
-  font-family: var(--font-sans);
-  font-size: var(--text-xs);
-  color: var(--color-ink-tertiary);
-  text-overflow: ellipsis;
-  white-space: nowrap;
-}
-
-.systemFigure {
-  overflow: hidden;
-  border: 0.0625rem solid var(--color-border-strong);
-  border-radius: var(--radius-lg);
-  background: var(--color-surface);
-}
-
-.systemFigure figcaption {
-  display: flex;
-  padding: 1.25rem;
-  flex-direction: column;
-  gap: 0.35rem;
-  border-bottom: 0.0625rem solid var(--color-border);
-  color: var(--color-ink);
-}
-
-.systemFigure figcaption strong {
-  font-size: var(--text-lg);
-  font-weight: 550;
-}
-
-.systemFigure ol {
-  padding: 0 1.25rem 1.25rem;
-}
-
-.systemFigure li {
-  position: relative;
-  display: grid;
-  padding-top: 1.25rem;
-  grid-template-columns: 2rem 1fr;
-  gap: 1rem;
-}
-
-.systemFigure li:not(:last-child)::after {
-  content: "";
-  position: absolute;
-  top: 3.25rem;
-  bottom: -1rem;
-  left: 0.97rem;
-  border-left: 0.0625rem solid var(--color-border);
-}
-
-.systemFigure li > span {
-  position: relative;
-  z-index: 1;
-  display: inline-flex;
-  width: 2rem;
-  height: 2rem;
-  align-items: center;
-  justify-content: center;
-  border: 0.0625rem solid var(--color-border-strong);
-  border-radius: var(--radius-sm);
-  background: var(--color-surface);
-  font-family: var(--font-mono);
-  font-size: 0.625rem;
-  color: var(--color-ink-tertiary);
-}
-
-.systemFigure li strong,
-.systemFigure li p {
-  display: block;
-}
-
-.systemFigure li strong {
-  padding-top: 0.15rem;
-  font-size: var(--text-sm);
-  font-weight: 550;
-  color: var(--color-ink);
-}
-
-.systemFigure li p {
-  margin-top: 0.2rem;
-  font-size: var(--text-xs);
-  line-height: 1.55;
-  color: var(--color-ink-secondary);
+.evidence .textCta {
+  margin-top: 1.15rem;
 }
 
 .systemsSection,
@@ -328,74 +255,88 @@
   margin-top: 1rem;
 }
 
-.systemRows {
-  margin-top: 3.5rem;
-  border-top: 0.0625rem solid var(--color-border);
-}
-
-.systemRows article {
+.systemGrid {
   display: grid;
-  padding-block: 1.75rem;
-  grid-template-columns: 2.5rem minmax(0, 1.5fr) minmax(12rem, 0.8fr) auto;
-  align-items: start;
-  gap: 1.5rem;
-  border-bottom: 0.0625rem solid var(--color-border);
+  margin-top: 2.25rem;
+  gap: 1rem;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
 }
 
-.rowIndex {
-  padding-top: 0.25rem;
+.systemCard {
+  display: flex;
+  flex-direction: column;
+  padding: 1.5rem;
+  border: 0.0625rem solid var(--color-border);
+  border-radius: var(--radius-md);
+  background: var(--color-surface);
+  box-shadow: var(--shadow-surface);
+  transition:
+    box-shadow var(--motion-fast) var(--ease-out),
+    transform var(--motion-fast) var(--ease-out),
+    border-color var(--motion-fast) var(--ease-out);
 }
 
-.rowCopy h3 {
-  margin-top: 0.35rem;
-  font-size: var(--text-xl);
+.systemCard:hover {
+  transform: translateY(-2px);
+  border-color: var(--color-border-strong);
+  box-shadow: var(--shadow-surface-hover);
+}
+
+.systemCard h3 {
+  margin-top: 0.7rem;
+  font-size: var(--text-lg);
   font-weight: 550;
   color: var(--color-ink);
 }
 
-.rowCopy > p:last-child {
+.systemSummary {
+  flex: 1;
   margin-top: 0.5rem;
   font-size: var(--text-sm);
-  line-height: 1.65;
+  line-height: 1.6;
   color: var(--color-ink-secondary);
 }
 
-.rowEvidence {
+.systemMetric {
   display: flex;
   flex-direction: column;
-  gap: 0.2rem;
+  gap: 0.15rem;
+  margin-top: 1.25rem;
+  padding-top: 1.15rem;
+  border-top: 0.0625rem solid var(--color-border);
 }
 
-.rowEvidence strong {
+.systemMetric strong {
   font-family: var(--font-mono);
-  font-size: var(--text-lg);
+  font-size: var(--text-2xl);
   font-weight: 500;
+  font-variant-numeric: tabular-nums;
   color: var(--color-ink);
 }
 
-.rowEvidence span,
-.rowEvidence a,
-.rowLinks a {
+.systemMetric span {
   font-size: var(--text-xs);
-}
-
-.rowEvidence span {
   color: var(--color-ink-secondary);
 }
 
-.rowEvidence a {
-  display: -webkit-box;
-  overflow: hidden;
-  color: var(--color-ink-tertiary);
-  -webkit-box-orient: vertical;
-  -webkit-line-clamp: 2;
+.systemLinks {
+  display: flex;
+  gap: 1.5rem;
+  margin-top: 1.25rem;
 }
 
-.rowLinks {
-  display: flex;
-  flex-direction: column;
-  align-items: flex-start;
-  gap: 0.55rem;
+.systemLinks a {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.3rem;
+  font-size: var(--text-sm);
+  color: var(--color-ink);
+  text-decoration: none;
+  transition: color var(--motion-fast) var(--ease-out);
+}
+
+.systemLinks a:hover {
+  color: var(--color-accent);
 }
 
 .principlesSection,
@@ -560,13 +501,18 @@
     border-left: 0;
   }
 
-  .systemRows article {
-    grid-template-columns: 2.5rem minmax(0, 1fr) minmax(11rem, 0.7fr);
+  .systemGrid {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
   }
+}
 
-  .rowLinks {
-    grid-column: 2 / -1;
-    flex-direction: row;
+/* Stack the hero earlier than the other bands: the copy and the workbench each
+   need room, so they go single-column below 56rem while narrower two-column
+   bands hold until 48rem. */
+@media (max-width: 56rem) {
+  .heroLayout {
+    grid-template-columns: 1fr;
+    align-items: stretch;
   }
 }
 
@@ -598,14 +544,8 @@
     border-top: 0.0625rem solid var(--color-border);
   }
 
-  .systemRows article {
-    grid-template-columns: 2rem minmax(0, 1fr);
-    gap: 1rem;
-  }
-
-  .rowEvidence,
-  .rowLinks {
-    grid-column: 2;
+  .systemGrid {
+    grid-template-columns: 1fr;
   }
 
   .principleList {

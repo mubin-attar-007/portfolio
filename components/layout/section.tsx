@@ -20,12 +20,12 @@ import { Container } from "./container";
  * hairlines (DESIGN §9).
  */
 /**
- * Vertical rhythm is ASYMMETRIC, matching clerk.com's measured bands: 128px
- * above, 172px below. Two equal paddings make adjacent sections pool into one
- * undifferentiated gap — the extra weight underneath is what closes a section
- * off, so each band reads as a finished plate rather than as content floating
- * between two voids. The hero inverts this (heavier above than below) and sets
- * its own bottom padding at the call site.
+ * Vertical rhythm is ASYMMETRIC: the bands run 128px above, 172px below. Two
+ * equal paddings make adjacent sections pool into one undifferentiated gap —
+ * the extra weight underneath is what closes a section off, so each band reads
+ * as a finished plate rather than as content floating between two voids. The
+ * hero inverts this (heavier above than below) and sets its own bottom padding
+ * at the call site.
  */
 const SPACE: Record<"sm" | "md" | "lg", string> = {
   sm: "pt-[var(--space-section-sm)] pb-[var(--space-section-md)]",

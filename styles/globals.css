@@ -27,12 +27,14 @@ body {
   text-rendering: optimizeLegibility;
 }
 
-/* sentence-case, balanced, tight display headings by default (components refine) */
+/* sentence-case, balanced, tight display headings by default (components refine).
+   550 (not 600): at display sizes the heavier weight read as generic-bold; a
+   lighter, tighter display face is the refined-display move (Stripe/Linear). */
 h1,
 h2,
 h3,
 h4 {
-  font-weight: 600;
+  font-weight: 550;
   letter-spacing: -0.02em;
   text-wrap: balance;
 }
@@ -61,8 +63,8 @@ h4 {
 }
 
 /* Interactive cursor standard. Native <button> defaults to the arrow cursor
-   while <a> gets the pointer hand — which is exactly why "Ask Friday" and the
-   theme toggle felt different from the nav links. One rule: every ENABLED
+   while <a> gets the pointer hand — which is exactly why the assistant launcher
+   and the theme toggle felt different from the nav links. One rule: every ENABLED
    interactive control is a pointer; anything disabled is not-allowed. */
 button:not(:disabled),
 [role="button"]:not([aria-disabled="true"]),
@@ -122,6 +124,35 @@ button:disabled,
   }
 }
 
+/* --- entrance reveal (design-system.md §6) ---
+   Section wrappers (never prose) fade + rise ONCE, on load. The opacity:0 start
+   lives ONLY inside `no-preference` (via the keyframe + `both` fill), so with
+   reduced motion — or before/without the animation — content is simply present;
+   nothing is ever hidden behind a transform that might not fire. `.reveal-stagger
+   > *` additionally delays each sibling by --i × --stagger-step (the index comes
+   from stagger(i) in constants/page.ts). Load-orchestrated, not scroll-triggered:
+   below-fold groups finish animating before they are read, so no body copy ever
+   fades in under the reader (motion policy). */
+@media (prefers-reduced-motion: no-preference) {
+  .reveal,
+  .reveal-stagger > * {
+    animation: reveal-in var(--motion-reveal) var(--ease-emphasized) both;
+  }
+  .reveal-stagger > * {
+    animation-delay: calc(var(--i, 0) * var(--stagger-step));
+  }
+}
+@keyframes reveal-in {
+  from {
+    opacity: 0;
+    transform: translateY(8px);
+  }
+  to {
+    opacity: 1;
+    transform: none;
+  }
+}
+
 /* --- interaction polish (all opacity/transform/color; reduced-motion-safe) --- */
 
 /* Animated underline: grows left→right on hover, no layout shift. */
@@ -138,11 +169,11 @@ button:disabled,
   background-size: 100% 1px;
 }
 
-/* --- dark section band (Clerk-style light/dark section rhythm) --- */
-/* Scopes the dark colour tokens LOCALLY so every child component adapts, adds a
-   faint technical texture, and (with .tone-notch) an angular transition edge. */
+/* --- dark section band (light page, dark bands — the brand rhythm) --- */
+/* Scopes the dark colour tokens LOCALLY so every child component adapts, and
+   (with .tone-notch) draws the graticule seam at the light↔dark boundary. */
 .tone-invert {
-  --color-bg: #131316; /* Clerk's exact dark-section colours */
+  --color-bg: #131316; /* dark-section colours, mirrored from [data-theme=dark] */
   --color-bg-subtle: #1a1a1f;
   --color-surface: #212126;
   --color-ink: #f7f7f8;
@@ -150,10 +181,10 @@ button:disabled,
   --color-ink-tertiary: #9394a1; /* light on dark — AA on the dark band */
   --color-border: #2f3037;
   --color-border-strong: #42434d;
-  --color-accent: #9a7fff;
-  --color-accent-hover: #b3a0ff;
-  --color-on-accent: #131316;
-  --color-accent-subtle: #241d47;
+  --color-accent: #5cccc0;
+  --color-accent-hover: #7ad9cf;
+  --color-on-accent: #08201e;
+  --color-accent-subtle: #10322f;
   /* Status colours must be scoped here too: without them a Metric delta or
      before/after value dropped into a tone='invert' section keeps the LIGHT
      #15803d / #b91c1c against the dark surface (~3:1, below AA). Mirror the
@@ -165,67 +196,83 @@ button:disabled,
   --shadow-sm: 0 0 0 0.5px rgb(255 255 255 / 0.07), 0 1px 2px rgb(0 0 0 / 0.5);
   --shadow-md: 0 0 0 0.5px rgb(255 255 255 / 0.08), 0 8px 20px -6px rgb(0 0 0 / 0.55);
   --shadow-lg: 0 0 0 0.5px rgb(255 255 255 / 0.09), 0 16px 38px -10px rgb(0 0 0 / 0.65);
+  --shadow-surface:
+    inset 0 1px 0 rgb(255 255 255 / 0.06),
+    0 0 0 0.5px rgb(255 255 255 / 0.08),
+    0 2px 4px rgb(0 0 0 / 0.45),
+    0 14px 34px -10px rgb(0 0 0 / 0.6);
+  --shadow-surface-hover:
+    inset 0 1px 0 rgb(255 255 255 / 0.08),
+    0 0 0 0.5px rgb(255 255 255 / 0.1),
+    0 4px 8px rgb(0 0 0 / 0.5),
+    0 22px 50px -12px rgb(0 0 0 / 0.66);
   background-color: var(--color-bg);
   color: var(--color-ink);
 }
-/* Light↔dark band transition — the chamfered tab, measured off clerk.com.
-   An earlier pass here was a centre pentagon, which read as a rendering fault; I
-   then removed it entirely, which was also wrong. Clerk's actual device is a
-   full-bleed dark band whose top edge STEPS UP across the container width, with
-   45° chamfers at the two container edges — so the light section appears to
-   overhang the dark one like a tab. The step is what makes the band read as a
-   deliberate plate rather than a colour change.
-   `--notch-h` is the step height; `--notch-x` is where the chamfers sit, which
-   must track the container so the corners land on the content edge.
-   Proportions re-measured off clerk.com at 1440: the step is ~48px, and the
-   chamfer is CENTRED on the container edge (top corner half a step outside the
-   container, bottom corner half a step inside) rather than starting at it —
-   centred is what makes the light section read as a plate overhanging the dark
-   band instead of a cut made inside it. */
+/* Dark-first rhythm: with no light↔dark flip, a feature band would vanish into
+   the page. Recess it into a slightly deeper well (and the graticule seam marks
+   the edge), so the band still reads as a distinct plate. */
+:root[data-theme="dark"] .tone-invert {
+  --color-bg: #0d0d10;
+  --color-bg-subtle: #151519;
+  --color-surface: #1d1d22;
+}
+/* Light↔dark band transition — the GRATICULE SEAM (design-system.md §5).
+   Replaces the previous chamfered "plate" tab (which read as a product surface,
+   not an instrument). Where a light section meets a dark band, the boundary is
+   drawn as a calibration scale: a 1px baseline rule carrying short, evenly-spaced
+   ticks descending into the dark band — a ruler edge / oscilloscope graticule.
+   It says "measured axis," which is the site's whole argument.
+
+   Pure CSS gradients on a pseudo-element: no clip-path, so the band stays a clean
+   full-bleed rectangle that composes with content-visibility and never clips
+   content. Tick spacing/height are tokens (--graticule-step / --graticule-h), so
+   the scale retunes from tokens.css. Static — reduced-motion is irrelevant.
+   Decorative, so the pseudo-element is aria-hidden by construction (::before). */
 .tone-notch {
-  --notch-h: 48px;
-  --notch-x: max(0px, (100% - var(--width-container)) / 2 - var(--notch-h) / 2);
   position: relative;
-  clip-path: polygon(
-    0 var(--notch-h),
-    var(--notch-x) var(--notch-h),
-    calc(var(--notch-x) + var(--notch-h)) 0,
-    calc(100% - var(--notch-x) - var(--notch-h)) 0,
-    calc(100% - var(--notch-x)) var(--notch-h),
-    100% var(--notch-h),
-    100% 100%,
-    0 100%
-  );
+}
+.tone-notch::before {
+  content: "";
+  position: absolute;
+  inset-inline: 0;
+  top: 0;
+  height: var(--graticule-h);
+  pointer-events: none;
+  /* baseline rule (top 1px) + downward ticks every --graticule-step */
+  background:
+    linear-gradient(var(--color-border-strong), var(--color-border-strong)) top / 100% 1px no-repeat,
+    repeating-linear-gradient(
+      90deg,
+      color-mix(in srgb, var(--color-accent) 60%, transparent) 0 1px,
+      transparent 1px var(--graticule-step)
+    );
+}
+/* The bottom-edge twin, for the one dark band that ends a PAGE (the contact
+   close): the same graticule, mirrored to sit on the band's lower boundary where
+   the light footer rises to meet it. */
+.tone-notch.tone-notch-b::after {
+  content: "";
+  position: absolute;
+  inset-inline: 0;
+  bottom: 0;
+  height: var(--graticule-h);
+  pointer-events: none;
+  background:
+    linear-gradient(var(--color-border-strong), var(--color-border-strong)) bottom / 100% 1px no-repeat,
+    repeating-linear-gradient(
+      90deg,
+      color-mix(in srgb, var(--color-accent) 60%, transparent) 0 1px,
+      transparent 1px var(--graticule-step)
+    );
+  /* ticks ascend from the bottom baseline instead of descending from the top */
+  transform: scaleY(-1);
 }
 @media (max-width: 640px) {
   .tone-notch {
-    --notch-h: 28px;
+    --graticule-step: 10px;
+    --graticule-h: 7px;
   }
-}
-/* The bottom-edge twin, for the one dark band that ends a PAGE (the contact
-   close): the same chamfered seam, mirrored. Measured off clerk.com's dark→light
-   hand-off: at a band's BOTTOM the outer margins run to the very edge and the
-   container-width middle stops one step short — the light surface below rises
-   into the plate as a tab, exactly inverse to the top seam. clip-path is a
-   single property, so this composes with `.tone-notch` by restating the top
-   step in one combined polygon rather than adding to it. Reuses --notch-h /
-   --notch-x from `.tone-notch`, so one knob tunes both seams (and the 640px
-   override above applies to both). */
-.tone-notch.tone-notch-b {
-  clip-path: polygon(
-    0 var(--notch-h),
-    var(--notch-x) var(--notch-h),
-    calc(var(--notch-x) + var(--notch-h)) 0,
-    calc(100% - var(--notch-x) - var(--notch-h)) 0,
-    calc(100% - var(--notch-x)) var(--notch-h),
-    100% var(--notch-h),
-    100% 100%,
-    calc(100% - var(--notch-x)) 100%,
-    calc(100% - var(--notch-x) - var(--notch-h)) calc(100% - var(--notch-h)),
-    calc(var(--notch-x) + var(--notch-h)) calc(100% - var(--notch-h)),
-    var(--notch-x) 100%,
-    0 100%
-  );
 }
 
 

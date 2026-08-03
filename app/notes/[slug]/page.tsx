@@ -6,7 +6,7 @@ import { PAGE_TOP } from "@/constants/page";
 import { routableNoteSlugs, loadNote, noteNeighbours } from "@/lib/notes";
 import { formatDate } from "@/lib/format";
 import { SITE } from "@/config/site";
-import { ArticleJsonLd } from "@/components/seo/json-ld";
+import { ArticleJsonLd, BreadcrumbJsonLd } from "@/components/seo/json-ld";
 import {
   NewsletterForm,
   NEWSLETTER_ENABLED,
@@ -69,6 +69,12 @@ export default async function NotePost({ params }: { params: Promise<{ slug: str
         description={describe(meta.tags)}
         url={url}
         datePublished={meta.date}
+      />
+      <BreadcrumbJsonLd
+        items={[
+          { name: "Notes", url: `${SITE.url}/notes` },
+          { name: meta.title, url },
+        ]}
       />
       <article className="max-w-[var(--width-prose)]">
         <ArticleHeader

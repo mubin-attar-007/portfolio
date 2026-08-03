@@ -57,6 +57,17 @@ const nextConfig: NextConfig = {
       },
     ];
   },
+  // Consolidated routes keep their inbound links alive (301, never a silent 404):
+  //   /talks    → /about  (removed until there is a real talk to list)
+  //   /timeline → /about  (the career narrative now lives inside /about)
+  //   /changelog→ /now     (the running record folded into the "now" surface)
+  async redirects() {
+    return [
+      { source: "/talks", destination: "/about", permanent: true },
+      { source: "/timeline", destination: "/about", permanent: true },
+      { source: "/changelog", destination: "/now", permanent: true },
+    ];
+  },
 };
 
 export default nextConfig;

@@ -2,7 +2,7 @@ import type { ElementType, ReactNode } from "react";
 
 /**
  * Container — centres content at the --width-container measure with responsive
- * gutters (24px mobile → 32px from md, matching Clerk's page inset).
+ * gutters (24px mobile → 32px from md, the site's page inset).
  * Purpose: the single horizontal-rhythm primitive. The width is read from the
  * token rather than restated here, so retuning the measure is a one-line change
  * in tokens.css and every page follows.

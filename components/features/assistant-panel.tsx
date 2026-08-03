@@ -346,7 +346,9 @@ export function AssistantPanel({ onClose }: { onClose: () => void }) {
   );
 
   const empty = messages.length === 0;
-  const statusText = busy ? "Friday is generating a response." : "Friday is ready.";
+  const statusText = busy
+    ? "Searching the site and generating a cited answer."
+    : "Ready to search this site.";
 
   // Portal to <body>: the header pill has backdrop-filter, which would otherwise
   // make it the containing block for this fixed panel and mis-anchor it.
@@ -397,8 +399,9 @@ export function AssistantPanel({ onClose }: { onClose: () => void }) {
           {empty ? (
             <div>
               <p className="text-sm leading-relaxed text-ink-secondary">
-                Hi — I&apos;m Friday. Ask about Mubin&apos;s work and I&apos;ll answer from his case
-                studies, writing, and résumé, with sources.
+                Ask about Mubin&apos;s work. Every answer is pulled straight from this
+                site — case studies, writing, and résumé — and cited to the page. It
+                won&apos;t tell you anything that isn&apos;t already here.
               </p>
               <p className="mt-5 font-mono text-xs uppercase tracking-wide text-ink-tertiary">
                 Try one, or ask your own
@@ -465,7 +468,7 @@ export function AssistantPanel({ onClose }: { onClose: () => void }) {
                 ask(draft);
                 setDraft("");
               }}
-              aria-label="Ask Friday a question"
+              aria-label="Ask this site a question"
               className="flex items-end gap-2 border-t border-border px-5 py-3"
             >
           <textarea

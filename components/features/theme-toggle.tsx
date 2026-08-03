@@ -5,24 +5,25 @@ import { Moon, Sun } from "lucide-react";
 
 /**
  * ThemeToggle — switches light/dark by setting `data-theme` on <html> and
- * persisting to localStorage. Light is the default/brand; this is a preference.
+ * persisting to localStorage. Dark is the default/brand; light is a preference.
  * Props: none. A11y: labelled button; icon reflects the *action*, updates on
- * toggle. SSR renders a stable placeholder (Moon) to avoid hydration mismatch;
- * the real state resolves after mount. The no-flash pre-paint script lives in layout.
+ * toggle. SSR renders a stable placeholder (Sun = the dark default) to avoid
+ * hydration mismatch; the real state resolves after mount. The no-flash pre-paint
+ * script lives in layout.
  */
 type Theme = "light" | "dark";
 
 export function ThemeToggle() {
-  const [theme, setTheme] = useState<Theme | null>(null);
+  const [theme, setTheme] = useState<Theme | null>("dark");
 
   useEffect(() => {
     const stored = localStorage.getItem("theme");
     const current: Theme =
       stored === "dark" || stored === "light"
         ? stored
-        : ((document.documentElement.getAttribute("data-theme") as Theme | null) ?? "light");
-    // one-time read of the persisted theme (else the light brand default) on
-    // mount — we intentionally do NOT follow the OS scheme (light is the brand)
+        : ((document.documentElement.getAttribute("data-theme") as Theme | null) ?? "dark");
+    // one-time read of the persisted theme (else the dark brand default) on
+    // mount — we intentionally do NOT follow the OS scheme (dark is the brand)
     // eslint-disable-next-line react-hooks/set-state-in-effect
     setTheme(current);
   }, []);

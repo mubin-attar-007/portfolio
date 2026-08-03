@@ -12,13 +12,13 @@ export const OG_SIZE = { width: 1200, height: 630 } as const;
 export const OG_CONTENT_TYPE = "image/png";
 
 // Brand tokens, inlined (satori can't read CSS variables). Kept in sync with
-// styles/tokens.css — the light (default) palette, Clerk purple accent.
+// styles/tokens.css — the light (default) palette, signal-teal accent.
 const BG = "#f7f7f8"; // --color-bg
 const INK = "#131316"; // --color-ink
 const INK_2 = "#5e5f6e"; // --color-ink-secondary
 const INK_3 = "#676876"; // --color-ink-tertiary
 const BORDER = "#d9d9de"; // --color-border-strong
-const ACCENT = "#6c47ff"; // --color-accent
+const ACCENT = "#0f6e6a"; // --color-accent
 export function formatOgEyebrow(label: string) {
   return `${SITE.name} · ${label}`;
 }

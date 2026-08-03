@@ -1,42 +1,46 @@
 # DESIGN.md — Visual system
 
-Design intent: **an engineering notebook with a product-grade surface.** Calm,
-typography-first, generous whitespace, evidence in the foreground. Reference feel:
-Clerk's marketing pages (the adopted system — see §0), with Stripe docs, Linear, and
-Anthropic docs as the restraint reference.
+> **Canonical source: [`design-system.md`](../design-system.md).** That document
+> holds the current thesis, token values, and measured contrast. This file keeps
+> the deeper component-level rationale (accent budget, page tempo, anti-patterns,
+> evidence rules), all of which still hold. Where the two disagree on a *value*,
+> `design-system.md` wins.
+
+Design intent: **an engineering notebook with a product-grade surface** — the
+readout of a precision instrument. Calm, typography-first, generous whitespace,
+evidence in the foreground. Restraint references: Stripe docs, Linear, Anthropic
+docs — for the *reasoning* (information density, typographic confidence, motion
+that clarifies), never the surface.
 
 Premium design isn't louder. It is quieter. The site should disappear; the work remains.
 
 ---
 
-## 0. Brand system direction (supersedes the earlier neutral-paper palette)
+## 0. Brand system direction — "Instrumentation, not decoration"
 
-The site is built to **Clerk's craft standard**: a cool near-white page, tactile
-elevation, a light page punctuated by dark section-bands, confident type, and calm
-motion curves. That direction shipped on `feature/clerk-caliber-pass` and is kept.
+The identity was re-forged (this session) away from a borrowed design language and
+onto a thesis of its own: the site is the **readout of a measurement instrument**.
+The full thesis, tokens, and measured contrast live in `design-system.md §1–§2`.
 
 The governing constraint comes from `CLAUDE.md`:
 
 > "Never copy designs directly. Understand the design principles and create an original
 > implementation."
 
-So the line is drawn at *principles, not artifacts*:
+What that means in practice here:
 
-- **Adopted:** the elevation model, band rhythm, spacing confidence, motion character,
-  type density — the standard of craft.
-- **Not adopted:** Clerk's logo, wordmark, illustrations, copy, or anything implying
-  affiliation. Nothing here may suggest a relationship with Clerk.
-- **RESOLVED (owner, this session):** keep the accent `#6C47FF` and the Clerk-derived
-  palette, and go *further* on depth, effect, and motion. The owner reviewed the
-  direction and chose it explicitly: *"follow the clerk's color, style, effect,
-  animation etc… i like it."* The values in §1.1 are therefore settled brand law.
-  The originality constraint is satisfied at the level that matters — the layouts,
-  copy, illustrations, diagrams, and product surfaces are entirely ours; what is
-  shared is the craft vocabulary.
+- **Original identity:** a **signal-teal** accent (`#0f6e6a` light / `#5cccc0` dark)
+  traceable to the subject matter (a signal trace, a passing check), a **graticule
+  seam** as the section-transition device (a calibration scale, not a product-plate
+  tab), and a stated design authority that is the site's own — no "measured off
+  another site" reasoning survives.
+- **Kept — the craft, not the skin:** the elevation-for-overlays-only model, the
+  asymmetric band rhythm, the accent budget, the motion character, the type density.
+  These are principles, and they raise the craft ceiling; they do not license
+  decoration.
 
 Everything else in this document — the accent budget (§2), the page tempo (§4), the
-anti-patterns (§9), the evidence rules — survives unaltered. A richer palette raises
-the ceiling on craft; it does not license decoration.
+anti-patterns (§9), the evidence rules — survives unaltered.
 
 ---
 
@@ -62,10 +66,10 @@ tokens via Tailwind utilities only. **No raw hex, px, or ms anywhere else.**
 | `--color-ink-tertiary` | `#676876` | meta labels, timestamps (darkened to clear AA on bg + bg-subtle) |
 | `--color-border` | `#E3E3E8` | hairlines (default) |
 | `--color-border-strong` | `#D9D9DE` | inputs, emphasized dividers |
-| `--color-accent` | `#6C47FF` | links, primary button, active nav, focus |
-| `--color-accent-hover` | `#5A37E0` | hover state |
-| `--color-on-accent` | `#FFFFFF` | text on an accent fill |
-| `--color-accent-subtle` | `#F0EDFF` | accent-tinted backgrounds (rare) |
+| `--color-accent` | `#0F6E6A` | signal teal — links, primary button, active nav, focus |
+| `--color-accent-hover` | `#0B5754` | hover state |
+| `--color-on-accent` | `#FFFFFF` | text on an accent fill (6.07:1) |
+| `--color-accent-subtle` | `#E7F3F1` | accent-tinted backgrounds (rare) |
 | `--color-positive` | `#15803D` | improved metrics (▼ latency, ▲ accuracy) |
 | `--color-negative` | `#B91C1C` | regressions in FailureLog "before" values |
 | `--color-warning` | `#B45309` | callout: caution |
@@ -74,8 +78,8 @@ tokens via Tailwind utilities only. **No raw hex, px, or ms anywhere else.**
 
 `--color-bg #131316` · `--color-bg-subtle #1A1A1F` · `--color-surface #212126` ·
 `--color-ink #F7F7F8` · `--color-ink-secondary #B7B8C2` · `--color-ink-tertiary #9394A1` ·
-`--color-border #2F3037` · `--color-border-strong #42434D` · `--color-accent #9A7FFF` ·
-`--color-accent-hover #B3A0FF` · `--color-accent-subtle #241D47` · `--color-on-accent #131316` ·
+`--color-border #2F3037` · `--color-border-strong #42434D` · `--color-accent #5CCCC0` ·
+`--color-accent-hover #7AD9CF` · `--color-accent-subtle #10322F` · `--color-on-accent #08201E` ·
 positive `#4ADE80` · negative `#F87171` · warning `#FBBF24`.
 
 **The brand default is the light page carrying dark section-bands** (`tone="invert"`),
@@ -129,7 +133,7 @@ Numbers in metrics use `--font-mono` with `font-variant-numeric: tabular-nums`.
   · `--radius-lg 12px` (figures, terminal frames). Nothing rounder except avatars.
 - Depth comes primarily from **hairline borders + background shifts**. Elevation is the
   exception, not the texture.
-- Elevation set (ratified with §0 — Clerk's tactile model): `--shadow-sm` / `--shadow-md`
+- Elevation set (tactile model, ratified §0): `--shadow-sm` / `--shadow-md`
   / `--shadow-lg`, each a hairline ring + a soft drop, plus `--shadow-btn` (inset top
   highlight) for the primary button only. `--shadow-overlay` aliases `--shadow-lg` for
   menus, dialogs, the assistant panel.
@@ -141,7 +145,7 @@ Numbers in metrics use `--font-mono` with `font-variant-numeric: tabular-nums`.
 
 - Durations: `--motion-fast 140ms` (hover) · `--motion-base 200ms` · `--motion-slow 300ms`
   (panels) · `--motion-reveal 600ms` (scroll entrance fades).
-- Easing (Clerk's curves, ratified §0): `--ease-out: cubic-bezier(0.4, 0.36, 0, 1)` is the
+- Easing (ratified §0): `--ease-out: cubic-bezier(0.4, 0.36, 0, 1)` is the
   default for everything — Tailwind's base transition is wired to it, so a bare
   `transition` settles on the one curve. `--ease-emphasized: cubic-bezier(0.33, 1, 0.68, 1)`
   for entrance reveals. `--ease-spring` exists for rare accent moments; overshoot on more

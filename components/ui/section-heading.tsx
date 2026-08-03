@@ -22,10 +22,10 @@ import { TextLink } from "./text-link";
  * - `size` — `display` (default) or `compact`. Compact drops an h2 one step
  *   (3xl→4xl instead of 4xl→5xl) and its sub to body size. Use it when two
  *   headers share one band (the Now+Writing two-up) or when the band is a
- *   closing group (the FAQ): Clerk's half-column headings measure ~36px, and two
+ *   closing group (the FAQ): half-column headings measure ~36px, and two
  *   display headings side by side read as competition, not rhythm.
  * - `sub` — one muted supporting sentence. Left-aligned subs cap near 60ch;
- *   centred (band) subs drop to body size and cap near 48ch — Clerk's measured
+ *   centred (band) subs drop to body size and cap near 48ch — a measured
  *   ~490px band-sub column — so they break into two balanced lines.
  * - `link` — the band's forward affordance, rendered as the shared `TextLink`.
  * - `children` — the heading text.
@@ -57,7 +57,7 @@ export function SectionHeading({
   // `size` only retunes an h2 — an h3 is already the compact scale, and pushing
   // it lower would collapse the outline's visual hierarchy entirely.
   // A CENTRED h2 (the dark-band header) takes its own scale before `size` is
-  // consulted: Clerk's centred band h2 measures 40px/700 where their page h2s
+  // consulted: the centred band h2 measures 40px/700 where page h2s
   // reach 48px/600 — smaller but heavier is what makes the band header read as
   // dense and finished rather than merely shrunk (--text-band-title).
   const headingScale =
@@ -82,7 +82,7 @@ export function SectionHeading({
         {children}
       </Tag>
       {sub ? (
-        // Centred subs drop to text-base and hold Clerk's measured ~490px
+        // Centred subs drop to text-base and hold a measured ~490px
         // column (two balanced lines): a centred paragraph at 60ch/lg read as
         // a slab rather than a caption.
         <p

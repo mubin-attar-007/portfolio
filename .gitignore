@@ -56,10 +56,6 @@ IMPLEMENTATION_PLAN.md
 PENDING_ONLINE.md
 claude_guide/
 
-# internal design study — competitor teardown incl. screenshots (kept local, not shipped)
-/docs/clerk-study.md
-/docs/clerk-study/
-
 # editor / OS cruft
 .vscode/
 .idea/

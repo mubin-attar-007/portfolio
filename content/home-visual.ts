@@ -42,6 +42,16 @@ export const flagshipHome = {
         detail: "Rows returned with the generated query attached",
       },
     ],
+    // The eval reading attached to the run — the SAME measured numbers as the
+    // registry (content/evals.ts), never a separate claim.
+    eval: {
+      set: "22 golden queries · 4 unsafe prompts",
+      rows: [
+        { label: "Exact result-set match", value: "82%", detail: "18 / 22" },
+        { label: "Fail-closed refusals", value: "100%", detail: "4 / 4 unsafe" },
+      ],
+      href: "/evals#dbwhisper-custom-golden-query-set",
+    },
   },
   proof: {
     lead: "AI/ML Engineer at Sevina Technologies",

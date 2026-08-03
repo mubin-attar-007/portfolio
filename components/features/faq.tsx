@@ -5,7 +5,7 @@ import { home } from "@/content/site";
 import { SectionHeading } from "@/components/ui/section-heading";
 
 /**
- * Faq — Clerk's accordion device, adapted to a personal-brand FAQ. One panel
+ * Faq — a single-open accordion, adapted to a personal-brand FAQ. One panel
  * open at a time.
  *
  * The device: hairline-separated rows, a mono label, and a small circular
@@ -14,7 +14,7 @@ import { SectionHeading } from "@/components/ui/section-heading";
  * not depend on colour perception (WCAG 1.4.1) — and the revealed answer is
  * itself the primary visual confirmation.
  *
- * Deviation from Clerk, on purpose: their labels are all-caps because they are
+ * A deliberate deviation from the all-caps accordion label: that idiom works for
  * two-word feature names. Ours are full sentences, and long strings set in caps
  * are both harder to read and banned outright by DESIGN.md §9 ("uppercase
  * headings"). The mono face, the tracking, the marker and the hairlines carry

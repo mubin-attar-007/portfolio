@@ -43,11 +43,11 @@ export const timeline: TimelinePhase[] = RAW.map((p) => TimelineSchema.parse(p))
 );
 
 /**
- * /timeline page chrome — lifted verbatim out of app/timeline/page.tsx (Law 3:
- * no copy in components). The `labels` map also fixes the ORDER of the four
- * rows in one place, which matters because the order is an argument: built →
- * learned → mistake → changed reads as a consequence chain, and the mistake is
- * the hinge. Reordering it would change what the page says.
+ * Career-timeline chrome — rendered as a section of /about via CareerTimeline
+ * (components/features/career-timeline.tsx). The `labels` map also fixes the
+ * ORDER of the four rows in one place, which matters because the order is an
+ * argument: built → learned → mistake → changed reads as a consequence chain,
+ * and the mistake is the hinge. Reordering it would change what it says.
  */
 export const timelineIntro = {
   kicker: "Timeline",

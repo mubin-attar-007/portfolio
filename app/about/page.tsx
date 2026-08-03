@@ -7,7 +7,9 @@ import { SectionHeading } from "@/components/ui/section-heading";
 import { TextLink } from "@/components/ui/text-link";
 import { buttonVariants } from "@/components/ui/button";
 import { ProofStrip } from "@/components/features/proof-strip";
+import { CareerTimeline } from "@/components/features/career-timeline";
 import { about, home } from "@/content/site";
+import { timelineIntro } from "@/content/timeline";
 import { SITE } from "@/config/site";
 import { FIGURE, PAGE_BODY_BAND, PAGE_HEADER_BAND, stagger } from "@/constants/page";
 
@@ -129,8 +131,21 @@ export default function AboutPage() {
               </div>
             ))}
           </dl>
-          <TextLink href={about.thinking.href} className="mt-8">
-            {about.thinking.cta}
+        </div>
+
+        {/* The career narrative, merged in from the former /timeline route:
+            growth over titles, with the mistake line as the credibility hinge. */}
+        <hr className="rule-fade mt-14" />
+        <div className="mt-14">
+          <SectionHeading kicker={timelineIntro.kicker}>{timelineIntro.title}</SectionHeading>
+          <p className="reveal mt-4 max-w-[var(--width-prose)] text-ink-secondary">
+            {timelineIntro.lede}
+          </p>
+          <div className="mt-10">
+            <CareerTimeline />
+          </div>
+          <TextLink href={timelineIntro.cta.href} className="mt-8">
+            {timelineIntro.cta.label}
           </TextLink>
         </div>
       </Section>

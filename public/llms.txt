@@ -27,8 +27,7 @@ AI/ML Engineer based in Ahmedabad, India, with 3+ years building and shipping pr
 - https://mubin-attar.vercel.app/writing/retrieval-beats-stuffing — guide: schema-aware retrieval over stuffing the whole schema into the prompt
 
 ## More
-- https://mubin-attar.vercel.app/about — how I work and what I refuse to fake
-- https://mubin-attar.vercel.app/timeline — Built / Learned / Mistake / Changed per phase
+- https://mubin-attar.vercel.app/about — how I work, what I refuse to fake, and the career timeline (Built / Learned / Mistake / Changed per phase)
 - https://mubin-attar.vercel.app/resume — résumé, with every metric linked to its method
 
 ## Links

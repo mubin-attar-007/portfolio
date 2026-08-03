@@ -63,7 +63,7 @@ export default function ComponentsPage() {
             label: stat.label,
           })),
           { href: "/trust", label: "trust policy" },
-          { href: "/changelog", label: "changelog" },
+          { href: "/now", label: "now" },
         ]}
         className="mt-8"
       />
@@ -75,6 +75,9 @@ export default function ComponentsPage() {
           <Button variant="ghost">Ghost</Button>
           <Button variant="primary" disabled>
             Disabled
+          </Button>
+          <Button variant="primary" loading>
+            Loading
           </Button>
         </div>
       </Row>

@@ -53,10 +53,11 @@ export const metadata: Metadata = {
   },
 };
 
-// Pre-paint theme application (no flash). The light page with dark section-bands
-// is the brand default and always renders unless the visitor has explicitly
-// chosen dark (stored) — we intentionally do NOT follow the OS colour-scheme.
-const THEME_SCRIPT = `(function(){document.documentElement.classList.add('js');try{var t=localStorage.getItem('theme');if(t==='dark'||t==='light')document.documentElement.setAttribute('data-theme',t);}catch(e){}})();`;
+// Pre-paint theme application (no flash). The brand is now DARK-first: the page
+// renders dark unless the visitor has explicitly chosen light (stored). We
+// intentionally do NOT follow the OS colour-scheme. The server renders
+// data-theme="dark" (below) so the first paint is already dark.
+const THEME_SCRIPT = `(function(){document.documentElement.classList.add('js');try{var t=localStorage.getItem('theme');document.documentElement.setAttribute('data-theme',t==='light'?'light':'dark');}catch(e){}})();`;
 const IS_VERCEL_DEPLOYMENT = process.env.VERCEL === "1";
 
 export default function RootLayout({ children }: Readonly<{ children: React.ReactNode }>) {
@@ -64,6 +65,7 @@ export default function RootLayout({ children }: Readonly<{ children: React.Reac
   return (
     <html
       lang="en"
+      data-theme="dark"
       className={`${geistSans.variable} ${geistMono.variable} ${newsreader.variable}`}
       suppressHydrationWarning
     >

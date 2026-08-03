@@ -5,7 +5,7 @@ import { CheckList, type CheckListItem } from "@/components/ui/check-list";
 import { TextLink } from "@/components/ui/text-link";
 
 /**
- * SplitFeature — the site's split feature band, measured off clerk.com: a narrow
+ * SplitFeature — the site's split feature band: a narrow
  * copy rail on one side (kicker → heading → body → checklist → forward link) and
  * a large product surface on the other that BLEEDS out of the container to the
  * viewport edge.
@@ -42,7 +42,7 @@ import { TextLink } from "@/components/ui/text-link";
  */
 
 /**
- * The copy rail's width at xl+. Clerk's is a deliberately narrow ~350px column:
+ * The copy rail's width at xl+. A deliberately narrow ~350px column:
  * narrow enough that the media keeps the majority of the page, wide enough for a
  * ~45-character measure. Everything below is derived from it, so retuning the
  * device is this one value.
@@ -170,15 +170,15 @@ export function SplitFeature({
             {kicker ? (
               // Same treatment as SectionHeading's kicker, including the automatic
               // accent switch on dark bands — one header idiom, two components.
-              // On a dark band it also steps up to text-sm (Clerk's band kickers
-              // measure ~15px; at text-xs ours disappeared into the band).
+              // On a dark band it also steps up to text-sm (band kickers want
+              // ~15px; at text-xs ours disappeared into the band).
               <p className="font-mono text-xs uppercase text-ink-tertiary [.tone-invert_&]:text-sm [.tone-invert_&]:text-accent">
                 {kicker}
               </p>
             ) : null}
             {/* text-4xl, not the 5xl a centred band header spends: this heading
                 lives in a 352px rail, where 48px type would break into three
-                ragged lines. Clerk's split headings measure 36–40px for the same
+                ragged lines. A split heading wants 36–40px for the same
                 reason. */}
             <h2 className={`${kicker ? "mt-4" : ""} max-w-[18ch] text-3xl text-ink sm:text-4xl`}>
               {title}

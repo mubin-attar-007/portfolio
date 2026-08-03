@@ -40,8 +40,8 @@ export default function TrustPage() {
           title={trust.title}
           lede={trust.body}
         >
-          <TextLink href="/changelog" tone="quiet">
-            Open changelog
+          <TextLink href="/now" tone="quiet">
+            What&rsquo;s shipping now
           </TextLink>
           <TextLink href="/hire">Talk about trust in production</TextLink>
         </PageHeader>
@@ -114,10 +114,10 @@ export default function TrustPage() {
         <div className="reveal mt-16 border-t border-border pt-8">
           <div className="flex flex-wrap items-start justify-between gap-6 sm:items-center">
             <p className="max-w-[45ch] text-sm text-ink-secondary">
-              Want to see the rollout history of changes, experiments, and
-              reliability updates?
+              Want to see what&rsquo;s shipping right now — the changes,
+              experiments, and reliability work in flight?
             </p>
-            <TextLink href="/changelog">Open changelog</TextLink>
+            <TextLink href="/now">See what I&rsquo;m doing now</TextLink>
           </div>
         </div>
       </Section>

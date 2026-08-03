@@ -24,7 +24,7 @@ import type { ReactNode } from "react";
  *   SectionHeading's align alternation).
  * - `children` — the actions slot: CTAs, a feed link, a cross-reference.
  *
- * Type: Clerk's measured header scale — weight 700, 1.1 line-height, -0.025em
+ * Type: a measured header scale — weight 700, 1.1 line-height, -0.025em
  * tracking, clamping to 56px on desktop. That is one step BELOW the homepage
  * hero's 64px ceiling, deliberately: the hero stays the largest type on the
  * site, so arriving on an index route still reads as going one level in.
@@ -70,7 +70,7 @@ export function PageHeader({
       <h1
         className={`${
           eyebrow ? "mt-6" : ""
-        } max-w-[20ch] text-balance text-[clamp(2.25rem,5vw,3.5rem)] font-semibold leading-[1.1] tracking-[-0.025em] text-ink`}
+        } max-w-[20ch] text-balance text-[clamp(2.25rem,5vw,3.5rem)] font-[560] leading-[1.08] tracking-[-0.028em] text-ink`}
       >
         {title}
       </h1>

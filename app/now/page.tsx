@@ -7,7 +7,7 @@ import { SITE, STATUS } from "@/config/site";
 import { nowPage } from "@/content/site";
 import { loadNow } from "@/lib/now";
 import { formatDate } from "@/lib/format";
-import { LABEL, PAGE_BODY_BAND, PAGE_HEADER_BAND, PANEL, PANEL_RAISED } from "@/constants/page";
+import { LABEL, PAGE_BODY_BAND, PAGE_HEADER_BAND, PANEL } from "@/constants/page";
 
 const NOW_PATH = "/now";
 
@@ -61,7 +61,7 @@ export default async function NowPage() {
 
         {/* Open to — single-sourced from STATUS so it never diverges from /hire
             and the footer. The one panel on the page with card elevation. */}
-        <section className={`reveal mt-8 max-w-[var(--width-prose)] ${PANEL} ${PANEL_RAISED}`}>
+        <section className={`reveal mt-8 max-w-[var(--width-prose)] ${PANEL}`}>
           <h2 className={LABEL}>{nowPage.openTo.title}</h2>
           <p className="mt-4 text-lg text-ink">{STATUS.text}.</p>
           <div className="mt-6">

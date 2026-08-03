@@ -7,7 +7,7 @@ import { buttonVariants } from "@/components/ui/button";
 import { ResumeDownloadLink } from "@/components/features/resume-download-link";
 import { SITE } from "@/config/site";
 import { resume } from "@/content/resume";
-import { LABEL, PAGE_BODY_BAND, PAGE_HEADER_BAND, PANEL, PANEL_REST } from "@/constants/page";
+import { LABEL, PAGE_BODY_BAND, PAGE_HEADER_BAND, PANEL } from "@/constants/page";
 
 const RESUME_PATH = "/resume";
 
@@ -36,8 +36,8 @@ export const metadata: Metadata = {
  *
  * The body is one column of `.rule-fade`-separated groups plus a skills panel in
  * the site's card vocabulary. Section labels use the shared LABEL style, so
- * "Experience" here is the same object as "Built" on /timeline and "Open to" on
- * /now.
+ * "Experience" here is the same object as "Built" in the /about timeline and
+ * "Open to" on /now.
  *
  * A11y: one `<h1>`, an `<h2>` per group and `<h3>` per entry — the outline reads
  * as a résumé with styles off. Every metric links to the page documenting how it
@@ -158,7 +158,7 @@ export default function ResumePage() {
               and a surface is what tells a reader it is a reference block beside
               the narrative rather than the next section of it. Resting elevation
               only — nothing in it is clickable. */}
-          <aside className={`${PANEL} ${PANEL_REST} h-fit`}>
+          <aside className={`${PANEL} h-fit`}>
             <h2 className={LABEL}>{resume.labels.skills}</h2>
             <dl className="mt-5 flex flex-col gap-4">
               {resume.skills.map((s) => (

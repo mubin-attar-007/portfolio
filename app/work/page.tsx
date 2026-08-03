@@ -10,14 +10,13 @@ import {
 import { Section } from "@/components/layout/section";
 import { SectionHeading } from "@/components/ui/section-heading";
 import { PageHeader } from "@/components/ui/page-header";
-import { Metric } from "@/components/ui/metric";
 import { TextLink } from "@/components/ui/text-link";
 import { PAGE_HEADER_BAND, PAGE_BODY_BAND, stagger } from "@/constants/page";
 import { SITE } from "@/config/site";
 import { pages } from "@/content/site";
 import { featuredProject, secondaryProjects } from "@/content/projects";
 
-/** A monochrome line-icon per system — the Clerk docs-card motif (calm, not photos). */
+/** A monochrome line-icon per system — a calm docs-card motif (not photos). */
 const PROJECT_ICON: Record<string, typeof ArrowRight> = {
   dbwhisper: Database,
   tradepulse: LineChart,
@@ -53,23 +52,48 @@ export default function WorkIndex() {
         />
       </Section>
       <Section space="md" tone="subtle" className={`reveal ${PAGE_BODY_BAND}`}>
-        <SectionHeading kicker={pages.work.flagshipKicker}>{flagship.title}</SectionHeading>
-        <p className="mt-3 max-w-[var(--width-prose)] text-ink-secondary">
-          {flagship.summary}
-        </p>
-        <div className="mt-8 flex flex-wrap gap-x-12 gap-y-6">
-          {flagship.metrics.slice(0, 3).map((m) => (
-            <Metric
-              key={m.label}
-              label={m.label}
-              after={m.value}
-              method={m.method}
-              methodHref={`/work/${flagship.slug}#performance-cost`}
-            />
-          ))}
-        </div>
-        <div className="mt-8">
-          <TextLink href={`/work/${flagship.slug}`}>{pages.work.flagshipCta}</TextLink>
+        <div className="grid gap-10 lg:grid-cols-[1.1fr_0.9fr] lg:items-start lg:gap-16">
+          <div>
+            <SectionHeading kicker={pages.work.flagshipKicker}>{flagship.title}</SectionHeading>
+            <p className="mt-3 max-w-[var(--width-prose)] text-ink-secondary">
+              {flagship.summary}
+            </p>
+            <dl className="mt-8 grid grid-cols-3 gap-x-6 gap-y-2 border-t border-border pt-6">
+              {flagship.metrics.slice(0, 3).map((m) => (
+                <div key={m.label}>
+                  <dd className="font-mono text-3xl font-medium tabular-nums text-ink">
+                    {m.value}
+                  </dd>
+                  <dt className="mt-1.5 text-sm leading-snug text-ink-secondary">{m.label}</dt>
+                </div>
+              ))}
+            </dl>
+            <div className="mt-8">
+              <TextLink href={`/work/${flagship.slug}`}>{pages.work.flagshipCta}</TextLink>
+            </div>
+          </div>
+
+          {/* Architecture at a glance — the deterministic layers around the model,
+              a compact spec panel that balances the band and previews the diagram
+              on the case-study page. */}
+          <div className="rounded-[var(--radius-md)] border border-border bg-surface p-6 shadow-[var(--shadow-surface)] sm:p-7">
+            <p className="font-mono text-xs uppercase tracking-[0.06em] text-ink-tertiary">
+              Architecture
+            </p>
+            <ol className="mt-4 flex flex-col">
+              {flagship.systems.map((system, i) => (
+                <li
+                  key={system}
+                  className="flex items-baseline gap-3 border-b border-border py-3 last:border-0"
+                >
+                  <span className="font-mono text-xs tabular-nums text-ink-tertiary">
+                    {String(i + 1).padStart(2, "0")}
+                  </span>
+                  <span className="text-sm text-ink">{system}</span>
+                </li>
+              ))}
+            </ol>
+          </div>
         </div>
       </Section>
 
@@ -82,7 +106,7 @@ export default function WorkIndex() {
               <li key={p.slug} style={stagger(i)}>
                 <Link
                   href={`/work/${p.slug}#performance-cost`}
-                  className="group flex h-full flex-col rounded-[var(--radius-md)] border border-border bg-surface p-5 transition-colors hover:border-border-strong"
+                  className="group flex h-full flex-col rounded-[var(--radius-md)] border border-border bg-surface p-5 shadow-[var(--shadow-surface)] transition-[box-shadow,transform,border-color] duration-fast ease-[var(--ease-out)] hover:-translate-y-0.5 hover:border-border-strong hover:shadow-[var(--shadow-surface-hover)]"
                 >
                   <div className="flex items-center justify-between">
                     <span className="inline-flex h-9 w-9 items-center justify-center rounded-[var(--radius-md)] border border-border text-ink-tertiary transition-colors group-hover:text-accent">

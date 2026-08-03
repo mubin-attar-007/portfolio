@@ -89,9 +89,6 @@ export default function HirePage() {
               <TextLink href="/trust" tone="quiet">
                 Open trust policy
               </TextLink>
-              <TextLink href="/changelog" tone="quiet">
-                Open changelog
-              </TextLink>
             </div>
           </section>
         </div>

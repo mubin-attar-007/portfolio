@@ -7,15 +7,15 @@ import { SITE, STATUS, FOOTER } from "@/config/site";
 import { FOOTER_NAV } from "@/config/nav";
 
 /**
- * Footer — Clerk's footer anatomy adapted to a personal brand: an identity
- * column on the left (Clerk parks its logo there; we spend it on a serif
+ * Footer — a considered footer anatomy for a personal brand: an identity
+ * column on the left (where a product parks its logo; we spend it on a serif
  * sign-off, one clear way to reach me, and the availability line), a concise
  * hiring-oriented link map on the right, then ONE hairline and a colophon bar.
- * Like Clerk's, the footer carries no background of its own and no top border:
- * it is the quiet end of the page surface, separated by whitespace (and, on the
+ * The footer carries no background of its own and no top border: it is the
+ * quiet end of the page surface, separated by whitespace (and, on the
  * homepage, by the dark close's chamfered bottom seam).
  *
- * Density is Clerk's measured rhythm: 36px from a column heading to its first
+ * Density follows a measured rhythm: 36px from a column heading to its first
  * link, 28px link pitch (20px line + 8px gap), links in full-ink so the map
  * reads crisp against the tertiary headings.
  *
@@ -41,7 +41,7 @@ export function Footer({ year }: { year: number }) {
           underneath the colophon — a footer padded evenly ends in a dead strip. */}
       <Container className="pb-10 pt-16 sm:pb-12 sm:pt-20">
         <div className="grid gap-y-12 md:grid-cols-[minmax(0,1fr)_auto] md:gap-x-16">
-          {/* Identity — the personal replacement for Clerk's logo column:
+          {/* Identity — the personal replacement for a product's logo column:
               sign-off to the reader who scrolled the evidence, one invitation,
               the literal email, and the availability line. */}
           <div className="max-w-[40ch]">
@@ -115,9 +115,9 @@ export function Footer({ year }: { year: number }) {
           </div>
         </div>
 
-        {/* Colophon — ONE hairline-separated bottom bar, like Clerk's: © left,
-            the build credits right. The hairline is `.rule-fade` (dies before
-            the gutter) rather than a border, so the bar closes the page without
+        {/* Colophon — ONE hairline-separated bottom bar: © left, the build
+            credits right. The hairline is `.rule-fade` (dies before the
+            gutter) rather than a border, so the bar closes the page without
             boxing it in. */}
         <hr className="rule-fade mt-14" />
         <div className="mt-8 flex flex-col gap-3 font-mono text-xs text-ink-tertiary sm:flex-row sm:items-center sm:justify-between">
@@ -128,9 +128,6 @@ export function Footer({ year }: { year: number }) {
             <span>Built with Next.js, TypeScript &amp; Tailwind</span>
             <Link href="/trust" prefetch={false} className="transition-colors hover:text-ink">
               Trust
-            </Link>
-            <Link href="/changelog" prefetch={false} className="transition-colors hover:text-ink">
-              Changelog
             </Link>
             <Link href="/privacy" prefetch={false} className="transition-colors hover:text-ink">
               Privacy

@@ -5,7 +5,7 @@ import { PAGE_TOP } from "@/constants/page";
 import { routableWritingSlugs, loadWriting, writingNeighbours } from "@/lib/writing";
 import { formatDate } from "@/lib/format";
 import { SITE } from "@/config/site";
-import { ArticleJsonLd } from "@/components/seo/json-ld";
+import { ArticleJsonLd, BreadcrumbJsonLd } from "@/components/seo/json-ld";
 import {
   NewsletterForm,
   NEWSLETTER_ENABLED,
@@ -68,6 +68,12 @@ export default async function WritingPost({ params }: { params: Promise<{ slug: 
         url={url}
         datePublished={meta.date}
         dateModified={meta.updated}
+      />
+      <BreadcrumbJsonLd
+        items={[
+          { name: "Writing", url: `${SITE.url}/writing` },
+          { name: meta.title, url },
+        ]}
       />
       <article className="max-w-[var(--width-prose)]">
         <ArticleHeader

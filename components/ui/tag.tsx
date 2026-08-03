@@ -3,7 +3,7 @@ import type { ReactNode } from "react";
 /**
  * Tag — xs mono metadata chip. Metadata only, never a skills wall (DESIGN §9).
  *
- * Clerk's quiet-chip treatment: a filled surface behind the hairline rather than
+ * A quiet-chip treatment: a filled surface behind the hairline rather than
  * a transparent outline. On a bg / bg-subtle band that fill is what separates
  * the chip from the page (an outline alone reads as a stray rule); on a white
  * card it resolves to the card colour and the chip stays a hairline, which is

@@ -254,8 +254,8 @@ export function MobileNav() {
                   }}
                   className="flex min-h-11 w-full items-center justify-between rounded-[var(--radius-md)] px-3 text-left text-sm text-ink transition-colors hover:bg-bg-subtle"
                 >
-                  <span>Ask Friday</span>
-                  <span className="font-mono text-xs text-ink-tertiary">Site-grounded AI</span>
+                  <span>Ask this site</span>
+                  <span className="font-mono text-xs text-ink-tertiary">Grounded · cited</span>
                 </button>
               </div>
             </div>

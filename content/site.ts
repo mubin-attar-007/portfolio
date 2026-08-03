@@ -57,18 +57,18 @@ export const home = {
     cta: "See the eval registry",
   },
 
-  // The tech-stack rotator — real tools across the four live products, shown in
-  // Clerk's vertical slot-machine (each column cycles its own tools). The honest
-  // take on Clerk's "trusted by" logo wall: we have no customer logos, so we
-  // rotate the stack that actually ships the work.
+  // The tech-stack rotator — real tools across the four live products, shown as a
+  // vertical slot-machine (each column cycles its own tools). The honest take on a
+  // "trusted by" logo wall: we have no customer logos, so we rotate the stack that
+  // actually ships the work.
   stackLabel: "The stack behind four live products.",
   stack: [
     "FastAPI", "Next.js", "LangGraph", "pgvector", "PostgreSQL", "XGBoost",
     "TypeScript", "React", "Docker", "Redis", "TimescaleDB", "Gemini",
     "SQLAlchemy", "Django", "Tailwind", "Playwright",
   ],
-  // Grouped for the homepage stack band — a Clerk-style hairline-celled grid.
-  // Same tools as `stack`, arranged by role so the grid reads as a real system.
+  // Grouped for the homepage stack band — a hairline-celled grid. Same tools as
+  // `stack`, arranged by role so the grid reads as a real system.
   stackGroups: [
     { label: "Backend & agents", items: ["FastAPI", "Django", "LangGraph", "SQLAlchemy"] },
     { label: "AI / ML", items: ["Gemini", "pgvector", "XGBoost"] },
@@ -120,10 +120,9 @@ export const home = {
     note: "A representative request — the validator gates every query.",
   },
 
-  // The flagship "up close" showcase — a Clerk-Components-style split: an
-  // accordion of the three real stages on the left, an animated terminal that
-  // plays the active stage on the right. Every line is real behaviour, not a
-  // benchmark. Copy lives here (Law 3).
+  // The flagship "up close" showcase — a split: an accordion of the three real
+  // stages on the left, an animated terminal that plays the active stage on the
+  // right. Every line is real behaviour, not a benchmark. Copy lives here (Law 3).
   showcase: {
     eyebrow: "The flagship, up close",
     title: "How DBWhisper stays safe",
@@ -392,14 +391,12 @@ export const about = {
   links: [
     { label: "GitHub", href: SITE.socials.github, external: true },
     { label: "LinkedIn", href: SITE.socials.linkedin, external: true },
-    { label: "Timeline", href: "/timeline", external: false },
+    { label: "Résumé", href: "/resume", external: false },
   ],
   // Framing for the /about "how I think" section, which renders home.principles.
   thinking: {
     kicker: "How I think",
     title: "Three rules I don't break",
-    cta: "See how that thinking developed",
-    href: "/timeline",
   },
 } as const;
 
@@ -419,42 +416,6 @@ export const hire = {
       { label: "Six LLM providers behind one interface", href: "/notes/six-providers-one-interface" },
       { label: "Enforce tenancy in the repository layer, not the route", href: "/notes/tenancy-in-the-repository-layer" },
     ],
-  },
-} as const;
-
-/** A talk or appearance. */
-export type Talk = {
-  date: string;
-  title: string;
-  venue: string;
-  href?: string;
-};
-
-/**
- * Talks & appearances — real entries only. Empty until the first one happens;
- * the page renders an honest empty state (never an invented lineup). Add a row
- * here when a talk is booked.
- */
-export const talks: Talk[] = [];
-
-/**
- * /talks page copy. Lifted verbatim out of app/talks/page.tsx, where the lede
- * and the whole empty state were typed into the component (Law 3). Nothing here
- * is a new claim: the empty state exists precisely so the page never implies a
- * speaking history that hasn't happened yet.
- */
-export const talksIntro = {
-  kicker: "Talks",
-  title: "Talks & appearances",
-  lede:
-    "On building grounded, honest AI systems — evals, deterministic safety boundaries, retrieval, and shipping products on a $0 stack.",
-  /** Label for the per-talk artifact link, once there are talks to link. */
-  entryCta: "slides / recording",
-  empty: {
-    title: "No talks yet — this is where they'll live.",
-    body:
-      "If you're organizing a meetup, podcast, or conference and think I'd be a fit — on evals, LLM safety boundaries, retrieval, or shipping AI on a free tier — I'd love to hear from you.",
-    cta: { label: "Get in touch", href: "/hire" },
   },
 } as const;
 
@@ -522,7 +483,7 @@ export const trust = {
   principles: [
     {
       title: "Transparent risk handling",
-      body: "If I discover reliability or quality issues, I log them, fix them, and keep the changelog visible. No bug is 'buried' if it affects confidence.",
+      body: "If I discover reliability or quality issues, I log them, fix them, and keep a running record visible. No bug is 'buried' if it affects confidence.",
     },
     {
       title: "Deterministic safety boundaries",
@@ -544,43 +505,7 @@ export const trust = {
     },
     {
       title: "Operational trust",
-      items: ["Zero-downtime deployment practices", "Rollback and incident playbooks", "Post-change notes for shipped decisions", "Public changelog for architecture and product movement"],
-    },
-  ],
-} as const;
-
-export const changelog = {
-  kicker: "Changelog",
-  title: "Product and engineering updates, in order.",
-  intro:
-    "I keep this registry current so hiring teams and collaborators can see what changed, when, and why.",
-  entries: [
-    {
-      quarter: "2026 · Q1",
-      title: "Structured trust surface added",
-      details: [
-        "Added dedicated /trust and /changelog routes with evidence-first sections.",
-        "Wired trust and changelog links into primary and footer navigation.",
-        "Consolidated trust and changelog copy in a single typed content source.",
-      ],
-    },
-    {
-      quarter: "2025 · Q4",
-      title: "Homepage + evidence rhythm upgrade",
-      details: [
-        "Split architecture and delivery copy into explicit, verifiable strips.",
-        "Added measured strip and field-note scaffolding for measurable work evidence.",
-        "Reworked claims to link back to case study sources and evaluation artifacts.",
-      ],
-    },
-    {
-      quarter: "2025 · Q3",
-      title: "Live demos and stack clarity",
-      details: [
-        "Centralized the live portfolio sections and product launch links.",
-        "Added role-specific stack grouping to remove decorative tech-wall claims.",
-        "Hardened content discipline with no-numbers-on-home unless sourced.",
-      ],
+      items: ["Zero-downtime deployment practices", "Rollback and incident playbooks", "Post-change notes for shipped decisions", "A running record of shipped decisions on /now"],
     },
   ],
 } as const;

@@ -146,8 +146,8 @@ export function SystemDiagram({
   }, [spec.nodes]);
 
   // On hover/pin, light the active node + its directly-connected neighbours and
-  // dim the rest — so hovering a node traces its slice of the system (the Clerk/
-  // Linear "focus the subsystem" hover), not just tints one box.
+  // dim the rest — so hovering a node traces its slice of the system (a
+  // "focus the subsystem" hover), not just tints one box.
   const litNodes = useMemo(() => {
     if (!active) return null;
     const s = new Set<string>([active]);
@@ -367,7 +367,7 @@ export function SystemDiagram({
             {/* FILLED triangles, not stroked chevrons: at ~8px on screen an open
                 chevron's two 1.2px strokes half-dissolve into the band and the
                 edge appears to end in a smudge. A solid head keeps a crisp point
-                at any rendered size — it is why Clerk's connector terminals read
+                at any rendered size — it is why the connector terminals here read
                 as drawn rather than sketched. refX sits at the tip so the head
                 touches the node edge exactly where the path ends. */}
             <marker

@@ -3,7 +3,7 @@
  * the stack band — which sit directly on top of each other under the hero.
  *
  * They exist because "read as one system" has to be enforced by a single source,
- * not by two files that happen to agree today. Clerk's trust row is a ruled grid
+ * not by two files that happen to agree today. A trust row is a ruled grid
  * of cells with identical padding on both sides of every hairline; the moment one
  * band pads its cells differently from its neighbour, the two rules stop lining
  * up and the pair reads as two pasted-on strips instead of one ruled block.

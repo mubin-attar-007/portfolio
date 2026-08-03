@@ -1,9 +1,8 @@
 /**
- * The shared page-opening TOP: 128px, Clerk's measured section top. Every route
- * starts the same distance from the nav — their changelog opens content at
- * ~173px from the viewport top, and an article template opening 64px lower than
- * its index (the old `space="lg"` 192px top) is exactly the kind of seam that
- * made the site read as two templates.
+ * The shared page-opening TOP: 128px. Every route starts the same distance from
+ * the nav, so no template reads as a different document. An article opening 64px
+ * lower than its index (the old `space="lg"` 192px top) is exactly the kind of
+ * seam that made the site read as two templates.
  *
  * Use ALONE on a single-band page (an article, /hire) whose one `Section` also
  * carries the page's close — that keeps the band's own asymmetric bottom
@@ -12,21 +11,19 @@
  * `!` prefix: `Section` writes its own `pt` from the SPACE map, and this is the
  * deliberate override at the call site.
  */
-export const PAGE_TOP = "!pt-[var(--space-section-md)]";
+export const PAGE_TOP = "!pt-[clamp(4.5rem,7vw,6.5rem)]";
 
 /**
  * Shared rhythm for a page's opening band — the one place the site decides how
  * much air sits above an h1 and below its lede.
  *
  * Why it is a constant and not a `space` prop: `Section`'s scale is tuned for
- * BODY bands, where the asymmetric 128/172 pair (Clerk's measured rhythm) is
- * what closes a section off as a finished plate. A page header is not a finished
- * plate — its content continues in the very next band — so it gets the shared
- * 128px top and then only HALF the seam below (`xs`, 48px); the body band
- * underneath spends the other half. Total lede→content gap: ~96px, which is
- * what Clerk's pricing page measures between its subhead and the plan cards.
- * The previous `sm`+`sm` pairing (88+88) doubled that and pushed the first row
- * of real content out of the fold on every index route.
+ * BODY bands, where the asymmetric 128/172 pair is what closes a section off as a
+ * finished plate. A page header is not a finished plate — its content continues
+ * in the very next band — so it gets the shared 128px top and then only HALF the
+ * seam below (`xs`, 48px); the body band underneath spends the other half. Total
+ * lede→content gap: ~96px. The previous `sm`+`sm` pairing (88+88) doubled that
+ * and pushed the first row of real content out of the fold on every index route.
  *
  * Every gap on the page stays a sum of two tokens, so the rhythm can be
  * reasoned about from tokens.css rather than measured in a browser.
@@ -54,11 +51,8 @@ export const PAGE_BODY_BAND = "!pt-[var(--space-section-xs)]";
  * Static panels stay flat: hierarchy comes from surface, border, spacing, and
  * type. Elevation belongs to true overlays only (DESIGN §1.5).
  */
-export const PANEL = "rounded-[var(--radius-md)] border border-border bg-surface p-6 sm:p-7";
-
-/** Compatibility aliases while page call sites converge on the flat panel. */
-export const PANEL_REST = "";
-export const PANEL_RAISED = "";
+export const PANEL =
+  "rounded-[var(--radius-md)] border border-border bg-surface p-6 shadow-[var(--shadow-surface)] sm:p-7";
 
 /**
  * A framed figure — an image or product surface that must read as a deliberate
@@ -68,7 +62,7 @@ export const PANEL_RAISED = "";
  * paint over the frame's rounded ones.
  */
 export const FIGURE =
-  "overflow-hidden rounded-[var(--radius-lg)] border border-border bg-surface";
+  "overflow-hidden rounded-[var(--radius-lg)] border border-border bg-surface shadow-[var(--shadow-surface)]";
 
 /**
  * The small mono label that titles a group inside a band (Experience, Skills,
