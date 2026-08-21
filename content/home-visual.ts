@@ -237,7 +237,7 @@ export const flagshipHome = {
      content model; the specimen panels restate the SAME facts as UI, never new
      ones. */
   walkthrough: {
-    eyebrow: "DBWhisper · flagship",
+    eyebrow: "DBWhisper · the flagship",
     title: "Five stages. One guarantee.",
     body:
       "Every request walks the same pipeline, and the dangerous step is guarded by code the model cannot argue with. Select a stage to see what it does.",
@@ -292,8 +292,11 @@ export const flagshipHome = {
   bento: {
     eyebrow: "Engineered reliability",
     title: "Everything the model needs around it",
-    body:
-      "The same decisions recur across four live products — each a deterministic guarantee, not a best-effort prompt.",
+    bodyParts: [
+      { t: "The same decisions recur across four live products — each a " },
+      { t: "deterministic guarantee", strong: true },
+      { t: ", not a best-effort prompt." },
+    ],
     items: [
       {
         id: "gate",
@@ -379,8 +382,13 @@ export const flagshipHome = {
   work: {
     eyebrow: "Selected work",
     title: "One engineering standard, three kinds of uncertainty.",
-    body:
-      "Each of these is deployed and maintained. Each claim below links to the case study and the method behind it.",
+    bodyParts: [
+      { t: "Each of these is " },
+      { t: "deployed and maintained", strong: true },
+      { t: ". Each claim below links to the case study and " },
+      { t: "the method behind it", strong: true },
+      { t: "." },
+    ],
     caseStudy: "View case study",
     live: "Live",
     source: "Source",

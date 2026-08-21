@@ -36,7 +36,15 @@ export function SelectedWork() {
           </h2>
         </div>
         <p className="max-w-[42ch] text-pretty text-base text-ink-secondary md:pb-1">
-          {w.body}
+          {w.bodyParts.map((part, i) =>
+            "strong" in part && part.strong ? (
+              <strong key={i} className="font-medium text-ink">
+                {part.t}
+              </strong>
+            ) : (
+              <span key={i}>{part.t}</span>
+            ),
+          )}
         </p>
       </div>
 

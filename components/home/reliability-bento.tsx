@@ -37,11 +37,21 @@ export function ReliabilityBento() {
 
       <Container className="relative">
         <div className="mx-auto flex max-w-[44rem] flex-col items-center text-center">
-          <EyebrowChip variant="pill">{b.eyebrow}</EyebrowChip>
+          <EyebrowChip>{b.eyebrow}</EyebrowChip>
           <h2 id="bento-title" className="mt-4 text-balance text-section font-bold text-ink">
             {b.title}
           </h2>
-          <p className="mt-4 max-w-[52ch] text-pretty text-base text-ink-secondary">{b.body}</p>
+          <p className="mt-4 max-w-[52ch] text-pretty text-base text-ink-secondary">
+            {b.bodyParts.map((part, i) =>
+              "strong" in part && part.strong ? (
+                <strong key={i} className="font-medium text-ink">
+                  {part.t}
+                </strong>
+              ) : (
+                <span key={i}>{part.t}</span>
+              ),
+            )}
+          </p>
         </div>
 
         <ul className="mt-14 grid gap-3 sm:grid-cols-2 lg:grid-cols-6 lg:gap-4">
