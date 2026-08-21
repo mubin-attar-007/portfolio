@@ -169,15 +169,16 @@ opacity and translate on the contents. Recorded here so it reads as a decision.
   `scripts/lighthouse-budget.mjs`; the gate was updated in the same change. The
   employment titles in `content/resume.ts` and `content/timeline.ts` are facts
   about jobs held and are untouched.
-- **The Lighthouse performance budget still fails, as it did before this work.**
-  Measured on the same machine, pre-redesign `HEAD` scored 78 / 79 / 79 with LCP
-  5.5s / 5.0s / 5.3s; after the redesign, 74 / 82 / 80 with LCP 6.2s / 4.5s /
-  5.3s. The flagship route improved, `/writing` is flat, and the homepage is ~4
-  points behind on a substantially richer first screen. The cause is a
-  pre-existing ~550KB app-router JS payload that saturates the simulated 1.6 Mbps
-  link and delays the webfont swap that defines LCP (measured: the LCP element is
-  the hero lede paragraph, and it changes at the swap). Accessibility, best
-  practices and SEO are 100 on all three routes and CLS is 0.000.
+- **CORRECTED RECORD (originally mis-measured).** This ADR first shipped citing
+  local Lighthouse runs — 74/82/80 with LCP 4.5-6.2s — and concluded the ~550KB
+  uncompressed app-router payload was an architectural floor. CI falsified both
+  claims: on clean hardware this tree scores **98 / 99 / 99** with LCP
+  2373 / 2240 / 2018ms, CLS 0.000, and ~170KB of *compressed* JS transfer. The
+  local machine was running builds and Lighthouse concurrently, and the 550KB
+  figure was pre-compression. Two real lessons stand: a single loaded machine is
+  not a measurement, and the LCP element remains the hero lede repainting at the
+  Geist swap — the residual 18-373ms miss against the original 2000ms budget,
+  re-baselined to the 2500ms Core Web Vitals threshold in ADR-012.
 - One regression was introduced and fixed during the work: `TechWall` imported
   the content layer directly, dragging the eval registry and Zod across the client
   boundary and adding ~290KB to the homepage bundle. Client components take props;
