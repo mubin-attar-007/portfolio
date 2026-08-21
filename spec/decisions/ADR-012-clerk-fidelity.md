@@ -58,9 +58,14 @@ and their marketing copy/assets/logo wall (excluded by the directive itself).
    plates. ADR-011's "≈eight sections" guidance is superseded by the
    directive's fuller architecture; every added section renders existing
    content-model data — no new claims.
-5. **Scroll reveals** land as the `[data-reveal]` device + `Reveal` component:
-   triple-gated (html.js, `no-preference`, observer fallback) so content can be
-   un-animated but never lost.
+5. **Scroll reveals were built twice and rejected twice.** The
+   IntersectionObserver version and the CSS `animation-timeline: view()`
+   version both share one structure — content hidden until an engine drives it
+   visible — and both rendered the page body blank in stitched captures. On a
+   site whose argument is that its evidence always renders, a hidden frame is a
+   failure mode, not a motion style. `components/ui/reveal.tsx` is a documented
+   no-op holding the reasoning; entrance choreography lives in the load-timed
+   hero reveal and per-element hover/state motion.
 6. **LCP budget 2000 → 2500ms** (Core Web Vitals "good"). CI measured
    2018–2373ms at performance 98/99; the residual is the Geist swap repainting
    the hero lede, and holding a budget below the swap cost would push toward
