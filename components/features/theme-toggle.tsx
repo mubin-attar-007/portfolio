@@ -52,12 +52,12 @@ export function ThemeToggle() {
       aria-pressed={isDark}
       aria-label={label}
       title={label}
-      className="icon-btn inline-flex h-11 w-11 items-center justify-center rounded-[var(--radius-sm)] text-ink-secondary hover:text-ink lg:h-9 lg:w-9"
+      className="icon-btn inline-flex h-9 w-9 items-center justify-center rounded-[var(--radius-sm)] text-ink-secondary hover:text-ink"
     >
       {isDark ? (
-        <Sun size={17} strokeWidth={1.6} aria-hidden />
+        <Sun size={16} strokeWidth={1.6} aria-hidden />
       ) : (
-        <Moon size={17} strokeWidth={1.6} aria-hidden />
+        <Moon size={16} strokeWidth={1.6} aria-hidden />
       )}
     </button>
   );

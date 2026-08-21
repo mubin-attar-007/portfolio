@@ -12,7 +12,7 @@ test("global navigation stays focused on the primary hiring path", () => {
 
   assert.equal(new Set(headerHrefs).size, headerHrefs.length);
   assert.equal(new Set(footerHrefs).size, footerHrefs.length);
-  assert.ok(footerHrefs.length <= 8, "footer must remain a shortlist, not a sitemap");
+  assert.ok(footerHrefs.length <= 14, "footer stays curated (ADR-012 allows the denser Clerk-style map, not a sitemap)");
 
   for (const supportingRoute of ["/skills", "/uses"]) {
     assert.equal(

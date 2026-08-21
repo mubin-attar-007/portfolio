@@ -28,7 +28,7 @@ function NavLink({ href, label, active }: { href: string; label: string; active:
       onMouseEnter={() => setIntent(true)}
       onFocus={() => setIntent(true)}
       aria-current={active ? "page" : undefined}
-      className={`relative py-1 text-sm font-medium transition-colors duration-fast ease-[var(--ease-out)] ${
+      className={`relative py-1 text-[0.8125rem] font-medium transition-colors duration-fast ease-[var(--ease-out)] ${
         active ? "text-ink" : "text-ink-secondary hover:text-ink"
       }`}
     >
@@ -52,7 +52,7 @@ function NavLink({ href, label, active }: { href: string; label: string; active:
 export function NavLinks() {
   const pathname = usePathname();
   return (
-    <nav aria-label="Primary" className="hidden items-center gap-8 lg:flex">
+    <nav aria-label="Primary" className="hidden items-center gap-6 lg:flex">
       {NAV.map((item) => {
         const active = pathname === item.href || pathname.startsWith(`${item.href}/`);
         return <NavLink key={item.href} href={item.href} label={item.label} active={active} />;

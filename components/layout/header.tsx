@@ -33,10 +33,10 @@ export function Header() {
     <HeaderShell>
       <LogoLink />
 
-      <div className="flex items-center gap-1 lg:gap-6">
+      <div className="flex items-center gap-0.5 lg:gap-5">
         <NavLinks />
 
-        <div className="flex items-center gap-1">
+        <div className="flex items-center gap-0.5">
           <Assistant />
           <ThemeToggle />
         </div>
@@ -48,8 +48,7 @@ export function Header() {
             stylesheet order rather than by the order they are written in — which
             is how the button stayed visible at 360px and pushed the header 16px
             past the viewport. */}
-        <div className="hidden items-center gap-3 sm:flex">
-          <span aria-hidden className="h-5 w-px bg-border" />
+        <div className="hidden items-center pl-1.5 sm:flex">
           <Link
             href={PRIMARY_CTA.href}
             prefetch={false}

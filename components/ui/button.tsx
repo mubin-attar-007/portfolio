@@ -38,7 +38,7 @@ const VARIANTS: Record<Variant, string> = {
     // The accent gradient under white text, with the sheen sweep on hover. The
     // flat `bg-accent` stays as the paint-order fallback beneath the image, so
     // an engine that drops the gradient still renders a filled control.
-    "btn-sheen bg-accent bg-[image:var(--gradient-accent)] text-on-accent shadow-[var(--shadow-btn)] hover:brightness-[1.06]",
+    "btn-sheen bg-accent bg-[image:var(--gradient-accent-control)] text-on-accent shadow-[var(--shadow-btn)] hover:brightness-[1.06]",
   secondary:
     "border border-border-strong bg-surface text-ink shadow-[var(--shadow-sm)] hover:border-ink/25 hover:bg-surface-raised",
   subtle:

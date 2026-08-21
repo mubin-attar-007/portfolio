@@ -32,7 +32,7 @@ export function FinalContactCTA() {
 
   return (
     <section
-      className="tone-invert relative overflow-hidden py-[var(--space-section-lg)]"
+      className="tone-invert chamfer relative overflow-hidden pb-[var(--space-section-lg-end)] pt-[var(--space-section-lg)]"
       aria-labelledby="contact-title"
     >
       <EvidenceGraph variant="quiet" />
@@ -51,7 +51,7 @@ export function FinalContactCTA() {
         <div className="mx-auto flex max-w-[46rem] flex-col items-center text-center">
           <h2
             id="contact-title"
-            className="text-balance text-section font-[560] text-ink"
+            className="text-balance text-section font-bold text-ink"
           >
             {c.title}
           </h2>

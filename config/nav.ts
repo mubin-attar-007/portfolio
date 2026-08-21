@@ -10,9 +10,9 @@
  */
 export const NAV = [
   { label: "Work", href: "/work" },
-  { label: "About", href: "/about" },
+  { label: "Evals", href: "/evals" },
   { label: "Writing", href: "/writing" },
-  { label: "Résumé", href: "/resume" },
+  { label: "About", href: "/about" },
 ] as const;
 
 export type NavItem = (typeof NAV)[number];
@@ -36,18 +36,28 @@ export const FOOTER_NAV = [
     heading: "Site",
     links: [
       { label: "Work", href: "/work" },
-      { label: "About", href: "/about" },
+      { label: "Evals", href: "/evals" },
       { label: "Writing", href: "/writing" },
-      { label: "Résumé", href: "/resume" },
+      { label: "About", href: "/about" },
       { label: "Contact", href: "/hire" },
     ],
   },
   {
-    heading: "Evidence",
+    heading: "Projects",
     links: [
-      { label: "Evals", href: "/evals" },
+      { label: "DBWhisper", href: "/work/dbwhisper" },
+      { label: "TradePulse", href: "/work/tradepulse" },
+      { label: "CrownWager", href: "/work/crownwager" },
+      { label: "LLM Studio", href: "/work/llm-studio" },
+    ],
+  },
+  {
+    heading: "More",
+    links: [
+      { label: "Résumé", href: "/resume" },
       { label: "Notes", href: "/notes" },
       { label: "Now", href: "/now" },
+      { label: "Trust", href: "/trust" },
     ],
   },
 ] as const;

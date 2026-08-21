@@ -56,7 +56,7 @@ export const PANEL =
  * corners paint over the frame's rounded ones.
  */
 export const FIGURE =
-  "overflow-hidden rounded-[var(--radius-lg)] border border-border bg-surface shadow-[var(--shadow-surface)]";
+  "overflow-hidden rounded-[var(--radius-xl)] bg-surface shadow-[var(--shadow-surface)]";
 
 /**
  * The small mono label that titles a group inside a band (Experience, Skills,

@@ -16,7 +16,7 @@ import { DBWHISPER_GOLDEN } from "./evals";
 export const flagshipHome = {
   /* ---- 1. hero --------------------------------------------------------- */
   hero: {
-    eyebrow: "Mubin Attar · AI Systems Engineer",
+    eyebrow: "AI Systems Engineer · Ahmedabad, India",
     /**
      * Two lines on desktop. The second carries the accent, because it is the
      * half of the sentence that makes the actual claim — "production AI" is the
@@ -24,11 +24,20 @@ export const flagshipHome = {
      */
     titleLead: "Production AI systems.",
     titleAccent: "Built to be trusted.",
-    lede:
-      "I design and ship AI products end to end — from agents and retrieval to deterministic guardrails and evaluations that show what actually works.",
+    /* Segments, not a string: the reference two-tones its intros — key phrases
+       a step darker than the connective tissue — and that emphasis is content,
+       not styling, so it lives here. */
+    ledeParts: [
+      { t: "I design and ship AI products " },
+      { t: "end to end", strong: true },
+      { t: " — from agents and retrieval to " },
+      { t: "deterministic guardrails", strong: true },
+      { t: " and evaluations that " },
+      { t: "show what actually works", strong: true },
+      { t: "." },
+    ],
     primary: { label: "Explore DBWhisper", href: "/work/dbwhisper" },
     secondary: { label: "View selected work", href: "/work" },
-    tertiary: { label: "Read my engineering principles", href: "#method" },
   },
 
   /* ---- 2. hero product stage -------------------------------------------
@@ -221,6 +230,151 @@ export const flagshipHome = {
     refusal: { label: "Refuse", note: "unsafe or out of scope" },
   },
 
+  /* ---- 5b. flagship walkthrough -----------------------------------------
+     Clerk's accordion-rail product section ("Pixel-perfect UIs" — copy rail +
+     stage list on the left, live specimen on the right), adapted to walk
+     DBWhisper's five stages. Every item line is a real mechanism from the
+     content model; the specimen panels restate the SAME facts as UI, never new
+     ones. */
+  walkthrough: {
+    eyebrow: "DBWhisper · flagship",
+    title: "Five stages. One guarantee.",
+    body:
+      "Every request walks the same pipeline, and the dangerous step is guarded by code the model cannot argue with. Select a stage to see what it does.",
+    cta: { label: "Read the full case study", href: "/work/dbwhisper" },
+    stages: [
+      {
+        id: "retrieve",
+        label: "Retrieve",
+        body: "pgvector similarity over embedded table docs pulls only the tables a question needs — never the whole schema into the prompt.",
+        items: ["search_tables · pgvector similarity", "Structured schema sections", "Verified NL→SQL examples"],
+      },
+      {
+        id: "generate",
+        label: "Generate",
+        body: "Dialect-correct SQL from a tightly scoped tool loop, behind a six-provider fallback chain so no vendor is a hard dependency.",
+        items: ["6-provider fallback chain", "Per-dialect directives · Postgres / MySQL / SQL Server", "LangGraph tool loop"],
+      },
+      {
+        id: "validate",
+        label: "Validate",
+        body: "A deterministic gate checks every statement — and refuses when it cannot prove the query is safe.",
+        items: ["SELECT-only", "Single statement", "Enrolled tables only", "Fails closed"],
+      },
+      {
+        id: "execute",
+        label: "Execute",
+        body: "The query runs as a least-privilege, read-only user. Rows come back; nothing is ever written.",
+        items: ["Least-privilege read-only connection", "The result ships with its query attached"],
+      },
+      {
+        id: "evaluate",
+        label: "Evaluate",
+        body: "The deployed path is scored end to end against a real read-only store — and the numbers are published with their method.",
+        items: ["22 golden queries · 4 unsafe prompts", "Spider dev split · 139 questions"],
+      },
+    ],
+    /* Specimen strings that are not already in `stage`. The refusal example is
+       ILLUSTRATIVE of real validator behaviour (the gate refuses non-SELECT
+       statements); it is labelled as behaviour, not as a logged incident. */
+    refusalDemo: {
+      prompt: "Delete inactive users from last quarter",
+      verdict: "REFUSED · fail-closed",
+      reason: "Not a SELECT · write access does not exist on this connection",
+    },
+    providers: ["OpenAI", "OpenRouter", "DeepSeek", "Groq", "Anthropic", "Gemini"],
+  },
+
+  /* ---- 5c. reliability bento --------------------------------------------
+     Clerk's giant dark feature bento, carrying the guarantees that recur
+     across the four products. Every body line restates a mechanism or metric
+     that content/projects.ts or content/evals.ts already backs. */
+  bento: {
+    eyebrow: "Engineered reliability",
+    title: "Everything the model needs around it",
+    body:
+      "The same decisions recur across four live products — each a deterministic guarantee, not a best-effort prompt.",
+    items: [
+      {
+        id: "gate",
+        glyph: "gate",
+        wide: true,
+        title: "Fail-closed validation",
+        body: "Every generated statement passes a deterministic gate — SELECT-only, single statement, enrolled tables — and is refused when safety cannot be proven.",
+      },
+      {
+        id: "retrieval",
+        glyph: "retrieval",
+        wide: true,
+        title: "Retrieval-scoped prompts",
+        body: "pgvector similarity pulls only the tables a question needs — a small scoped context beats stuffing the schema.",
+      },
+      {
+        id: "evals",
+        glyph: "matrix",
+        title: "Task-level evals",
+        body: "Execution accuracy against real stores, published with method, date, and the excluded cases stated.",
+      },
+      {
+        id: "fallback",
+        glyph: "route",
+        title: "Multi-provider fallback",
+        body: "Six LLM providers behind one interface — the first with credentials wins, a free tier is the floor.",
+      },
+      {
+        id: "tenancy",
+        glyph: "lock",
+        title: "Tenancy below the route",
+        body: "Ownership is enforced in the repository layer on every query — not just at the handler.",
+      },
+      {
+        id: "canary",
+        glyph: "wave",
+        title: "Look-ahead canary",
+        body: "A test multiplies every future bar by 3× and asserts the past equity curve is byte-identical.",
+      },
+      {
+        id: "honest",
+        glyph: "scale",
+        title: "Honest metrics",
+        body: "65.2% ± 0.8% cross-validated replaced a cherry-picked 68% — lower, and real.",
+      },
+      {
+        id: "hardening",
+        glyph: "shield",
+        title: "Security hardening",
+        body: "Argon2id auth, per-IP and API-key rate limits, admin 2FA, and blocking bandit + gitleaks in CI.",
+      },
+      {
+        id: "infra",
+        glyph: "pipeline",
+        span: 6,
+        title: "Production on a $0 stack",
+        body: "Vercel, Hugging Face Spaces, Neon, and GitHub Actions free tiers — lean containers, bounded loops, CI-gated deploys. The constraint is the discipline.",
+      },
+    ],
+  },
+
+  /* ---- 5d. registry strip ------------------------------------------------ */
+  registry: {
+    eyebrow: "The record",
+    title: "Measured, on the record.",
+    body: "Every system that can be scored, with its method and its date. When a run is partial, the excluded count is stated — not hidden.",
+    cta: { label: "Open the full registry", href: "/evals" },
+  },
+
+  /* ---- 8b. the engineer --------------------------------------------------- */
+  engineer: {
+    eyebrow: "The engineer",
+    title: "Built by one person, end to end.",
+    principlesLabel: "Three rules I don't break",
+    timelineLabel: "The road here",
+    ctas: {
+      about: { label: "More about me", href: "/about" },
+      resume: { label: "Résumé", href: "/resume" },
+    },
+  },
+
   /* ---- 6. selected work ------------------------------------------------- */
   work: {
     eyebrow: "Selected work",
@@ -231,43 +385,6 @@ export const flagshipHome = {
     live: "Live",
     source: "Source",
     cta: { label: "See all four projects", href: "/work" },
-  },
-
-  /* ---- 7. method / capabilities ----------------------------------------- */
-  method: {
-    eyebrow: "How I engineer AI systems",
-    title: "AI that works beyond the demo",
-    body: "The model is only one component. Reliability comes from the system around it.",
-    items: [
-      {
-        id: "retrieval",
-        visual: "retrieval",
-        title: "Agents and retrieval",
-        body: "Context selection, orchestration, structured tools, and grounded generation — so the model answers from evidence rather than from memory.",
-        proof: { label: "In DBWhisper", href: "/notes/retrieval-beats-stuffing" },
-      },
-      {
-        id: "safeguards",
-        visual: "gate",
-        title: "Deterministic safeguards",
-        body: "Validation, permission boundaries, failure handling, and fail-closed behaviour that does not depend on the model agreeing to it.",
-        proof: { label: "Why a validator", href: "/writing/a-validator-is-not-a-better-prompt" },
-      },
-      {
-        id: "evaluation",
-        visual: "matrix",
-        title: "Evaluation systems",
-        body: "Task-level metrics, regression tests, trace inspection, and error analysis — including the cases that were excluded and why.",
-        proof: { label: "Open the registry", href: "/evals" },
-      },
-      {
-        id: "delivery",
-        visual: "pipeline",
-        title: "Full-stack delivery",
-        body: "Product UI, APIs, data pipelines, deployment, observability, and the iteration loop that keeps four products live on a $0 stack.",
-        proof: { label: "The stack", href: "/uses" },
-      },
-    ],
   },
 
   /* ---- 8. writing + current focus --------------------------------------- */

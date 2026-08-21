@@ -174,9 +174,9 @@ export function MobileNav() {
         // aria-controls would point at an element that isn't in the document.
         aria-controls={mounted ? "mobile-menu" : undefined}
         onClick={openMenu}
-        className="icon-btn inline-flex h-11 w-11 items-center justify-center rounded-[var(--radius-sm)] text-ink-secondary hover:text-ink"
+        className="icon-btn inline-flex h-9 w-9 items-center justify-center rounded-[var(--radius-sm)] text-ink-secondary hover:text-ink"
       >
-        <Menu size={20} strokeWidth={1.5} aria-hidden />
+        <Menu size={18} strokeWidth={1.6} aria-hidden />
       </button>
 
       {mounted &&

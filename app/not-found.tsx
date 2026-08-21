@@ -15,7 +15,7 @@ export default function NotFound() {
   return (
     <Section space="lg">
       <p className="font-mono text-xs uppercase text-ink-tertiary">404</p>
-      <h1 className="mt-6 max-w-[20ch] text-3xl font-[560] text-ink sm:text-4xl">
+      <h1 className="mt-6 max-w-[20ch] text-3xl font-bold text-ink sm:text-4xl">
         That page doesn&apos;t exist.
       </h1>
       <p className="mt-6 max-w-[var(--width-prose)] text-lg text-ink-secondary">

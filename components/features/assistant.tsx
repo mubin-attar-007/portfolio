@@ -70,7 +70,7 @@ export function Assistant() {
         aria-controls={open ? "assistant-panel-dialog" : undefined}
         title="Ask this site — a grounded assistant that answers only from this site's content (case studies, writing, résumé), with citations. Press ⌘K or / to open."
         aria-label="Ask this site — a grounded, cited assistant over this site's content. Press command-K or slash to open."
-        className="icon-btn inline-flex h-11 w-11 items-center justify-center rounded-[var(--radius-md)] text-ink-secondary hover:text-ink xl:h-9 xl:w-auto xl:gap-2 xl:rounded-[var(--radius-sm)] xl:border xl:border-border xl:bg-surface xl:px-2.5 xl:text-[0.8125rem] xl:text-ink-secondary xl:shadow-[var(--shadow-sm)] xl:hover:border-border-strong xl:hover:text-ink"
+        className="icon-btn inline-flex h-9 w-9 items-center justify-center rounded-[var(--radius-sm)] text-ink-secondary hover:text-ink xl:h-8 xl:w-auto xl:gap-2 xl:rounded-[var(--radius-sm)] xl:border xl:border-border xl:bg-surface xl:px-2.5 xl:text-[0.8125rem] xl:text-ink-secondary xl:shadow-[var(--shadow-sm)] xl:hover:border-border-strong xl:hover:text-ink"
       >
         <Sparkles size={18} strokeWidth={1.5} className="xl:hidden" aria-hidden />
         <span className="hidden xl:inline">Ask this site</span>

@@ -50,7 +50,13 @@
   /* The display gradient — the one place the two hues meet. Reserved for the
      hero's accent line and the primary button. Both endpoints clear 3:1 on the
      page (large-text AA): #6552f0 at 4.9:1, #3f6fd8 at 4.0:1. */
-  --gradient-accent: linear-gradient(100deg, #6552f0 12%, #7a5cf5 52%, #3f6fd8 100%);
+  --gradient-accent: linear-gradient(100deg, #5b48e8 10%, #7a5cf5 55%, #3f6fd8 100%);
+  /* Controls get a single-hue luminance ramp (the reference's bevel), never the
+     two-hue sweep — a 44px button whose corners are different brand colours
+     reads broken, not rich. */
+  --gradient-accent-control: linear-gradient(180deg, #7a5cf5, #6552f0);
+  /* Specimen frames sit one radius step above cards, per the reference. */
+  --radius-xl: 16px;
 
   /* 6.5:1 on surface, 5.9:1 on bg-subtle. The obvious #15803d measures 4.45:1
      on bg-subtle, which is under AA for the 12px syntax tokens in the hero
@@ -86,12 +92,12 @@
      display   360→40  768→57  1024→67  1440→84 (capped)
      section   360→32  768→41  1440→52 (capped)
      sub       360→24  768→28  1440→32 (capped)  */
-  --text-display: clamp(2.5rem, 1.58rem + 4.07vw, 5.25rem);
-  --text-display--line-height: 0.99;
-  --text-display--letter-spacing: -0.032em;
-  --text-section: clamp(2rem, 1.5rem + 2.2vw, 3.25rem);
-  --text-section--line-height: 1.08;
-  --text-section--letter-spacing: -0.026em;
+  --text-display: clamp(2rem, 1.26rem + 3.05vw, 4rem);
+  --text-display--line-height: 1.125;
+  --text-display--letter-spacing: -0.025em;
+  --text-section: clamp(1.75rem, 1.32rem + 1.8vw, 2.75rem);
+  --text-section--line-height: 1.15;
+  --text-section--letter-spacing: -0.025em;
   --text-sub: clamp(1.5rem, 1.35rem + 0.66vw, 2rem);
   --text-sub--line-height: 1.2;
   --text-sub--letter-spacing: -0.019em;
@@ -107,16 +113,16 @@
      body band directly under it spends the other half, so the total header→
      content gap is one reasoned number rather than two paddings that happen to
      stack. */
-  --space-section-xs: clamp(2rem, 3.2vw, 2.75rem);     /* 32  → 44  */
-  --space-section-sm: clamp(3rem, 5vw, 4rem);          /* 48  → 64  */
-  --space-section-md: clamp(4.5rem, 6vw, 6.5rem);      /* 72  → 104 */
-  --space-section-md-end: clamp(5rem, 6.6vw, 7.25rem); /* 80  → 116 */
-  --space-section-lg: clamp(5.5rem, 7.4vw, 8rem);      /* 88  → 128 */
-  --space-section-lg-end: clamp(6rem, 8.2vw, 9rem);    /* 96  → 144 */
+  --space-section-xs: clamp(2rem, 3.2vw, 2.75rem);      /* 32  → 44  */
+  --space-section-sm: clamp(3rem, 5vw, 4.5rem);         /* 48  → 72  */
+  --space-section-md: clamp(4.5rem, 6.6vw, 7rem);       /* 72  → 112 */
+  --space-section-md-end: clamp(5.25rem, 7.6vw, 8.5rem);/* 84  → 136 */
+  --space-section-lg: clamp(5.5rem, 7.6vw, 8rem);       /* 88  → 128 */
+  --space-section-lg-end: clamp(6.5rem, 9.6vw, 10.75rem);/* 104 → 172 */
 
   /* measures */
   --width-prose: 68ch;          /* long-form reading column */
-  --width-container: 1216px;    /* the page's one content measure */
+  --width-container: 1264px;    /* measured off clerk.com: their one content cap */
   --width-hero: 56rem;          /* 896px — hero copy cap (headline, lede, actions) */
   --width-stage: 1160px;        /* the hero product stage, wider than the copy */
 
@@ -131,19 +137,22 @@
 
   /* ---- borders ---- */
   --stripe-width: 3px;  /* accent left-rule on callouts / pull-quotes */
+  /* Corner cut on the dark plates (the .chamfer device in globals.css). */
+  --chamfer: clamp(1.25rem, 3.4vw, 3rem);
 
   /* ---- motion ------------------------------------------------------------
      One curve, three durations. Micro 150ms · standard 260/320ms · reveal 500ms.
      Tailwind reads --default-transition-* so every bare `transition` in the
      codebase lands on the same curve without per-element easing. */
-  --motion-fast: 150ms;      /* micro-interaction: colour, icon nudge */
-  --motion-base: 260ms;      /* standard transition */
-  --motion-slow: 320ms;      /* the slower reach: elevation, disclosure */
-  --motion-reveal: 500ms;    /* section entrance */
-  --stagger-step: 60ms;      /* per-sibling delay in .reveal-stagger groups */
+  --motion-fast: 130ms;      /* micro-interaction: colour, icon nudge */
+  --motion-base: 200ms;      /* standard transition */
+  --motion-slow: 300ms;      /* the slower reach: elevation, disclosure */
+  --motion-reveal: 450ms;    /* section entrance */
+  --stagger-step: 60ms;      /* per-sibling delay in staggered groups */
   --motion-reduced: 0.01ms;
-  --ease-out: cubic-bezier(0.32, 0.72, 0, 1);        /* primary — a settled arrival */
-  --ease-emphasized: cubic-bezier(0.22, 1, 0.36, 1); /* reveals — reaches, then rests */
+  --ease-out: cubic-bezier(0.4, 0.36, 0, 1);         /* measured off clerk.com */
+  --ease-emphasized: cubic-bezier(0.33, 1, 0.68, 1); /* measured off clerk.com */
+  --ease-spring: cubic-bezier(0.175, 0.885, 0.32, 1.1); /* measured off clerk.com */
 
   --default-transition-duration: var(--motion-base);
   --default-transition-timing-function: var(--ease-out);
@@ -153,11 +162,13 @@
   /* ---- elevation ---------------------------------------------------------
      Layered and low-opacity: a hairline ring, a close contact shadow, a wide
      ambient one. Never a single dramatic black drop. */
-  --shadow-sm: 0 0 0 0.5px rgb(23 23 28 / 0.06), 0 1px 2px rgb(23 23 28 / 0.05);
+  /* Measured off clerk.com card elements, adopted verbatim. */
+  --shadow-sm: 0 0 0 0.5px rgb(217 217 222), 0 1px 2px rgb(0 0 0 / 0.06), 0 0 2px rgb(0 0 0 / 0.08);
   --shadow-md:
-    0 0 0 0.5px rgb(23 23 28 / 0.06),
-    0 2px 4px rgb(23 23 28 / 0.04),
-    0 8px 20px -6px rgb(23 23 28 / 0.1);
+    0 0 0 1px rgb(0 0 0 / 0.06),
+    0 5px 15px rgb(0 0 0 / 0.08),
+    0 15px 35px -5px rgb(47 48 55 / 0.2),
+    0 4px 6px rgb(34 42 53 / 0.04);
   --shadow-lg:
     0 0 0 0.5px rgb(23 23 28 / 0.07),
     0 4px 8px rgb(23 23 28 / 0.05),

@@ -1,11 +1,14 @@
 import type { Metadata } from "next";
 import { Hero } from "@/components/home/hero";
 import { ProofBand } from "@/components/home/proof-band";
-import { FlagshipProject } from "@/components/home/flagship";
+import { FlagshipWalkthroughSection } from "@/components/home/flagship-walkthrough";
+import { ReliabilityBento } from "@/components/home/reliability-bento";
 import { SelectedWork } from "@/components/home/selected-work";
-import { CapabilitySection } from "@/components/home/capabilities";
+import { RegistryStrip } from "@/components/home/registry-strip";
+import { EngineerStrip } from "@/components/home/engineer-strip";
 import { WritingAndNow } from "@/components/home/writing-and-now";
 import { FinalContactCTA } from "@/components/home/final-cta";
+import { Reveal } from "@/components/ui/reveal";
 import { SITE } from "@/config/site";
 import { allWriting } from "@/lib/writing";
 import { loadNow } from "@/lib/now";
@@ -31,32 +34,24 @@ export const metadata: Metadata = {
 };
 
 /**
- * The homepage.
+ * The homepage — Clerk's observed choreography (ADR-012), carrying this
+ * portfolio's evidence:
  *
- * ONE narrative, seven sections:
+ *   1  Hero + product stage      the claim, and the product making it
+ *   2  Proof band                the record + the stack wall
+ *   3  Flagship walkthrough      accordion-rail product section (light)
+ *   4  Reliability bento         chamfered dark plate of guarantees
+ *   5  Selected work             the other three products, three equal tiles
+ *   6  Registry strip            the eval ledger, on the page
+ *   7  The engineer              person, principles, road here
+ *   8  Writing + now             the human beat
+ *   9  Close                     one ask, on the second dark plate
  *
- *   1  Hero + product stage   who this is, what he builds, and the product
- *   2  Proof band             the record, plus the stack behind it
- *   3  Flagship               DBWhisper, in depth              (dark plate 1)
- *   4  Selected work          the other three, as a bento
- *   5  Method                 how the systems are engineered
- *   6  Writing + now          the human beat
- *   7  Close                  one conversion ask               (dark plate 2)
- *
- * What is deliberately absent, and why: no FAQ (it answered questions the page
- * had already answered), no skills marquee, no second proof strip competing with
- * the first, no mid-page hiring CTA stealing from the close, and no separate Now
- * band — it is folded into section 6. The page went from a sequence of
- * independent widgets to one argument.
- *
- * Data is fetched here, at the route, rather than inside the sections: every
- * section stays a pure server component that renders what it is given, which is
- * what keeps them testable and reorderable.
- *
- * Client JavaScript on this route: the header shell, the nav, the mobile menu,
- * the theme toggle, the assistant launcher, and the stack wall's single timer.
- * The hero, the product stage, both dark plates and every card are static
- * server-rendered markup.
+ * Exactly two dark plates (4 and 10), both chamfered. Sections below the fold
+ * enter through <Reveal> — scroll-triggered, triple-gated against ever hiding
+ * content (globals.css). Data is fetched here at the route so every section
+ * stays a pure server component; the only client islands are the header
+ * controls, the stack wall's timer, and the walkthrough's accordion.
  */
 export default async function Home() {
   const [writing, now] = await Promise.all([allWriting(), loadNow()]);
@@ -73,11 +68,27 @@ export default async function Home() {
     <>
       <Hero />
       <ProofBand />
-      <FlagshipProject />
-      <SelectedWork />
-      <CapabilitySection />
-      <WritingAndNow writing={posts} exploring={now.meta.exploring.slice(0, 3)} />
-      <FinalContactCTA />
+      <Reveal>
+        <FlagshipWalkthroughSection />
+      </Reveal>
+      <Reveal>
+        <ReliabilityBento />
+      </Reveal>
+      <Reveal>
+        <SelectedWork />
+      </Reveal>
+      <Reveal>
+        <RegistryStrip />
+      </Reveal>
+      <Reveal>
+        <EngineerStrip />
+      </Reveal>
+      <Reveal>
+        <WritingAndNow writing={posts} exploring={now.meta.exploring.slice(0, 3)} />
+      </Reveal>
+      <Reveal>
+        <FinalContactCTA />
+      </Reveal>
     </>
   );
 }

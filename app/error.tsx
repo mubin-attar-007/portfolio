@@ -25,7 +25,7 @@ export default function ErrorState({ error, reset }: ErrorState) {
           <p className="font-mono text-xs uppercase tracking-[0.06em] text-ink-tertiary">
             Error · production hardening guard
           </p>
-          <h1 className="mt-5 max-w-[18ch] text-section font-[560] text-ink">
+          <h1 className="mt-5 max-w-[18ch] text-section font-bold text-ink">
             Something failed unexpectedly.
           </h1>
           <p className="mt-5 text-lg leading-relaxed text-ink-secondary">

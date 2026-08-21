@@ -195,6 +195,27 @@ button:disabled,
   }
 }
 
+/* ---- device: the chamfered plate ----------------------------------------
+   Clerk's dark sections enter and exit on cut corners — an eight-point
+   clip-path rather than a radius, which is what makes the plate read as
+   machined instead of rounded. Owner-directed adoption (ADR-012): ADR-010 had
+   banned this as Clerk-identifying; the current directive explicitly
+   authorizes close adaptation. The cut is a token (--chamfer) so all plates
+   retune together. clip-path clips our own glows too, which is fine — the
+   plate's light should stop at the plate's edge. */
+.chamfer {
+  clip-path: polygon(
+    var(--chamfer) 0,
+    calc(100% - var(--chamfer)) 0,
+    100% var(--chamfer),
+    100% calc(100% - var(--chamfer)),
+    calc(100% - var(--chamfer)) 100%,
+    var(--chamfer) 100%,
+    0 calc(100% - var(--chamfer)),
+    0 var(--chamfer)
+  );
+}
+
 /* ---- device 2: the animated underline ---------------------------------- */
 .link-underline {
   background-image: linear-gradient(currentColor, currentColor);
@@ -403,6 +424,7 @@ button:disabled,
 
   /* Entrance animation must never leave printed content faded out. */
   .reveal,
+  [data-reveal],
   .reveal-stagger > * {
     animation: none !important;
     opacity: 1 !important;

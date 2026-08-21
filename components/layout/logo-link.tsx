@@ -26,10 +26,10 @@ export function LogoLink() {
       aria-label={`${SITE.name} — home`}
     >
       <BoundaryMark
-        size={18}
+        size={16}
         className="text-accent transition-transform duration-base ease-[var(--ease-out)] group-hover/logo:scale-[1.06]"
       />
-      <span className="text-[0.9375rem] font-semibold tracking-[-0.017em] text-ink">
+      <span className="text-sm font-semibold tracking-[-0.015em] text-ink">
         {SITE.name}
       </span>
     </Link>

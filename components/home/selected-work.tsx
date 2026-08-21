@@ -15,14 +15,13 @@ import styles from "@/components/work/project-card.module.css";
  * — using the same `ProjectCard`, so the click does not land the visitor on what
  * looks like a different site.
  *
- * The shapes differ on purpose. The lead project takes a tall card with a large
- * screenshot; the other two stack beside it. Three identical tiles would say
- * "these are interchangeable"; this says "start here".
+ * Three equal tiles, one schema — the reference's own B2B pattern. A tall lead
+ * tile was built and removed twice: every capture in the repo is 16:9, and a
+ * portrait window can only slice it or pad it.
  */
 export function SelectedWork() {
   const w = flagshipHome.work;
   const labels = { caseStudy: w.caseStudy, live: w.live, source: w.source };
-  const [lead, ...rest] = secondaryProjects;
 
   return (
     <Section space="lg" ariaLabelledBy="work-title">
@@ -31,7 +30,7 @@ export function SelectedWork() {
           <EyebrowChip>{w.eyebrow}</EyebrowChip>
           <h2
             id="work-title"
-            className="mt-4 max-w-[20ch] text-balance text-section font-[560] text-ink"
+            className="mt-4 max-w-[20ch] text-balance text-section font-bold text-ink"
           >
             {w.title}
           </h2>
@@ -42,9 +41,8 @@ export function SelectedWork() {
       </div>
 
       <div className={styles.grid}>
-        {lead ? <ProjectCard project={lead} size="lead" labels={labels} /> : null}
-        {rest.map((project) => (
-          <ProjectCard key={project.slug} project={project} labels={labels} />
+        {secondaryProjects.map((project, i) => (
+          <ProjectCard key={project.slug} project={project} priority={i === 0} labels={labels} />
         ))}
       </div>
 

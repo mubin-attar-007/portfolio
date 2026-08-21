@@ -72,7 +72,7 @@ export default function WorkIndex() {
         <div className="grid gap-10 lg:grid-cols-[minmax(0,0.85fr)_minmax(0,1.15fr)] lg:items-center lg:gap-14">
           <div>
             <EyebrowChip>{pages.work.flagshipKicker}</EyebrowChip>
-            <h2 className="mt-4 text-section font-[560] text-ink">{flagship.title}</h2>
+            <h2 className="mt-4 text-section font-bold text-ink">{flagship.title}</h2>
             <p className="mt-4 max-w-[46ch] text-pretty text-lg text-ink-secondary">
               {flagship.summary}
             </p>
@@ -80,7 +80,7 @@ export default function WorkIndex() {
             <dl className="mt-8 grid grid-cols-1 gap-x-8 gap-y-5 border-t border-border pt-7 sm:grid-cols-3">
               {flagship.metrics.slice(0, 3).map((m) => (
                 <div key={m.label}>
-                  <dd className="font-mono text-3xl tabular-nums tracking-[-0.03em] text-ink">
+                  <dd className="text-3xl font-bold tabular-nums tracking-[-0.03em] text-ink">
                     {m.value}
                   </dd>
                   <dt className="mt-1.5 text-sm leading-snug text-ink-secondary">{m.label}</dt>
@@ -151,12 +151,16 @@ export default function WorkIndex() {
                 {flagship.slug}.app
               </span>
             </div>
+            {/* The full-resolution capture (1920px), not the 768px card webp:
+                a 56vw slot on retina wants ~1600px, and the smaller asset went
+                soft exactly where the page claims "not screenshots". The bottom
+                fade makes the crop read deliberate. */}
             <Image
-              src={flagship.card.shot.src}
+              src="/demos/dbwhisper.png"
               alt={flagship.card.alt}
-              width={flagship.card.shot.width}
-              height={flagship.card.shot.height}
-              className="h-auto w-full"
+              width={1920}
+              height={1140}
+              className="h-auto w-full [mask-image:linear-gradient(to_bottom,black_84%,transparent)]"
               sizes="(min-width: 64rem) 56vw, 100vw"
               priority
             />
@@ -169,7 +173,7 @@ export default function WorkIndex() {
         <div className="flex flex-col gap-4 sm:flex-row sm:items-end sm:justify-between">
           <div>
             <EyebrowChip>{pages.work.othersKicker}</EyebrowChip>
-            <h2 className="mt-4 text-section font-[560] text-ink">{pages.work.othersTitle}</h2>
+            <h2 className="mt-4 text-section font-bold text-ink">{pages.work.othersTitle}</h2>
           </div>
           <TextLink href="/evals" className="sm:pb-2">
             How each was measured
@@ -177,13 +181,8 @@ export default function WorkIndex() {
         </div>
 
         <div className={cardStyles.grid}>
-          {secondaryProjects.map((project, i) => (
-            <ProjectCard
-              key={project.slug}
-              project={project}
-              size={i === 0 ? "lead" : "standard"}
-              labels={labels}
-            />
+          {secondaryProjects.map((project) => (
+            <ProjectCard key={project.slug} project={project} labels={labels} />
           ))}
         </div>
       </Section>

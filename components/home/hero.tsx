@@ -20,7 +20,7 @@ import { HeroProductStage } from "./hero-stage";
  * it is the half of the sentence that makes the actual claim.
  *
  * Fold budget at 1440×900: availability bar + header (104) + hero top (64) +
- * eyebrow, headline, lede, actions and the tertiary link (≈460) leaves roughly
+ * eyebrow, headline, lede and the action pair (≈420) leaves roughly
  * 270px of the product stage visible above the fold. That is the intended
  * reading — the stage should be *started*, not finished, on first paint.
  *
@@ -37,21 +37,21 @@ export function Hero() {
 
   return (
     <section
-      className="relative overflow-hidden pb-[var(--space-section-md)] pt-10 sm:pt-14 lg:pt-16"
+      className="relative overflow-hidden pb-[var(--space-section-md)] pt-14 sm:pt-20 lg:pt-28"
       aria-labelledby="home-title"
     >
       <EvidenceGraph />
 
       <Container className="relative">
         <div className="reveal mx-auto flex max-w-[var(--width-hero)] flex-col items-center text-center">
-          <p className="inline-flex items-center gap-2 rounded-[var(--radius-pill)] border border-border bg-surface/80 py-1 pl-2 pr-3 font-mono text-xs tracking-[0.02em] text-ink-secondary shadow-[var(--shadow-sm)] backdrop-blur-sm">
+          <p className="inline-flex items-center gap-2 rounded-[var(--radius-pill)] border border-border bg-surface/80 py-1 pl-2 pr-3 text-xs font-medium tracking-[0.01em] text-ink-secondary shadow-[var(--shadow-sm)] backdrop-blur-sm">
             <BoundaryMark size={13} className="text-accent" />
             {hero.eyebrow}
           </p>
 
           <h1
             id="home-title"
-            className="mt-6 text-balance text-display font-[560] text-ink sm:mt-7"
+            className="mt-6 text-balance text-display font-bold text-ink sm:mt-7"
           >
             <span className="block">{hero.titleLead}</span>
             {/* The claim line carries the display gradient. background-clip
@@ -63,7 +63,15 @@ export function Hero() {
           </h1>
 
           <p className="mt-5 max-w-[46ch] text-pretty text-base text-ink-secondary sm:mt-6 sm:text-lg">
-            {hero.lede}
+            {hero.ledeParts.map((part, i) =>
+              "strong" in part && part.strong ? (
+                <strong key={i} className="font-medium text-ink">
+                  {part.t}
+                </strong>
+              ) : (
+                <span key={i}>{part.t}</span>
+              ),
+            )}
           </p>
 
           {/* One primary action. The secondary is a real control rather than a
@@ -87,19 +95,6 @@ export function Hero() {
             </Link>
           </div>
 
-          <Link
-            href={hero.tertiary.href}
-            prefetch={false}
-            className="group/tertiary mt-6 inline-flex items-center gap-1.5 text-sm text-ink-tertiary transition-colors duration-fast ease-[var(--ease-out)] hover:text-ink"
-          >
-            {hero.tertiary.label}
-            <ArrowRight
-              size={13}
-              strokeWidth={2.25}
-              aria-hidden
-              className="transition-transform duration-fast ease-[var(--ease-out)] group-hover/tertiary:translate-x-0.5"
-            />
-          </Link>
         </div>
 
         <div className="reveal mt-14 sm:mt-16 lg:mt-20">

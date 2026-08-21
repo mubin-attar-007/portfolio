@@ -34,7 +34,7 @@ export function AvailabilityBar() {
           aria-hidden
           className="relative inline-flex h-1.5 w-1.5 shrink-0 rounded-[var(--radius-pill)] bg-positive"
         />
-        <span className="font-mono text-[0.6875rem] tracking-[0.02em] text-ink-secondary transition-colors group-hover:text-ink">
+        <span className="text-xs font-medium text-ink-secondary transition-colors group-hover:text-ink">
           <span className="sm:hidden">{STATUS.short}</span>
           <span className="hidden sm:inline">{STATUS.text}</span>
         </span>

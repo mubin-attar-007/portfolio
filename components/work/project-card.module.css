@@ -1,14 +1,11 @@
 /* ============================================================================
-   Selected work — an editorial bento, not a row of identical tiles.
+   Selected work — three equal cards, one schema.
 
-   DBWhisper already had the flagship band above, so it is deliberately absent
-   here: repeating it as an equal fourth card would undo the hierarchy the
-   flagship section just built.
-
-   The three remaining projects get DIFFERENT shapes on purpose. TradePulse takes
-   a tall lead card with a large product shot; CrownWager and LLM Studio stack
-   beside it as wide, shallow cards. Three identical cards say "these are
-   interchangeable"; this says "one of these is the next thing to look at".
+   The tall 2-row lead tile is deliberately gone. Every product capture in the
+   repo is 16:9, and a 16:9 image in a portrait window can only be served
+   sliced (mid-word crops) or padded (a ~500px void) — both were built, both
+   were correctly savaged in review. The reference's own B2B section is three
+   equal cards; with these assets, that IS the premium layout.
    ============================================================================ */
 
 .grid {
@@ -19,12 +16,9 @@
 
 @media (min-width: 64rem) {
   .grid {
-    grid-template-columns: 1.15fr 1fr;
-    grid-template-rows: repeat(2, minmax(0, 1fr));
+    grid-template-columns: repeat(3, minmax(0, 1fr));
     gap: 1.25rem;
-  }
-  .lead {
-    grid-row: span 2;
+    align-items: stretch;
   }
 }
 
@@ -104,12 +98,6 @@
   letter-spacing: -0.02em;
   font-weight: 560;
   color: var(--color-ink);
-}
-
-@media (min-width: 64rem) {
-  .lead .name {
-    font-size: 1.75rem;
-  }
 }
 
 /* The whole card is one tab stop: the title carries the link and a stretched
@@ -253,88 +241,15 @@
 /* The frame declares a ratio AND flexes to the window's remaining height.
    The ratio reserves the box before the image decodes (the CLS budget is
    < 0.05) and sizes the frame in the single-column mobile flow; `flex: 1 1
-   auto` lets standard cards absorb their small height remainder (a ~10% crop a
-   screenshot survives). The LEAD tile is the exception: stretching a 16:9
-   capture into a 2:3 window guillotines its own headline mid-word, so its
-   frame stays at the ratio and the card's extra height is spent on the
-   lead-only evidence block instead. */
+   auto` lets equal-height cards absorb their small remainder — a ~10% crop a
+   screenshot survives, unlike the portrait crops the retired lead tile
+   demanded. */
 .shotFrame {
   position: relative;
   width: 100%;
   aspect-ratio: 16 / 9;
   flex: 1 1 auto;
   min-height: 0;
-}
-
-@media (min-width: 64rem) {
-  .lead .shotFrame {
-    flex: none;
-  }
-  /* Any slack the evidence block does not spend becomes air ABOVE the window,
-     not a void below the image — the card ends on its strongest element.
-     `flex: none` is load-bearing: the window inherits `flex: 1` from the
-     standard card, and a stretched window around an unstretched frame re-opens
-     the empty well inside the chrome. */
-  .lead .shot {
-    flex: none;
-    margin-top: auto;
-  }
-}
-
-/* ---- the lead-only evidence block ---------------------------------------
-   The remaining measured results and the system list — what the tall tile
-   earns its height with. Hidden below `lg`, where the bento is a single column
-   and every card is the same shape. */
-.leadExtra {
-  display: none;
-}
-
-@media (min-width: 64rem) {
-  .lead .leadExtra {
-    display: block;
-    margin-top: 1.125rem;
-    border-top: 1px solid var(--color-border);
-    padding-top: 1.125rem;
-  }
-}
-
-.leadMetrics {
-  display: grid;
-  grid-template-columns: repeat(2, minmax(0, 1fr));
-  gap: 0.375rem 1.5rem;
-}
-.leadMetric {
-  display: flex;
-  flex-direction: column-reverse;
-  gap: 0.125rem;
-}
-.leadMetric dt {
-  font-size: 0.75rem;
-  line-height: 1.4;
-  color: var(--color-ink-tertiary);
-}
-.leadMetric dd {
-  font-family: var(--font-mono);
-  font-size: 0.9375rem;
-  font-variant-numeric: tabular-nums;
-  color: var(--color-ink);
-}
-
-.leadSystems {
-  margin-top: 1rem;
-  display: flex;
-  flex-wrap: wrap;
-  gap: 0.375rem;
-}
-.leadSystems li {
-  border: 1px solid var(--color-border);
-  border-radius: var(--radius-pill);
-  background: var(--color-bg-subtle);
-  padding: 0.1875rem 0.625rem;
-  font-family: var(--font-mono);
-  font-size: 0.6875rem;
-  color: var(--color-ink-secondary);
-  white-space: nowrap;
 }
 
 .shotImg {

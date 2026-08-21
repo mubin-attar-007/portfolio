@@ -43,7 +43,7 @@ export default function GlobalError({ error, reset }: GlobalErrorProps) {
             <p className="font-mono text-xs uppercase tracking-[0.07em] text-ink-tertiary">
               Global runtime error
             </p>
-            <h1 className="mt-5 max-w-[18ch] text-section font-[560] text-ink">
+            <h1 className="mt-5 max-w-[18ch] text-section font-bold text-ink">
               We hit a hard runtime boundary.
             </h1>
             <p className="mt-5 text-lg leading-relaxed text-ink-secondary">

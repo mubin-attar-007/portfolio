@@ -1,0 +1,364 @@
+/* ============================================================================
+   Flagship walkthrough — Clerk's accordion-rail product section, adapted.
+
+   Left: copy + a five-stage accordion (the rail). Right: a specimen panel that
+   shows the ACTIVE stage as product UI. The observed reference keeps the rail
+   narrow and the specimen dominant; the rail's open item gets an accent spine.
+   ============================================================================ */
+
+.layout {
+  display: grid;
+  gap: 2.5rem;
+  align-items: start;
+}
+
+@media (min-width: 64rem) {
+  .layout {
+    grid-template-columns: minmax(0, 24rem) minmax(0, 1fr);
+    gap: 4rem;
+  }
+}
+
+/* ---- the rail ------------------------------------------------------------ */
+
+.rail {
+  display: flex;
+  flex-direction: column;
+}
+
+.stageList {
+  margin-top: 1.75rem;
+  border-top: 1px solid var(--color-border);
+}
+
+.stageItem {
+  border-bottom: 1px solid var(--color-border);
+}
+
+/* The whole row is the control. Number, label, chevron — quiet until active. */
+.stageBtn {
+  display: flex;
+  width: 100%;
+  align-items: center;
+  gap: 0.75rem;
+  padding: 0.875rem 0.25rem;
+  text-align: left;
+  font-size: 0.9375rem;
+  font-weight: 550;
+  color: var(--color-ink-secondary);
+  transition: color var(--motion-fast) var(--ease-out);
+}
+.stageBtn:hover {
+  color: var(--color-ink);
+}
+
+.stageN {
+  font-family: var(--font-mono);
+  font-size: 0.6875rem;
+  color: var(--color-ink-tertiary);
+  width: 1.25rem;
+  flex: none;
+}
+
+.stageChevron {
+  margin-left: auto;
+  flex: none;
+  color: var(--color-ink-tertiary);
+  transition: transform var(--motion-base) var(--ease-out);
+}
+
+.stageItemOpen .stageBtn {
+  color: var(--color-ink);
+}
+.stageItemOpen .stageChevron {
+  transform: rotate(90deg);
+  color: var(--color-accent);
+}
+
+/* Open state: the accent spine on the left is the "this one is live" signal,
+   paired with the rotated chevron and full-ink label — never colour alone. */
+.stageItemOpen {
+  box-shadow: inset 2px 0 0 var(--color-accent);
+}
+.stageItemOpen .stageBtn,
+.stageItemOpen .stagePanel {
+  padding-left: 0.875rem;
+}
+
+/* Height animates 0fr -> 1fr (the recorded disclosure exception, ADR-011);
+   perceived motion is opacity/translate on the inner content. */
+.stagePanel {
+  display: grid;
+  grid-template-rows: 0fr;
+  transition: grid-template-rows var(--motion-slow) var(--ease-out);
+}
+.stageItemOpen .stagePanel {
+  grid-template-rows: 1fr;
+}
+.stagePanelInner {
+  overflow: hidden;
+  min-height: 0;
+}
+
+.stageBody {
+  font-size: 0.875rem;
+  line-height: 1.6;
+  color: var(--color-ink-secondary);
+  max-width: 40ch;
+  opacity: 0;
+  transform: translateY(-3px);
+  transition:
+    opacity var(--motion-base) var(--ease-out),
+    transform var(--motion-base) var(--ease-out);
+}
+.stageItemOpen .stageBody {
+  opacity: 1;
+  transform: none;
+  transition-delay: var(--motion-fast);
+}
+
+.stageItems {
+  margin: 0.75rem 0 1rem;
+  display: flex;
+  flex-direction: column;
+  gap: 0.375rem;
+}
+.stageItems li {
+  display: flex;
+  align-items: baseline;
+  gap: 0.5rem;
+  font-family: var(--font-mono);
+  font-size: 0.75rem;
+  color: var(--color-ink-tertiary);
+}
+.stageItems li::before {
+  content: "";
+  width: 0.875rem;
+  height: 1px;
+  background: color-mix(in srgb, var(--color-accent) 55%, var(--color-border-strong));
+  flex: none;
+  transform: translateY(-0.2em);
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .stageBody {
+    transform: none;
+  }
+}
+
+/* ---- the specimen -------------------------------------------------------- */
+
+.specimen {
+  position: relative;
+  overflow: hidden;
+  border-radius: var(--radius-xl);
+  background: var(--color-surface);
+  box-shadow: var(--shadow-md);
+}
+
+/* The shared gradient top light — the signature every product surface wears. */
+.specimen::before {
+  content: "";
+  position: absolute;
+  inset: 0 0 auto;
+  height: 2px;
+  z-index: 1;
+  background: linear-gradient(
+    90deg,
+    transparent 4%,
+    color-mix(in srgb, var(--color-accent) 55%, transparent) 35%,
+    color-mix(in srgb, var(--color-ambient) 45%, transparent) 75%,
+    transparent 96%
+  );
+}
+
+.specimenHead {
+  display: flex;
+  align-items: center;
+  gap: 0.625rem;
+  height: 2.25rem;
+  padding-inline: 0.875rem;
+  border-bottom: 1px solid var(--color-border);
+  background: var(--color-bg-subtle);
+  font-family: var(--font-mono);
+  font-size: 0.6875rem;
+  letter-spacing: 0.05em;
+  text-transform: uppercase;
+  color: var(--color-ink-tertiary);
+}
+
+.specimenDot {
+  width: 0.375rem;
+  height: 0.375rem;
+  border-radius: var(--radius-pill);
+  background: var(--color-accent);
+  flex: none;
+}
+
+.specimenBody {
+  padding: 1.25rem;
+  min-height: 21rem;
+}
+
+@media (min-width: 48rem) {
+  .specimenBody {
+    padding: 1.5rem;
+    min-height: 23rem;
+  }
+}
+
+/* Panel swap: the incoming panel fades and rises 6px. Under reduced motion the
+   blanket rule collapses the duration, so the swap is instant. */
+.panelEnter {
+  animation: panel-in var(--motion-base) var(--ease-out) both;
+}
+@keyframes panel-in {
+  from {
+    opacity: 0;
+    transform: translateY(6px);
+  }
+  to {
+    opacity: 1;
+    transform: none;
+  }
+}
+
+/* ---- specimen internals (shared vocabulary with the hero stage) ---------- */
+
+.specRow {
+  display: flex;
+  align-items: center;
+  gap: 0.625rem;
+  padding: 0.5rem 0.625rem;
+  border-radius: var(--radius-xs);
+  font-size: 0.8125rem;
+  color: var(--color-ink-secondary);
+}
+.specRow:nth-child(odd) {
+  background: color-mix(in srgb, var(--color-ink) 2%, transparent);
+}
+.specMono {
+  font-family: var(--font-mono);
+  font-size: 0.75rem;
+  color: var(--color-ink);
+  white-space: nowrap;
+}
+.specMeta {
+  margin-left: auto;
+  font-family: var(--font-mono);
+  font-size: 0.6875rem;
+  color: var(--color-ink-tertiary);
+  white-space: nowrap;
+}
+.specMark {
+  width: 0.875rem;
+  height: 0.875rem;
+  flex: none;
+  color: var(--color-accent);
+}
+
+.specWell {
+  margin-top: 0.75rem;
+  padding: 0.75rem 0.875rem;
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-sm);
+  background: var(--color-bg-subtle);
+  font-family: var(--font-mono);
+  font-size: 0.75rem;
+  line-height: 1.7;
+  overflow-x: auto;
+  white-space: pre;
+  color: var(--color-ink-secondary);
+}
+
+.chips {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.375rem;
+  margin-top: 0.75rem;
+}
+.chip {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.375rem;
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-pill);
+  background: var(--color-surface);
+  padding: 0.1875rem 0.625rem;
+  font-family: var(--font-mono);
+  font-size: 0.6875rem;
+  color: var(--color-ink-secondary);
+  white-space: nowrap;
+}
+.chipArrow {
+  color: var(--color-ink-tertiary);
+}
+.chipOn {
+  border-color: color-mix(in srgb, var(--color-accent) 40%, transparent);
+  background: var(--color-accent-soft);
+  color: var(--color-ink);
+}
+
+/* Refusal block: dashed border + cross + the word — three signals, no colour
+   dependence. */
+.refusal {
+  margin-top: 0.875rem;
+  padding: 0.75rem 0.875rem;
+  border: 1px dashed color-mix(in srgb, var(--color-accent) 35%, var(--color-border-strong));
+  border-radius: var(--radius-sm);
+  background: var(--color-bg-subtle);
+}
+.refusalRow {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  font-family: var(--font-mono);
+  font-size: 0.75rem;
+  color: var(--color-ink);
+}
+.refusalReason {
+  margin-top: 0.25rem;
+  font-family: var(--font-mono);
+  font-size: 0.6875rem;
+  color: var(--color-ink-tertiary);
+}
+.refusalMark {
+  width: 0.8125rem;
+  height: 0.8125rem;
+  flex: none;
+  color: var(--color-negative);
+}
+
+/* Scoreboard (evaluate stage). */
+.score {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 0.625rem;
+}
+.scoreCell {
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-sm);
+  background: var(--color-surface);
+  box-shadow: var(--shadow-sm);
+  padding: 0.875rem;
+  display: flex;
+  flex-direction: column-reverse;
+  gap: 0.25rem;
+}
+.scoreCell dt {
+  font-size: 0.75rem;
+  line-height: 1.35;
+  color: var(--color-ink-secondary);
+}
+.scoreCell dd {
+  font-family: var(--font-mono);
+  font-size: 1.25rem;
+  font-variant-numeric: tabular-nums;
+  letter-spacing: -0.02em;
+  color: var(--color-ink);
+}
+@media (max-width: 33rem) {
+  .score {
+    grid-template-columns: 1fr;
+  }
+}

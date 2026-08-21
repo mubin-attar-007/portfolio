@@ -35,7 +35,7 @@ const FOOTER_LINK =
 export function Footer({ year }: { year: number }) {
   return (
     <footer className="border-t border-border bg-bg">
-      <Container className="pb-10 pt-14 sm:pb-12 sm:pt-16">
+      <Container className="pb-10 pt-20 sm:pb-12 sm:pt-28">
         <div className="grid gap-y-12 md:grid-cols-[minmax(0,1fr)_auto] md:gap-x-16">
           {/* Identity — the personal replacement for a product's logo column. */}
           <div className="max-w-[38ch]">
@@ -70,7 +70,7 @@ export function Footer({ year }: { year: number }) {
 
           {/* A shortlist, not a second sitemap. Reference routes stay reachable
               from the pages that need them. */}
-          <div className="grid grid-cols-2 gap-x-10 gap-y-10 sm:grid-cols-3 md:gap-x-14">
+          <div className="grid grid-cols-2 gap-x-10 gap-y-10 sm:grid-cols-4 md:gap-x-12">
             {FOOTER_NAV.map((group) => (
               <nav key={group.heading} aria-label={group.heading}>
                 <h2 className={LABEL}>{group.heading}</h2>

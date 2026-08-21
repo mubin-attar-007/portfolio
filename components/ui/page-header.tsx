@@ -69,7 +69,7 @@ export function PageHeader({
       <h1
         className={`${
           eyebrow ? "mt-6" : ""
-        } max-w-[20ch] text-balance text-section font-[560] text-ink`}
+        } max-w-[20ch] text-balance text-section font-bold text-ink`}
       >
         {title}
       </h1>

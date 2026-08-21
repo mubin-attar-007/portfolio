@@ -46,12 +46,14 @@
 
 /* ---- the frame --------------------------------------------------------- */
 
+/* Borderless: the shadow token opens with its own 0.5px ring, and a drawn 1px
+   border on top produced the ~1.5px outline the fidelity pass called boxy.
+   The reference's cards imply their edges with light. */
 .stage {
   position: relative;
   z-index: 1;
   overflow: hidden;
-  border: 1px solid var(--color-border);
-  border-radius: var(--radius-lg);
+  border-radius: var(--radius-xl);
   background: var(--color-surface);
   box-shadow: var(--shadow-stage);
 }

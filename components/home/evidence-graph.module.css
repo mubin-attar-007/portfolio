@@ -95,21 +95,21 @@
    the whole metaphor. */
 .trace {
   fill: none;
-  stroke: color-mix(in srgb, var(--color-ink) 13%, transparent);
+  stroke: color-mix(in srgb, var(--color-ink) 8%, transparent);
   stroke-width: 1;
   stroke-linecap: square;
 }
 
 .traceAmbient {
   fill: none;
-  stroke: color-mix(in srgb, var(--color-ink) 7%, transparent);
+  stroke: color-mix(in srgb, var(--color-ink) 5%, transparent);
   stroke-width: 1;
   stroke-linecap: square;
 }
 
 .tracePrimary {
   fill: none;
-  stroke: color-mix(in srgb, var(--color-accent) 42%, transparent);
+  stroke: color-mix(in srgb, var(--color-accent) 18%, transparent);
   stroke-width: 1.25;
   stroke-linecap: square;
 }
@@ -119,39 +119,39 @@
    way to a reader who cannot see the hue. */
 .traceRefused {
   fill: none;
-  stroke: color-mix(in srgb, var(--color-ink) 16%, transparent);
+  stroke: color-mix(in srgb, var(--color-ink) 10%, transparent);
   stroke-width: 1;
   stroke-dasharray: 3 4;
 }
 
 .node {
   fill: var(--color-bg);
-  stroke: color-mix(in srgb, var(--color-accent) 55%, transparent);
+  stroke: color-mix(in srgb, var(--color-accent) 30%, transparent);
   stroke-width: 1.25;
 }
 
 .nodeCore {
   fill: var(--color-accent);
-  opacity: 0.75;
+  opacity: 0.4;
 }
 
 .checkpoint {
   fill: none;
-  stroke: color-mix(in srgb, var(--color-ink) 20%, transparent);
+  stroke: color-mix(in srgb, var(--color-ink) 12%, transparent);
   stroke-width: 1;
 }
 
 .reject {
   fill: none;
-  stroke: color-mix(in srgb, var(--color-ink) 26%, transparent);
+  stroke: color-mix(in srgb, var(--color-ink) 14%, transparent);
   stroke-width: 1.25;
   stroke-linecap: round;
 }
 
 .label {
-  fill: color-mix(in srgb, var(--color-ink) 34%, transparent);
+  fill: color-mix(in srgb, var(--color-ink) 13%, transparent);
   font-family: var(--font-mono);
-  font-size: 11px;
+  font-size: 10px;
   letter-spacing: 0.08em;
   text-transform: uppercase;
 }
@@ -173,8 +173,8 @@
   .pulse {
     display: block;
     fill: none;
-    stroke: var(--color-accent);
-    stroke-width: 1.75;
+    stroke: color-mix(in srgb, var(--color-accent) 38%, transparent);
+    stroke-width: 1.5;
     stroke-linecap: round;
     stroke-dasharray: 46 2200;
     animation: trace-run 9s linear infinite;

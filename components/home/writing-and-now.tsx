@@ -55,7 +55,7 @@ export function WritingAndNow({
           headline it read as footer matter despite holding three essays. */}
       <div className="mb-12">
         <EyebrowChip>{n.eyebrow}</EyebrowChip>
-        <h2 id="writing-title" className="mt-4 text-balance text-section font-[560] text-ink">
+        <h2 id="writing-title" className="mt-4 text-balance text-section font-bold text-ink">
           {n.title}
         </h2>
       </div>

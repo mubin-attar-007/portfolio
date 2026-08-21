@@ -31,18 +31,14 @@ import styles from "./project-card.module.css";
  * above that overlay so they stay independently reachable. `:focus-within`
  * mirrors the hover state, so keyboard users get the same affordance.
  *
- * @param size    `lead` is the tall bento hero tile; `standard` is everything
- *                else. The only differences are the title step and the crop.
  * @param priority Pass on the one card likely to be the LCP element.
  */
 export function ProjectCard({
   project,
-  size = "standard",
   priority = false,
   labels,
 }: {
   project: Project;
-  size?: "lead" | "standard";
   priority?: boolean;
   labels: { caseStudy: string; live: string; source: string };
 }) {
@@ -50,7 +46,7 @@ export function ProjectCard({
   const { card } = project;
 
   return (
-    <article className={`${styles.card} ${size === "lead" ? styles.lead : ""}`}>
+    <article className={styles.card}>
       <div className={styles.body}>
         <p className={styles.meta}>
           <span>{card.category}</span>
@@ -69,29 +65,6 @@ export function ProjectCard({
           <div className={styles.result}>
             <span className={styles.resultValue}>{metric.value}</span>
             <span className={styles.resultLabel}>{metric.label}</span>
-          </div>
-        ) : null}
-
-        {/* The lead-only evidence block: the remaining measured results and
-            the system list. This — not a taller crop of the screenshot — is
-            what the tall tile spends its extra height on. */}
-        {size === "lead" ? (
-          <div className={styles.leadExtra}>
-            {project.metrics.length > 1 ? (
-              <dl className={styles.leadMetrics}>
-                {project.metrics.slice(1, 3).map((m) => (
-                  <div key={m.label} className={styles.leadMetric}>
-                    <dt>{m.label}</dt>
-                    <dd>{m.value}</dd>
-                  </div>
-                ))}
-              </dl>
-            ) : null}
-            <ul className={styles.leadSystems} aria-label="Systems">
-              {project.systems.slice(0, 4).map((s) => (
-                <li key={s}>{s}</li>
-              ))}
-            </ul>
           </div>
         ) : null}
 
