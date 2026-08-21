@@ -3,8 +3,28 @@
 > **Canonical source: [`design-system.md`](../design-system.md).** That document
 > holds the current thesis, token values, and measured contrast. This file keeps
 > the deeper component-level rationale (accent budget, page tempo, anti-patterns,
-> evidence rules), all of which still hold. Where the two disagree on a *value*,
-> `design-system.md` wins.
+> evidence rules). Where the two disagree on a *value*, `design-system.md` wins.
+>
+> ---
+>
+> ### ⚠ Superseded clauses — read [ADR-011](./decisions/ADR-011-evidence-paths-identity.md) first
+>
+> The redesign recorded in ADR-011 replaced the "instrumentation" identity this
+> file was written for. These specific statements below are **no longer true**;
+> the surrounding rationale still holds.
+>
+> | Clause here | Current reality |
+> |---|---|
+> | "Instrumentation, not decoration" thesis (§0) | Superseded by "Evidence paths" — light paper, one violet accent, the product as the hero. |
+> | Signal-teal accent | `--color-accent: #6552f0`. The dark ramp lifts it to `#a99cff`. |
+> | Dark-first default | **Light is the default.** `data-theme="light"` is server-rendered; dark is an explicit, remembered preference. |
+> | The graticule seam at light↔dark boundaries | Retired. Dark bands have a clean full-bleed edge, and `Section`'s `notch` prop is removed. |
+> | "Serif appears in exactly one place per page" | False in both directions. Newsreader now reaches only `PullQuote`, which ships on no marketing route. |
+> | Container width, section spacing, type scale | Re-tuned. 1216px container, 104–144px desktop bands, and the three fluid steps in `tokens.css`. |
+> | Parallax / glow bans (§9) | Parallax remains banned. A single soft ambient glow behind product surfaces is permitted and tokenised (`--glow-accent`, `--glow-ambient`). |
+>
+> Everything else in §9's anti-pattern list — cursor followers, marquees,
+> typewriter effects, tilt cards, scroll-jacking — **remains law**.
 
 Design intent: **an engineering notebook with a product-grade surface** — the
 readout of a precision instrument. Calm, typography-first, generous whitespace,
