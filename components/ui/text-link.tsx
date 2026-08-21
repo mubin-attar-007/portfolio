@@ -28,8 +28,8 @@ import { ArrowUpRight, ChevronRight } from "lucide-react";
  * focus uses the global focus ring. External links carry `rel="noopener
  * noreferrer"` and the arrow glyph is the conventional "opens a new tab" cue.
  *
- * Motion: colour and transform only, at `--motion-fast` (Clerk's dominant
- * interaction duration). The global `prefers-reduced-motion` rule collapses both
+ * Motion: colour and transform only, at `--motion-fast`, the site's dominant
+ * interaction duration. The global `prefers-reduced-motion` rule collapses both
  * transitions, so the nudge disappears without a per-component guard.
  */
 const TONE: Record<"accent" | "quiet", string> = {

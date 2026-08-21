@@ -6,7 +6,7 @@ import { SITE_URL } from "@/lib/env";
  */
 export const SITE = {
   name: "Mubin Attar",
-  role: "AI Software Engineer",
+  role: "AI Systems Engineer",
   url: SITE_URL,
   email: "sk.mubinattar@gmail.com",
   location: "Ahmedabad, India",
@@ -39,18 +39,26 @@ export const INTEGRATIONS = {
  * mailto wherever it's shown verbatim (footer, /hire, homepage contact).
  */
 export const STATUS = {
-  text: "Open to AI software engineering roles — remote or Ahmedabad, India",
+  text: "Open to senior AI engineering and applied AI roles — remote or Ahmedabad, India",
+  /**
+   * The phone form of the same sentence. Not a different claim — the same one,
+   * short enough to fit 360px without an ellipsis. A status line that truncates
+   * mid-word reads as a layout bug rather than as availability.
+   */
+  short: "Open to AI engineering roles",
   cta: "Get in touch",
   href: "/hire",
 } as const;
 
 /**
- * Footer sign-off — a personal line in the owner's voice (not a company tagline
- * and not a metric). Spoken to the reader who scrolled through the evidence.
+ * Footer copy — the identity column, in the owner's voice. `positioning` is the
+ * one-line statement of what he does (the same claim the hero makes, said
+ * plainly); `invite` is the human line under it. Neither asserts a number, so
+ * neither needs a linked method.
  */
 export const FOOTER = {
-  signoff: "Thanks for reading this far.",
-  invite: "The rest is a conversation — I answer every email myself.",
+  positioning: "Production AI systems — designed, shipped, constrained, and measured.",
+  invite: "I answer every email myself.",
 } as const;
 
 export type RouteClass = "page" | "special" | "system";
@@ -282,18 +290,6 @@ export const FOUNDATION_SCOPE = {
       riskRationale: "Supplementary identity content.",
     },
     {
-      path: "/timeline",
-      label: "Timeline",
-      intent: "experience",
-      class: "page",
-      inHeader: false,
-      inFooter: true,
-      sourceOfTruth: "content",
-      parityStatus: "aligned",
-      risk: "low",
-      riskRationale: "Timeline narrative is consistent with experience work.",
-    },
-    {
       path: "/evals",
       label: "Evaluations",
       intent: "identity",
@@ -304,30 +300,6 @@ export const FOUNDATION_SCOPE = {
       parityStatus: "aligned",
       risk: "low",
       riskRationale: "Technical trust artifact in secondary navigation.",
-    },
-    {
-      path: "/talks",
-      label: "Talks",
-      intent: "identity",
-      class: "page",
-      inHeader: false,
-      inFooter: true,
-      sourceOfTruth: "content",
-      parityStatus: "aligned",
-      risk: "low",
-      riskRationale: "Completes identity and speaking artifacts.",
-    },
-    {
-      path: "/changelog",
-      label: "Changelog",
-      intent: "identity",
-      class: "page",
-      inHeader: false,
-      inFooter: true,
-      sourceOfTruth: "content",
-      parityStatus: "aligned",
-      risk: "low",
-      riskRationale: "Stable support surface and audit-friendly content cadence.",
     },
     {
       path: "/api/chat",

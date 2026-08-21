@@ -35,8 +35,11 @@ export function CrownWagerBody() {
 
       <CS id="constraints" title="Constraints">
         <p>
-          It&apos;s a ground-up rebuild of a legacy monolith that scored 2.3/10 on a twelve-dimension
-          assessment, so hardening was a first-class requirement, not a follow-up. And it&apos;s a
+          It&apos;s a ground-up rebuild of a legacy monolith I audited and judged unshippable —
+          no rate limiting, secrets in the repo, no auth hardening — so security was a first-class
+          requirement rather than a follow-up. I&apos;m not publishing the score I gave it: it was my
+          own rubric, applied once, to a codebase nobody else can inspect. The rebuild&apos;s
+          hardening is checkable in CI, which is the part that can actually be verified. And it is a
           responsible-gambling product, which constrains the assistant on purpose.
         </p>
       </CS>
@@ -128,7 +131,7 @@ export function CrownWagerBody() {
             { label: "model shape", value: "106 features · depth 3", method: "750 shallow trees (max_depth 3, learning rate 0.01) over 106 pre-game features; kept deliberately shallow to resist overfitting and stay interpretable." },
             { label: "track record", value: "graded vs finals", method: "Picks settle only on FINAL scores; aggregated per edge tier; unmappable picks voided; flagged insufficient below 20 settled picks." },
             { label: "money math", value: "Decimal", method: "Edge, EV, and half-Kelly (0.5) staking in Decimal; arbitrage flagged when Σ(1/odds) < 1, legs sized to equalize payout." },
-            { label: "legacy → rebuild", value: "2.3/10 → hardened", method: "A twelve-dimension assessment drove a rebuild with per-IP rate limiting, admin 2FA, CSP, and blocking bandit + gitleaks in CI." },
+            { label: "legacy → rebuild", value: "hardened in CI", method: "Rebuilt from a legacy monolith with proxy-aware per-IP rate limiting, admin 2FA (TOTP), constant-time token comparison, CSP, and blocking bandit + gitleaks + dependency audits in CI. The pre-rebuild audit was my own rubric on a private codebase, so no score is published for it." },
           ]}
         />
       </CS>

@@ -24,6 +24,30 @@ function safeIsoDate(value?: string): string | undefined {
 }
 
 /**
+ * BreadcrumbJsonLd — BreadcrumbList structured data mirroring the visual
+ * breadcrumb a detail page already renders (Work → project, Writing → post,
+ * Notes → note). `items` is the ordered trail; each needs an absolute url.
+ * Emitted alongside the visual <nav aria-label="Breadcrumb"> so the structured
+ * trail and the on-screen one never disagree.
+ */
+export function BreadcrumbJsonLd({ items }: { items: { name: string; url: string }[] }) {
+  return (
+    <LdScript
+      data={{
+        "@context": "https://schema.org",
+        "@type": "BreadcrumbList",
+        itemListElement: items.map((item, i) => ({
+          "@type": "ListItem",
+          position: i + 1,
+          name: item.name,
+          item: item.url,
+        })),
+      }}
+    />
+  );
+}
+
+/**
  * ArticleJsonLd — BlogPosting structured data for a writing post, authored by
  * the site's Person node. Rendered on each /writing/[slug] page.
  */

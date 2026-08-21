@@ -5,15 +5,24 @@ import { Moon, Sun } from "lucide-react";
 
 /**
  * ThemeToggle — switches light/dark by setting `data-theme` on <html> and
- * persisting to localStorage. Light is the default/brand; this is a preference.
- * Props: none. A11y: labelled button; icon reflects the *action*, updates on
- * toggle. SSR renders a stable placeholder (Moon) to avoid hydration mismatch;
- * the real state resolves after mount. The no-flash pre-paint script lives in layout.
+ * persisting the choice to localStorage.
+ *
+ * LIGHT is the brand default; dark is an explicit, remembered preference. The OS
+ * `prefers-color-scheme` is deliberately never consulted (ADR-011), so this
+ * button is the only thing that can move the site off light.
+ *
+ * SSR renders the light-state icon — matching the `data-theme="light"` the
+ * server puts on <html> — so there is no hydration mismatch, and the pre-paint
+ * script in the layout has already corrected the attribute for a returning
+ * visitor before this component mounts.
+ *
+ * A11y: a labelled button whose icon shows the ACTION (moon = go dark), with
+ * `aria-pressed` reflecting the current state and a title for pointer users.
  */
 type Theme = "light" | "dark";
 
 export function ThemeToggle() {
-  const [theme, setTheme] = useState<Theme | null>(null);
+  const [theme, setTheme] = useState<Theme>("light");
 
   useEffect(() => {
     const stored = localStorage.getItem("theme");
@@ -21,8 +30,8 @@ export function ThemeToggle() {
       stored === "dark" || stored === "light"
         ? stored
         : ((document.documentElement.getAttribute("data-theme") as Theme | null) ?? "light");
-    // one-time read of the persisted theme (else the light brand default) on
-    // mount — we intentionally do NOT follow the OS scheme (light is the brand)
+    // One-time read of the persisted theme (else the light brand default) on
+    // mount — we intentionally do NOT follow the OS scheme.
     // eslint-disable-next-line react-hooks/set-state-in-effect
     setTheme(current);
   }, []);
@@ -35,19 +44,20 @@ export function ThemeToggle() {
   }
 
   const isDark = theme === "dark";
+  const label = isDark ? "Switch to light theme" : "Switch to dark theme";
   return (
     <button
       type="button"
       onClick={toggle}
       aria-pressed={isDark}
-      aria-label={isDark ? "Switch to light theme" : "Switch to dark theme"}
-      title={isDark ? "Switch to light theme" : "Switch to dark theme"}
-      className="icon-btn inline-flex h-11 w-11 items-center justify-center rounded-[var(--radius-md)] text-ink-secondary hover:text-ink lg:h-9 lg:w-9"
+      aria-label={label}
+      title={label}
+      className="icon-btn inline-flex h-11 w-11 items-center justify-center rounded-[var(--radius-sm)] text-ink-secondary hover:text-ink lg:h-9 lg:w-9"
     >
       {isDark ? (
-        <Sun size={18} strokeWidth={1.5} aria-hidden />
+        <Sun size={17} strokeWidth={1.6} aria-hidden />
       ) : (
-        <Moon size={18} strokeWidth={1.5} aria-hidden />
+        <Moon size={17} strokeWidth={1.6} aria-hidden />
       )}
     </button>
   );

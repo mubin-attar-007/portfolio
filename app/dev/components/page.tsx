@@ -1,4 +1,5 @@
 import type { Metadata } from "next";
+import Link from "next/link";
 import type { ReactNode } from "react";
 import { Container } from "@/components/layout/container";
 import { AuditLane } from "@/components/features/audit-lane";
@@ -54,6 +55,19 @@ export default function ComponentsPage() {
         Every primitive in every state, both themes. Toggle the theme in the header. This route is
         noindex and hidden from production nav.
       </p>
+      {/* noindex is not the same as private — this URL is publicly fetchable. On
+          a site whose whole argument is that no number is invented, a gallery
+          full of realistic-looking metrics is a liability, so every value below
+          is deliberately impossible (999, 000, xx). */}
+      <p className="mt-4 max-w-[var(--width-prose)] rounded-[var(--radius-md)] border border-warning/40 bg-warning/5 px-4 py-3 text-sm text-ink">
+        <strong className="font-medium">Fixture data.</strong> Every number, label and date on this
+        page is a deliberately impossible placeholder chosen so it can never be mistaken for a
+        measured result. Real metrics live on{" "}
+        <Link href="/evals" prefetch={false} className="link-underline text-accent">
+          /evals
+        </Link>
+        .
+      </p>
       <AuditLane
         title="Audit lane"
         items={[
@@ -63,7 +77,7 @@ export default function ComponentsPage() {
             label: stat.label,
           })),
           { href: "/trust", label: "trust policy" },
-          { href: "/changelog", label: "changelog" },
+          { href: "/now", label: "now" },
         ]}
         className="mt-8"
       />
@@ -75,6 +89,9 @@ export default function ComponentsPage() {
           <Button variant="ghost">Ghost</Button>
           <Button variant="primary" disabled>
             Disabled
+          </Button>
+          <Button variant="primary" loading>
+            Loading
           </Button>
         </div>
       </Row>
@@ -116,9 +133,9 @@ export default function ComponentsPage() {
 
       <Row title="Metrics">
         <MetricsRow>
-          <Metric label="review time per assessment" before="45 min" after="6 min" direction="down-good" method="Median wall-clock over 200 sampled assessments, v1 vs current." />
-          <Metric label="false-positive rate" before="31%" after="11%" direction="down-good" method="On a 500-case labelled validation set." />
-          <Metric label="cost per run" after="$0.0024" direction="down-good" method="Token + compute cost, averaged over a week of runs." />
+          <Metric label="review time per assessment" before="999 min" after="000 min" direction="down-good" method="Fixture value — not a measurement. See /evals for real results." />
+          <Metric label="false-positive rate" before="99.9%" after="00.0%" direction="down-good" method="Fixture value — not a measurement. See /evals for real results." />
+          <Metric label="cost per run" after="$0.0000" direction="down-good" method="Fixture value — not a measurement. See /evals for real results." />
         </MetricsRow>
         <div className="mt-8">
           <MetricsTable
@@ -134,8 +151,8 @@ export default function ComponentsPage() {
       <Row title="Before / after">
         <BeforeAfter
           label="v1 → v2"
-          before="Single-pass retrieval; 31% false positives on the validation set."
-          after="Added a reranking pass; 11% false positives, same latency budget."
+          before="Fixture: single-pass retrieval, 99.9% false positives."
+          after="Fixture: added a reranking pass, 00.0% false positives."
         />
       </Row>
 
@@ -162,8 +179,8 @@ export default function ComponentsPage() {
       <Row title="Failure log">
         <FailureLog
           entries={[
-            { version: "v1", metric: "false-positive rate", value: "31%", cause: "single-pass retrieval, naive rule threshold" },
-            { version: "v2", metric: "false-positive rate", value: "11%", fix: "added a reranking pass and rewrote the threshold rule" },
+            { version: "v1", metric: "fixture rate", value: "99.9%", cause: "fixture — not a measured cause" },
+            { version: "v2", metric: "fixture rate", value: "00.0%", fix: "fixture — not a measured fix" },
           ]}
         />
       </Row>

@@ -1,12 +1,12 @@
 import type { Metadata } from "next";
 import Link from "next/link";
-import { ArrowUpRight } from "lucide-react";
+import { ArrowUpRight, Check } from "lucide-react";
 import { Section } from "@/components/layout/section";
 import { PageHeader } from "@/components/ui/page-header";
 import { PAGE_BODY_BAND, PAGE_HEADER_BAND } from "@/constants/page";
 import { SITE } from "@/config/site";
 import { formatDate } from "@/lib/format";
-import { evals, evalsIntro } from "@/content/evals";
+import { evalAnchor, evals, evalsIntro } from "@/content/evals";
 import type { EvalRow } from "@/content/schema";
 
 export const metadata: Metadata = {
@@ -42,7 +42,7 @@ function Status({
   const dashed = status === "planned";
   return (
     <span
-      className={`inline-flex items-center gap-1.5 rounded-[var(--radius-sm)] border px-2.5 py-0.5 font-mono text-xs tabular-nums text-ink-tertiary ${
+      className={`inline-flex items-center gap-1.5 rounded-[var(--radius-xs)] border px-2.5 py-0.5 font-mono text-xs tabular-nums text-ink-tertiary ${
         dashed ? "border-dashed border-border-strong" : "border-border-strong"
       }`}
     >
@@ -73,26 +73,68 @@ function ResultLink({
   );
 }
 
-const REGISTRY_GRID =
-  "md:grid-cols-[minmax(6.5rem,0.85fr)_minmax(10rem,1.45fr)_minmax(8rem,1fr)_minmax(6.5rem,0.75fr)_minmax(5rem,0.6fr)_minmax(12rem,1.6fr)]";
-const MOBILE_LABEL =
-  "font-mono text-xs uppercase tracking-[0.06em] text-ink-tertiary md:hidden";
 
-function evalId(e: EvalRow) {
-  return `${e.system}-${e.benchmark}`
-    .toLowerCase()
-    .replace(/[^a-z0-9]+/g, "-")
-    .replace(/(^-|-$)/g, "");
+
+/**
+ * A single eval as a registry row: the measured RESULT is the focal point, the
+ * system/benchmark/metric label it, and the honest note is the method footnote.
+ *
+ * The result is set in INK, not in the positive colour. Rendering every complete
+ * row green turned an honest registry into a wall of approval — a colour-only
+ * signal saying "all good" about numbers whose entire point is that some of them
+ * are not, and that one of them replaced a flattering figure with a lower true
+ * one. Completion is carried by a status chip that says the word instead.
+ */
+function EvalCard({ e }: { e: EvalRow }) {
+  return (
+    <li
+      id={evalAnchor(e)}
+      className="scroll-mt-28 rounded-[var(--radius-md)] border border-border bg-surface p-6 shadow-[var(--shadow-surface)]"
+    >
+      <div className="grid gap-x-8 gap-y-5 md:grid-cols-[1fr_auto]">
+        <div className="min-w-0">
+          <p className="font-mono text-xs uppercase tracking-[0.06em] text-ink-tertiary">
+            {e.system} · {e.benchmark}
+          </p>
+          <p className="mt-2 text-base font-medium text-ink">{e.metric}</p>
+          <p className="mt-3 max-w-[var(--width-prose)] text-sm leading-relaxed text-ink-secondary">
+            {e.note}
+          </p>
+          {e.link ? (
+            <span className="mt-3 block">
+              <ResultLink href={e.link}>method</ResultLink>
+            </span>
+          ) : null}
+        </div>
+        <div className="flex flex-col gap-2 border-border md:min-w-[13rem] md:max-w-[17rem] md:items-end md:border-l md:pl-8 md:text-right">
+          {e.status === "complete" ? (
+            <>
+              <span className="font-mono text-[1.375rem] leading-tight tabular-nums tracking-[-0.02em] text-ink">
+                {e.result}
+              </span>
+              <span className="inline-flex items-center gap-1.5 rounded-[var(--radius-pill)] border border-border bg-bg-subtle px-2 py-0.5 font-mono text-xs text-ink-secondary">
+                <Check size={11} strokeWidth={2.5} aria-hidden className="text-positive" />
+                measured
+              </span>
+            </>
+          ) : (
+            <Status status={e.status} result={e.result} />
+          )}
+          <time className="font-mono text-xs text-ink-tertiary">
+            {e.date ? formatDate(e.date) : "—"}
+          </time>
+        </div>
+      </div>
+    </li>
+  );
 }
 
 /**
- * /evals — the eval registry. Opens with the shared `PageHeader`, and the
- * REGISTRY itself is the first thing
- * in the body band — the same fold economy as Clerk's pricing page, where the
- * plans are visible inside the first viewport and the fine print sits under
- * them. The two method paragraphs (`evalsIntro.body`) follow the table: they
- * qualify the data, so they read as its footnote, not its gatekeeper — leading
- * with them was what pushed the table below the fold.
+ * /evals — the eval registry as a scannable scoreboard of cards. The header
+ * lede + the fine print (`evalsIntro.body`) establish what counts as a
+ * measurement BEFORE the readings, then each system's real result is the focal
+ * point of its card. No fake-green: an unfinished run shows a muted pill, never
+ * a borrowed number.
  */
 export default function EvalsPage() {
   return (
@@ -105,84 +147,46 @@ export default function EvalsPage() {
         />
       </Section>
       <Section space="md" className={PAGE_BODY_BAND}>
-        {/* One responsive registry, not separate mobile and desktop DOM trees.
-            Each claim now has one exact, stable hash target at the visible row. */}
-        <div className="overflow-x-auto" role="table" aria-label="Evaluation registry">
-          <div
-            role="row"
-            className={`${REGISTRY_GRID} hidden min-w-[60rem] border-b border-border py-3 text-left md:grid md:gap-5`}
-          >
-            {["System", "Benchmark / Method", "Metric", "Result", "Date", "Notes"].map(
-              (label) => (
-                <span
-                  key={label}
-                  role="columnheader"
-                  className="font-mono text-xs uppercase tracking-[0.06em] text-ink-tertiary"
-                >
-                  {label}
-                </span>
-              ),
-            )}
-          </div>
-          <ul role="rowgroup" className="divide-y divide-border border-y border-border md:border-t-0">
-            {evals.map((e) => (
-              <li
-                key={`${e.system}-${e.benchmark}`}
-                id={evalId(e)}
-                role="row"
-                className={`${REGISTRY_GRID} grid scroll-mt-28 gap-4 py-5 text-sm md:min-w-[60rem] md:gap-5`}
-              >
-                <div role="cell" className="flex items-center justify-between gap-4 md:block">
-                  <span className="font-medium text-ink">{e.system}</span>
-                  <span className="md:hidden">
-                    <Status status={e.status} result={e.result} />
-                  </span>
-                </div>
-                <div role="cell" className="text-ink-secondary">
-                  <span className={MOBILE_LABEL}>Benchmark / method</span>
-                  <p className="mt-1 md:mt-0">{e.benchmark}</p>
-                </div>
-                <div role="cell" className="text-ink-secondary">
-                  <span className={MOBILE_LABEL}>Metric</span>
-                  <p className="mt-1 md:mt-0">{e.metric}</p>
-                </div>
-                <div role="cell" className="hidden md:block">
-                  <Status status={e.status} result={e.result} />
-                </div>
-                <div
-                  role="cell"
-                  className="font-mono text-xs text-ink-tertiary"
-                >
-                  <span className={MOBILE_LABEL}>Date</span>
-                  <p className="mt-1 md:mt-0">{e.date ? formatDate(e.date) : "—"}</p>
-                </div>
-                <div role="cell" className="max-w-[32ch] text-ink-secondary">
-                  <span className={MOBILE_LABEL}>Notes</span>
-                  <p className="mt-1 md:mt-0">{e.note}</p>
-                  {e.link ? (
-                    <span className="mt-1.5 block">
-                      <ResultLink href={e.link}>method</ResultLink>
-                    </span>
-                  ) : null}
-                </div>
-              </li>
-            ))}
-          </ul>
-        </div>
-
-        {/* The fine print — what counts as a measurement here. Below the data,
-            the way Clerk's pricing page keeps its qualifiers under the plans. */}
-        <hr className="rule-fade mt-16" />
-        <div className="reveal mt-10 flex flex-col gap-4">
+        {/* What counts as a measurement here — the standard, stated once, before
+            the readings so the numbers are read the right way. */}
+        <div className="max-w-[var(--width-prose)] border-l-[length:var(--stripe-width)] border-l-border-strong pl-5">
           {evalsIntro.body.map((p) => (
-            <p
-              key={p}
-              className="max-w-[var(--width-prose)] text-ink-secondary"
-            >
+            <p key={p} className="text-sm leading-relaxed text-ink-secondary [&+p]:mt-3">
               {p}
             </p>
           ))}
         </div>
+
+        {/* How to read a row — the definitions, before the readings. Without
+            these, "execution accuracy" and "exact match" look like synonyms, and
+            the difference between them is the argument this page is making. */}
+        <dl className="mt-10 grid gap-x-10 gap-y-4 border-y border-border py-6 sm:grid-cols-2 lg:grid-cols-3">
+          {[
+            {
+              term: "Execution accuracy",
+              def: "The generated query is RUN against the real database and its result set is compared — not its text.",
+            },
+            {
+              term: "Exact match",
+              def: "The returned rows are identical to the reference. An extra correct column still counts as a miss.",
+            },
+            {
+              term: "Fail-closed refusal",
+              def: "An unsafe or out-of-scope prompt is rejected before execution rather than answered approximately.",
+            },
+          ].map((d) => (
+            <div key={d.term}>
+              <dt className="font-mono text-xs uppercase tracking-[0.06em] text-ink">{d.term}</dt>
+              <dd className="mt-1.5 text-sm leading-relaxed text-ink-secondary">{d.def}</dd>
+            </div>
+          ))}
+        </dl>
+
+        <ul aria-label="Evaluation registry" className="mt-8 flex flex-col gap-4">
+          {evals.map((e) => (
+            <EvalCard key={`${e.system}-${e.benchmark}`} e={e} />
+          ))}
+        </ul>
       </Section>
     </>
   );

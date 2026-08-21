@@ -2,8 +2,13 @@
 @import "./tokens.css";
 
 /* ============================================================================
-   Base — element defaults only. Everything visual is tokens (see tokens.css)
-   and DESIGN.md. Calm, light, typography-first. No decoration here.
+   Base + the handful of GLOBAL devices.
+
+   Everything visual comes from tokens.css. What lives here is (a) element
+   defaults, (b) the accessibility contract (focus, skip link, reduced motion),
+   and (c) the four devices used on more than one route: the dark band, the
+   entrance reveal, the fading hairline, and the decorative grid field.
+   Section-specific composition lives in that section's CSS module.
    ============================================================================ */
 
 *,
@@ -15,6 +20,9 @@
 html {
   -webkit-text-size-adjust: 100%;
   scroll-behavior: smooth;
+  /* Anchor targets must clear the sticky header (64px) plus a breath, or a deep
+     link lands with its own heading hidden behind the nav. */
+  scroll-padding-top: 5.5rem;
 }
 
 body {
@@ -27,19 +35,21 @@ body {
   text-rendering: optimizeLegibility;
 }
 
-/* sentence-case, balanced, tight display headings by default (components refine) */
+/* Display headings default to a tight, slightly-light-of-bold face. 550, not
+   600: at display sizes the heavier weight reads as generic-bold, and the
+   tighter tracking is what makes a large headline read as typeset rather than
+   enlarged. Components refine per step. */
 h1,
 h2,
 h3,
 h4 {
-  font-weight: 600;
+  font-weight: 550;
   letter-spacing: -0.02em;
   text-wrap: balance;
 }
 
-/* In @layer base so text-color utilities (e.g. text-on-accent, text-accent on a
-   link styled as a button) win — an UNLAYERED `a{color}` would beat every
-   utility and force links to inherit ink. */
+/* In @layer base so text-colour utilities (e.g. `text-on-accent` on a Link
+   styled as a button) win — an UNLAYERED `a{color}` would beat every utility. */
 @layer base {
   a {
     color: inherit;
@@ -47,23 +57,27 @@ h4 {
 }
 
 ::selection {
-  background: var(--color-accent-subtle);
+  background: var(--color-accent-soft);
   color: var(--color-ink);
 }
 
-/* focus is visible on everything (spec §8) */
+/* ---- the accessibility contract ---------------------------------------- */
+
+/* Focus is visible on everything, and it is the accent ring — never removed,
+   never replaced by a colour change alone. */
 :focus-visible {
   outline: 2px solid var(--color-accent);
   outline-offset: 2px;
+  border-radius: var(--radius-xs);
 }
 :focus:not(:focus-visible) {
   outline: none;
 }
 
-/* Interactive cursor standard. Native <button> defaults to the arrow cursor
-   while <a> gets the pointer hand — which is exactly why "Ask Friday" and the
-   theme toggle felt different from the nav links. One rule: every ENABLED
-   interactive control is a pointer; anything disabled is not-allowed. */
+/* One cursor standard: every ENABLED interactive control is a pointer, anything
+   disabled is not-allowed. Native <button> otherwise defaults to the arrow while
+   <a> gets the hand, which is what made icon controls feel unlike the links
+   beside them. */
 button:not(:disabled),
 [role="button"]:not([aria-disabled="true"]),
 label[for],
@@ -76,20 +90,17 @@ button:disabled,
   cursor: not-allowed;
 }
 
-/* Icon-only button: a subtle square hit-area veil on hover so icon controls read
-   as pressable — matching the bordered pills beside them (theme toggle + hamburger
-   used to only tint their glyph, which read as "different"). Token-derived, so it
-   adapts to light/dark automatically. */
+/* Icon-only control: a square hit-area veil on hover, so an icon button reads as
+   pressable rather than as a glyph that happens to change colour. */
 .icon-btn {
   transition:
-    color var(--motion-base) var(--ease-out),
-    background-color var(--motion-base) var(--ease-out);
+    color var(--motion-fast) var(--ease-out),
+    background-color var(--motion-fast) var(--ease-out);
 }
 .icon-btn:hover {
   background-color: color-mix(in srgb, var(--color-ink) 6%, transparent);
 }
 
-/* skip-to-content link */
 .skip-link {
   position: fixed;
   top: 0.5rem;
@@ -97,9 +108,9 @@ button:disabled,
   z-index: 100;
   transform: translateY(-150%);
   background: var(--color-accent);
-  color: #fff;
+  color: var(--color-on-accent);
   padding: 0.5rem 0.875rem;
-  border-radius: var(--radius-md);
+  border-radius: var(--radius-sm);
   font-size: var(--text-sm);
   transition: transform var(--motion-base) var(--ease-out);
 }
@@ -107,7 +118,10 @@ button:disabled,
   transform: translateY(0);
 }
 
-/* motion: opacity/transform/color only; reduced-motion removes it (spec §1.6) */
+/* Reduced motion collapses every animation and transition to effectively zero.
+   Kept as a blanket rule rather than per-component guards so a new component
+   cannot forget: scripts/a11y.mjs asserts every computed duration is ≤80ms in
+   this mode, and a component that opted out would fail the gate. */
 @media (prefers-reduced-motion: reduce) {
   html {
     scroll-behavior: auto;
@@ -122,9 +136,66 @@ button:disabled,
   }
 }
 
-/* --- interaction polish (all opacity/transform/color; reduced-motion-safe) --- */
+/* ---- device 1: the entrance reveal -------------------------------------
+   Section wrappers (never prose) fade and rise ONCE. The `opacity: 0` start
+   lives only inside `no-preference` via the keyframe's `both` fill, so with
+   reduced motion — or before the animation runs — content is simply present.
+   Nothing is ever hidden behind a transform that might not fire.
 
-/* Animated underline: grows left→right on hover, no layout shift. */
+   `.reveal-stagger > *` additionally delays each sibling by --i × --stagger-step
+   (the index comes from stagger(i) in constants/page.ts). Load-orchestrated
+   rather than scroll-triggered, so body copy never fades in under the reader. */
+@media (prefers-reduced-motion: no-preference) {
+  .reveal,
+  .reveal-stagger > * {
+    animation: reveal-in var(--motion-reveal) var(--ease-emphasized) both;
+  }
+  .reveal-stagger > * {
+    animation-delay: calc(var(--i, 0) * var(--stagger-step));
+  }
+}
+@keyframes reveal-in {
+  from {
+    opacity: 0;
+    transform: translateY(8px);
+  }
+  to {
+    opacity: 1;
+    transform: none;
+  }
+}
+
+/* ---- device: the primary-button sheen ----------------------------------
+   A slim band of light that sweeps across the primary action on hover — the
+   one flourish the accent fill is allowed. Pure transform on a pseudo-element
+   (compositor-only), and the whole device lives inside `no-preference`: with
+   reduced motion there is no sheen at all, not a sheen that snaps. */
+@media (prefers-reduced-motion: no-preference) {
+  .btn-sheen {
+    position: relative;
+    overflow: hidden;
+  }
+  .btn-sheen::after {
+    content: "";
+    position: absolute;
+    inset: 0;
+    transform: translateX(-130%) skewX(-18deg);
+    background: linear-gradient(
+      100deg,
+      transparent 30%,
+      rgb(255 255 255 / 0.22) 50%,
+      transparent 70%
+    );
+    transition: transform var(--motion-slow) var(--ease-out);
+    pointer-events: none;
+  }
+  .btn-sheen:hover::after,
+  .btn-sheen:focus-visible::after {
+    transform: translateX(130%) skewX(-18deg);
+  }
+}
+
+/* ---- device 2: the animated underline ---------------------------------- */
 .link-underline {
   background-image: linear-gradient(currentColor, currentColor);
   background-position: 0 100%;
@@ -138,138 +209,119 @@ button:disabled,
   background-size: 100% 1px;
 }
 
-/* --- dark section band (Clerk-style light/dark section rhythm) --- */
-/* Scopes the dark colour tokens LOCALLY so every child component adapts, adds a
-   faint technical texture, and (with .tone-notch) an angular transition edge. */
+/* ---- device 3: the dark band -------------------------------------------
+   Scopes the dark ramp LOCALLY, so every token-driven child adapts with no
+   component-level dark variant. The values are `var(--dark-*)` from tokens.css
+   rather than a second copy of the palette: a band and the full-dark theme that
+   disagree is a bug waiting on a redesign.
+
+   The edge is a clean full-bleed boundary. The previous identity drew a
+   "graticule" tick-scale at every light↔dark seam; it read as instrument chrome
+   and competed with the content it was framing. A dark plate does not need a
+   device to announce it. */
 .tone-invert {
-  --color-bg: #131316; /* Clerk's exact dark-section colours */
-  --color-bg-subtle: #1a1a1f;
-  --color-surface: #212126;
-  --color-ink: #f7f7f8;
-  --color-ink-secondary: #b7b8c2;
-  --color-ink-tertiary: #9394a1; /* light on dark — AA on the dark band */
-  --color-border: #2f3037;
-  --color-border-strong: #42434d;
-  --color-accent: #9a7fff;
-  --color-accent-hover: #b3a0ff;
-  --color-on-accent: #131316;
-  --color-accent-subtle: #241d47;
-  /* Status colours must be scoped here too: without them a Metric delta or
-     before/after value dropped into a tone='invert' section keeps the LIGHT
-     #15803d / #b91c1c against the dark surface (~3:1, below AA). Mirror the
-     [data-theme=dark] palette (tokens.css) so a valid component in a valid
-     container can never render an inaccessible result. */
-  --color-positive: #4ade80;
-  --color-negative: #f87171;
-  --color-warning: #fbbf24;
-  --shadow-sm: 0 0 0 0.5px rgb(255 255 255 / 0.07), 0 1px 2px rgb(0 0 0 / 0.5);
-  --shadow-md: 0 0 0 0.5px rgb(255 255 255 / 0.08), 0 8px 20px -6px rgb(0 0 0 / 0.55);
-  --shadow-lg: 0 0 0 0.5px rgb(255 255 255 / 0.09), 0 16px 38px -10px rgb(0 0 0 / 0.65);
+  --color-bg: var(--dark-bg);
+  --color-bg-subtle: var(--dark-bg-subtle);
+  --color-surface: var(--dark-surface);
+  --color-surface-raised: var(--dark-surface-raised);
+  --color-ink: var(--dark-ink);
+  --color-ink-secondary: var(--dark-ink-secondary);
+  --color-ink-tertiary: var(--dark-ink-tertiary);
+  --color-border: var(--dark-border);
+  --color-border-strong: var(--dark-border-strong);
+  --color-accent: var(--dark-accent);
+  --color-accent-hover: var(--dark-accent-hover);
+  --color-on-accent: var(--dark-on-accent);
+  --color-accent-soft: var(--dark-accent-soft);
+  /* Status colours must be scoped here too: without them a Metric delta dropped
+     into a dark band keeps the LIGHT #15803d / #b91c1c against the dark surface
+     (~3:1, below AA). A valid component in a valid container can never render an
+     inaccessible result. */
+  --color-positive: var(--dark-positive);
+  --color-negative: var(--dark-negative);
+  --color-warning: var(--dark-warning);
+  --shadow-sm: var(--dark-shadow-sm);
+  --shadow-md: var(--dark-shadow-md);
+  --shadow-lg: var(--dark-shadow-lg);
+  --shadow-overlay: var(--dark-shadow-lg);
+  --shadow-surface: var(--dark-shadow-surface);
+  --shadow-surface-hover: var(--dark-shadow-surface-hover);
+  --shadow-stage: var(--dark-shadow-stage);
+  --shadow-float: var(--dark-shadow-float);
+  --shadow-btn: inset 0 1px 0 rgb(255 255 255 / 0.16), 0 1px 2px rgb(0 0 0 / 0.5);
   background-color: var(--color-bg);
   color: var(--color-ink);
 }
-/* Light↔dark band transition — the chamfered tab, measured off clerk.com.
-   An earlier pass here was a centre pentagon, which read as a rendering fault; I
-   then removed it entirely, which was also wrong. Clerk's actual device is a
-   full-bleed dark band whose top edge STEPS UP across the container width, with
-   45° chamfers at the two container edges — so the light section appears to
-   overhang the dark one like a tab. The step is what makes the band read as a
-   deliberate plate rather than a colour change.
-   `--notch-h` is the step height; `--notch-x` is where the chamfers sit, which
-   must track the container so the corners land on the content edge.
-   Proportions re-measured off clerk.com at 1440: the step is ~48px, and the
-   chamfer is CENTRED on the container edge (top corner half a step outside the
-   container, bottom corner half a step inside) rather than starting at it —
-   centred is what makes the light section read as a plate overhanging the dark
-   band instead of a cut made inside it. */
-.tone-notch {
-  --notch-h: 48px;
-  --notch-x: max(0px, (100% - var(--width-container)) / 2 - var(--notch-h) / 2);
-  position: relative;
-  clip-path: polygon(
-    0 var(--notch-h),
-    var(--notch-x) var(--notch-h),
-    calc(var(--notch-x) + var(--notch-h)) 0,
-    calc(100% - var(--notch-x) - var(--notch-h)) 0,
-    calc(100% - var(--notch-x)) var(--notch-h),
-    100% var(--notch-h),
-    100% 100%,
-    0 100%
-  );
-}
-@media (max-width: 640px) {
-  .tone-notch {
-    --notch-h: 28px;
-  }
-}
-/* The bottom-edge twin, for the one dark band that ends a PAGE (the contact
-   close): the same chamfered seam, mirrored. Measured off clerk.com's dark→light
-   hand-off: at a band's BOTTOM the outer margins run to the very edge and the
-   container-width middle stops one step short — the light surface below rises
-   into the plate as a tab, exactly inverse to the top seam. clip-path is a
-   single property, so this composes with `.tone-notch` by restating the top
-   step in one combined polygon rather than adding to it. Reuses --notch-h /
-   --notch-x from `.tone-notch`, so one knob tunes both seams (and the 640px
-   override above applies to both). */
-.tone-notch.tone-notch-b {
-  clip-path: polygon(
-    0 var(--notch-h),
-    var(--notch-x) var(--notch-h),
-    calc(var(--notch-x) + var(--notch-h)) 0,
-    calc(100% - var(--notch-x) - var(--notch-h)) 0,
-    calc(100% - var(--notch-x)) var(--notch-h),
-    100% var(--notch-h),
-    100% 100%,
-    calc(100% - var(--notch-x)) 100%,
-    calc(100% - var(--notch-x) - var(--notch-h)) calc(100% - var(--notch-h)),
-    calc(var(--notch-x) + var(--notch-h)) calc(100% - var(--notch-h)),
-    var(--notch-x) 100%,
-    0 100%
-  );
+
+/* Under the full-dark preference there is no light↔dark flip left to make, so a
+   dark band would vanish into the page. Recess it one step instead — the band
+   still reads as a distinct plate, by depth rather than by inversion. */
+:root[data-theme="dark"] .tone-invert {
+  --color-bg: #0f0f13;
+  --color-bg-subtle: #16161b;
+  --color-surface: #1b1c22;
+  --color-surface-raised: #212229;
 }
 
-
-/* Hairline that fades out at both ends instead of colliding with the container
-   edge — a small thing that separates considered layouts from boxy ones. */
+/* ---- device 4: hairlines that dissolve --------------------------------- */
 .rule-fade {
   border: 0;
   height: 1px;
   background: var(--hairline-fade);
 }
-/* The vertical twin — a column separator that dissolves at top and bottom, so a
-   row of stats reads as one measured group rather than three boxed cells. */
-.rule-fade-y {
-  border: 0;
-  width: 1px;
-  background: var(--hairline-fade-y);
+
+/* ---- device 5: the grid field ------------------------------------------
+   The sparse grid the "evidence path" motif is drawn on. Two 1px repeating
+   gradients, masked to fade out before they reach any edge — so it reads as a
+   surface the page is resting on rather than as a texture pasted onto it.
+   Purely decorative: always applied to an aria-hidden element.
+
+   `--grid-step` and `--grid-fade` are local knobs, not global tokens: only the
+   three motif surfaces use them, and each tunes its own density. */
+.grid-field {
+  --grid-step: 64px;
+  --grid-fade: 62%;
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+  background-image:
+    linear-gradient(to right, color-mix(in srgb, var(--color-ink) 5%, transparent) 1px, transparent 1px),
+    linear-gradient(to bottom, color-mix(in srgb, var(--color-ink) 5%, transparent) 1px, transparent 1px);
+  background-size: var(--grid-step) var(--grid-step);
+  -webkit-mask-image: radial-gradient(closest-side at 50% 40%, #000, transparent var(--grid-fade));
+  mask-image: radial-gradient(closest-side at 50% 40%, #000, transparent var(--grid-fade));
+}
+.tone-invert .grid-field {
+  background-image:
+    linear-gradient(to right, rgb(255 255 255 / 0.05) 1px, transparent 1px),
+    linear-gradient(to bottom, rgb(255 255 255 / 0.05) 1px, transparent 1px);
 }
 
-/* --- reading progress ---
-   Used by case-study TOCs to express reading depth at a glance.
-   Composed from tokens so reduced-motion has one authoritative source of truth.
-   The bar never carries meaning by itself in this project; it is an orientation
-   aid that can be ignored by non-visual readers. */
-.progress-track {
-  background: var(--color-border);
-}
-.progress-track .progress-fill {
-  height: 100%;
-  background: color-mix(in oklab, var(--color-ink) 20%, transparent);
-  transition: transform var(--motion-base) var(--ease-out);
-  will-change: transform;
-}
+/* ---- long-form + syntax ------------------------------------------------- */
 
-/* Case-study chapters are substantial, independently anchored documents.
-   Let the browser skip style, layout, and paint for chapters well below the
-   viewport while retaining a stable scroll estimate. `auto` keeps find-in-page,
-   deep links, focus, printing, and accessibility semantics available. */
+/* Case-study chapters are substantial, independently anchored documents. Let the
+   browser skip style, layout and paint for chapters well below the viewport
+   while keeping a stable scroll estimate. `auto` keeps find-in-page, deep links,
+   focus, printing and accessibility semantics available. */
 .case-study-section {
   content-visibility: auto;
   contain-intrinsic-size: auto 36rem;
 }
 
-/* Shiki code highlighting — transparent bg (use our surface), our mono face,
-   dark palette activated under an explicit or OS dark preference. */
+/* Reading-depth indicator on case-study contents. Orientation only — it never
+   carries meaning on its own. */
+.progress-track {
+  background: var(--color-border);
+}
+.progress-track .progress-fill {
+  height: 100%;
+  background: color-mix(in oklab, var(--color-ink) 22%, transparent);
+  transition: transform var(--motion-base) var(--ease-out);
+  will-change: transform;
+}
+
+/* Shiki — transparent ground (we supply the surface), our mono face, dark
+   palette only under the explicit dark choice. */
 .shiki {
   background-color: transparent !important;
 }
@@ -280,46 +332,103 @@ button:disabled,
   font-size: 0.8125rem;
   line-height: 1.65;
 }
-/* Dark syntax palette only on the explicit dark choice — the brand default is
-   light (no prefers-color-scheme auto-switch, matching tokens.css). */
 :root[data-theme="dark"] .shiki,
 :root[data-theme="dark"] .shiki span {
   color: var(--shiki-dark) !important;
 }
 
-/* --- FAQ accordion ------------------------------------------------------
-   Honest note on the height animation. Growing to an UNKNOWN auto height means
-   animating a layout property (grid-template-rows / height / max-height) or
-   measuring in JS and animating a pixel value. grid-rows 0fr→1fr is the
-   least-bad of those: it is exact, needs no measurement, survives reflow, and
-   only one short panel is ever in flight. So it stays.
+/* ============================================================================
+   PRINT
 
-   What was actually costing frames was `transition-all` on the grid container,
-   which put every animatable property into the transition alongside the layout
-   one. Two fixes: (1) transition ONLY grid-template-rows, and (2) let the
-   PERCEIVED motion be carried by opacity + translate on the answer itself.
-   Those two run on the compositor, so the eye follows the smooth layer and the
-   reflow stops being the thing you notice. */
-.faq-panel {
-  transition: grid-template-rows var(--motion-slow) var(--ease-out);
-}
-.faq-answer {
-  opacity: 0;
-  transform: translateY(-4px);
-  transition:
-    opacity var(--motion-base) var(--ease-out),
-    transform var(--motion-base) var(--ease-out);
-}
-/* Opening: let the panel start making room before the text fades in, so the
-   answer never appears to be clipped by its own container. */
-.faq-panel[data-open] .faq-answer {
-  opacity: 1;
-  transform: none;
-  transition-delay: var(--motion-fast);
-}
-@media (prefers-reduced-motion: reduce) {
-  .faq-answer {
-    transform: none;
+   /resume is a document people print or save as PDF, and until now printing it
+   produced the availability bar, the sticky nav, the site footer, a "Download
+   PDF" button (on the thing already being printed) and every card shadow — four
+   pages of chrome around two pages of résumé.
+
+   Written against LANDMARKS and one `data-print="hide"` hook rather than a list
+   of component classes, so a new piece of chrome is excluded by being chrome
+   rather than by someone remembering to add it here.
+   ============================================================================ */
+@media print {
+  /* Colour-adjust off: the brand's near-white page becomes real white, and ink
+     becomes real black. Printing a design system's greys wastes toner and reads
+     washed out on paper. */
+  :root,
+  :root[data-theme="dark"] {
+    --color-bg: #ffffff;
+    --color-bg-subtle: #ffffff;
+    --color-surface: #ffffff;
+    --color-surface-raised: #ffffff;
+    --color-ink: #000000;
+    --color-ink-secondary: #333333;
+    --color-ink-tertiary: #555555;
+    --color-border: #cccccc;
+    --color-border-strong: #999999;
+    --color-accent: #000000;
+    --shadow-sm: none;
+    --shadow-md: none;
+    --shadow-lg: none;
+    --shadow-surface: none;
+    --shadow-surface-hover: none;
+    --shadow-stage: none;
+    --shadow-float: none;
+    --shadow-btn: none;
+    --shadow-overlay: none;
+  }
+
+  @page {
+    margin: 16mm 14mm;
+  }
+
+  html,
+  body {
+    background: #fff !important;
+    font-size: 10.5pt;
+    line-height: 1.45;
+  }
+
+  /* Chrome, in every sense. */
+  body > header,
+  body > footer,
+  [data-print="hide"],
+  .skip-link {
+    display: none !important;
+  }
+
+  /* Bands are for screen rhythm; on paper they are blank inches. */
+  section {
+    padding-top: 0 !important;
+    padding-bottom: 0 !important;
+  }
+
+  /* Entrance animation must never leave printed content faded out. */
+  .reveal,
+  .reveal-stagger > * {
+    animation: none !important;
+    opacity: 1 !important;
+    transform: none !important;
+  }
+
+  /* Keep a job, a project or a heading from being split across a page break. */
+  h1,
+  h2,
+  h3 {
+    break-after: avoid-page;
+  }
+  li,
+  figure,
+  blockquote,
+  article {
+    break-inside: avoid;
+  }
+
+  /* A printed link cannot be clicked, so external destinations are spelled out
+     — but only for genuinely external ones. Printing "(/work)" after every
+     internal link is noise. */
+  a[href^="http"]::after {
+    content: " (" attr(href) ")";
+    font-size: 8.5pt;
+    color: #555;
+    word-break: break-all;
   }
 }
-

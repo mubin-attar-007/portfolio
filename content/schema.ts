@@ -32,6 +32,27 @@ export const ProjectSchema = z.object({
     repo: z.string().url().optional(),
   }),
   diagram: z.string().optional(),
+  /**
+   * The CARD view of this project — what a gallery tile needs and a case-study
+   * header does not.
+   *
+   * It lives on the project rather than in a page's copy file because two
+   * surfaces render it (the homepage bento and /work), and a card definition
+   * kept next to one of them is a card definition the other will eventually
+   * contradict. `summary` is deliberately NOT reused here: it is a
+   * 200-character paragraph written for the case-study header and reads as a
+   * wall at tile size.
+   */
+  card: z.object({
+    /** One line. What the product is, before any mechanism is named. */
+    definition: z.string().max(90),
+    /** The technical family — not a tag cloud. */
+    category: z.string(),
+    /** A real screenshot of the running product, served from /public. */
+    shot: z.object({ src: z.string(), width: z.number(), height: z.number() }),
+    /** Describes what the screenshot SHOWS. Never the project name repeated. */
+    alt: z.string().min(1),
+  }),
   /** Real, dated milestones (newest first), derived from git history / shipped work. */
   changelog: z
     .array(z.object({ date: z.string(), summary: z.string() }))
@@ -75,6 +96,15 @@ export type NoteMeta = z.infer<typeof NoteSchema>;
 export const NowSchema = z.object({
   updated: z.string(),
   lede: z.string(),
+  /**
+   * "Currently exploring" — structured rather than a markdown list in the body,
+   * because the homepage shows the same three themes. A list that lives in prose
+   * can only be duplicated; as data it has exactly one source, and /now and the
+   * homepage cannot drift apart.
+   */
+  exploring: z
+    .array(z.object({ title: z.string(), body: z.string() }))
+    .default([]),
 });
 export type NowMeta = z.infer<typeof NowSchema>;
 

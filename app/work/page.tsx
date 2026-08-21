@@ -1,29 +1,19 @@
 import type { Metadata } from "next";
+import Image from "next/image";
 import Link from "next/link";
-import {
-  ArrowRight,
-  Database,
-  LineChart,
-  Target,
-  MessagesSquare,
-} from "lucide-react";
+import { ArrowRight, ArrowUpRight } from "lucide-react";
 import { Section } from "@/components/layout/section";
-import { SectionHeading } from "@/components/ui/section-heading";
 import { PageHeader } from "@/components/ui/page-header";
-import { Metric } from "@/components/ui/metric";
 import { TextLink } from "@/components/ui/text-link";
-import { PAGE_HEADER_BAND, PAGE_BODY_BAND, stagger } from "@/constants/page";
+import { ProjectCard } from "@/components/work/project-card";
+import { buttonVariants } from "@/components/ui/button";
+import { FIGURE, PAGE_BODY_BAND, PAGE_HEADER_BAND } from "@/constants/page";
+import { EyebrowChip } from "@/components/ui/eyebrow-chip";
 import { SITE } from "@/config/site";
 import { pages } from "@/content/site";
+import { flagshipHome } from "@/content/home-visual";
 import { featuredProject, secondaryProjects } from "@/content/projects";
-
-/** A monochrome line-icon per system — the Clerk docs-card motif (calm, not photos). */
-const PROJECT_ICON: Record<string, typeof ArrowRight> = {
-  dbwhisper: Database,
-  tradepulse: LineChart,
-  crownwager: Target,
-  "llm-studio": MessagesSquare,
-};
+import cardStyles from "@/components/work/project-card.module.css";
 
 export const metadata: Metadata = {
   title: "Work",
@@ -40,86 +30,162 @@ export const metadata: Metadata = {
   },
 };
 
+/**
+ * /work — four projects, with the flagship given a shape the other three do not
+ * get.
+ *
+ * The index used to present DBWhisper as a text block beside a list of its own
+ * subsystem names, and the other three as small icon cards. That made the
+ * flagship look like a paragraph and the rest look like documentation links —
+ * and, more importantly, it looked nothing like the gallery the visitor had just
+ * clicked away from on the homepage.
+ *
+ * Now the flagship gets a full-width editorial band with the real product
+ * screenshot and its three measured metrics, and the other three use the SAME
+ * `ProjectCard` the homepage bento uses. One card treatment, two placements.
+ *
+ * There are no filters. With four projects a filter row is furniture that
+ * removes items from a list a visitor can already see in one glance.
+ */
 export default function WorkIndex() {
   const flagship = featuredProject;
+  const labels = {
+    caseStudy: flagshipHome.work.caseStudy,
+    live: flagshipHome.work.live,
+    source: flagshipHome.work.source,
+  };
+
   return (
     <>
-      {/* Shared page-top rhythm; hierarchy comes from type and space. */}
-      <Section space="lg" className={PAGE_HEADER_BAND}>
-        <PageHeader
-          kicker={pages.work.kicker}
-          title={pages.work.title}
-          lede={pages.work.lede}
+      <Section space="lg" className={`relative overflow-hidden ${PAGE_HEADER_BAND}`}>
+        {/* The same light source the homepage hero has — /work was the only
+            route presenting the flagship on a completely grey surface. */}
+        <div
+          aria-hidden
+          className="pointer-events-none absolute inset-x-0 top-0 h-[24rem] bg-[radial-gradient(58%_80%_at_50%_-12%,color-mix(in_srgb,var(--color-accent)_11%,transparent),transparent_75%)]"
         />
+        <PageHeader kicker={pages.work.kicker} title={pages.work.title} lede={pages.work.lede} />
       </Section>
+
+      {/* ---- the flagship ---- */}
       <Section space="md" tone="subtle" className={`reveal ${PAGE_BODY_BAND}`}>
-        <SectionHeading kicker={pages.work.flagshipKicker}>{flagship.title}</SectionHeading>
-        <p className="mt-3 max-w-[var(--width-prose)] text-ink-secondary">
-          {flagship.summary}
-        </p>
-        <div className="mt-8 flex flex-wrap gap-x-12 gap-y-6">
-          {flagship.metrics.slice(0, 3).map((m) => (
-            <Metric
-              key={m.label}
-              label={m.label}
-              after={m.value}
-              method={m.method}
-              methodHref={`/work/${flagship.slug}#performance-cost`}
+        <div className="grid gap-10 lg:grid-cols-[minmax(0,0.85fr)_minmax(0,1.15fr)] lg:items-center lg:gap-14">
+          <div>
+            <EyebrowChip>{pages.work.flagshipKicker}</EyebrowChip>
+            <h2 className="mt-4 text-section font-[560] text-ink">{flagship.title}</h2>
+            <p className="mt-4 max-w-[46ch] text-pretty text-lg text-ink-secondary">
+              {flagship.summary}
+            </p>
+
+            <dl className="mt-8 grid grid-cols-1 gap-x-8 gap-y-5 border-t border-border pt-7 sm:grid-cols-3">
+              {flagship.metrics.slice(0, 3).map((m) => (
+                <div key={m.label}>
+                  <dd className="font-mono text-3xl tabular-nums tracking-[-0.03em] text-ink">
+                    {m.value}
+                  </dd>
+                  <dt className="mt-1.5 text-sm leading-snug text-ink-secondary">{m.label}</dt>
+                </div>
+              ))}
+            </dl>
+
+            <div className="mt-8 flex flex-wrap items-center gap-x-6 gap-y-3">
+              <Link
+                href={`/work/${flagship.slug}`}
+                prefetch={false}
+                className={buttonVariants("primary", "md")}
+              >
+                {pages.work.flagshipCta}
+                <ArrowRight size={15} strokeWidth={2.25} aria-hidden />
+              </Link>
+              {flagship.links.live ? (
+                <a
+                  href={flagship.links.live}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="group/live inline-flex items-center gap-1.5 text-sm font-medium text-ink-secondary transition-colors duration-fast ease-[var(--ease-out)] hover:text-ink"
+                >
+                  {labels.live}
+                  <ArrowUpRight
+                    size={14}
+                    strokeWidth={2.25}
+                    aria-hidden
+                    className="transition-transform duration-fast ease-[var(--ease-out)] group-hover/live:-translate-y-0.5 group-hover/live:translate-x-0.5"
+                  />
+                </a>
+              ) : null}
+              {flagship.links.repo ? (
+                <a
+                  href={flagship.links.repo}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="group/repo inline-flex items-center gap-1.5 text-sm font-medium text-ink-secondary transition-colors duration-fast ease-[var(--ease-out)] hover:text-ink"
+                >
+                  {labels.source}
+                  <ArrowUpRight
+                    size={14}
+                    strokeWidth={2.25}
+                    aria-hidden
+                    className="transition-transform duration-fast ease-[var(--ease-out)] group-hover/repo:-translate-y-0.5 group-hover/repo:translate-x-0.5"
+                  />
+                </a>
+              ) : null}
+            </div>
+          </div>
+
+          {/* The real product, at the top of the page that is about it. The
+              intrinsic width/height come from the content model, so the frame
+              reserves its box before the image decodes. */}
+          <figure className={FIGURE}>
+            {/* The same window chrome every other capture wears — this was the
+                one bare screenshot left on the site. */}
+            <div
+              aria-hidden
+              className="flex h-8 items-center gap-2.5 border-b border-border bg-bg-subtle px-3"
+            >
+              <span className="flex gap-[0.3125rem]">
+                <span className="h-[0.4375rem] w-[0.4375rem] rounded-[var(--radius-pill)] bg-border-strong" />
+                <span className="h-[0.4375rem] w-[0.4375rem] rounded-[var(--radius-pill)] bg-border-strong" />
+                <span className="h-[0.4375rem] w-[0.4375rem] rounded-[var(--radius-pill)] bg-border-strong" />
+              </span>
+              <span className="font-mono text-[0.6875rem] text-ink-tertiary">
+                {flagship.slug}.app
+              </span>
+            </div>
+            <Image
+              src={flagship.card.shot.src}
+              alt={flagship.card.alt}
+              width={flagship.card.shot.width}
+              height={flagship.card.shot.height}
+              className="h-auto w-full"
+              sizes="(min-width: 64rem) 56vw, 100vw"
+              priority
             />
-          ))}
-        </div>
-        <div className="mt-8">
-          <TextLink href={`/work/${flagship.slug}`}>{pages.work.flagshipCta}</TextLink>
+          </figure>
         </div>
       </Section>
 
+      {/* ---- the rest ---- */}
       <Section space="md" className="reveal">
-        <SectionHeading kicker={pages.work.othersKicker}>{pages.work.othersTitle}</SectionHeading>
-        <ul className="reveal-stagger mt-8 grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
-          {secondaryProjects.map((p, i) => {
-            const Icon = PROJECT_ICON[p.slug] ?? Database;
-            return (
-              <li key={p.slug} style={stagger(i)}>
-                <Link
-                  href={`/work/${p.slug}#performance-cost`}
-                  className="group flex h-full flex-col rounded-[var(--radius-md)] border border-border bg-surface p-5 transition-colors hover:border-border-strong"
-                >
-                  <div className="flex items-center justify-between">
-                    <span className="inline-flex h-9 w-9 items-center justify-center rounded-[var(--radius-md)] border border-border text-ink-tertiary transition-colors group-hover:text-accent">
-                      <Icon size={18} strokeWidth={1.5} aria-hidden />
-                    </span>
-                    <span className="font-mono text-xs uppercase text-ink-tertiary">
-                      {p.status}
-                    </span>
-                  </div>
-                  <h2 className="mt-4 text-lg text-ink transition-colors group-hover:text-accent">
-                    {p.title}
-                  </h2>
-                  <p className="mt-1.5 flex-1 text-sm text-ink-secondary">
-                    {p.summary}
-                  </p>
-                  <div className="mt-4 flex items-center justify-between gap-3 border-t border-border pt-3">
-                    <span className="font-mono text-sm tabular-nums text-ink">
-                      {p.metrics[0]?.value}{" "}
-                      <span className="text-ink-tertiary">
-                        {p.metrics[0]?.label}
-                      </span>
-                    </span>
-                    <ArrowRight
-                      size={15}
-                      strokeWidth={1.5}
-                      aria-hidden
-                      className="shrink-0 text-ink-tertiary transition-transform duration-fast ease-[var(--ease-out)] group-hover:translate-x-0.5 group-hover:text-accent"
-                    />
-                  </div>
-                  <span className="mt-2 text-xs text-ink-tertiary underline decoration-border-strong underline-offset-4">
-                    Method: performance &amp; cost
-                  </span>
-                </Link>
-              </li>
-            );
-          })}
-        </ul>
+        <div className="flex flex-col gap-4 sm:flex-row sm:items-end sm:justify-between">
+          <div>
+            <EyebrowChip>{pages.work.othersKicker}</EyebrowChip>
+            <h2 className="mt-4 text-section font-[560] text-ink">{pages.work.othersTitle}</h2>
+          </div>
+          <TextLink href="/evals" className="sm:pb-2">
+            How each was measured
+          </TextLink>
+        </div>
+
+        <div className={cardStyles.grid}>
+          {secondaryProjects.map((project, i) => (
+            <ProjectCard
+              key={project.slug}
+              project={project}
+              size={i === 0 ? "lead" : "standard"}
+              labels={labels}
+            />
+          ))}
+        </div>
       </Section>
     </>
   );

@@ -7,7 +7,7 @@ import { SITE, STATUS } from "@/config/site";
 import { nowPage } from "@/content/site";
 import { loadNow } from "@/lib/now";
 import { formatDate } from "@/lib/format";
-import { LABEL, PAGE_BODY_BAND, PAGE_HEADER_BAND, PANEL, PANEL_RAISED } from "@/constants/page";
+import { LABEL, PAGE_BODY_BAND, PAGE_HEADER_BAND, PANEL } from "@/constants/page";
 
 const NOW_PATH = "/now";
 
@@ -57,11 +57,34 @@ export default async function NowPage() {
       <Section space="md" className={PAGE_BODY_BAND}>
         <div className="reveal max-w-[var(--width-prose)]">{content}</div>
 
+        {/* "Exploring" is structured front-matter rather than a markdown list in
+            the body, because the homepage shows the same three themes. A list
+            that lives in prose can only be duplicated; as data it has one
+            source, and the two surfaces cannot drift apart. */}
+        {meta.exploring.length > 0 ? (
+          <section className="reveal mt-12 max-w-[var(--width-prose)]">
+            <h2 className={LABEL}>{nowPage.exploringTitle}</h2>
+            <ul className="mt-5 flex flex-col gap-3">
+              {meta.exploring.map((item) => (
+                <li
+                  key={item.title}
+                  className="rounded-[var(--radius-md)] border border-border bg-surface p-4 shadow-[var(--shadow-sm)]"
+                >
+                  <h3 className="text-[0.9375rem] font-[550] leading-snug text-ink">
+                    {item.title}
+                  </h3>
+                  <p className="mt-1.5 text-sm leading-relaxed text-ink-secondary">{item.body}</p>
+                </li>
+              ))}
+            </ul>
+          </section>
+        ) : null}
+
         <hr className="rule-fade mt-14 max-w-[var(--width-prose)]" />
 
         {/* Open to — single-sourced from STATUS so it never diverges from /hire
             and the footer. The one panel on the page with card elevation. */}
-        <section className={`reveal mt-8 max-w-[var(--width-prose)] ${PANEL} ${PANEL_RAISED}`}>
+        <section className={`reveal mt-8 max-w-[var(--width-prose)] ${PANEL}`}>
           <h2 className={LABEL}>{nowPage.openTo.title}</h2>
           <p className="mt-4 text-lg text-ink">{STATUS.text}.</p>
           <div className="mt-6">

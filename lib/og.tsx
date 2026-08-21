@@ -11,14 +11,18 @@ import { SITE } from "@/config/site";
 export const OG_SIZE = { width: 1200, height: 630 } as const;
 export const OG_CONTENT_TYPE = "image/png";
 
-// Brand tokens, inlined (satori can't read CSS variables). Kept in sync with
-// styles/tokens.css — the light (default) palette, Clerk purple accent.
-const BG = "#f7f7f8"; // --color-bg
-const INK = "#131316"; // --color-ink
-const INK_2 = "#5e5f6e"; // --color-ink-secondary
-const INK_3 = "#676876"; // --color-ink-tertiary
-const BORDER = "#d9d9de"; // --color-border-strong
-const ACCENT = "#6c47ff"; // --color-accent
+// Brand tokens, inlined — satori cannot read CSS custom properties, so these
+// six literals are the ONE legitimate place in the codebase that hardcodes a
+// brand colour. They mirror the light palette in styles/tokens.css and must be
+// updated together with it: nothing tests OG colour (the gate only checks that
+// an image/* byte-stream comes back), so a drift here ships silently across all
+// 17 OG routes.
+const BG = "#f8f8fa"; // --color-bg
+const INK = "#17171c"; // --color-ink
+const INK_2 = "#62636f"; // --color-ink-secondary
+const INK_3 = "#6b6c79"; // --color-ink-tertiary
+const BORDER = "#d7d7de"; // --color-border-strong
+const ACCENT = "#6552f0"; // --color-accent
 export function formatOgEyebrow(label: string) {
   return `${SITE.name} · ${label}`;
 }

@@ -24,6 +24,9 @@ export function ResumeDownloadLink({
       className={className}
       download
       onClick={onClick}
+      // Hidden when printing: offering a PDF download on the page being turned
+      // into a PDF is chrome inside the document.
+      data-print="hide"
     >
       {children}
     </a>

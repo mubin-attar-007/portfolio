@@ -10,7 +10,6 @@ import {
   PAGE_BODY_BAND,
   PAGE_HEADER_BAND,
   PANEL,
-  PANEL_RAISED,
   stagger,
 } from "@/constants/page";
 import { SITE } from "@/config/site";
@@ -52,7 +51,7 @@ export default function PrivacyPage() {
 
       <Section space="md" className={PAGE_BODY_BAND}>
         <div className="reveal-stagger space-y-6">
-          <article className={`${PANEL} ${PANEL_RAISED} reveal`} style={stagger(1)}>
+          <article className={`${PANEL} reveal`} style={stagger(1)}>
             <p className={LABEL}>What this site handles</p>
             <div className="mt-4 space-y-3 text-sm leading-6 text-ink-secondary">
               <p>

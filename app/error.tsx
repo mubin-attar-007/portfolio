@@ -14,14 +14,18 @@ type ErrorState = {
 };
 
 export default function ErrorState({ error, reset }: ErrorState) {
+  // No <main> here. This boundary renders INSIDE the root layout's
+  // <main id="main">, so wrapping it in another one produced two main landmarks
+  // — a real a11y defect on a surface that only appears when something has
+  // already gone wrong.
   return (
-    <main className="min-h-screen bg-bg">
+    <div className="min-h-[60vh]">
       <Section space="lg">
         <div className="max-w-[60ch]">
           <p className="font-mono text-xs uppercase tracking-[0.06em] text-ink-tertiary">
             Error · production hardening guard
           </p>
-          <h1 className="mt-5 max-w-[18ch] text-4xl font-[560] text-ink sm:text-5xl">
+          <h1 className="mt-5 max-w-[18ch] text-section font-[560] text-ink">
             Something failed unexpectedly.
           </h1>
           <p className="mt-5 text-lg leading-relaxed text-ink-secondary">
@@ -51,6 +55,6 @@ export default function ErrorState({ error, reset }: ErrorState) {
           </p>
         </div>
       </Section>
-    </main>
+    </div>
   );
 }

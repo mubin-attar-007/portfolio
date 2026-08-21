@@ -14,7 +14,7 @@ test("global navigation stays focused on the primary hiring path", () => {
   assert.equal(new Set(footerHrefs).size, footerHrefs.length);
   assert.ok(footerHrefs.length <= 8, "footer must remain a shortlist, not a sitemap");
 
-  for (const supportingRoute of ["/skills", "/uses", "/timeline", "/talks"]) {
+  for (const supportingRoute of ["/skills", "/uses"]) {
     assert.equal(
       headerHrefs.includes(supportingRoute as (typeof headerHrefs)[number]),
       false,

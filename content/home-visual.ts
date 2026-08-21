@@ -1,252 +1,295 @@
+/**
+ * Homepage copy and figure data.
+ *
+ * Structured content lives in a typed module rather than parsed markdown: it is
+ * shaped data, not prose, so TypeScript checks it at build with no parser in
+ * between. Long-form prose stays in MDX under content/{projects,writing,notes}.
+ *
+ * THE CONTENT LAW APPLIES HERE. Every number below is either (a) single-sourced
+ * from content/evals.ts or content/projects.ts, or (b) labelled as illustrative
+ * sample data in the UI that renders it. Nothing is invented to make a section
+ * read stronger, and no metric appears in two sections competing with itself.
+ */
+
+import { DBWHISPER_GOLDEN } from "./evals";
+
 export const flagshipHome = {
+  /* ---- 1. hero --------------------------------------------------------- */
   hero: {
-    kicker: "Mubin Attar · AI software engineer · Ahmedabad, India",
-    title: "I build production AI systems — and prove how they work.",
-    body:
-      "Four live products, opened up as engineering evidence: architecture, deterministic boundaries, task-level evaluations, and the decisions behind every tradeoff. Every metric on this page links to how it was measured.",
-    primary: "Read the flagship case study",
-    secondary: "How I make decisions",
+    eyebrow: "Mubin Attar · AI Systems Engineer",
+    /**
+     * Two lines on desktop. The second carries the accent, because it is the
+     * half of the sentence that makes the actual claim — "production AI" is the
+     * category, "built to be trusted" is the differentiator.
+     */
+    titleLead: "Production AI systems.",
+    titleAccent: "Built to be trusted.",
+    lede:
+      "I design and ship AI products end to end — from agents and retrieval to deterministic guardrails and evaluations that show what actually works.",
+    primary: { label: "Explore DBWhisper", href: "/work/dbwhisper" },
+    secondary: { label: "View selected work", href: "/work" },
+    tertiary: { label: "Read my engineering principles", href: "#method" },
   },
-  workbench: {
-    eyebrow: "DBWhisper · live system",
-    title: "Ask in plain English. Inspect every boundary.",
-    tabs: [
-      { id: "query", label: "Query" },
-      { id: "trace", label: "Agent trace" },
-      { id: "eval", label: "Eval" },
+
+  /* ---- 2. hero product stage -------------------------------------------
+     A real DBWhisper request, rendered as the product rather than as a browser
+     mock-up. Every tool name is the agent's ACTUAL tool (app/agent/tools.py in
+     DBWhisper): `search_tables` does pgvector retrieval over table docs, and
+     `validate_sql` is the fail-closed SELECT-only / single-statement /
+     enrolled-tables gate. Generic "thinking…" lines would say nothing.
+
+     The ROW VALUES are sample data from a demo database. They are labelled as
+     such in the UI: they are not a customer figure, a benchmark, or a claim. */
+  stage: {
+    app: "dbwhisper",
+    connection: "analytics_demo · postgres",
+    badge: "read-only",
+    askLabel: "Ask",
+    question: "Revenue by month for the last year",
+    recentLabel: "Recent",
+    recent: [
+      "Top 10 customers by lifetime value",
+      "Refund rate by product category",
+      "Signups per week since launch",
     ],
-    question: "Which active accounts grew more than 20% this quarter?",
-    sql:
-      "SELECT account, arr, growth FROM account_growth WHERE status = 'active' AND growth > 0.20 ORDER BY growth DESC;",
-    stages: [
-      { label: "Retrieve schema", detail: "3 relevant tables" },
-      { label: "Generate candidate", detail: "Postgres dialect" },
-      { label: "Validate read-only", detail: "Allowlist passed" },
-      { label: "Execute", detail: "Synthetic demo data" },
+    schemaLabel: "Enrolled schema",
+    schema: [
+      { name: "orders", cols: "12 columns", selected: true },
+      { name: "customers", cols: "9 columns", selected: true },
+      { name: "order_items", cols: "7 columns", selected: false },
+      { name: "products", cols: "11 columns", selected: false },
     ],
-    trace: [
+    runLabel: "Run",
+    runMeta: "4 steps · 1.2s",
+    steps: [
+      { tool: "search_tables", detail: "matched orders — 2 of 4 enrolled tables", state: "ok" },
+      { tool: "generate_sql", detail: "postgres dialect · temperature 0.1", state: "ok" },
+      { tool: "validate_sql", detail: "SELECT-only · single statement · enrolled tables", state: "ok" },
+      { tool: "execute", detail: "least-privilege read-only connection", state: "ok" },
+    ],
+    sqlLabel: "Generated query",
+    sql: [
+      { t: "kw", v: "SELECT" },
+      { t: "fn", v: " date_trunc" },
+      { t: "p", v: "('month', o.created_at) " },
+      { t: "kw", v: "AS" },
+      { t: "p", v: " month," },
+      { t: "br", v: "" },
+      { t: "fn", v: "       sum" },
+      { t: "p", v: "(o.amount) " },
+      { t: "kw", v: "AS" },
+      { t: "p", v: " revenue" },
+      { t: "br", v: "" },
+      { t: "kw", v: "FROM" },
+      { t: "p", v: " orders o" },
+      { t: "br", v: "" },
+      { t: "kw", v: "WHERE" },
+      { t: "p", v: " o.created_at >= now() - " },
+      { t: "kw", v: "INTERVAL" },
+      { t: "str", v: " '1 year'" },
+      { t: "br", v: "" },
+      { t: "kw", v: "GROUP BY" },
+      { t: "p", v: " 1 " },
+      { t: "kw", v: "ORDER BY" },
+      { t: "p", v: " 1;" },
+    ],
+    resultLabel: "Result",
+    sampleLabel: "sample data",
+    columns: ["month", "revenue"],
+    rows: [
+      ["2024-01-01", "48,210.00"],
+      ["2024-02-01", "51,884.00"],
+      ["2024-03-01", "63,027.00"],
+      ["2024-04-01", "59,415.00"],
+    ],
+    moreLabel: "8 more rows",
+    verdict: "12 rows returned · nothing was written",
+    /**
+     * Floating evidence cards. Deliberately NOT the four numbers in the proof
+     * bar 300px below: two components stating the same metric is the "multiple
+     * components communicating the same proof" failure the redesign exists to
+     * remove. These state what the RUN guarantees; the bar states the record.
+     */
+    evidence: [
       {
-        label: "Intent",
-        detail: "Revenue growth over enrolled account data",
+        id: "gate",
+        label: "Deterministic gate",
+        body: "Refuses when it cannot prove the query is safe.",
       },
       {
-        label: "Context",
-        detail: "account_growth + accounts schemas retrieved",
+        id: "readonly",
+        label: "Read-only execution",
+        body: "Least-privilege connection. No write path exists.",
       },
       {
-        label: "Boundary",
-        detail: "SELECT-only AST and enrolled tables verified",
-      },
-      {
-        label: "Result",
-        detail: "Rows returned with the generated query attached",
+        id: "measured",
+        label: "Scored end to end",
+        body: "Retrieval → generation → validation → execute.",
       },
     ],
   },
+
+  /* ---- 3. proof band ---------------------------------------------------
+     Four points, each linking to the page where a visitor can check it. The
+     82% / 100% pair is single-sourced from the completed golden-set row in
+     content/evals.ts; "4 live products" is the length of content/projects.ts. */
   proof: {
-    lead: "AI/ML Engineer at Sevina Technologies",
+    label: "The record",
     items: [
       {
         value: "4",
-        label: "products live",
-        method: "production inventory",
+        label: "products live in production",
+        method: "Deployed and maintained — not screenshots",
         href: "/work",
       },
       {
         value: "3+ yrs",
         label: "shipping software",
-        method: "résumé timeline",
-        href: "/resume#experience",
+        method: "Since 2022; production AI since 2024",
+        href: "/resume",
       },
       {
-        value: "82%",
+        value: DBWHISPER_GOLDEN.exactMatch,
         label: "exact execution match",
-        method: "22-query eval",
-        href: "/evals#dbwhisper-custom-golden-query-set",
+        method: "22 golden queries, run end to end",
+        href: DBWHISPER_GOLDEN.anchor,
       },
       {
-        value: "100%",
+        value: DBWHISPER_GOLDEN.failClosed,
         label: "fail-closed refusals",
-        method: "4 unsafe prompts",
-        href: "/evals#dbwhisper-custom-golden-query-set",
+        method: "4 of 4 unsafe prompts refused",
+        href: DBWHISPER_GOLDEN.anchor,
       },
     ],
   },
-  capabilities: {
-    kicker: "Production boundaries",
-    title: "The model is one component. The system earns the trust.",
-    body:
-      "I design the deterministic layers around probabilistic models: retrieval, validation, routing, evals, tenancy, and operational feedback.",
-    items: [
+
+  /* ---- 4. the stack wall ------------------------------------------------
+     The honest answer to a "trusted by" logo wall: there are no customer logos
+     to show, so the wall shows the stack that actually ships four live products.
+     Each cell cycles its own column, which is what keeps fifteen tools legible
+     in the height of one row. Every tool here appears in `uses` (content/site.ts)
+     — the wall is not aspirational padding. */
+  techWall: {
+    lead: "The stack behind four live products.",
+    columns: [
+      ["FastAPI", "Django", "LangGraph"],
+      ["Next.js", "React", "TypeScript"],
+      ["PostgreSQL", "pgvector", "TimescaleDB"],
+      ["Docker", "GitHub Actions", "Playwright"],
+      ["XGBoost", "Gemini", "SQLAlchemy"],
+    ],
+  },
+
+  /* ---- 5. flagship ------------------------------------------------------ */
+  flagship: {
+    eyebrow: "Flagship project",
+    /** One sentence that defines the product before any mechanism is named. */
+    definition:
+      "A natural-language interface to a production database that cannot damage it.",
+    problem:
+      "A better prompt makes a model emit a destructive query less often — never “never”. Anything with write access to real data needs a boundary the model cannot argue its way past.",
+    guaranteesLabel: "Three engineering guarantees",
+    guarantees: [
       {
-        id: "guardrail",
-        control: "policy gate",
-        outcome: "reject",
-        label: "Deterministic safety",
-        title: "Fail closed before execution",
-        body:
-          "AST checks, table allowlists, and read-only connections reject unsafe work before a model output can touch data.",
+        n: "01",
+        title: "Retrieve only the schema the question needs",
+        body: "pgvector similarity over embedded table docs selects a few tables, instead of stuffing an entire database into the prompt.",
       },
       {
+        n: "02",
+        title: "Validate before anything executes",
+        body: "A deterministic gate checks SELECT-only, single statement, enrolled tables — and fails closed when it cannot prove safety.",
+      },
+      {
+        n: "03",
+        title: "Measure the deployed path, not the demo",
+        body: "Retrieval, generation, validation and execution are scored together against a real read-only Postgres store.",
+      },
+    ],
+    caseStudy: "Read the case study",
+    live: "Open the live product",
+    repo: "Source",
+    /** The pipeline drawn beside the copy. Labels are the real stage names. */
+    pipeline: [
+      { id: "ask", label: "Question", note: "natural language" },
+      { id: "retrieve", label: "Retrieve", note: "pgvector · table docs" },
+      { id: "generate", label: "Generate", note: "6-provider fallback" },
+      { id: "validate", label: "Validate", note: "fail-closed gate" },
+      { id: "execute", label: "Execute", note: "read-only connection" },
+      { id: "rows", label: "Rows", note: "with the query attached" },
+    ],
+    refusal: { label: "Refuse", note: "unsafe or out of scope" },
+  },
+
+  /* ---- 6. selected work ------------------------------------------------- */
+  work: {
+    eyebrow: "Selected work",
+    title: "One engineering standard, three kinds of uncertainty.",
+    body:
+      "Each of these is deployed and maintained. Each claim below links to the case study and the method behind it.",
+    caseStudy: "View case study",
+    live: "Live",
+    source: "Source",
+    cta: { label: "See all four projects", href: "/work" },
+  },
+
+  /* ---- 7. method / capabilities ----------------------------------------- */
+  method: {
+    eyebrow: "How I engineer AI systems",
+    title: "AI that works beyond the demo",
+    body: "The model is only one component. Reliability comes from the system around it.",
+    items: [
+      {
         id: "retrieval",
-        control: "context index",
-        outcome: "ground",
-        label: "Grounding",
-        title: "Retrieve the smallest useful context",
-        body:
-          "Schema and domain evidence are ranked before generation instead of stuffing an entire system into a prompt.",
+        visual: "retrieval",
+        title: "Agents and retrieval",
+        body: "Context selection, orchestration, structured tools, and grounded generation — so the model answers from evidence rather than from memory.",
+        proof: { label: "In DBWhisper", href: "/notes/retrieval-beats-stuffing" },
+      },
+      {
+        id: "safeguards",
+        visual: "gate",
+        title: "Deterministic safeguards",
+        body: "Validation, permission boundaries, failure handling, and fail-closed behaviour that does not depend on the model agreeing to it.",
+        proof: { label: "Why a validator", href: "/writing/a-validator-is-not-a-better-prompt" },
       },
       {
         id: "evaluation",
-        control: "golden set",
-        outcome: "score",
-        label: "Evaluation",
-        title: "Measure behavior end to end",
-        body:
-          "Execution accuracy and refusal behavior are tested against real stores, not judged by exact text match.",
-      },
-      {
-        id: "routing",
-        control: "provider router",
-        outcome: "recover",
-        label: "Resilience",
-        title: "Route providers behind one interface",
-        body:
-          "Provider limits and failures become explicit routing states rather than unexplained product outages.",
-      },
-      {
-        id: "tenancy",
-        control: "repository scope",
-        outcome: "isolate",
-        label: "Data isolation",
-        title: "Enforce ownership below the route",
-        body:
-          "Repository-level constraints keep user data isolated even when a handler or model makes the wrong assumption.",
+        visual: "matrix",
+        title: "Evaluation systems",
+        body: "Task-level metrics, regression tests, trace inspection, and error analysis — including the cases that were excluded and why.",
+        proof: { label: "Open the registry", href: "/evals" },
       },
       {
         id: "delivery",
-        control: "CI + telemetry",
-        outcome: "observe",
-        label: "Delivery",
-        title: "Make every risky change observable",
-        body:
-          "Typed contracts, deterministic tests, CI gates, and public change notes turn reliability into a repeatable practice.",
+        visual: "pipeline",
+        title: "Full-stack delivery",
+        body: "Product UI, APIs, data pipelines, deployment, observability, and the iteration loop that keeps four products live on a $0 stack.",
+        proof: { label: "The stack", href: "/uses" },
       },
     ],
   },
-  protocol: {
-    kicker: "Evidence protocol",
-    title: "Every AI feature should leave a receipt.",
-    body:
-      "A claim is only useful when the boundary, measurement, and published method travel with it. This is the protocol I use to keep AI work inspectable.",
-    system: "DBWhisper",
-    receipt: "GOLDEN-QUERY / 2026-07-08",
-    steps: [
-      {
-        id: "claim",
-        n: "01",
-        label: "Claim",
-        title: "Natural language should return the right rows.",
-        body:
-          "The product claim is written as observable behavior before prompts or providers are optimized.",
-        fields: [
-          { label: "Input", value: "natural-language question" },
-          { label: "Expected", value: "correct result set" },
-          { label: "Failure", value: "refuse or explain" },
-        ],
-      },
-      {
-        id: "boundary",
-        n: "02",
-        label: "Boundary",
-        title: "Unsafe work must stop before execution.",
-        body:
-          "The generated statement crosses deterministic checks that do not depend on the model agreeing with them.",
-        fields: [
-          { label: "Operation", value: "SELECT only" },
-          { label: "Scope", value: "enrolled schema" },
-          { label: "Policy", value: "fail closed" },
-        ],
-      },
-      {
-        id: "measure",
-        n: "03",
-        label: "Measure",
-        title: "The deployed path is scored end to end.",
-        body:
-          "Retrieval, generation, validation, and execution are measured together against a read-only Postgres store.",
-        fields: [
-          { label: "Safe prompts", value: "22 golden queries" },
-          { label: "Exact match", value: "82% (18/22)" },
-          { label: "Unsafe refusals", value: "100% (4/4)" },
-        ],
-      },
-      {
-        id: "publish",
-        n: "04",
-        label: "Publish",
-        title: "The result ships with its method attached.",
-        body:
-          "The case study, evaluation registry, and change history make the claim inspectable instead of asking for trust.",
-        fields: [
-          { label: "Artifact", value: "case study" },
-          { label: "Registry", value: "evaluation row" },
-          { label: "History", value: "public changelog" },
-        ],
-      },
-    ],
-    links: [
-      { href: "/work/dbwhisper", label: "Inspect the case study" },
-      { href: "/evals", label: "Open the eval registry" },
-    ],
-  },
-  products: {
-    kicker: "Selected systems",
-    title: "One engineering standard, applied to different kinds of uncertainty.",
-    body:
-      "Each product is live. Each claim below connects to its case study and measurement method.",
-    caseStudy: "Read case study",
-    live: "Open live product",
-  },
-  operatingSystem: {
-    kicker: "How I work",
-    title: "Build the evidence loop into the product.",
-    body:
-      "A reliable AI feature is not finished when it produces an answer. It is finished when the answer can be constrained, evaluated, and improved without guesswork.",
-    steps: [
-      {
-        n: "01",
-        title: "Constrain",
-        body: "Define permissions, valid outputs, and failure behavior before optimizing prompts.",
-      },
-      {
-        n: "02",
-        title: "Measure",
-        body: "Test the deployed path with task-level metrics and keep excluded cases visible.",
-      },
-      {
-        n: "03",
-        title: "Publish",
-        body: "Connect claims to methods, record decisions, and expose the tradeoffs behind the result.",
-      },
-    ],
-    ledgerTitle: "Current evaluation ledger",
-    ledgerCta: "Open the complete eval registry",
+
+  /* ---- 8. writing + current focus --------------------------------------- */
+  notebook: {
+    eyebrow: "From the notebook",
+    title: "Thinking in public.",
   },
   writing: {
-    kicker: "Engineering notes",
-    title: "The decisions are part of the work.",
-    body:
-      "Short notes on evals, safety boundaries, retrieval, tenancy, and the choices that survive contact with production.",
-    cta: "Read all writing",
+    label: "Selected writing",
+    cta: { label: "All writing", href: "/writing" },
   },
+  exploring: {
+    label: "Currently exploring",
+    cta: { label: "What I'm doing now", href: "/now" },
+  },
+
+  /* ---- 9. close --------------------------------------------------------- */
   close: {
-    kicker: "Available for AI engineering roles",
-    principle: "The model may improvise. The boundary should not.",
-    title: "Need someone who can ship the model and the system around it?",
+    title: "Building an AI product that needs to work in production?",
     body:
-      "I am looking for teams where AI quality is treated as an engineering problem: observable, testable, and grounded in real product behavior.",
-    primary: "Start a conversation",
-    secondary: "View resume",
+      "Let's discuss the system, the failure modes, and how success will be measured.",
+    primary: { label: "Start a conversation", href: "/hire" },
+    secondary: { label: "View résumé", href: "/resume" },
   },
 } as const;

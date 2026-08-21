@@ -38,15 +38,12 @@ const ROUTES = [
   "/now",
   "/evals",
   "/hire",
-  "/talks",
   "/about",
-  "/timeline",
   "/uses",
   "/resume",
   "/skills",
   "/privacy",
   "/trust",
-  "/changelog",
   "/route-that-does-not-exist",
   "/dev/components",
 ];
@@ -74,7 +71,7 @@ const PASSES = [
 function dialogsFor(device) {
   const assistant = {
     label: "assistant panel",
-    trigger: /^Ask Friday/,
+    trigger: /^Ask this site/,
     dialog: /^Ask about/,
   };
   return device === "desktop"
@@ -233,7 +230,7 @@ async function auditOverlayKeyboard(browser) {
 
   try {
     await open(desktopPage, "/", "light");
-    const launcher = desktopPage.getByRole("button", { name: /^Ask Friday/ }).first();
+    const launcher = desktopPage.getByRole("button", { name: /^Ask this site/ }).first();
     await launcher.click();
     const dialog = desktopPage.getByRole("dialog", { name: /^Ask about/ });
     await dialog.waitFor();
@@ -288,7 +285,7 @@ async function auditOverlayKeyboard(browser) {
       throw new Error("Mobile menu did not focus its visible Close action");
     }
     await mobilePage.keyboard.press("Shift+Tab");
-    const assistant = menu.getByRole("button", { name: /^Ask Friday/ });
+    const assistant = menu.getByRole("button", { name: /^Ask this site/ });
     if (!(await assistant.evaluate((el) => el === document.activeElement))) {
       throw new Error("Mobile menu focus trap did not wrap to its final action");
     }

@@ -11,7 +11,9 @@
     "test": "node --disable-warning=MODULE_TYPELESS_PACKAGE_JSON --import ./test/alias-loader.mjs --test \"test/**/*.test.mts\"",
     "test:a11y": "node scripts/a11y.mjs",
     "test:metadata": "node scripts/lighthouse-budget.mjs --metadata-only",
-    "test:lighthouse": "node scripts/lighthouse-budget.mjs"
+    "test:lighthouse": "node scripts/lighthouse-budget.mjs",
+    "test:screens": "node scripts/screenshot.mjs",
+    "test:print": "node scripts/print-check.mjs"
   },
   "dependencies": {
     "@opennextjs/cloudflare": "^1.20.2",

@@ -22,9 +22,8 @@ const ROUTES = [
   { label: "writing", path: "/writing/a-validator-is-not-a-better-prompt" },
 ];
 const TITLE_ROUTES = [
-  { path: "/", expected: "Mubin Attar — AI Software Engineer" },
+  { path: "/", expected: "Mubin Attar — AI Systems Engineer" },
   { path: "/trust", expected: "Trust · Mubin Attar" },
-  { path: "/changelog", expected: "Changelog · Mubin Attar" },
   { path: "/privacy", expected: "Privacy policy · Mubin Attar" },
 ];
 const CATEGORY_BUDGETS = {
@@ -53,6 +52,33 @@ const AUDIT_BUDGETS = {
     strict: true,
   },
 };
+
+// First-load JavaScript budget (transferred/gzipped bytes) per route
+// (design-system.md §9, spec/ENGINEERING.md). The home route carries the one
+// client chunk — the workbench — so it gets the larger ceiling; content routes
+// stay lean. Enforced from Lighthouse's own resource accounting, so "optimized"
+// is never a claim without a number.
+const SCRIPT_BYTE_BUDGETS = {
+  home: 120 * 1024,
+  flagship: 90 * 1024,
+  writing: 90 * 1024,
+};
+
+/**
+ * Total transferred script bytes for a page. Prefers the `resource-summary`
+ * rollup (resourceType "script"); falls back to summing `network-requests`
+ * (resourceType "Script"). Returns undefined if neither is available.
+ */
+function scriptTransferBytes(report) {
+  const summary = report.audits?.["resource-summary"]?.details?.items ?? [];
+  const rollup = summary.find((item) => item.resourceType === "script");
+  if (Number.isFinite(rollup?.transferSize)) return rollup.transferSize;
+  const requests = report.audits?.["network-requests"]?.details?.items ?? [];
+  const total = requests
+    .filter((item) => item.resourceType === "Script")
+    .reduce((sum, item) => sum + (Number.isFinite(item.transferSize) ? item.transferSize : 0), 0);
+  return total > 0 ? total : undefined;
+}
 
 function positiveInteger(value, fallback) {
   const parsed = Number.parseInt(value ?? "", 10);
@@ -324,16 +350,24 @@ async function verifySocialPreviews(baseUrl) {
     }
   }
 
-  const talksResponse = await fetch(new URL("/talks", baseUrl), {
-    headers: { "user-agent": "Googlebot" },
-  });
-  if (!talksResponse.ok) {
-    throw new Error(`talks: route returned ${talksResponse.status}`);
-  }
-  const talksHtml = await talksResponse.text();
-  const talksRobots = metaContent(talksHtml, "robots") ?? "";
-  if (!talksRobots.includes("noindex")) {
-    throw new Error("talks: empty route must emit a noindex directive");
+  // Consolidated routes must 301, never 404 (inbound links stay alive).
+  for (const [from, to] of [
+    ["/talks", "/about"],
+    ["/timeline", "/about"],
+    ["/changelog", "/now"],
+  ]) {
+    const redirectResponse = await fetch(new URL(from, baseUrl), {
+      redirect: "manual",
+    });
+    if (redirectResponse.status !== 301 && redirectResponse.status !== 308) {
+      throw new Error(
+        `redirect: ${from} returned ${redirectResponse.status}; expected a permanent redirect to ${to}`,
+      );
+    }
+    const location = redirectResponse.headers.get("location") ?? "";
+    if (!location.endsWith(to)) {
+      throw new Error(`redirect: ${from} points at ${location || "nothing"}; expected ${to}`);
+    }
   }
 
   const sitemapResponse = await fetch(new URL("/sitemap.xml", baseUrl));
@@ -344,8 +378,10 @@ async function verifySocialPreviews(baseUrl) {
   if (!sitemapXml.includes("<urlset")) {
     throw new Error("sitemap: response is not a sitemap document");
   }
-  if (sitemapXml.includes("/talks</loc>")) {
-    throw new Error("sitemap: empty Talks route must not be advertised");
+  for (const removed of ["/talks</loc>", "/timeline</loc>", "/changelog</loc>"]) {
+    if (sitemapXml.includes(removed)) {
+      throw new Error(`sitemap: consolidated route ${removed} must not be advertised`);
+    }
   }
   const sitemapEntries = [...sitemapXml.matchAll(/<url>([\s\S]*?)<\/url>/g)].map(
     (match) => match[1],
@@ -448,6 +484,28 @@ function evaluateRoute(route, reports) {
     }
   }
 
+  // First-load JS byte report (median across runs). ADVISORY, not a hard gate:
+  // the measured transfer is framework-dominated (the same shared chunks load on
+  // routes with zero page-specific client JS) and depends on the serving
+  // environment's compression, so a hard threshold here would red-CI on a
+  // pre-existing floor rather than on a real regression. We always PRINT the
+  // number (measure, don't claim) and flag when it exceeds the aspirational
+  // budget, but do not fail the build on it. Driving first-load JS toward the
+  // budget is a dedicated optimization task (see NEEDS-INPUT.md).
+  let jsSummary = "";
+  const scriptBudget = SCRIPT_BYTE_BUDGETS[route.label];
+  if (scriptBudget) {
+    const values = reports
+      .map((report) => scriptTransferBytes(report))
+      .filter((value) => Number.isFinite(value));
+    if (values.length === reports.length) {
+      const bytes = median(values);
+      const kb = bytes / 1024;
+      const over = bytes > scriptBudget;
+      jsSummary = ` JS=${kb.toFixed(0)}KB${over ? ` (⚠ over ${(scriptBudget / 1024).toFixed(0)}KB target)` : ""}`;
+    }
+  }
+
   const categorySummary = Object.entries(scores)
     .map(([name, score]) => `${name}=${Math.round(score * 100)}`)
     .join(" ");
@@ -457,7 +515,7 @@ function evaluateRoute(route, reports) {
       return `${budget.label}=${value.toFixed(budget.unit ? 0 : 3)}${budget.unit}`;
     })
     .join(" ");
-  console.log(`${route.label}: ${categorySummary} ${auditSummary}`);
+  console.log(`${route.label}: ${categorySummary} ${auditSummary}${jsSummary}`);
   return failures;
 }
 

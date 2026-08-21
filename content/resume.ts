@@ -24,7 +24,7 @@ export const resume = {
     skills: "Skills",
   },
   summary:
-    "AI Software Engineer shipping production software since 2022 and production AI since 2024 — GenAI/LLM applications, agentic and RAG systems, predictive ML, and healthcare-AI automation. Four AI products shipped to production and kept live, each measured rather than demoed. Fluent across the stack (FastAPI, Next.js, PostgreSQL, Docker) with auth, CI/CD, and security hardening baked in.",
+    "AI Systems Engineer shipping production software since 2022 and production AI since 2024 — GenAI/LLM applications, agentic and RAG systems, predictive ML, and healthcare-AI automation. Four AI products shipped to production and kept live, with published task-level evaluations for the systems whose behaviour can be scored. Fluent across the stack (FastAPI, Next.js, PostgreSQL, Docker) with auth, CI/CD, and security hardening baked in.",
   skills: [
     { group: "Languages", items: "Python, JavaScript / TypeScript, SQL" },
     { group: "GenAI / LLM", items: "LangChain, LangGraph, RAG, pgvector, prompt engineering, agents, multi-provider routing (Gemini, GPT, Claude, Groq)" },

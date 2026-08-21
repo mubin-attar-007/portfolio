@@ -79,7 +79,9 @@ export function WritingList({ posts }: { posts: Post[] }) {
                   <Link
                     href={`/writing/${p.slug}`}
                     prefetch={false}
-                    className="group grid gap-4 py-7 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent focus-visible:ring-offset-4 focus-visible:ring-offset-bg sm:grid-cols-[minmax(0,1fr)_auto] sm:items-start sm:gap-10"
+                    // The global :focus-visible ring, pushed out so it clears a full-width row
+                    // rather than tracing its text. One indicator, one look, everywhere.
+                    className="group grid gap-4 py-7 focus-visible:outline-offset-4 sm:grid-cols-[minmax(0,1fr)_auto] sm:items-start sm:gap-10"
                   >
                     <span>
                       <span className="flex flex-wrap items-center gap-x-3 gap-y-1 font-mono text-xs text-ink-tertiary">

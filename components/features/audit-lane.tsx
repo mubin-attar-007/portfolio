@@ -21,7 +21,7 @@ function stagger(i: number): StaggerStyle {
 }
 
 const AUDIT_PILL =
-  "group inline-flex items-center gap-1 rounded-[var(--radius-sm)] border border-border bg-surface px-2.5 py-1.5 font-mono text-xs text-ink-secondary transition-colors duration-base ease-[var(--ease-out)] hover:border-border-strong hover:bg-bg-subtle focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent/55 focus-visible:ring-offset-2 focus-visible:ring-offset-[var(--bg)]";
+  "group inline-flex items-center gap-1 rounded-[var(--radius-sm)] border border-border bg-surface px-2.5 py-1.5 font-mono text-xs text-ink-secondary transition-colors duration-base ease-[var(--ease-out)] hover:border-border-strong hover:bg-bg-subtle";
 
 export function AuditLane({ title, items, className }: AuditLaneProps) {
   return (

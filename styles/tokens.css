@@ -1,158 +1,305 @@
 /* ============================================================================
-   Design tokens — the single source of truth (spec/DESIGN.md §1).
-   Consumed by components ONLY through Tailwind utilities. No raw hex/px/ms
-   anywhere else in the codebase.
+   Design tokens — the single source of truth (spec/DESIGN.md §1, ADR-011).
 
-   Light is the brand (default). Dark is a preference: applied via
-   [data-theme="dark"], or via prefers-color-scheme when the user hasn't chosen.
+   Consumed by components ONLY through Tailwind utilities or var() inside a CSS
+   module. No raw hex / px / ms anywhere else in the codebase.
+
+   IDENTITY (ADR-011 — "evidence paths"): a light, near-monochrome paper with ONE
+   violet accent rationed to action, state and evidence. Dark is used two ways:
+   as a *band* inside the light page (.tone-invert) and as an explicit, remembered
+   full-page preference ([data-theme="dark"]). prefers-color-scheme is deliberately
+   NOT consulted — the light page is the brand, not a mode.
+
+   TOKEN NAMES ARE STABLE. The redesign changed the VALUES, not the vocabulary:
+   ~60 components already read `--color-ink` / `bg-bg` / `border-border`, and
+   renaming semantics that were already correct would have been churn with no
+   design payoff.
    ============================================================================ */
 
 @theme {
-  /* ---- color: light (default) — Clerk's exact palette (extracted from clerk.com) ---- */
-  --color-bg: #f7f7f8;              /* page background — Clerk's cool near-white */
-  --color-bg-subtle: #eeeef0;       /* alternate section bands, inline code bg */
-  --color-surface: #ffffff;         /* cards, panels, code blocks */
-  --color-ink: #131316;             /* primary text — Clerk's near-black */
-  --color-ink-secondary: #5e5f6e;   /* supporting text */
-  --color-ink-tertiary: #676876;    /* Clerk's tertiary, nudged darker to clear AA 4.5:1 on bg + bg-subtle */
-  --color-border: #e3e3e8;          /* hairlines */
-  --color-border-strong: #d9d9de;   /* inputs, emphasized dividers (Clerk card border) */
-  --color-accent: #6c47ff;          /* Clerk's exact purple — links, primary button, active nav, focus */
-  --color-accent-hover: #5a37e0;    /* hover — Clerk darkens the purple */
-  --color-on-accent: #ffffff;       /* text on an accent fill */
-  --color-accent-subtle: #f0edff;   /* accent-tinted backgrounds (rare) */
-  --color-positive: #15803d;        /* improved metrics */
+  /* ---- colour: the light page (the brand) --------------------------------
+     Every pair below is measured. The ratios in the comments are computed
+     against the ground the token is actually used on, and the a11y gate
+     (scripts/a11y.mjs) re-checks them on every route in both themes. */
+  --color-bg: #f8f8fa;              /* page — cool near-white */
+  --color-bg-subtle: #f1f1f4;       /* alternate bands, inline code, wells */
+  --color-surface: #ffffff;         /* cards, panels, product frames */
+  --color-surface-raised: #fcfcfd;  /* a panel stacked ON a white panel */
+  --color-ink: #17171c;             /* primary text — 16.8:1 on bg */
+  --color-ink-secondary: #62636f;   /* supporting text — 5.6:1 on bg, 5.3:1 on bg-subtle */
+  /* Tertiary is one step darker than the "obvious" #7c7d89: mono microcopy runs
+     at 12px, which WCAG counts as normal text (4.5:1), and #7c7d89 measures
+     3.85:1 on the page. #6b6c79 clears 4.6:1 on the DARKEST light ground
+     (bg-subtle) and still reads as a third tier. */
+  --color-ink-tertiary: #6b6c79;
+  --color-border: #e5e5ea;          /* hairlines */
+  --color-border-strong: #d7d7de;   /* inputs, emphasised dividers, card hover */
+
+  /* The accent. Held at #6552f0 rather than a lighter violet because it must
+     clear AA as TEXT on all three light grounds — 5.2:1 on surface, 4.9:1 on bg,
+     4.6:1 on bg-subtle — and still carry white at 5.2:1 when used as a fill.
+     One accent, rationed: action, active state, and measured evidence. */
+  --color-accent: #6552f0;
+  --color-accent-hover: #5544d6;    /* 6.6:1 on surface */
+  --color-on-accent: #ffffff;       /* text on an accent fill (5.2:1) */
+  --color-accent-soft: #eeecfe;     /* accent-tinted ground — never behind body text */
+  /* The one non-accent hue in the system: a cool blue that appears ONLY in
+     ambient gradients and data visuals (never as text, never as a control), so
+     the palette stays single-accent where it counts. */
+  --color-ambient: #4d7fe0;
+  /* The display gradient — the one place the two hues meet. Reserved for the
+     hero's accent line and the primary button. Both endpoints clear 3:1 on the
+     page (large-text AA): #6552f0 at 4.9:1, #3f6fd8 at 4.0:1. */
+  --gradient-accent: linear-gradient(100deg, #6552f0 12%, #7a5cf5 52%, #3f6fd8 100%);
+
+  /* 6.5:1 on surface, 5.9:1 on bg-subtle. The obvious #15803d measures 4.45:1
+     on bg-subtle, which is under AA for the 12px syntax tokens in the hero
+     stage — fixed here rather than at the call site, because every other use
+     (metric deltas, status text) sat on the same margin. */
+  --color-positive: #146b33;
   --color-negative: #b91c1c;        /* regressions / before-values */
   --color-warning: #b45309;         /* caution callouts */
 
-  /* ---- typography ---- */
+  /* ---- typography --------------------------------------------------------
+     Two families, one job each: Geist Sans for everything the reader reads,
+     Geist Mono for anything that is a value, a label, or code. The editorial
+     serif is loaded only for the long-form pull-quote (see app/layout.tsx). */
   --font-sans: var(--font-geist-sans), "Inter", system-ui, sans-serif;
   --font-mono: var(--font-geist-mono), "JetBrains Mono", ui-monospace, monospace;
   --font-serif: var(--font-newsreader), Georgia, serif;
 
-  /* type scale — size / line-height / tracking (spec §1.3) */
+  /* Fixed steps — size / line-height / tracking. */
   --text-xs: 0.75rem;      --text-xs--line-height: 1.5;  --text-xs--letter-spacing: 0.04em;
   --text-sm: 0.875rem;     --text-sm--line-height: 1.6;
   --text-base: 1rem;       --text-base--line-height: 1.7;
-  --text-lg: 1.125rem;     --text-lg--line-height: 1.65;
-  --text-xl: 1.25rem;      --text-xl--line-height: 1.5;   --text-xl--letter-spacing: -0.01em;
-  --text-2xl: 1.5rem;      --text-2xl--line-height: 1.4;  --text-2xl--letter-spacing: -0.015em;
-  --text-3xl: 1.875rem;    --text-3xl--line-height: 1.3;  --text-3xl--letter-spacing: -0.02em;
-  --text-4xl: 2.25rem;     --text-4xl--line-height: 1.2;  --text-4xl--letter-spacing: -0.022em;
-  /* Clerk's centred dark-band h2 measures 40px/700 — between the 4xl and 5xl
-     steps. A named step rather than an arbitrary value so the band headers
-     stay retunable from here (used by SectionHeading's centred variant). */
-  --text-band-title: 2.5rem; --text-band-title--line-height: 1.15; --text-band-title--letter-spacing: -0.022em;
-  --text-5xl: 3rem;        --text-5xl--line-height: 1.1;  --text-5xl--letter-spacing: -0.025em;
-  --text-6xl: 3.75rem;     --text-6xl--line-height: 1.05; --text-6xl--letter-spacing: -0.028em;
-  --text-7xl: 4.75rem;     --text-7xl--line-height: 1.0;  --text-7xl--letter-spacing: -0.032em;
+  --text-lg: 1.125rem;     --text-lg--line-height: 1.6;
+  --text-xl: 1.25rem;      --text-xl--line-height: 1.45; --text-xl--letter-spacing: -0.011em;
+  --text-2xl: 1.5rem;      --text-2xl--line-height: 1.35; --text-2xl--letter-spacing: -0.016em;
+  --text-3xl: 1.875rem;    --text-3xl--line-height: 1.25; --text-3xl--letter-spacing: -0.021em;
+  --text-4xl: 2.25rem;     --text-4xl--line-height: 1.15; --text-4xl--letter-spacing: -0.024em;
+  --text-5xl: 3rem;        --text-5xl--line-height: 1.08; --text-5xl--letter-spacing: -0.027em;
 
-  /* ---- spacing: section rhythm (fluid, mobile→desktop per §1.4) ---- */
-  /* +~18% over the base scale — more breathing room reads as more confident. */
-  /* Measured off clerk.com: their band rhythm is ASYMMETRIC — 128px top,
-     172px bottom (the hero runs 192/128). The extra weight underneath is what
-     makes a section read as a finished block rather than a floating one, and it
-     stops adjacent bands from pooling into one dead gap the way two equal
-     paddings do. Kept fluid; the desktop ceiling matches Clerk's fixed values. */
-  /* The header→body SEAM: on Clerk's interior pages the gap from a header's
-     lede to the first row of real content measures ~96px total (pricing:
-     subhead ~243 → plan cards ~337). Split across the two bands (header pb +
-     body pt) that is 48 each — half of `sm`, which was tuned for joining two
-     CONTENT bands, not for the seam under a header. Spending `sm` on both
-     sides doubled Clerk's gap and pushed first content out of the fold. */
-  --space-section-xs: clamp(2.5rem, 4vw, 3rem);      /* 40  → 48 (half the seam) */
-  --space-section-sm: clamp(4rem, 8vw, 6rem);        /* 64  → 96  */
-  --space-section-md: clamp(6rem, 10vw, 8rem);       /* 96  → 128 */
-  --space-section-lg: clamp(8rem, 13vw, 11rem);      /* 128 → 176 */
-  --space-section-md-end: clamp(6rem, 10vw, 8rem);
-  --space-section-lg-end: clamp(8rem, 13vw, 11rem);
+  /* Fluid steps — the three sizes that must hit an exact figure at an exact
+     viewport, so each is solved as `intercept + slope*vw` rather than guessed
+     with a bare vw. The comments state the pinned widths.
 
-  /* prose + container measures */
-  --width-prose: 68ch;
-  --width-container: 1120px;
+     display   360→40  768→57  1024→67  1440→84 (capped)
+     section   360→32  768→41  1440→52 (capped)
+     sub       360→24  768→28  1440→32 (capped)  */
+  --text-display: clamp(2.5rem, 1.58rem + 4.07vw, 5.25rem);
+  --text-display--line-height: 0.99;
+  --text-display--letter-spacing: -0.032em;
+  --text-section: clamp(2rem, 1.5rem + 2.2vw, 3.25rem);
+  --text-section--line-height: 1.08;
+  --text-section--letter-spacing: -0.026em;
+  --text-sub: clamp(1.5rem, 1.35rem + 0.66vw, 2rem);
+  --text-sub--line-height: 1.2;
+  --text-sub--letter-spacing: -0.019em;
 
-  /* ---- radius (§1.5) ---- */
-  --radius-sm: 4px;   /* tags, inline code */
-  --radius-md: 8px;   /* cards, inputs, buttons */
-  --radius-lg: 12px;  /* figures, terminal frames */
+  /* ---- spacing: section rhythm ------------------------------------------
+     Desktop bands run 104–144px, mobile 72–96px. The rhythm stays slightly
+     ASYMMETRIC (a touch more weight underneath) so a band reads as a finished
+     plate rather than as content floating between two equal voids — but the gap
+     is far smaller than the old 128/172 pair, which produced blank screens
+     between sections.
+
+     `xs` is deliberately half a seam: a page HEADER spends it below, and the
+     body band directly under it spends the other half, so the total header→
+     content gap is one reasoned number rather than two paddings that happen to
+     stack. */
+  --space-section-xs: clamp(2rem, 3.2vw, 2.75rem);     /* 32  → 44  */
+  --space-section-sm: clamp(3rem, 5vw, 4rem);          /* 48  → 64  */
+  --space-section-md: clamp(4.5rem, 6vw, 6.5rem);      /* 72  → 104 */
+  --space-section-md-end: clamp(5rem, 6.6vw, 7.25rem); /* 80  → 116 */
+  --space-section-lg: clamp(5.5rem, 7.4vw, 8rem);      /* 88  → 128 */
+  --space-section-lg-end: clamp(6rem, 8.2vw, 9rem);    /* 96  → 144 */
+
+  /* measures */
+  --width-prose: 68ch;          /* long-form reading column */
+  --width-container: 1216px;    /* the page's one content measure */
+  --width-hero: 56rem;          /* 896px — hero copy cap (headline, lede, actions) */
+  --width-stage: 1160px;        /* the hero product stage, wider than the copy */
+
+  /* ---- radius ------------------------------------------------------------
+     Small numbers on purpose. Large radii read as consumer-app chrome; tight
+     corners read as engineered. */
+  --radius-xs: 4px;     /* tags, inline code */
+  --radius-sm: 6px;     /* buttons, chips */
+  --radius-md: 8px;     /* cards, inputs, panels */
+  --radius-lg: 12px;    /* product stages, figures */
+  --radius-pill: 999px; /* status pills ONLY */
 
   /* ---- borders ---- */
-  --stripe-width: 3px; /* accent left-rule on callouts / pull-quotes (token, not a raw value) */
+  --stripe-width: 3px;  /* accent left-rule on callouts / pull-quotes */
 
-  /* ---- motion (§1.6) — Clerk's signature curves (adopted verbatim) ---- */
-  /* Durations measured off clerk.com — 150ms and 500ms are their two most
-     common by a wide margin, with 300ms in between. The long 500ms on hover
-     states is a large part of why the site feels unhurried rather than snappy. */
-  --motion-fast: 140ms;
-  --motion-base: 200ms;
-  --motion-slow: 300ms;
-  --motion-reveal: 600ms;                          /* scroll/entrance fade-ups */
-  --motion-fastest: 120ms;                         /* tiny, micro stagger offsets */
-  --motion-short: 220ms;                           /* short interaction offsets */
-  --motion-mid: 260ms;                             /* medium transition offsets */
-  --motion-sweep: 900ms;                          /* header/looped dash traces */
-  --motion-illustration: 420ms;                    /* fine-grained vector reveal timing */
-  --motion-illustration-long: 460ms;               /* strong spring-ready timing */
-  --motion-illustration-in: 440ms;                 /* micro interaction overlap */
-  --motion-illustration-slow: 480ms;               /* long spring arc for single-shot pops */
-  --motion-illustration-fine: 130ms;               /* short row-by-row delay on static strips */
-  --motion-illustration-step: 240ms;               /* half-interval for secondary stagger */
-  --motion-illustration-sweep: 380ms;              /* delayed follow-on accent motion */
-  --motion-illustration-scan: 1000ms;              /* full sweep loop in inline visuals */
+  /* ---- motion ------------------------------------------------------------
+     One curve, three durations. Micro 150ms · standard 260/320ms · reveal 500ms.
+     Tailwind reads --default-transition-* so every bare `transition` in the
+     codebase lands on the same curve without per-element easing. */
+  --motion-fast: 150ms;      /* micro-interaction: colour, icon nudge */
+  --motion-base: 260ms;      /* standard transition */
+  --motion-slow: 320ms;      /* the slower reach: elevation, disclosure */
+  --motion-reveal: 500ms;    /* section entrance */
+  --stagger-step: 60ms;      /* per-sibling delay in .reveal-stagger groups */
   --motion-reduced: 0.01ms;
-  --ease-out: cubic-bezier(0.4, 0.36, 0, 1);      /* Clerk primary — smooth settle */
-  --ease-emphasized: cubic-bezier(0.33, 1, 0.68, 1); /* Clerk secondary — gentle overshoot for reveals */
-  --ease-spring: cubic-bezier(0.34, 1.56, 0.64, 1);  /* back-out overshoot — the Framer-spring "pop" for accent moments */
+  --ease-out: cubic-bezier(0.32, 0.72, 0, 1);        /* primary — a settled arrival */
+  --ease-emphasized: cubic-bezier(0.22, 1, 0.36, 1); /* reveals — reaches, then rests */
 
-  /* One curve, everywhere. Tailwind reads these to build its transition
-     utilities, so every bare `transition`/`transition-colors` in the codebase
-     settles on the ONE Clerk ease-out at the base duration — no per-element
-     easing needed. This is the "uniform motion = one careful hand" move. */
   --default-transition-duration: var(--motion-base);
   --default-transition-timing-function: var(--ease-out);
-  /* Named duration utilities (duration-fast/base/slow) so components stop
-     hardcoding raw milliseconds (Law 8: no magic numbers). */
   --transition-duration-fast: var(--motion-fast);
   --transition-duration-base: var(--motion-base);
-  --transition-duration-slow: var(--motion-slow);
 
-  /* ---- elevation: reserved for overlays ------------------------------- */
-  --shadow-sm: 0 0 0 0.5px rgb(217 217 222), 0 1px 2px rgb(0 0 0 / 0.06), 0 0 2px rgb(0 0 0 / 0.08);
-  --shadow-md: 0 0 0 1px rgb(0 0 0 / 0.06), 0 5px 15px rgb(0 0 0 / 0.08), 0 15px 35px -5px rgb(47 48 55 / 0.2);
-  --shadow-lg: 0 0 0 1px rgb(0 0 0 / 0.06), 0 10px 19px 4px rgb(0 0 0 / 0.12), 0 24px 48px -8px rgb(47 48 55 / 0.28);
+  /* ---- elevation ---------------------------------------------------------
+     Layered and low-opacity: a hairline ring, a close contact shadow, a wide
+     ambient one. Never a single dramatic black drop. */
+  --shadow-sm: 0 0 0 0.5px rgb(23 23 28 / 0.06), 0 1px 2px rgb(23 23 28 / 0.05);
+  --shadow-md:
+    0 0 0 0.5px rgb(23 23 28 / 0.06),
+    0 2px 4px rgb(23 23 28 / 0.04),
+    0 8px 20px -6px rgb(23 23 28 / 0.1);
+  --shadow-lg:
+    0 0 0 0.5px rgb(23 23 28 / 0.07),
+    0 4px 8px rgb(23 23 28 / 0.05),
+    0 18px 40px -10px rgb(23 23 28 / 0.16);
   --shadow-overlay: var(--shadow-lg);
+  /* The scrim behind a modal overlay. One value, because the assistant panel and
+     the mobile menu are the same kind of surface and dimming the page by
+     different amounts made them read as two systems. */
+  --scrim: rgb(23 23 28 / 0.2);
 
+  /* The one tactile control: an inset top highlight + a close drop, so the
+     primary button reads as a raised, pressable plane. */
+  --shadow-btn: inset 0 1px 0 rgb(255 255 255 / 0.22), 0 1px 2px rgb(23 23 28 / 0.24);
+
+  /* Product surfaces — the frames that stand for a real application. The inset
+     top highlight is what stops a white panel on a white-ish page from reading
+     as a flat rectangle. */
+  --shadow-surface:
+    inset 0 1px 0 rgb(255 255 255 / 0.9),
+    0 0 0 0.5px rgb(23 23 28 / 0.05),
+    0 1px 2px rgb(23 23 28 / 0.04),
+    0 6px 16px -6px rgb(23 23 28 / 0.07),
+    0 16px 36px -12px rgb(23 23 28 / 0.08);
+  --shadow-surface-hover:
+    inset 0 1px 0 rgb(255 255 255 / 0.9),
+    0 0 0 0.5px rgb(23 23 28 / 0.07),
+    0 2px 4px rgb(23 23 28 / 0.05),
+    0 12px 24px -8px rgb(23 23 28 / 0.09),
+    0 28px 56px -16px rgb(23 23 28 / 0.12);
+  /* The hero stage sits highest on the page and earns one step more depth. */
+  --shadow-stage:
+    inset 0 1px 0 rgb(255 255 255 / 0.9),
+    0 0 0 0.5px rgb(23 23 28 / 0.06),
+    0 2px 6px rgb(23 23 28 / 0.04),
+    0 18px 40px -14px rgb(23 23 28 / 0.12),
+    0 48px 88px -32px rgb(23 23 28 / 0.16);
+  /* A floating evidence card over the stage: reads as a layer ABOVE the product,
+     so it carries a tighter ring and a longer throw than the stage itself. */
+  --shadow-float:
+    0 0 0 0.5px rgb(23 23 28 / 0.07),
+    0 2px 6px rgb(23 23 28 / 0.06),
+    0 14px 30px -10px rgb(23 23 28 / 0.14);
+
+  /* ---- ambient light -----------------------------------------------------
+     Two soft radials, never a mesh: one violet (the accent's own light) and one
+     cool blue, both far below any text. They give the plane depth behind product
+     surfaces; they never touch contrast. */
+  --glow-accent: radial-gradient(
+    42% 46% at 76% 16%,
+    color-mix(in srgb, var(--color-accent) 7%, transparent),
+    transparent 68%
+  );
+  --glow-ambient: radial-gradient(
+    38% 44% at 16% 26%,
+    color-mix(in srgb, var(--color-ambient) 5%, transparent),
+    transparent 66%
+  );
+
+  /* Hairlines that dissolve instead of colliding with the container edge. */
   --hairline-fade: linear-gradient(90deg, transparent, var(--color-border) 12%, var(--color-border) 88%, transparent);
-  /* Vertical twin of the above — column separators (proof strip) fade out at the
-     top and bottom instead of butting into their neighbours' padding. */
-  --hairline-fade-y: linear-gradient(180deg, transparent, var(--color-border) 18%, var(--color-border) 82%, transparent);
 }
 
-/* ---- color: dark (preference, not the brand) — Clerk's exact dark palette ---- */
+/* ============================================================================
+   The DARK RAMP — one palette, two consumers.
+
+   Declared as plain custom properties (no selector applies them here) so the
+   dark BAND inside the light page (`.tone-invert`, globals.css) and the full-dark
+   THEME (`[data-theme="dark"]`, below) read from the same source. Two copies of a
+   dark palette is exactly how a band and a theme drift apart.
+   ============================================================================ */
+:root {
+  --dark-bg: #15151a;
+  --dark-bg-subtle: #1a1a20;
+  --dark-surface: #1e1f25;
+  --dark-surface-raised: #24252c;
+  --dark-ink: #f5f5f7;
+  --dark-ink-secondary: #a8a9b4;   /* 7.8:1 on --dark-bg */
+  --dark-ink-tertiary: #8b8c99;    /* 5.5:1 on --dark-bg, 4.9:1 on --dark-surface */
+  --dark-border: rgb(255 255 255 / 0.1);
+  --dark-border-strong: rgb(255 255 255 / 0.18);
+  /* The accent must clear AA as text on the dark plane, which #6552f0 does not
+     (3.5:1). This is the same hue lifted into the light half of the ramp:
+     7.7:1 on --dark-bg, 7.0:1 on --dark-surface. */
+  --dark-accent: #a99cff;
+  --dark-accent-hover: #c0b6ff;
+  --dark-on-accent: #1b1440;       /* 7.3:1 on the lifted-violet fill */
+  --dark-accent-soft: #241f4d;
+  --dark-positive: #4ade80;
+  --dark-negative: #f87171;
+  --dark-warning: #fbbf24;
+
+  --dark-shadow-sm: 0 0 0 0.5px rgb(255 255 255 / 0.07), 0 1px 2px rgb(0 0 0 / 0.5);
+  --dark-shadow-md: 0 0 0 0.5px rgb(255 255 255 / 0.08), 0 8px 20px -6px rgb(0 0 0 / 0.55);
+  --dark-shadow-lg: 0 0 0 0.5px rgb(255 255 255 / 0.09), 0 16px 38px -10px rgb(0 0 0 / 0.65);
+  --dark-shadow-surface:
+    inset 0 1px 0 rgb(255 255 255 / 0.06),
+    0 0 0 0.5px rgb(255 255 255 / 0.08),
+    0 2px 4px rgb(0 0 0 / 0.45),
+    0 14px 34px -10px rgb(0 0 0 / 0.6);
+  --dark-shadow-surface-hover:
+    inset 0 1px 0 rgb(255 255 255 / 0.09),
+    0 0 0 0.5px rgb(255 255 255 / 0.12),
+    0 4px 8px rgb(0 0 0 / 0.5),
+    0 22px 50px -12px rgb(0 0 0 / 0.66);
+  --dark-shadow-stage:
+    inset 0 1px 0 rgb(255 255 255 / 0.08),
+    0 0 0 0.5px rgb(255 255 255 / 0.1),
+    0 4px 10px rgb(0 0 0 / 0.5),
+    0 40px 80px -28px rgb(0 0 0 / 0.72);
+  --dark-shadow-float:
+    0 0 0 0.5px rgb(255 255 255 / 0.12),
+    0 2px 6px rgb(0 0 0 / 0.5),
+    0 16px 34px -10px rgb(0 0 0 / 0.6);
+}
+
+/* ---- full-dark: an explicit, remembered preference (never the OS default) --- */
 :root[data-theme="dark"] {
-  --color-bg: #131316;              /* Clerk's dark section bg */
-  --color-bg-subtle: #1a1a1f;
-  --color-surface: #212126;         /* Clerk's dark card */
-  --color-ink: #f7f7f8;
-  --color-ink-secondary: #b7b8c2;   /* Clerk's dark secondary */
-  --color-ink-tertiary: #9394a1;    /* Clerk's dark tertiary — AA on dark bg */
-  --color-border: #2f3037;          /* Clerk's dark border */
-  --color-border-strong: #42434d;
-  --color-accent: #9a7fff;          /* Clerk's purple lightened for AA as text on dark */
-  --color-accent-hover: #b3a0ff;
-  --color-accent-subtle: #241d47;   /* deep purple tint */
-  --color-on-accent: #131316;       /* dark ink on the lightened-purple fill (AA) */
-  --color-positive: #4ade80;
-  --color-negative: #f87171;
-  --color-warning: #fbbf24;
-  --shadow-sm: 0 0 0 0.5px rgb(255 255 255 / 0.06), 0 1px 2px rgb(0 0 0 / 0.4);
-  --shadow-md: 0 0 0 0.5px rgb(255 255 255 / 0.07), 0 8px 20px -6px rgb(0 0 0 / 0.5);
-  --shadow-lg: 0 0 0 0.5px rgb(255 255 255 / 0.08), 0 16px 38px -10px rgb(0 0 0 / 0.6);
-  --shadow-overlay: var(--shadow-lg);
-}
+  --color-bg: var(--dark-bg);
+  --color-bg-subtle: var(--dark-bg-subtle);
+  --color-surface: var(--dark-surface);
+  --color-surface-raised: var(--dark-surface-raised);
+  --color-ink: var(--dark-ink);
+  --color-ink-secondary: var(--dark-ink-secondary);
+  --color-ink-tertiary: var(--dark-ink-tertiary);
+  --color-border: var(--dark-border);
+  --color-border-strong: var(--dark-border-strong);
+  --color-accent: var(--dark-accent);
+  --color-accent-hover: var(--dark-accent-hover);
+  --color-on-accent: var(--dark-on-accent);
+  --color-accent-soft: var(--dark-accent-soft);
+  --color-positive: var(--dark-positive);
+  --color-negative: var(--dark-negative);
+  --color-warning: var(--dark-warning);
 
-/* Brand default is the light page with dark section-bands (Clerk's rhythm) — it
-   is the identity, not a light-mode variant, so it renders the same regardless
-   of the OS colour-scheme. Full-dark is an explicit, remembered choice only:
-   the visitor toggles it, which sets [data-theme="dark"] (see the block above).
-   We intentionally do NOT auto-switch to full-dark on prefers-color-scheme. */
+  --shadow-sm: var(--dark-shadow-sm);
+  --shadow-md: var(--dark-shadow-md);
+  --shadow-lg: var(--dark-shadow-lg);
+  --shadow-overlay: var(--dark-shadow-lg);
+  --scrim: rgb(0 0 0 / 0.5);
+  --shadow-surface: var(--dark-shadow-surface);
+  --shadow-surface-hover: var(--dark-shadow-surface-hover);
+  --shadow-stage: var(--dark-shadow-stage);
+  --shadow-float: var(--dark-shadow-float);
+  --shadow-btn: inset 0 1px 0 rgb(255 255 255 / 0.16), 0 1px 2px rgb(0 0 0 / 0.5);
+}

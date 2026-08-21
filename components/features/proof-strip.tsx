@@ -8,7 +8,7 @@ import { BAND_CELL, BAND_ROW, BAND_RULE_LG, BAND_RULE_SM } from "@/constants/ban
  * stat links to the page where a visitor can verify the count for themselves —
  * the site's "no number without its backing" rule applies to the homepage too.
  * Server component. Shares its white ground with the stack band directly below
- * — Clerk's trust wall is ONE crisp ruled block, so the pair reads as a single
+ * — the trust wall is ONE crisp ruled block, so the pair reads as a single
  * white band with one interior hairline (this strip's border-b), not as two
  * differently-tinted strips.
  *

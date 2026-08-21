@@ -1,4 +1,5 @@
 import type { Metadata } from "next";
+import Link from "next/link";
 
 import { Section } from "@/components/layout/section";
 import { PageHeader } from "@/components/ui/page-header";
@@ -25,12 +26,6 @@ export const metadata: Metadata = {
   },
 };
 
-const TRUST_METRICS = [
-  { label: "Signal", value: "4 live production products" },
-  { label: "Signal", value: "Reproducible evals and decision logs" },
-  { label: "Signal", value: "Public changelog for trust-impacting decisions" },
-];
-
 export default function TrustPage() {
   return (
     <>
@@ -40,24 +35,27 @@ export default function TrustPage() {
           title={trust.title}
           lede={trust.body}
         >
-          <TextLink href="/changelog" tone="quiet">
-            Open changelog
+          <TextLink href="/now" tone="quiet">
+            What&rsquo;s shipping now
           </TextLink>
           <TextLink href="/hire">Talk about trust in production</TextLink>
         </PageHeader>
       </Section>
       <Section space="md" className={PAGE_BODY_BAND}>
         <dl className="divide-y divide-border border-y border-border">
-          {TRUST_METRICS.map((metric, i) => (
+          {trust.signals.map((metric, i) => (
             <div
               key={metric.value}
               className="grid gap-2 py-5 sm:grid-cols-[8rem_1fr] sm:items-baseline sm:gap-8"
               style={stagger(i + 1)}
             >
-              <dt className={LABEL}>
-                {metric.label} {i + 1}
-              </dt>
-              <dd className="text-sm leading-6 text-ink-secondary">{metric.value}</dd>
+              <dt className={LABEL}>{metric.label}</dt>
+              <dd className="text-sm leading-6 text-ink-secondary">
+                {metric.value}{" "}
+                <Link href={metric.href} prefetch={false} className="link-underline text-ink">
+                  Check it
+                </Link>
+              </dd>
             </div>
           ))}
         </dl>
@@ -114,10 +112,10 @@ export default function TrustPage() {
         <div className="reveal mt-16 border-t border-border pt-8">
           <div className="flex flex-wrap items-start justify-between gap-6 sm:items-center">
             <p className="max-w-[45ch] text-sm text-ink-secondary">
-              Want to see the rollout history of changes, experiments, and
-              reliability updates?
+              Want to see what&rsquo;s shipping right now — the changes,
+              experiments, and reliability work in flight?
             </p>
-            <TextLink href="/changelog">Open changelog</TextLink>
+            <TextLink href="/now">See what I&rsquo;m doing now</TextLink>
           </div>
         </div>
       </Section>

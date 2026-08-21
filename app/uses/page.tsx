@@ -9,7 +9,6 @@ import {
   PAGE_BODY_BAND,
   PAGE_HEADER_BAND,
   PANEL,
-  PANEL_REST,
   stagger,
 } from "@/constants/page";
 
@@ -51,13 +50,19 @@ export default function UsesPage() {
       </Section>
 
       <Section space="md" className={PAGE_BODY_BAND}>
+        {/* The "$0" figure is shown on /about and /hire and links here to be
+            checked, so this page states how it is actually met. */}
+        <p className="reveal max-w-[var(--width-prose)] border-l-[length:var(--stripe-width)] border-l-border-strong pl-5 text-sm leading-relaxed text-ink-secondary">
+          {uses.costNote}
+        </p>
+
         {/* `.reveal` sits on the <li> wrapper, never on the panel itself — the
             stagger keyframe holds `transform: none` after it finishes and would
             out-rank any transform the card wanted later (globals.css). */}
-        <ul className="reveal-stagger grid gap-6 sm:grid-cols-2">
+        <ul className="reveal-stagger mt-10 grid gap-6 sm:grid-cols-2">
           {uses.groups.map((g, i) => (
             <li key={g.title} className="reveal" style={stagger(i)}>
-              <section className={`${PANEL} ${PANEL_REST} h-full`}>
+              <section className={`${PANEL} h-full`}>
                 <h2 className={LABEL}>{g.title}</h2>
                 <ul className="mt-5 flex flex-col gap-3">
                   {g.items.map((item) => (

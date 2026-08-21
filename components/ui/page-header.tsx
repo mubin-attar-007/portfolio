@@ -1,4 +1,5 @@
 import type { ReactNode } from "react";
+import { EyebrowChip } from "./eyebrow-chip";
 
 /**
  * PageHeader — the ONE page-top used by every route, so a visitor arriving on
@@ -24,10 +25,12 @@ import type { ReactNode } from "react";
  *   SectionHeading's align alternation).
  * - `children` — the actions slot: CTAs, a feed link, a cross-reference.
  *
- * Type: Clerk's measured header scale — weight 700, 1.1 line-height, -0.025em
- * tracking, clamping to 56px on desktop. That is one step BELOW the homepage
- * hero's 64px ceiling, deliberately: the hero stays the largest type on the
- * site, so arriving on an index route still reads as going one level in.
+ * Type: the shared `--text-section` step (32px → 52px). One step BELOW the
+ * homepage hero's `--text-display` (40px → 84px), deliberately: the hero stays
+ * the largest type on the site, so arriving on an index route still reads as
+ * going one level in. Both are tokens, so the gap between them is a design
+ * decision in tokens.css rather than two clamps in two files that happen to
+ * differ today.
  *
  * A11y: renders the page's single `<h1>`. Performance: the entire header paints
  * immediately; the h1 is commonly the LCP element on index routes.
@@ -55,11 +58,7 @@ export function PageHeader({
         centered ? "items-center text-center" : ""
       }`}
     >
-      {kicker ? (
-        <p className="w-fit font-mono text-xs uppercase tracking-[0.04em] text-ink-tertiary">
-          {kicker}
-        </p>
-      ) : null}
+      {kicker ? <EyebrowChip>{kicker}</EyebrowChip> : null}
       {meta ? (
         <p className={`font-mono text-xs uppercase tracking-[0.04em] text-ink-tertiary ${
           kicker ? "mt-3" : ""
@@ -70,7 +69,7 @@ export function PageHeader({
       <h1
         className={`${
           eyebrow ? "mt-6" : ""
-        } max-w-[20ch] text-balance text-[clamp(2.25rem,5vw,3.5rem)] font-semibold leading-[1.1] tracking-[-0.025em] text-ink`}
+        } max-w-[20ch] text-balance text-section font-[560] text-ink`}
       >
         {title}
       </h1>

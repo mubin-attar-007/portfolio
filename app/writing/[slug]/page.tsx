@@ -5,12 +5,13 @@ import { PAGE_TOP } from "@/constants/page";
 import { routableWritingSlugs, loadWriting, writingNeighbours } from "@/lib/writing";
 import { formatDate } from "@/lib/format";
 import { SITE } from "@/config/site";
-import { ArticleJsonLd } from "@/components/seo/json-ld";
+import { ArticleJsonLd, BreadcrumbJsonLd } from "@/components/seo/json-ld";
 import {
   NewsletterForm,
   NEWSLETTER_ENABLED,
 } from "@/components/features/newsletter-form";
 import { ArticleHeader } from "@/components/ui/article-header";
+import { Breadcrumb } from "@/components/ui/breadcrumb";
 import { ArticleFooter } from "@/components/ui/article-footer";
 import { ARTICLE_KICKER, ARTICLE_META } from "@/content/article";
 
@@ -69,6 +70,13 @@ export default async function WritingPost({ params }: { params: Promise<{ slug: 
         datePublished={meta.date}
         dateModified={meta.updated}
       />
+      <BreadcrumbJsonLd
+        items={[
+          { name: "Writing", url: `${SITE.url}/writing` },
+          { name: meta.title, url },
+        ]}
+      />
+      <Breadcrumb parent={{ label: "Writing", href: "/writing" }} current={meta.title} />
       <article className="max-w-[var(--width-prose)]">
         <ArticleHeader
           kicker={ARTICLE_KICKER.writing(meta.category, readingMinutes)}
