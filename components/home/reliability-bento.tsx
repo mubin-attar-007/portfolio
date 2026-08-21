@@ -48,7 +48,7 @@ export function ReliabilityBento() {
           {b.items.map((item) => (
             <li
               key={item.id}
-              className={`flex flex-col rounded-[var(--radius-md)] border border-border bg-surface p-5 transition-[border-color] duration-base ease-[var(--ease-out)] hover:border-[color-mix(in_srgb,var(--color-accent)_38%,var(--color-border))] ${
+              className={`group flex flex-col rounded-[var(--radius-md)] border border-border bg-surface p-5 transition-[border-color,transform] duration-base ease-[var(--ease-out)] hover:-translate-y-0.5 hover:border-[color-mix(in_srgb,var(--color-accent)_38%,var(--color-border))] motion-reduce:hover:translate-y-0 ${
                 "span" in item && item.span === 6 ? "lg:flex-row lg:items-center lg:gap-6 " : ""
               }${
                 "span" in item && item.span === 6
@@ -59,7 +59,7 @@ export function ReliabilityBento() {
               }`}
             >
               <div
-                className={`rounded-[var(--radius-sm)] border border-border bg-[linear-gradient(180deg,color-mix(in_srgb,var(--color-accent)_9%,var(--color-bg-subtle)),var(--color-bg-subtle))] px-4 py-4 ${
+                className={`rounded-[var(--radius-sm)] border border-border bg-[linear-gradient(180deg,color-mix(in_srgb,var(--color-accent)_9%,var(--color-bg-subtle)),var(--color-bg-subtle))] px-4 py-4 transition-[border-color,filter] duration-base ease-[var(--ease-out)] group-hover:border-[color-mix(in_srgb,var(--color-accent)_45%,var(--color-border))] group-hover:brightness-[1.25] ${
                   "span" in item && item.span === 6 ? "lg:w-72 lg:flex-none" : ""
                 }`}
               >

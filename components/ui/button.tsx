@@ -40,7 +40,7 @@ const VARIANTS: Record<Variant, string> = {
     // an engine that drops the gradient still renders a filled control.
     "btn-sheen bg-accent bg-[image:var(--gradient-accent-control)] text-on-accent shadow-[var(--shadow-btn)] hover:brightness-[1.06]",
   secondary:
-    "border border-border-strong bg-surface text-ink shadow-[var(--shadow-sm)] hover:border-ink/25 hover:bg-surface-raised",
+    "border border-border-strong bg-surface text-ink shadow-[var(--shadow-sm)] hover:-translate-y-px hover:border-ink/25 hover:bg-surface-raised",
   subtle:
     "bg-bg-subtle text-ink hover:bg-border",
   ghost:

@@ -105,6 +105,10 @@
   letter-spacing: -0.03em;
   line-height: 1;
   color: var(--color-ink);
+  transition: color var(--motion-fast) var(--ease-out);
+}
+.metric:hover .value {
+  color: var(--color-accent);
 }
 
 /* Underlined at rest, not on hover. These links sit in a field of non-link text,
@@ -292,6 +296,9 @@
 .slotItemActive {
   display: block;
   color: var(--color-ink);
+}
+.wallCell:hover .slotItemActive {
+  color: var(--color-accent);
 }
 
 @media (min-width: 40rem) {

@@ -110,7 +110,7 @@ export function WritingAndNow({
             {exploring.map((item, i) => (
               <li
                 key={item.title}
-                className="rounded-[var(--radius-md)] border border-border bg-surface p-4 shadow-[var(--shadow-sm)]"
+                className="rounded-[var(--radius-md)] border border-border bg-surface p-4 shadow-[var(--shadow-sm)] transition-[border-color,transform,box-shadow] duration-base ease-[var(--ease-out)] hover:-translate-y-0.5 hover:border-[color-mix(in_srgb,var(--color-accent)_32%,var(--color-border))] hover:shadow-[var(--shadow-md)] motion-reduce:hover:translate-y-0"
               >
                 <p className={LABEL}>{String(i + 1).padStart(2, "0")}</p>
                 <h4 className="mt-2 text-[0.9375rem] font-[550] leading-snug text-ink">

@@ -100,6 +100,14 @@ button:disabled,
 .icon-btn:hover {
   background-color: color-mix(in srgb, var(--color-ink) 6%, transparent);
 }
+/* The glyph answers with a small spring pop — the reference's icon-tile hover.
+   Transform-only; the blanket reduced-motion rule collapses the duration. */
+.icon-btn svg {
+  transition: transform var(--motion-base) var(--ease-spring);
+}
+.icon-btn:hover svg {
+  transform: scale(1.12);
+}
 
 .skip-link {
   position: fixed;
@@ -195,24 +203,30 @@ button:disabled,
   }
 }
 
-/* ---- device: the chamfered plate ----------------------------------------
-   Clerk's dark sections enter and exit on cut corners — an eight-point
-   clip-path rather than a radius, which is what makes the plate read as
-   machined instead of rounded. Owner-directed adoption (ADR-012): ADR-010 had
-   banned this as Clerk-identifying; the current directive explicitly
-   authorizes close adaptation. The cut is a token (--chamfer) so all plates
-   retune together. clip-path clips our own glows too, which is fine — the
-   plate's light should stop at the plate's edge. */
+/* ---- device: the notched plate ------------------------------------------
+   The reference's dark-section edge, measured (crop-top-edge / crop-bottom-edge
+   in .screenshots/clerk/): the dark plate keeps FULL-HEIGHT WINGS at the
+   viewport edges while the light section intrudes as a wide centred tab with
+   45° shoulders — ~43px deep, shoulders ~115px in from each edge at 1440.
+   A twelve-point clip-path, mirrored top and bottom. The first version of this
+   device cut the plate's corners instead — geometrically the exact inverse —
+   and shipped that way until the owner put the two screenshots side by side.
+   Geometry is two tokens (--chamfer depth, --chamfer-inset shoulder position),
+   so every plate retunes together. */
 .chamfer {
   clip-path: polygon(
-    var(--chamfer) 0,
-    calc(100% - var(--chamfer)) 0,
-    100% var(--chamfer),
-    100% calc(100% - var(--chamfer)),
-    calc(100% - var(--chamfer)) 100%,
-    var(--chamfer) 100%,
-    0 calc(100% - var(--chamfer)),
-    0 var(--chamfer)
+    0 0,
+    var(--chamfer-inset) 0,
+    calc(var(--chamfer-inset) + var(--chamfer)) var(--chamfer),
+    calc(100% - var(--chamfer-inset) - var(--chamfer)) var(--chamfer),
+    calc(100% - var(--chamfer-inset)) 0,
+    100% 0,
+    100% 100%,
+    calc(100% - var(--chamfer-inset)) 100%,
+    calc(100% - var(--chamfer-inset) - var(--chamfer)) calc(100% - var(--chamfer)),
+    calc(var(--chamfer-inset) + var(--chamfer)) calc(100% - var(--chamfer)),
+    var(--chamfer-inset) 100%,
+    0 100%
   );
 }
 

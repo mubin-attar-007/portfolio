@@ -52,7 +52,7 @@ export function RegistryStrip() {
                 </span>
                 <span className="mt-0.5 block truncate text-sm text-ink-secondary">{e.metric}</span>
               </span>
-              <span className="hidden min-w-0 items-center gap-2 font-mono text-sm tabular-nums text-ink sm:flex">
+              <span className="hidden min-w-0 items-center gap-2 font-mono text-sm tabular-nums text-ink transition-colors duration-fast ease-[var(--ease-out)] group-hover/row:text-accent sm:flex">
                 {e.result}
                 {e.status === "complete" ? (
                   <span className="inline-flex items-center gap-1 font-mono text-[0.6875rem] text-ink-tertiary">

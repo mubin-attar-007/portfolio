@@ -67,6 +67,10 @@
   transition: transform var(--motion-base) var(--ease-out);
 }
 
+.stageItem:not(.stageItemOpen) .stageBtn:hover .stageChevron {
+  transform: translateX(3px);
+}
+
 .stageItemOpen .stageBtn {
   color: var(--color-ink);
 }

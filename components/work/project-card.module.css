@@ -82,6 +82,12 @@
   text-transform: uppercase;
   color: var(--color-ink-tertiary);
 }
+.meta > span:first-child {
+  transition: color var(--motion-fast) var(--ease-out);
+}
+.card:hover .meta > span:first-child {
+  color: var(--color-accent);
+}
 
 /* The separator is drawn AFTER each term rather than before the next, so a
    wrap breaks after "TIME-SERIES ·" — a line can never open with a dangling

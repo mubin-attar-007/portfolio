@@ -137,8 +137,13 @@
 
   /* ---- borders ---- */
   --stripe-width: 3px;  /* accent left-rule on callouts / pull-quotes */
-  /* Corner cut on the dark plates (the .chamfer device in globals.css). */
-  --chamfer: clamp(1.25rem, 3.4vw, 3rem);
+  /* The notched plate (.chamfer, globals.css) — measured off the reference's
+     dark sections: the LIGHT side intrudes as a centred tab, --chamfer deep,
+     with 45° shoulders set --chamfer-inset in from each edge; the dark keeps
+     full-height wings outside the shoulders. First build had this inverted
+     (corners cut off the plate) — the owner caught it against the reference. */
+  --chamfer: clamp(1.125rem, 3vw, 2.75rem);
+  --chamfer-inset: clamp(1.75rem, 8vw, 7.25rem);
 
   /* ---- motion ------------------------------------------------------------
      One curve, three durations. Micro 150ms · standard 260/320ms · reveal 500ms.

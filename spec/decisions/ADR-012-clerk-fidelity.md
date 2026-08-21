@@ -31,7 +31,7 @@ had produced.
 | Durations | cluster at 130/150/200/300/450ms | fast 130 · base 200 · slow 300 · reveal 450 |
 | Card shadows | two exact stacks (hairline-ring; raised 4-layer) | `--shadow-sm` / `--shadow-md`, verbatim |
 | Navigation | slim 42px sticky row, floating below the top edge | 44px contained pill, `top` offset, glass unconditional |
-| Dark plates | #131316, **chamfered corners** | `.chamfer` clip-path device, `--chamfer` token |
+| Dark plates | #131316, **notched edges**: full-height wings at the viewport edges, the light side intruding as a centred tab with 45° shoulders (~43px deep, ~115px inset at 1440) | `.chamfer` clip-path device, `--chamfer` + `--chamfer-inset` tokens |
 | Product section | accordion rail driving a dominant specimen | `FlagshipWalkthrough` (five stages) |
 | Feature section | giant dark bento of illustrated guarantee cards | `ReliabilityBento` (nine method-backed cards) |
 | Footer | dense multi-column map | three-column map + Elsewhere; nav test cap 8→14 |
@@ -42,21 +42,26 @@ and their marketing copy/assets/logo wall (excluded by the directive itself).
 
 ## Decisions recorded
 
-1. **The chamfer returns.** ADR-010 banned the cut-corner plate as
+1. **The notch was shipped inverted first.** The initial build cut the
+   PLATE'S corners (centre high, edges low); the owner put the two screenshots
+   side by side and caught that the reference is the exact inverse — wings high
+   at the edges, the light section tabbing into the plate. The device was
+   rebuilt from pixel-measured crops (`crop-top-edge` / `crop-bottom-edge`).
+2. **The chamfer returns.** ADR-010 banned the cut-corner plate as
    Clerk-identifying; ADR-011 retired the graticule that replaced it. The owner
    directive explicitly authorizes the pattern; it ships as a clip-path token.
-2. **Nav set** becomes Work · Evals · Writing · About (+ the one CTA); Résumé
+3. **Nav set** becomes Work · Evals · Writing · About (+ the one CTA); Résumé
    moves to the footer map. Evals is promoted because the registry is the
    portfolio's differentiator.
-3. **Homepage choreography** expands to ten sections (walkthrough, bento,
+4. **Homepage choreography** expands to ten sections (walkthrough, bento,
    registry strip and engineer strip are new), still with exactly two dark
    plates. ADR-011's "≈eight sections" guidance is superseded by the
    directive's fuller architecture; every added section renders existing
    content-model data — no new claims.
-4. **Scroll reveals** land as the `[data-reveal]` device + `Reveal` component:
+5. **Scroll reveals** land as the `[data-reveal]` device + `Reveal` component:
    triple-gated (html.js, `no-preference`, observer fallback) so content can be
    un-animated but never lost.
-5. **LCP budget 2000 → 2500ms** (Core Web Vitals "good"). CI measured
+6. **LCP budget 2000 → 2500ms** (Core Web Vitals "good"). CI measured
    2018–2373ms at performance 98/99; the residual is the Geist swap repainting
    the hero lede, and holding a budget below the swap cost would push toward
    `font-display: optional` — dropping the brand face on slow connections to

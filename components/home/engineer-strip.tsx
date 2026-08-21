@@ -87,7 +87,7 @@ export function EngineerStrip() {
             {timeline.map((phase) => (
               <li
                 key={phase.period}
-                className="rounded-[var(--radius-md)] border border-border bg-surface p-5 shadow-[var(--shadow-sm)]"
+                className="rounded-[var(--radius-md)] border border-border bg-surface p-5 shadow-[var(--shadow-sm)] transition-[border-color,transform,box-shadow] duration-base ease-[var(--ease-out)] hover:-translate-y-0.5 hover:border-[color-mix(in_srgb,var(--color-accent)_32%,var(--color-border))] hover:shadow-[var(--shadow-md)] motion-reduce:hover:translate-y-0"
               >
                 <div className="flex flex-wrap items-baseline justify-between gap-x-4 gap-y-1">
                   <h3 className="text-[0.9375rem] font-[550] text-ink">
