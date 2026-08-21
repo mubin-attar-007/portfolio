@@ -67,3 +67,15 @@ Desktop.ini
 
 # local AI / tooling state
 .claude/
+
+# Local QA screenshot sweeps (scripts/screenshot.mjs) — never committed.
+.screenshots/
+
+# Local server logs from the QA scripts.
+dev.out.log
+dev.err.log
+srv.out.log
+srv.err.log
+
+# Binary archive of the docs/ tree — the source files are committed alongside it.
+docs/*.rar

@@ -1,0 +1,233 @@
+/* ============================================================================
+   The "evidence path" motif — the site's one piece of original artwork.
+
+   It draws what the work actually is: a request routed through retrieval,
+   validation, execution and measurement, with one branch that ends in a refusal
+   rather than a result. Angular traces, small nodes, square checkpoints, faint
+   stage labels. No mesh gradient, no blob, no circuit-board pastiche.
+
+   Everything here is derived from tokens. The only local knobs are the mask
+   geometry and the trace weights, which are properties of this drawing and of
+   nothing else on the site.
+   ============================================================================ */
+
+.root {
+  position: absolute;
+  inset-inline: 0;
+  top: 0;
+  /* HEIGHT IS LOAD-BEARING. `inset: 0` stretched the drawing over the entire
+     hero — copy AND product stage — and because the SVG crops with `slice`, the
+     taller box scaled it up until every node and label was outside the viewport.
+     Bounding it to the copy block is what makes the motif legible at all. */
+  height: 44rem;
+  max-height: 100%;
+  overflow: hidden;
+  pointer-events: none;
+  /* No mask HERE. It used to sit on this container, which forced one composited
+     masked layer holding the gradients and the line-work together — a
+     full-width composite on the LCP path, for no visual gain. The mask belongs
+     to `.svg`, which is the only child that needs clipping; the glow is already
+     a soft radial that fades out on its own. */
+  contain: paint;
+}
+
+/* Below `lg` the copy fills nearly the whole width, so there is no "either side
+   of the headline" left for the drawing to live in. It steps back rather than
+   competing: a much larger clear zone and half the presence. A motif that
+   crosses a paragraph is texture behind text, which is the one thing the mask
+   exists to prevent. */
+@media (max-width: 63.99rem) {
+  .root {
+    height: 34rem;
+    opacity: 0.55;
+  }
+  .svg {
+    -webkit-mask-image: radial-gradient(86% 60% at 50% 46%, transparent 54%, #000 94%);
+    mask-image: radial-gradient(86% 60% at 50% 46%, transparent 54%, #000 94%);
+  }
+}
+
+/* Ambient light. Three off-centre radials — violet high right, blue high
+   left, violet again low-centre where the product stage begins — bright enough
+   to read as light rather than as a stain, and positioned so the copy's centre
+   stays clean paper. Static gradients: zero runtime cost. */
+.glow {
+  position: absolute;
+  inset: -12% -8%;
+  background-image:
+    radial-gradient(
+      58% 56% at 50% -8%,
+      color-mix(in srgb, var(--color-accent) 14%, transparent),
+      transparent 74%
+    ),
+    radial-gradient(
+      84% 62% at 50% -4%,
+      color-mix(in srgb, var(--color-ambient) 8%, transparent),
+      transparent 80%
+    ),
+    radial-gradient(
+      52% 30% at 50% 80%,
+      color-mix(in srgb, var(--color-accent) 10%, transparent),
+      transparent 74%
+    );
+}
+
+/* On the dark close the same aurora would glow like a screen in a dark room —
+   halve it. */
+:global(.tone-invert) .glow {
+  opacity: 0.5;
+}
+
+.svg {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  /* Clipped out of the middle rather than dimmed: fading line-work under text
+     still leaves the text sitting on a texture; removing it leaves clean paper.
+     The hole is tight so the routes read either side of the headline. */
+  -webkit-mask-image: radial-gradient(48% 62% at 50% 46%, transparent 42%, #000 88%);
+  mask-image: radial-gradient(48% 62% at 50% 46%, transparent 42%, #000 88%);
+}
+
+/* Trace weights. The ambient traces sit at a third of the primary's presence:
+   the drawing has to read as ONE route through a field of other routes, which is
+   the whole metaphor. */
+.trace {
+  fill: none;
+  stroke: color-mix(in srgb, var(--color-ink) 13%, transparent);
+  stroke-width: 1;
+  stroke-linecap: square;
+}
+
+.traceAmbient {
+  fill: none;
+  stroke: color-mix(in srgb, var(--color-ink) 7%, transparent);
+  stroke-width: 1;
+  stroke-linecap: square;
+}
+
+.tracePrimary {
+  fill: none;
+  stroke: color-mix(in srgb, var(--color-accent) 42%, transparent);
+  stroke-width: 1.25;
+  stroke-linecap: square;
+}
+
+/* The refused branch: dashed, and it stops at a cross instead of a node. Dash
+   plus terminal glyph, never colour alone — the drawing says "refused" the same
+   way to a reader who cannot see the hue. */
+.traceRefused {
+  fill: none;
+  stroke: color-mix(in srgb, var(--color-ink) 16%, transparent);
+  stroke-width: 1;
+  stroke-dasharray: 3 4;
+}
+
+.node {
+  fill: var(--color-bg);
+  stroke: color-mix(in srgb, var(--color-accent) 55%, transparent);
+  stroke-width: 1.25;
+}
+
+.nodeCore {
+  fill: var(--color-accent);
+  opacity: 0.75;
+}
+
+.checkpoint {
+  fill: none;
+  stroke: color-mix(in srgb, var(--color-ink) 20%, transparent);
+  stroke-width: 1;
+}
+
+.reject {
+  fill: none;
+  stroke: color-mix(in srgb, var(--color-ink) 26%, transparent);
+  stroke-width: 1.25;
+  stroke-linecap: round;
+}
+
+.label {
+  fill: color-mix(in srgb, var(--color-ink) 34%, transparent);
+  font-family: var(--font-mono);
+  font-size: 11px;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+}
+
+/* The one moving part: a short bright segment travelling the primary route, so
+   the drawing reads as a request in flight rather than as a diagram.
+   Compositor-friendly (a single stroke-dashoffset on one path) and slow enough
+   to be ambient rather than attention-seeking.
+
+   It exists ONLY inside `no-preference`. That is the difference between "the
+   animation is disabled" and "there is a designed still pose": with reduced
+   motion this element is never rendered at all, so it cannot freeze halfway
+   along the route as an unexplained dash. */
+.pulse {
+  display: none;
+}
+
+@media (prefers-reduced-motion: no-preference) {
+  .pulse {
+    display: block;
+    fill: none;
+    stroke: var(--color-accent);
+    stroke-width: 1.75;
+    stroke-linecap: round;
+    stroke-dasharray: 46 2200;
+    animation: trace-run 9s linear infinite;
+  }
+}
+
+@keyframes trace-run {
+  from {
+    stroke-dashoffset: 2246;
+  }
+  to {
+    stroke-dashoffset: 0;
+  }
+}
+
+/* On the dark band the same drawing inverts its neutrals. The accent already
+   swaps through `.tone-invert`, so only the ink-derived strokes need a rule. */
+:global(.tone-invert) .trace {
+  stroke: rgb(255 255 255 / 0.13);
+}
+:global(.tone-invert) .traceAmbient {
+  stroke: rgb(255 255 255 / 0.06);
+}
+:global(.tone-invert) .traceRefused {
+  stroke: rgb(255 255 255 / 0.16);
+}
+:global(.tone-invert) .checkpoint {
+  stroke: rgb(255 255 255 / 0.2);
+}
+:global(.tone-invert) .reject {
+  stroke: rgb(255 255 255 / 0.28);
+}
+:global(.tone-invert) .label {
+  fill: rgb(255 255 255 / 0.52);
+}
+:global(.tone-invert) .node {
+  fill: var(--color-bg);
+}
+
+/* Variant: the closing CTA sits on a dark plate and only needs the field to
+   suggest depth behind the headline, so the mask keeps the outer thirds and the
+   traces drop another step. */
+.quiet .tracePrimary {
+  stroke-width: 1.25;
+  stroke: color-mix(in srgb, var(--color-accent) 52%, transparent);
+}
+.quiet .node {
+  stroke: color-mix(in srgb, var(--color-accent) 70%, transparent);
+}
+.quiet {
+  opacity: 0.85;
+}
+.quiet .svg {
+  -webkit-mask-image: radial-gradient(70% 78% at 50% 50%, transparent 22%, #000 82%);
+  mask-image: radial-gradient(70% 78% at 50% 50%, transparent 22%, #000 82%);
+}

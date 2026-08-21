@@ -23,6 +23,12 @@ const RAW = [
       { label: "LLM providers behind one fallback", value: "6", method: "OpenAI → OpenRouter → DeepSeek → Groq → Anthropic → Gemini; the first with credentials wins, Gemini's free tier is the final fallback." },
       { label: "SQL dialects supported", value: "3", method: "Postgres, MySQL, and SQL Server via SQLAlchemy 2.0 + ODBC, with per-dialect generation directives." },
     ],
+    card: {
+      definition: "Ask a production database in English. It cannot damage it.",
+      category: "Agents · retrieval · SQL safety",
+      shot: { src: "/demos/dbwhisper.webp", width: 768, height: 456 },
+      alt: "The DBWhisper console: a natural-language question, the generated SQL beneath it, and the returned result table.",
+    },
     links: { live: "https://dbwhisper.vercel.app", repo: "https://github.com/mubin-attar-007/dbwhisper" },
     diagram: "dbwhisper",
     changelog: [
@@ -47,6 +53,12 @@ const RAW = [
       { label: "look-ahead safety", value: "structural", method: "Decide on bar i, fill at bar i+1's open; a canary test fails the build if any look-ahead leaks into a result." },
       { label: "Sharpe risk-free rate", value: "0 (stated)", method: "Sharpe/Sortino are annualized; the risk-free rate is shown wherever they appear — no silent assumptions." },
     ],
+    card: {
+      definition: "Backtest a trading strategy without lying to yourself.",
+      category: "Quantitative systems · time-series",
+      shot: { src: "/demos/tradepulse.webp", width: 1280, height: 760 },
+      alt: "A TradePulse backtest report showing an equity curve above an underwater drawdown chart.",
+    },
     links: { live: "https://tradepulse-live.vercel.app", repo: "https://github.com/mubin-attar-007/tradepulse" },
     diagram: "tradepulse",
     changelog: [
@@ -72,6 +84,12 @@ const RAW = [
       { label: "model accuracy", value: "65.2% ± 0.8%", method: "5-fold stratified cross-validation on 15,115 NBA games; base home-win rate is 57.5%, so a real ~8-point edge (ROC-AUC 0.685)." },
       { label: "track-record", value: "graded vs finals", method: "Every published pick is settled against the real final score; the record is flagged 'insufficient' below 20 settled picks." },
     ],
+    card: {
+      definition: "Turn a validated model into odds, edge, and a graded record.",
+      category: "Predictive ML · model evaluation",
+      shot: { src: "/demos/crownwager.webp", width: 1280, height: 760 },
+      alt: "The CrownWager analytics view listing model predictions with fair odds and confidence grades.",
+    },
     links: { live: "https://crownwager.vercel.app", repo: "https://github.com/mubin-attar-007/crownwager" },
     diagram: "crownwager",
     changelog: [
@@ -97,6 +115,12 @@ const RAW = [
       { label: "tenancy isolation", value: "per-user", method: "Ownership is enforced on every query in the repository layer, not just at the route — a user can never read another user's chats or history." },
       { label: "LLM routing", value: "cloud + local", method: "Hosted models and a local option are routed behind one interface, with per-provider rate-limit and quota errors surfaced cleanly to the user instead of failing the request." },
     ],
+    card: {
+      definition: "A multi-user LLM platform with tenancy enforced below the route.",
+      category: "Applied LLM · multi-tenant SaaS",
+      shot: { src: "/demos/llm-studio.webp", width: 1280, height: 720 },
+      alt: "The LLM Studio chat interface with a conversation sidebar and a model selector.",
+    },
     links: { live: "https://heisenbergblue-llm-studio.hf.space", repo: "https://github.com/mubin-attar-007/llm_studio" },
     diagram: "llm-studio",
     changelog: [

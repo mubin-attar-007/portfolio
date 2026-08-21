@@ -57,9 +57,66 @@ export function Metric({
   );
 }
 
-/** Horizontal group of Metrics (hero of a case study, homepage proof strip). */
+/** Horizontal group of Metrics — a loose row, for use inside prose. */
 export function MetricsRow({ children }: { children: ReactNode }) {
   return <div className="flex flex-wrap gap-x-12 gap-y-6">{children}</div>;
+}
+
+/**
+ * MetricCards — the pull-out metric block at the top of a case study.
+ *
+ * A case study opens by asking the reader to spend ten minutes. The numbers that
+ * justify that have to read as objects, not as a run of text: the previous
+ * `MetricsRow` set them as bare figures in the flow, so the three claims a
+ * write-up rests on looked like a caption.
+ *
+ * Each card is the site's one panel treatment. The value is mono and tabular,
+ * the label sits under it, and the method line is a LINK to the chapter that
+ * derives it — the content law rendered as an affordance rather than a footnote.
+ *
+ * A11y: a `<dl>`, because that is what this is — terms and their values. The
+ * card `<div>` is the DIRECT child of the `<dl>` and contains exactly one `<dt>`
+ * and one `<dd>`; anything deeper is invalid (axe: `dlitem` /
+ * `definition-list`), which is why the method line lives INSIDE the `<dt>`
+ * rather than as a third sibling. `flex-col-reverse` puts the value on top
+ * visually while the DOM keeps term-before-value, so a screen reader never
+ * announces "0" as the term.
+ */
+export function MetricCards({
+  metrics,
+  methodHref,
+}: {
+  metrics: readonly { label: string; value: string; method: string }[];
+  methodHref?: string;
+}) {
+  return (
+    <dl className="grid gap-3 sm:grid-cols-2 lg:grid-cols-3">
+      {metrics.map((m) => (
+        <div
+          key={m.label}
+          className="flex flex-col-reverse rounded-[var(--radius-md)] border border-border bg-surface p-5 shadow-[var(--shadow-surface)]"
+        >
+          <dt className="mt-1.5 text-sm leading-snug text-ink-secondary">
+            {m.label}
+            <span className="mt-4 block border-t border-border pt-3 text-xs leading-relaxed text-ink-tertiary">
+              {methodHref ? (
+                <Link href={methodHref} className="link-underline text-ink-secondary">
+                  How this was measured
+                </Link>
+              ) : (
+                <span className="text-ink-secondary">Method</span>
+              )}
+              {" — "}
+              {m.method}
+            </span>
+          </dt>
+          <dd className="font-mono text-[1.75rem] leading-none tabular-nums tracking-[-0.03em] text-ink">
+            {m.value}
+          </dd>
+        </div>
+      ))}
+    </dl>
+  );
 }
 
 /** Tabular metrics with a required method column. Hairline rows, no zebra, no colour headers. */

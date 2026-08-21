@@ -1,4 +1,4 @@
-import { renderOg, OG_SIZE, OG_CONTENT_TYPE } from "@/lib/og";
+import { formatOgEyebrow, renderOg, OG_SIZE, OG_CONTENT_TYPE } from "@/lib/og";
 import { routableWritingSlugs, loadWriting } from "@/lib/writing";
 
 export const alt = "Writing — Mubin Attar";
@@ -14,7 +14,7 @@ export default async function OG({ params }: { params: Promise<{ slug: string }>
   const { slug } = await params;
   const w = await loadWriting(slug);
   return renderOg({
-    eyebrow: `writing · ${w?.meta.category ?? ""}`,
+    eyebrow: formatOgEyebrow(`writing · ${w?.meta.category ?? ""}`),
     title: w?.meta.title ?? "Writing",
     footerRight: `/writing/${slug}`,
   });

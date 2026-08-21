@@ -354,7 +354,11 @@ export function AssistantPanel({ onClose }: { onClose: () => void }) {
   // make it the containing block for this fixed panel and mis-anchor it.
   return createPortal(
     <>
-      <div className="fixed inset-0 z-50 bg-ink/15" onClick={onClose} aria-hidden="true" />
+      <div
+        className="fixed inset-0 z-50 bg-[var(--scrim)]"
+        onClick={onClose}
+        aria-hidden="true"
+      />
       <div
         id="assistant-panel-dialog"
         ref={panelRef}
@@ -448,7 +452,7 @@ export function AssistantPanel({ onClose }: { onClose: () => void }) {
                         {m.sources.map((s, si) => (
                           <span
                             key={si}
-                            className="rounded-[var(--radius-sm)] border border-border px-2 py-0.5 font-mono text-xs text-ink-tertiary"
+                            className="rounded-[var(--radius-xs)] border border-border px-2 py-0.5 font-mono text-xs text-ink-tertiary"
                           >
                             {s.source}
                           </span>

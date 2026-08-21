@@ -1,0 +1,576 @@
+/* ============================================================================
+   HeroProductStage — DBWhisper rendered as the product, not as a browser mock.
+
+   The rules this composition follows:
+   - Compact UI type (12–13px), because that is what a real console uses. A
+     marketing-sized "app screenshot" is the tell that it was never an app.
+   - Every string is real product vocabulary (the agent's actual tool names).
+   - Sample data is LABELLED as sample data inside the frame.
+   - Mobile is a different composition, not the desktop one scaled down: the
+     context rail (recent questions, schema) is dropped and the narrative —
+     ask → run → query → result — is what survives.
+
+   Local knobs only. Every colour, radius, shadow and duration is a token.
+   ============================================================================ */
+
+.wrap {
+  position: relative;
+  width: 100%;
+  max-width: var(--width-stage);
+  margin-inline: auto;
+}
+
+/* The halo. A wide violet→blue ellipse under the stage's top half, so the
+   frame reads as lit from behind — the Clerk move that separates "a screenshot
+   on a page" from "the product, presented". Static, blur-free (the radial's own
+   falloff is the blur), behind everything. */
+.wrap::before {
+  content: "";
+  position: absolute;
+  inset: -6% -10% auto;
+  height: 70%;
+  z-index: 0;
+  pointer-events: none;
+  background-image:
+    radial-gradient(
+      50% 64% at 30% 24%,
+      color-mix(in srgb, var(--color-accent) 14%, transparent),
+      transparent 78%
+    ),
+    radial-gradient(
+      48% 62% at 72% 20%,
+      color-mix(in srgb, var(--color-ambient) 11%, transparent),
+      transparent 78%
+    );
+}
+
+/* ---- the frame --------------------------------------------------------- */
+
+.stage {
+  position: relative;
+  z-index: 1;
+  overflow: hidden;
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-lg);
+  background: var(--color-surface);
+  box-shadow: var(--shadow-stage);
+}
+
+/* A 2px gradient light along the stage's top edge — the frame's one coloured
+   detail, saying "this is the object the halo is lighting". */
+.stage::before {
+  content: "";
+  position: absolute;
+  inset: 0 0 auto;
+  height: 2px;
+  z-index: 1;
+  background: linear-gradient(
+    90deg,
+    transparent 4%,
+    color-mix(in srgb, var(--color-accent) 55%, transparent) 30%,
+    color-mix(in srgb, var(--color-ambient) 50%, transparent) 70%,
+    transparent 96%
+  );
+}
+
+/* Title bar. Three dots and a name — the minimum that says "application
+   window" without drawing a fake browser with a fake URL in it. */
+.titlebar {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  padding: 0 0.875rem;
+  height: 2.5rem;
+  border-bottom: 1px solid var(--color-border);
+  background: var(--color-bg-subtle);
+}
+
+.dots {
+  display: flex;
+  gap: 0.375rem;
+}
+.dots span {
+  width: 0.5rem;
+  height: 0.5rem;
+  border-radius: var(--radius-pill);
+  background: var(--color-border-strong);
+}
+
+.appName {
+  font-family: var(--font-mono);
+  font-size: 0.75rem;
+  color: var(--color-ink-secondary);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.badge {
+  margin-left: auto;
+  display: inline-flex;
+  align-items: center;
+  gap: 0.375rem;
+  padding: 0.125rem 0.5rem;
+  border: 1px solid color-mix(in srgb, var(--color-accent) 30%, transparent);
+  border-radius: var(--radius-pill);
+  background: var(--color-accent-soft);
+  color: var(--color-accent);
+  font-family: var(--font-mono);
+  font-size: 0.6875rem;
+  white-space: nowrap;
+}
+
+/* ---- body grid --------------------------------------------------------- */
+
+.body {
+  display: grid;
+  grid-template-columns: 1fr;
+}
+
+@media (min-width: 62rem) {
+  .body {
+    grid-template-columns: 17rem minmax(0, 1fr);
+    min-height: 33rem;
+  }
+}
+
+/* The context rail: what the user brought to the question. Dropped entirely
+   below `lg` — at 360px it would be four rows of 10px text nobody reads, and
+   the ask → run → result narrative is the part that has to survive. */
+.rail {
+  display: none;
+}
+
+@media (min-width: 62rem) {
+  .rail {
+    display: flex;
+    flex-direction: column;
+    border-right: 1px solid var(--color-border);
+    background: var(--color-surface-raised);
+  }
+}
+
+.railBlock {
+  padding: 0.875rem 1rem;
+  border-bottom: 1px solid var(--color-border);
+}
+.railBlock:last-child {
+  border-bottom: 0;
+}
+
+.railLabel {
+  font-family: var(--font-mono);
+  font-size: 0.6875rem;
+  letter-spacing: 0.07em;
+  text-transform: uppercase;
+  color: var(--color-ink-tertiary);
+}
+
+/* The question, as it sits in the input. The caret is a static 1px rule, not a
+   blinking one: a typing effect in a hero is a banned pattern, and a blinking
+   caret is the same idea wearing a smaller costume. */
+.ask {
+  margin-top: 0.5rem;
+  display: flex;
+  align-items: flex-start;
+  gap: 0.5rem;
+  padding: 0.625rem 0.75rem;
+  border: 1px solid var(--color-border-strong);
+  border-radius: var(--radius-sm);
+  background: var(--color-surface);
+  box-shadow: var(--shadow-sm);
+}
+.askText {
+  font-size: 0.8125rem;
+  line-height: 1.45;
+  color: var(--color-ink);
+}
+.caret {
+  flex: none;
+  width: 1px;
+  align-self: stretch;
+  min-height: 1.05rem;
+  background: var(--color-accent);
+}
+
+.recentList {
+  margin-top: 0.5rem;
+  display: flex;
+  flex-direction: column;
+  gap: 0.375rem;
+}
+.recentList li {
+  font-size: 0.75rem;
+  line-height: 1.4;
+  color: var(--color-ink-tertiary);
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.schemaList {
+  margin-top: 0.5rem;
+  display: flex;
+  flex-direction: column;
+  gap: 0.25rem;
+}
+.schemaRow {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  padding: 0.25rem 0.375rem;
+  border-radius: var(--radius-xs);
+  font-family: var(--font-mono);
+  font-size: 0.75rem;
+  color: var(--color-ink-tertiary);
+}
+/* Selected tables are the two retrieval actually chose. Marked by a filled
+   indicator AND full-ink type, so selection never rests on colour alone. */
+.schemaRowOn {
+  background: var(--color-accent-soft);
+  color: var(--color-ink);
+}
+.schemaDot {
+  width: 0.375rem;
+  height: 0.375rem;
+  border-radius: var(--radius-pill);
+  background: var(--color-border-strong);
+  flex: none;
+}
+.schemaRowOn .schemaDot {
+  background: var(--color-accent);
+}
+.schemaCols {
+  margin-left: auto;
+  font-size: 0.6875rem;
+  color: var(--color-ink-tertiary);
+}
+/* The selected row sits on the accent tint, which is lighter than the page: the
+   tertiary ink measures 4.47:1 there — under AA for 11px text. Everything on a
+   tinted ground steps up one tier. */
+.schemaRowOn .schemaCols {
+  color: var(--color-ink-secondary);
+}
+
+/* ---- main column ------------------------------------------------------- */
+
+.main {
+  display: flex;
+  flex-direction: column;
+  min-width: 0;
+}
+
+.panel {
+  padding: 0.875rem 1rem;
+  border-bottom: 1px solid var(--color-border);
+}
+.panel:last-child {
+  border-bottom: 0;
+}
+
+@media (min-width: 48rem) {
+  .panel {
+    padding: 1rem 1.25rem;
+  }
+}
+
+.panelHead {
+  display: flex;
+  align-items: baseline;
+  gap: 0.75rem;
+}
+.panelMeta {
+  margin-left: auto;
+  font-family: var(--font-mono);
+  font-size: 0.6875rem;
+  color: var(--color-ink-tertiary);
+}
+
+/* The mobile-only ask row: the question has to appear somewhere once the rail
+   is gone, and it belongs above the run it produced. */
+.askMobile {
+  display: block;
+}
+@media (min-width: 62rem) {
+  .askMobile {
+    display: none;
+  }
+}
+
+/* ---- run trace --------------------------------------------------------- */
+
+.steps {
+  margin-top: 0.75rem;
+  display: flex;
+  flex-direction: column;
+  gap: 0.125rem;
+}
+
+.step {
+  display: flex;
+  align-items: center;
+  gap: 0.625rem;
+  padding: 0.375rem 0.5rem;
+  border-radius: var(--radius-xs);
+}
+.step:nth-child(odd) {
+  background: color-mix(in srgb, var(--color-ink) 2%, transparent);
+}
+
+/* The state glyph is a real check inside a ring, at 14px — the same "boundary
+   around a validated thing" the logomark draws, at UI scale. */
+.stepMark {
+  flex: none;
+  width: 0.875rem;
+  height: 0.875rem;
+  color: var(--color-accent);
+}
+
+.stepTool {
+  font-family: var(--font-mono);
+  font-size: 0.75rem;
+  color: var(--color-ink);
+  white-space: nowrap;
+}
+
+.stepDetail {
+  font-size: 0.75rem;
+  color: var(--color-ink-tertiary);
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+/* Below `sm` the detail drops under its tool name rather than truncating to
+   three words — a step that reads "matched orders — 2 of…" is worse than two
+   short lines. */
+@media (max-width: 33rem) {
+  .step {
+    align-items: flex-start;
+    flex-wrap: wrap;
+  }
+  .stepDetail {
+    flex-basis: 100%;
+    padding-left: 1.5rem;
+    white-space: normal;
+  }
+}
+
+/* ---- generated query --------------------------------------------------- */
+
+.sql {
+  margin-top: 0.625rem;
+  padding: 0.75rem 0.875rem;
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-sm);
+  background: var(--color-bg-subtle);
+  font-family: var(--font-mono);
+  font-size: 0.75rem;
+  line-height: 1.7;
+  /* A generated query is one artefact: it scrolls inside its own frame rather
+     than wrapping into a shape that no longer looks like SQL, and never pushes
+     the page sideways. */
+  overflow-x: auto;
+  white-space: pre;
+  color: var(--color-ink-secondary);
+}
+.kw {
+  color: var(--color-accent);
+  font-weight: 500;
+}
+.fn {
+  color: var(--color-ink);
+}
+.str {
+  color: var(--color-positive);
+}
+
+/* ---- result ------------------------------------------------------------ */
+
+.tableWrap {
+  margin-top: 0.625rem;
+  overflow-x: auto;
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-sm);
+}
+
+.table {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 0.75rem;
+}
+.table th {
+  padding: 0.5rem 0.75rem;
+  border-bottom: 1px solid var(--color-border);
+  background: var(--color-bg-subtle);
+  font-family: var(--font-mono);
+  font-size: 0.6875rem;
+  font-weight: 500;
+  letter-spacing: 0.05em;
+  text-transform: uppercase;
+  color: var(--color-ink-tertiary);
+  text-align: left;
+  white-space: nowrap;
+}
+.table td {
+  padding: 0.4375rem 0.75rem;
+  border-bottom: 1px solid var(--color-border);
+  font-family: var(--font-mono);
+  font-variant-numeric: tabular-nums;
+  color: var(--color-ink-secondary);
+  white-space: nowrap;
+}
+/* Numerals right-align so magnitudes scan — the detail a SQL product's own
+   result table cannot get wrong. */
+.table th:last-child,
+.table td:last-child {
+  text-align: right;
+}
+.table td:last-child {
+  color: var(--color-ink);
+}
+.table tr:last-child td {
+  border-bottom: 0;
+}
+
+.moreRow td {
+  color: var(--color-ink-tertiary);
+  font-size: 0.6875rem;
+}
+
+.verdict {
+  margin-top: 0.625rem;
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  font-family: var(--font-mono);
+  font-size: 0.6875rem;
+  color: var(--color-ink-tertiary);
+}
+.verdictMark {
+  width: 0.75rem;
+  height: 0.75rem;
+  color: var(--color-positive);
+  flex: none;
+}
+
+.sample {
+  display: inline-flex;
+  align-items: center;
+  padding: 0.0625rem 0.375rem;
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-xs);
+  background: var(--color-surface);
+  font-family: var(--font-mono);
+  font-size: 0.625rem;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+  color: var(--color-ink-tertiary);
+}
+
+/* ---- floating evidence cards -------------------------------------------
+   Absolutely positioned over the stage's corners from `xl`, where there is
+   genuine margin either side of a 1160px frame. Below that they become an
+   ordinary row beneath the stage: a card overlapping a 360px-wide product
+   surface hides the product it is supposed to be evidence for. */
+
+.evidence {
+  margin-top: 1rem;
+  display: grid;
+  gap: 0.625rem;
+  grid-template-columns: 1fr;
+}
+
+@media (min-width: 34rem) {
+  .evidence {
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+  }
+}
+
+@media (min-width: 80rem) {
+  .evidence {
+    display: contents;
+  }
+}
+
+.card {
+  z-index: 2;
+  display: flex;
+  flex-direction: column;
+  gap: 0.25rem;
+  padding: 0.6875rem 0.875rem;
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-md);
+  background: var(--color-surface);
+  box-shadow: var(--shadow-float);
+}
+
+@media (min-width: 80rem) {
+  .card {
+    position: absolute;
+    width: 15.5rem;
+  }
+  /* Two right, one left — asymmetric, because three cards placed symmetrically
+     read as a decorative frame rather than as annotations. VERTICAL positions
+     are chosen against the console's own layout: the step rows and the query
+     panel are left-aligned text with empty right halves, so a card there
+     annotates; a card over the RUN header occluded its "4 steps · 1.2s" meta. */
+  .card0 {
+    top: 8.5rem;
+    right: -5.5rem;
+  }
+  .card1 {
+    bottom: -1.75rem;
+    left: -5rem;
+  }
+  .card2 {
+    top: 21.5rem;
+    right: -4.5rem;
+  }
+}
+
+@media (min-width: 90rem) {
+  .card0 {
+    right: -6.5rem;
+  }
+  .card1 {
+    left: -6.25rem;
+  }
+  .card2 {
+    right: -6.5rem;
+  }
+}
+
+.cardLabel {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.5rem;
+  font-family: var(--font-mono);
+  font-size: 0.6875rem;
+  letter-spacing: 0.05em;
+  text-transform: uppercase;
+  color: var(--color-ink);
+}
+/* The icon sits in a small tinted chip — the card's one coloured detail. */
+.cardChip {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 1.375rem;
+  height: 1.375rem;
+  flex: none;
+  border-radius: var(--radius-sm);
+  border: 1px solid color-mix(in srgb, var(--color-accent) 28%, transparent);
+  background: var(--color-accent-soft);
+  color: var(--color-accent);
+}
+.cardMark {
+  width: 0.8125rem;
+  height: 0.8125rem;
+  flex: none;
+}
+.cardBody {
+  font-size: 0.8125rem;
+  line-height: 1.45;
+  color: var(--color-ink-secondary);
+}

@@ -5,7 +5,8 @@ import { createPortal } from "react-dom";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { Menu, X } from "lucide-react";
-import { NAV } from "@/config/nav";
+import { NAV, PRIMARY_CTA } from "@/config/nav";
+import { buttonVariants } from "@/components/ui/button";
 
 const DESKTOP_QUERY = "(min-width: 64rem)";
 
@@ -33,8 +34,13 @@ export function MobileNav() {
   const panelRef = useRef<HTMLDivElement>(null);
   const toggleRef = useRef<HTMLButtonElement>(null);
   const afterCloseRef = useRef<(() => void) | null>(null);
+  const closeFallbackRef = useRef<ReturnType<typeof setTimeout> | null>(null);
 
   const finishClose = useCallback(() => {
+    if (closeFallbackRef.current !== null) {
+      clearTimeout(closeFallbackRef.current);
+      closeFallbackRef.current = null;
+    }
     visibleRef.current = false;
     mountedRef.current = false;
     setVisible(false);
@@ -52,6 +58,14 @@ export function MobileNav() {
     }
     visibleRef.current = false;
     setVisible(false);
+    // Fallback unmount. The normal path waits for the panel's opacity
+    // `transitionend`, but a close that lands in the same frame as the open
+    // (Escape during the opening rAF) runs NO transition — start and end
+    // styles are equal — so the event never fires and the dialog would stay
+    // mounted forever. The timer is the guarantee; transitionend arriving
+    // first simply cancels it in finishClose.
+    if (closeFallbackRef.current !== null) clearTimeout(closeFallbackRef.current);
+    closeFallbackRef.current = setTimeout(finishClose, 400);
   }, [finishClose]);
 
   const openMenu = () => {
@@ -160,7 +174,7 @@ export function MobileNav() {
         // aria-controls would point at an element that isn't in the document.
         aria-controls={mounted ? "mobile-menu" : undefined}
         onClick={openMenu}
-        className="icon-btn inline-flex h-11 w-11 items-center justify-center rounded-[var(--radius-md)] text-ink-secondary hover:text-ink"
+        className="icon-btn inline-flex h-11 w-11 items-center justify-center rounded-[var(--radius-sm)] text-ink-secondary hover:text-ink"
       >
         <Menu size={20} strokeWidth={1.5} aria-hidden />
       </button>
@@ -172,7 +186,7 @@ export function MobileNav() {
             <div
               role="presentation"
               onClick={closeMenu}
-              className={`absolute inset-0 bg-ink/20 transition-opacity duration-fast ease-[var(--ease-out)] motion-reduce:transition-none ${
+              className={`absolute inset-0 bg-[var(--scrim)] transition-opacity duration-fast ease-[var(--ease-out)] motion-reduce:transition-none ${
                 visible ? "opacity-100" : "opacity-0"
               }`}
             />
@@ -201,12 +215,12 @@ export function MobileNav() {
                   <h2 id="mobile-menu-title" className="text-sm font-medium text-ink">
                     Menu
                   </h2>
-                  <p className="font-mono text-xs text-ink-tertiary">Five essential pages</p>
+                  <p className="font-mono text-xs text-ink-tertiary">Primary pages</p>
                 </div>
                 <button
                   type="button"
                   onClick={closeMenu}
-                  className="inline-flex min-h-11 items-center gap-1.5 rounded-[var(--radius-md)] px-2 text-sm text-ink-secondary transition-colors hover:text-ink"
+                  className="inline-flex min-h-11 items-center gap-1.5 rounded-[var(--radius-sm)] px-2 text-sm text-ink-secondary transition-colors hover:text-ink"
                 >
                   Close
                   <X size={17} strokeWidth={1.5} aria-hidden />
@@ -228,7 +242,7 @@ export function MobileNav() {
                           onClick={closeMenu}
                           aria-current={active ? "page" : undefined}
                           data-menu-autofocus={active ? "" : undefined}
-                          className={`flex min-h-11 items-center justify-between rounded-[var(--radius-md)] px-3 text-base transition-colors ${
+                          className={`flex min-h-11 items-center justify-between rounded-[var(--radius-sm)] px-3 text-base transition-colors ${
                             active
                               ? "bg-bg-subtle font-medium text-ink"
                               : "text-ink-secondary hover:bg-bg-subtle hover:text-ink"
@@ -244,6 +258,20 @@ export function MobileNav() {
                   })}
                 </ul>
               </nav>
+              {/* The header's primary action follows the visitor into the menu.
+                  It is the first thing under the links, not a fifth row in
+                  them — the hierarchy the header sets has to survive the
+                  breakpoint that hides it. */}
+              <div className="border-t border-border p-2">
+                <Link
+                  href={PRIMARY_CTA.href}
+                  prefetch={false}
+                  onClick={closeMenu}
+                  className={`${buttonVariants("primary", "lg")} w-full`}
+                >
+                  {PRIMARY_CTA.label}
+                </Link>
+              </div>
               <div className="border-t border-border p-2">
                 <button
                   type="button"
@@ -252,7 +280,7 @@ export function MobileNav() {
                       window.dispatchEvent(new CustomEvent("open-assistant"));
                     closeMenu();
                   }}
-                  className="flex min-h-11 w-full items-center justify-between rounded-[var(--radius-md)] px-3 text-left text-sm text-ink transition-colors hover:bg-bg-subtle"
+                  className="flex min-h-11 w-full items-center justify-between rounded-[var(--radius-sm)] px-3 text-left text-sm text-ink transition-colors hover:bg-bg-subtle"
                 >
                   <span>Ask this site</span>
                   <span className="font-mono text-xs text-ink-tertiary">Grounded · cited</span>

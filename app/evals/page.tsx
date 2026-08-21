@@ -1,12 +1,12 @@
 import type { Metadata } from "next";
 import Link from "next/link";
-import { ArrowUpRight } from "lucide-react";
+import { ArrowUpRight, Check } from "lucide-react";
 import { Section } from "@/components/layout/section";
 import { PageHeader } from "@/components/ui/page-header";
 import { PAGE_BODY_BAND, PAGE_HEADER_BAND } from "@/constants/page";
 import { SITE } from "@/config/site";
 import { formatDate } from "@/lib/format";
-import { evals, evalsIntro } from "@/content/evals";
+import { evalAnchor, evals, evalsIntro } from "@/content/evals";
 import type { EvalRow } from "@/content/schema";
 
 export const metadata: Metadata = {
@@ -42,7 +42,7 @@ function Status({
   const dashed = status === "planned";
   return (
     <span
-      className={`inline-flex items-center gap-1.5 rounded-[var(--radius-sm)] border px-2.5 py-0.5 font-mono text-xs tabular-nums text-ink-tertiary ${
+      className={`inline-flex items-center gap-1.5 rounded-[var(--radius-xs)] border px-2.5 py-0.5 font-mono text-xs tabular-nums text-ink-tertiary ${
         dashed ? "border-dashed border-border-strong" : "border-border-strong"
       }`}
     >
@@ -73,23 +73,22 @@ function ResultLink({
   );
 }
 
-function evalId(e: EvalRow) {
-  return `${e.system}-${e.benchmark}`
-    .toLowerCase()
-    .replace(/[^a-z0-9]+/g, "-")
-    .replace(/(^-|-$)/g, "");
-}
+
 
 /**
- * A single eval as a "leaderboard" card: the measured RESULT is the focal point
- * (large mono, `positive` when a real run is complete), the system/benchmark/
- * metric label it, and the honest note is the method footnote. Elevated with the
- * shared surface depth so the registry reads as a scoreboard, not a spreadsheet.
+ * A single eval as a registry row: the measured RESULT is the focal point, the
+ * system/benchmark/metric label it, and the honest note is the method footnote.
+ *
+ * The result is set in INK, not in the positive colour. Rendering every complete
+ * row green turned an honest registry into a wall of approval — a colour-only
+ * signal saying "all good" about numbers whose entire point is that some of them
+ * are not, and that one of them replaced a flattering figure with a lower true
+ * one. Completion is carried by a status chip that says the word instead.
  */
 function EvalCard({ e }: { e: EvalRow }) {
   return (
     <li
-      id={evalId(e)}
+      id={evalAnchor(e)}
       className="scroll-mt-28 rounded-[var(--radius-md)] border border-border bg-surface p-6 shadow-[var(--shadow-surface)]"
     >
       <div className="grid gap-x-8 gap-y-5 md:grid-cols-[1fr_auto]">
@@ -107,15 +106,19 @@ function EvalCard({ e }: { e: EvalRow }) {
             </span>
           ) : null}
         </div>
-        <div className="flex flex-col gap-1 border-border md:min-w-[10rem] md:border-l md:pl-8 md:text-right">
+        <div className="flex flex-col gap-2 border-border md:min-w-[13rem] md:max-w-[17rem] md:items-end md:border-l md:pl-8 md:text-right">
           {e.status === "complete" ? (
-            <span className="font-mono text-2xl font-medium tabular-nums text-positive">
-              {e.result}
-            </span>
+            <>
+              <span className="font-mono text-[1.375rem] leading-tight tabular-nums tracking-[-0.02em] text-ink">
+                {e.result}
+              </span>
+              <span className="inline-flex items-center gap-1.5 rounded-[var(--radius-pill)] border border-border bg-bg-subtle px-2 py-0.5 font-mono text-xs text-ink-secondary">
+                <Check size={11} strokeWidth={2.5} aria-hidden className="text-positive" />
+                measured
+              </span>
+            </>
           ) : (
-            <span className="md:self-end">
-              <Status status={e.status} result={e.result} />
-            </span>
+            <Status status={e.status} result={e.result} />
           )}
           <time className="font-mono text-xs text-ink-tertiary">
             {e.date ? formatDate(e.date) : "—"}
@@ -154,7 +157,32 @@ export default function EvalsPage() {
           ))}
         </div>
 
-        <ul aria-label="Evaluation registry" className="mt-10 flex flex-col gap-4">
+        {/* How to read a row — the definitions, before the readings. Without
+            these, "execution accuracy" and "exact match" look like synonyms, and
+            the difference between them is the argument this page is making. */}
+        <dl className="mt-10 grid gap-x-10 gap-y-4 border-y border-border py-6 sm:grid-cols-2 lg:grid-cols-3">
+          {[
+            {
+              term: "Execution accuracy",
+              def: "The generated query is RUN against the real database and its result set is compared — not its text.",
+            },
+            {
+              term: "Exact match",
+              def: "The returned rows are identical to the reference. An extra correct column still counts as a miss.",
+            },
+            {
+              term: "Fail-closed refusal",
+              def: "An unsafe or out-of-scope prompt is rejected before execution rather than answered approximately.",
+            },
+          ].map((d) => (
+            <div key={d.term}>
+              <dt className="font-mono text-xs uppercase tracking-[0.06em] text-ink">{d.term}</dt>
+              <dd className="mt-1.5 text-sm leading-relaxed text-ink-secondary">{d.def}</dd>
+            </div>
+          ))}
+        </dl>
+
+        <ul aria-label="Evaluation registry" className="mt-8 flex flex-col gap-4">
           {evals.map((e) => (
             <EvalCard key={`${e.system}-${e.benchmark}`} e={e} />
           ))}

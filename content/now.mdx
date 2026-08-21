@@ -1,6 +1,13 @@
 ---
 updated: "2026-07-10"
 lede: "A running snapshot of what I'm building, exploring, and reading — updated by hand, not scraped. Inspired by Derek Sivers' /now page."
+exploring:
+  - title: "Golden-query evals for text-to-SQL"
+    body: "Execution accuracy against a real database, not string-matching against a reference query."
+  - title: "Model Context Protocol for typed tool-use"
+    body: "Tool contracts as a protocol between agents, rather than bespoke glue per integration."
+  - title: "Long context vs. retrieval"
+    body: "When a bigger window still loses to a small, scoped prompt — and how to tell in advance."
 ---
 
 ## Building now
@@ -9,14 +16,8 @@ lede: "A running snapshot of what I'm building, exploring, and reading — updat
 - **This site as a product** — turning the portfolio into a running notebook: [Notes](/notes), a public [eval registry](/evals), and the grounded, cited "Ask this site" assistant, all on the same $0 stack.
 - **Keeping four products live** — [DBWhisper](/work/dbwhisper), [TradePulse](/work/tradepulse), [CrownWager](/work/crownwager), and [LLM Studio](/work/llm-studio) are deployed and maintained, not screenshots.
 
-## Exploring
-
-- Golden-query evals for text-to-SQL — execution accuracy, not vibes.
-- Model Context Protocol (MCP) for typed tool-use across agents.
-- Long-context vs. retrieval — when a bigger window still loses to a small, scoped prompt.
-- Agent memory beyond flat conversation summaries.
-
 ## Reading
 
 - The **Model Context Protocol** specification — typed tool-use as a protocol, not per-agent glue.
 - **Spider** (Yu et al., 2018) — the cross-domain text-to-SQL benchmark I'm measuring DBWhisper against.
+- **Agent memory beyond flat conversation summaries** — what actually survives a long session, and what should.

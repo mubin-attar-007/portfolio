@@ -17,7 +17,7 @@ import type { ReactNode } from "react";
  */
 export function Tag({ children }: { children: ReactNode }) {
   return (
-    <span className="inline-flex items-center gap-1.5 whitespace-nowrap rounded-[var(--radius-sm)] border border-border bg-surface px-2 py-0.5 font-mono text-xs text-ink-secondary">
+    <span className="inline-flex items-center gap-1.5 whitespace-nowrap rounded-[var(--radius-xs)] border border-border bg-surface px-2 py-0.5 font-mono text-xs text-ink-secondary">
       {children}
     </span>
   );

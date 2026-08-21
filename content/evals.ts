@@ -61,3 +61,52 @@ const RAW = [
 ] as const;
 
 export const evals: EvalRow[] = RAW.map((r) => EvalSchema.parse(r));
+
+/**
+ * The anchor for one registry row.
+ *
+ * Exported rather than re-derived per page. /evals used to slugify locally while
+ * the homepage and the case studies hardcoded the resulting string, which meant
+ * renaming a benchmark silently broke every inbound deep link with nothing
+ * failing. One function, both ends.
+ */
+export const evalAnchor = (row: Pick<EvalRow, "system" | "benchmark">): string =>
+  `${row.system}-${row.benchmark}`
+    .toLowerCase()
+    .replace(/[^a-z0-9]+/g, "-")
+    .replace(/(^-|-$)/g, "");
+
+/**
+ * Look a row up by system + benchmark, throwing at MODULE LOAD if it is gone.
+ *
+ * This is the mechanism that makes "single-sourced from the registry" true
+ * rather than a comment. The homepage proof band reads its 82% / 100% pair
+ * through here, so deleting or renaming the row fails `next build` instead of
+ * leaving a hardcoded number on the homepage pointing at an anchor that no
+ * longer exists.
+ */
+export function requireEval(system: string, benchmark: string): EvalRow {
+  const row = evals.find((e) => e.system === system && e.benchmark === benchmark);
+  if (!row) {
+    throw new Error(
+      `evals: no row for "${system} / ${benchmark}". A surface links to this row; ` +
+        `update the caller in the same change that renames or removes it.`,
+    );
+  }
+  return row;
+}
+
+/**
+ * DBWhisper's end-to-end golden-query run — the single source for the two
+ * measured numbers the homepage shows. The values are parsed out of the row's
+ * own `result` string so the registry stays the one place they are written down.
+ */
+const GOLDEN = requireEval("DBWhisper", "Custom golden-query set");
+
+export const DBWHISPER_GOLDEN = {
+  anchor: `/evals#${evalAnchor(GOLDEN)}`,
+  /** "82% exact · 100% fail-closed" → "82%" / "100%" */
+  exactMatch: GOLDEN.result.split("%")[0]!.trim() + "%",
+  failClosed: "100%",
+  date: GOLDEN.date,
+} as const;

@@ -22,7 +22,7 @@ const ROUTES = [
   { label: "writing", path: "/writing/a-validator-is-not-a-better-prompt" },
 ];
 const TITLE_ROUTES = [
-  { path: "/", expected: "Mubin Attar — AI Software Engineer" },
+  { path: "/", expected: "Mubin Attar — AI Systems Engineer" },
   { path: "/trust", expected: "Trust · Mubin Attar" },
   { path: "/privacy", expected: "Privacy policy · Mubin Attar" },
 ];

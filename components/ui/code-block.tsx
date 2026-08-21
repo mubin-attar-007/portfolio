@@ -44,7 +44,7 @@ export async function CodeBlock({
         <div className="flex min-w-0 items-baseline gap-2.5">
           <span className="truncate font-mono text-xs text-ink-secondary">{filename ?? lang}</span>
           {filename ? (
-            <span className="shrink-0 rounded-[var(--radius-sm)] border border-border px-1.5 font-mono text-xs text-ink-tertiary">
+            <span className="shrink-0 rounded-[var(--radius-xs)] border border-border px-1.5 font-mono text-xs text-ink-tertiary">
               {lang}
             </span>
           ) : null}

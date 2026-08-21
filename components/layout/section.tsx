@@ -2,32 +2,34 @@ import type { ReactNode } from "react";
 import { Container } from "./container";
 
 /**
- * Section — vertical rhythm primitive. `tone` drives the light/dark section
- * rhythm (DESIGN §4). `invert` is a full dark band: it scopes the dark colour
- * tokens locally so every child component adapts.
+ * Section — the vertical-rhythm primitive.
  *
- * Props:
- * - `space` (sm|md|lg) — vertical padding. Pick per section so ADJACENT sections
- *   don't both spend `lg` and stack into a 400px void; `lg` is for the page's
- *   bookends (hero, final close), `md` is the body default, `sm` joins two bands
- *   that belong together.
- * - `tone` (page|subtle|invert)
- * - `notch` (graded edge, defaults on for invert), `bleed`, `id`, `ariaLabel`,
- *   `className`.
+ * `space` picks the band's padding. Pick per section so two ADJACENT bands don't
+ * both spend `lg` and stack into a dead screen: `lg` is for a page's bookends
+ * (hero, closing CTA), `md` is the body default, `sm` joins two bands that
+ * belong together, `xs` is half a header seam.
  *
- * Accent gradients, texture grids, and decorative glows are intentionally not
- * available here; hierarchy comes from type, spacing, flat tone changes, and
- * hairlines (DESIGN §9).
+ * The rhythm is slightly ASYMMETRIC — a little more weight below than above — so
+ * a band reads as a finished plate rather than as content floating between two
+ * equal voids. It is far tighter than the previous 128/172 pair, which produced
+ * genuinely blank screens between sections.
+ *
+ * `tone="invert"` is a full dark band: it scopes the dark ramp locally
+ * (`.tone-invert`, globals.css) so every token-driven child adapts with no
+ * per-component dark variant. The homepage spends at most two of these.
+ *
+ * The old `notch` prop and its graticule seam are gone. The device drew a
+ * tick-scale at every light↔dark boundary; it read as instrument chrome and
+ * competed with the content it framed. A dark plate does not need a device to
+ * announce that it started.
+ *
+ * Accent gradients, texture grids and decorative glows are intentionally not
+ * available here. Hierarchy comes from type, spacing, flat tone changes and
+ * hairlines; the one ambient-light treatment belongs to the three motif
+ * surfaces, which own it themselves.
  */
-/**
- * Vertical rhythm is ASYMMETRIC: the bands run 128px above, 172px below. Two
- * equal paddings make adjacent sections pool into one undifferentiated gap —
- * the extra weight underneath is what closes a section off, so each band reads
- * as a finished plate rather than as content floating between two voids. The
- * hero inverts this (heavier above than below) and sets its own bottom padding
- * at the call site.
- */
-const SPACE: Record<"sm" | "md" | "lg", string> = {
+const SPACE: Record<"xs" | "sm" | "md" | "lg", string> = {
+  xs: "pt-[var(--space-section-xs)] pb-[var(--space-section-xs)]",
   sm: "pt-[var(--space-section-sm)] pb-[var(--space-section-md)]",
   md: "pt-[var(--space-section-md)] pb-[var(--space-section-md-end)]",
   lg: "pt-[var(--space-section-lg)] pb-[var(--space-section-lg-end)]",
@@ -42,28 +44,28 @@ const TONE: Record<"page" | "subtle" | "invert", string> = {
 export function Section({
   space = "md",
   tone = "page",
-  notch,
   bleed = false,
   id,
   ariaLabel,
+  ariaLabelledBy,
   className = "",
   children,
 }: {
-  space?: "sm" | "md" | "lg";
+  space?: "xs" | "sm" | "md" | "lg";
   tone?: "page" | "subtle" | "invert";
-  notch?: boolean;
   bleed?: boolean;
   id?: string;
   ariaLabel?: string;
+  ariaLabelledBy?: string;
   className?: string;
   children: ReactNode;
 }) {
-  const notched = (notch ?? tone === "invert") ? "tone-notch" : "";
   return (
     <section
       id={id}
       aria-label={ariaLabel}
-      className={`relative ${SPACE[space]} ${TONE[tone]} ${notched} ${className}`}
+      aria-labelledby={ariaLabelledBy}
+      className={`relative ${SPACE[space]} ${TONE[tone]} ${className}`}
     >
       {bleed ? children : <Container className="relative">{children}</Container>}
     </section>

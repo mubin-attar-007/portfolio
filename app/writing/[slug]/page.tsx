@@ -11,6 +11,7 @@ import {
   NEWSLETTER_ENABLED,
 } from "@/components/features/newsletter-form";
 import { ArticleHeader } from "@/components/ui/article-header";
+import { Breadcrumb } from "@/components/ui/breadcrumb";
 import { ArticleFooter } from "@/components/ui/article-footer";
 import { ARTICLE_KICKER, ARTICLE_META } from "@/content/article";
 
@@ -75,6 +76,7 @@ export default async function WritingPost({ params }: { params: Promise<{ slug: 
           { name: meta.title, url },
         ]}
       />
+      <Breadcrumb parent={{ label: "Writing", href: "/writing" }} current={meta.title} />
       <article className="max-w-[var(--width-prose)]">
         <ArticleHeader
           kicker={ARTICLE_KICKER.writing(meta.category, readingMinutes)}

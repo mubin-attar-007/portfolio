@@ -1,13 +1,12 @@
 import type { Metadata } from "next";
 import type { ReactNode } from "react";
-import Link from "next/link";
 import { notFound } from "next/navigation";
-import { ArrowLeft, ArrowUpRight } from "lucide-react";
+import { ArrowUpRight } from "lucide-react";
 import { Section } from "@/components/layout/section";
 import { Figure } from "@/components/ui/figure";
 import { ArticleHeader } from "@/components/ui/article-header";
 import { ArticleFooter } from "@/components/ui/article-footer";
-import { Metric, MetricsRow } from "@/components/ui/metric";
+import { MetricCards } from "@/components/ui/metric";
 import { buttonVariants } from "@/components/ui/button";
 import { projects, projectBySlug, projectNeighbours } from "@/content/projects";
 import { PROJECT_STATUS_LABEL } from "@/content/article";
@@ -27,6 +26,7 @@ import { DemoPosterPreload } from "@/components/case-studies/demo-poster-preload
 import { CaseStudyReadingOutline } from "@/components/case-studies/reading-outline";
 import { type CaseStudySection } from "@/components/case-studies/section";
 import { BreadcrumbJsonLd, ProjectJsonLd } from "@/components/seo/json-ld";
+import { Breadcrumb } from "@/components/ui/breadcrumb";
 type CaseStudyTemplate = {
   Body: () => ReactNode;
   sections: readonly CaseStudySection[];
@@ -142,16 +142,7 @@ export default async function CaseStudyPage({ params }: { params: Promise<{ slug
           ]}
         />
         {demo ? <DemoPosterPreload href={`/demos/${slug}.webp`} /> : null}
-        <nav
-          aria-label="Breadcrumb"
-          className="relative z-10 mb-8 font-mono text-xs text-ink-tertiary"
-        >
-          <Link href="/work" className="inline-flex items-center gap-1 hover:text-ink">
-            <ArrowLeft size={13} strokeWidth={1.5} /> Work
-          </Link>
-          <span className="px-2">/</span>
-          <span className="text-ink-secondary">{p.title}</span>
-        </nav>
+        <Breadcrumb parent={{ label: "Work", href: "/work" }} current={p.title} />
 
         {/* The status is the kicker; role and timeline drop to the meta row, which
           is where the other two article templates put their document facts. One
@@ -192,20 +183,11 @@ export default async function CaseStudyPage({ params }: { params: Promise<{ slug
       <Section space="lg" className={PAGE_BODY_BAND}>
         <div className="xl:grid xl:grid-cols-[minmax(0,1fr)_17rem] xl:gap-10">
           <div id="work-case-study-content">
-            <MetricsRow>
-              {p.metrics.map((m) => (
-                <Metric
-                  key={m.label}
-                  label={m.label}
-                  after={m.value}
-                  method={m.method}
-                  methodHref="#performance-cost"
-                />
-              ))}
-            </MetricsRow>
-
+            {/* §9 order: the product FIRST, then the numbers it earned. Opening
+                on three figures asks the reader to trust a claim before they
+                have seen the thing making it. */}
             {demo ? (
-              <div className="mt-10 max-w-[var(--width-prose)]">
+              <div className="max-w-[var(--width-prose)]">
                 <Figure
                   caption={
                     <>
@@ -249,6 +231,13 @@ export default async function CaseStudyPage({ params }: { params: Promise<{ slug
                 </Figure>
               </div>
             ) : null}
+
+            {/* Pull-out metric cards. Every method line links to the chapter
+                that derives it, so the reader can jump from a claim to its
+                working rather than taking the number on trust. */}
+            <div className={demo ? "mt-10" : ""}>
+              <MetricCards metrics={p.metrics} methodHref="#performance-cost" />
+            </div>
 
             {/* No top margin: the body's first `<CS>` heading carries the section gap
                 itself (PROSE.h2's `mt-14`), the same as the first heading in an MDX

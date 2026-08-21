@@ -1,5 +1,4 @@
 import Link from "next/link";
-import { ArrowUpRight } from "lucide-react";
 import { Container } from "./container";
 import { BoundaryMark } from "@/components/ui/boundary-mark";
 import { LABEL } from "@/constants/page";
@@ -7,21 +6,20 @@ import { SITE, STATUS, FOOTER } from "@/config/site";
 import { FOOTER_NAV } from "@/config/nav";
 
 /**
- * Footer — a considered footer anatomy for a personal brand: an identity
- * column on the left (where a product parks its logo; we spend it on a serif
- * sign-off, one clear way to reach me, and the availability line), a concise
- * hiring-oriented link map on the right, then ONE hairline and a colophon bar.
- * The footer carries no background of its own and no top border: it is the
- * quiet end of the page surface, separated by whitespace (and, on the
- * homepage, by the dark close's chamfered bottom seam).
+ * Footer — compact by design.
  *
- * Density follows a measured rhythm: 36px from a column heading to its first
- * link, 28px link pitch (20px line + 8px gap), links in full-ink so the map
- * reads crisp against the tertiary headings.
+ * This is a personal site, not a multi-product company, so it gets a personal
+ * footer: an identity column (mark, name, one-line positioning, the literal
+ * email, the availability line) and a short two-column link map. No sitemap, no
+ * newsletter block, no decorative serif quote — every one of those is a
+ * corporate-footer reflex that would make the page end louder than it started.
  *
- * A11y: <footer> landmark; each link group is a labelled nav landmark; every
- * link is keyboard-operable with a visible focus ring; the status dot is
- * decorative.
+ * The footer carries no background of its own and no top border: it is the quiet
+ * end of the page surface, separated by whitespace and closed by one hairline
+ * above the colophon.
+ *
+ * A11y: a `<footer>` landmark; each link group is its own labelled `<nav>`; the
+ * status dot is decorative and the sentence beside it carries the meaning.
  */
 type FLink = { label: string; href: string };
 
@@ -31,60 +29,52 @@ const PROFILES: FLink[] = [
   { label: "Hugging Face", href: SITE.socials.huggingface },
 ];
 
-/** One column of the link map — shared by internal groups and the profiles. */
-const FOOTER_LINK = "text-sm text-ink transition-colors hover:text-ink-secondary";
+const FOOTER_LINK =
+  "text-sm text-ink-secondary transition-colors duration-fast ease-[var(--ease-out)] hover:text-ink";
 
 export function Footer({ year }: { year: number }) {
   return (
-    <footer className="bg-bg">
-      {/* Asymmetric: weight at the top where the identity column lands, less
-          underneath the colophon — a footer padded evenly ends in a dead strip. */}
-      <Container className="pb-10 pt-16 sm:pb-12 sm:pt-20">
+    <footer className="border-t border-border bg-bg">
+      <Container className="pb-10 pt-14 sm:pb-12 sm:pt-16">
         <div className="grid gap-y-12 md:grid-cols-[minmax(0,1fr)_auto] md:gap-x-16">
-          {/* Identity — the personal replacement for a product's logo column:
-              sign-off to the reader who scrolled the evidence, one invitation,
-              the literal email, and the availability line. */}
-          <div className="max-w-[40ch]">
+          {/* Identity — the personal replacement for a product's logo column. */}
+          <div className="max-w-[38ch]">
             <Link
               href="/"
               prefetch={false}
-              className="inline-flex items-center gap-2 font-mono text-sm font-medium tracking-tight text-ink"
+              className="inline-flex items-center gap-2 text-[0.9375rem] font-semibold tracking-[-0.017em] text-ink"
             >
-              <BoundaryMark size={17} className="text-ink" />
+              <BoundaryMark size={18} className="text-accent" />
               {SITE.name}
             </Link>
-            <p className="mt-5 font-serif text-2xl italic leading-snug text-ink">
-              {FOOTER.signoff}
+            <p className="mt-4 text-sm leading-relaxed text-ink-secondary">
+              {FOOTER.positioning}
             </p>
-            <p className="mt-3 max-w-[36ch] text-sm text-ink-secondary">{FOOTER.invite}</p>
-            <p className="mt-8">
+            <p className="mt-5">
               <a
                 href={`mailto:${SITE.email}`}
-                className="group inline-flex items-center gap-2 text-base text-ink"
+                className="text-sm font-medium text-ink"
               >
                 <span className="link-underline">{SITE.email}</span>
-                <ArrowUpRight
-                  size={16}
-                  strokeWidth={1.5}
-                  className="text-ink-tertiary transition-colors duration-fast ease-[var(--ease-out)] group-hover:text-accent"
-                  aria-hidden
-                />
               </a>
+              <span className="ml-2 text-sm text-ink-tertiary">{FOOTER.invite}</span>
             </p>
-            <p className="mt-4 inline-flex items-center gap-2 font-mono text-xs text-ink-tertiary">
-              <span className="h-1.5 w-1.5 rounded-full bg-positive" aria-hidden />
+            <p className="mt-5 inline-flex items-start gap-2 font-mono text-xs leading-relaxed text-ink-tertiary">
+              <span
+                aria-hidden
+                className="mt-[0.4rem] h-1.5 w-1.5 shrink-0 rounded-[var(--radius-pill)] bg-positive"
+              />
               {STATUS.text}
             </p>
           </div>
 
-          {/* The link map is a shortlist, not a sitemap. Secondary profile and
-              process routes remain available contextually from the pages where
-              they make sense. */}
-          <div className="grid grid-cols-2 gap-x-8 gap-y-10 sm:grid-cols-3 md:gap-x-14 lg:gap-x-16">
+          {/* A shortlist, not a second sitemap. Reference routes stay reachable
+              from the pages that need them. */}
+          <div className="grid grid-cols-2 gap-x-10 gap-y-10 sm:grid-cols-3 md:gap-x-14">
             {FOOTER_NAV.map((group) => (
               <nav key={group.heading} aria-label={group.heading}>
                 <h2 className={LABEL}>{group.heading}</h2>
-                <ul className="mt-5 flex flex-col gap-2">
+                <ul className="mt-4 flex flex-col gap-2.5">
                   {group.links.map((l) => (
                     <li key={l.href}>
                       <Link href={l.href} prefetch={false} className={FOOTER_LINK}>
@@ -97,7 +87,7 @@ export function Footer({ year }: { year: number }) {
             ))}
             <nav aria-label="Elsewhere">
               <h2 className={LABEL}>Elsewhere</h2>
-              <ul className="mt-5 flex flex-col gap-2">
+              <ul className="mt-4 flex flex-col gap-2.5">
                 {PROFILES.map((l) => (
                   <li key={l.label}>
                     <a
@@ -115,17 +105,16 @@ export function Footer({ year }: { year: number }) {
           </div>
         </div>
 
-        {/* Colophon — ONE hairline-separated bottom bar: © left, the build
-            credits right. The hairline is `.rule-fade` (dies before the
-            gutter) rather than a border, so the bar closes the page without
-            boxing it in. */}
-        <hr className="rule-fade mt-14" />
-        <div className="mt-8 flex flex-col gap-3 font-mono text-xs text-ink-tertiary sm:flex-row sm:items-center sm:justify-between">
+        {/* Colophon — one hairline, then a single bottom bar. The rule is
+            `.rule-fade` (it dies before the gutter) rather than a border, so the
+            bar closes the page without boxing it in. */}
+        <hr className="rule-fade mt-12" />
+        <div className="mt-6 flex flex-col gap-3 font-mono text-xs text-ink-tertiary sm:flex-row sm:items-center sm:justify-between">
           <span>
             © {year} {SITE.name} · {SITE.location}
           </span>
           <span className="flex flex-wrap items-center gap-x-5 gap-y-1">
-            <span>Built with Next.js, TypeScript &amp; Tailwind</span>
+            <span>Built with Next.js &amp; Tailwind</span>
             <Link href="/trust" prefetch={false} className="transition-colors hover:text-ink">
               Trust
             </Link>

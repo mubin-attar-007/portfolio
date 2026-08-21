@@ -63,11 +63,11 @@ export function SectionHeading({
   const headingScale =
     Tag === "h2"
       ? centered
-        ? "text-4xl font-semibold text-ink sm:text-band-title"
+        ? "text-4xl font-semibold text-ink sm:text-[length:var(--text-section)] sm:leading-[1.08] sm:tracking-[-0.026em]"
         : size === "compact"
           ? "text-3xl text-ink sm:text-4xl"
-          : "text-4xl text-ink sm:text-5xl"
-      : "text-2xl text-ink sm:text-3xl";
+          : "text-[length:var(--text-section)] leading-[1.08] tracking-[-0.026em] text-ink"
+      : "text-[length:var(--text-sub)] leading-[1.2] tracking-[-0.019em] text-ink";
   return (
     <div className={centered ? "flex flex-col items-center text-center" : "flex flex-col"}>
       {kicker ? (

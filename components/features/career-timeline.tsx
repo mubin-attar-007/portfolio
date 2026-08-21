@@ -58,7 +58,7 @@ export function CareerTimeline() {
               <PhaseRow label={timelineIntro.labels.learned}>{phase.learned}</PhaseRow>
 
               {/* The credibility device — see the component note above. */}
-              <div className="rounded-[var(--radius-sm)] border-l-[length:var(--stripe-width)] border-l-ink bg-bg-subtle px-5 py-4 sm:px-6 sm:py-5">
+              <div className="rounded-[var(--radius-md)] border-l-[length:var(--stripe-width)] border-l-ink bg-bg-subtle px-5 py-4 sm:px-6 sm:py-5">
                 <dt className="font-mono text-xs uppercase tracking-[0.06em] text-ink">
                   {timelineIntro.labels.mistake}
                 </dt>

@@ -70,11 +70,11 @@ export function Assistant() {
         aria-controls={open ? "assistant-panel-dialog" : undefined}
         title="Ask this site — a grounded assistant that answers only from this site's content (case studies, writing, résumé), with citations. Press ⌘K or / to open."
         aria-label="Ask this site — a grounded, cited assistant over this site's content. Press command-K or slash to open."
-        className="icon-btn inline-flex h-11 w-11 items-center justify-center rounded-[var(--radius-md)] text-ink-secondary hover:text-ink lg:h-auto lg:w-auto lg:gap-2 lg:border lg:border-border-strong lg:px-3 lg:py-1.5 lg:text-sm lg:text-ink lg:hover:border-accent"
+        className="icon-btn inline-flex h-11 w-11 items-center justify-center rounded-[var(--radius-md)] text-ink-secondary hover:text-ink xl:h-9 xl:w-auto xl:gap-2 xl:rounded-[var(--radius-sm)] xl:border xl:border-border xl:bg-surface xl:px-2.5 xl:text-[0.8125rem] xl:text-ink-secondary xl:shadow-[var(--shadow-sm)] xl:hover:border-border-strong xl:hover:text-ink"
       >
-        <Sparkles size={18} strokeWidth={1.5} className="lg:hidden" aria-hidden />
-        <span className="hidden lg:inline">Ask this site</span>
-        <kbd className="hidden rounded-[var(--radius-sm)] border border-border bg-bg-subtle px-1.5 font-mono text-[0.7rem] text-ink-tertiary lg:inline">
+        <Sparkles size={18} strokeWidth={1.5} className="xl:hidden" aria-hidden />
+        <span className="hidden xl:inline">Ask this site</span>
+        <kbd className="hidden rounded-[var(--radius-xs)] border border-border bg-bg-subtle px-1.5 font-mono text-[0.7rem] text-ink-tertiary xl:inline">
           ⌘K
         </kbd>
       </button>

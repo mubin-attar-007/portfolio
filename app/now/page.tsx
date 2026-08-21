@@ -57,6 +57,29 @@ export default async function NowPage() {
       <Section space="md" className={PAGE_BODY_BAND}>
         <div className="reveal max-w-[var(--width-prose)]">{content}</div>
 
+        {/* "Exploring" is structured front-matter rather than a markdown list in
+            the body, because the homepage shows the same three themes. A list
+            that lives in prose can only be duplicated; as data it has one
+            source, and the two surfaces cannot drift apart. */}
+        {meta.exploring.length > 0 ? (
+          <section className="reveal mt-12 max-w-[var(--width-prose)]">
+            <h2 className={LABEL}>{nowPage.exploringTitle}</h2>
+            <ul className="mt-5 flex flex-col gap-3">
+              {meta.exploring.map((item) => (
+                <li
+                  key={item.title}
+                  className="rounded-[var(--radius-md)] border border-border bg-surface p-4 shadow-[var(--shadow-sm)]"
+                >
+                  <h3 className="text-[0.9375rem] font-[550] leading-snug text-ink">
+                    {item.title}
+                  </h3>
+                  <p className="mt-1.5 text-sm leading-relaxed text-ink-secondary">{item.body}</p>
+                </li>
+              ))}
+            </ul>
+          </section>
+        ) : null}
+
         <hr className="rule-fade mt-14 max-w-[var(--width-prose)]" />
 
         {/* Open to — single-sourced from STATUS so it never diverges from /hire

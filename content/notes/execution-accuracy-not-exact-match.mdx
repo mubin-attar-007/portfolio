@@ -7,6 +7,8 @@ source: "https://yale-lily.github.io/spider"
 
 Two SQL queries can be spelled completely differently and return exactly the same rows. So string-matching generated SQL against a reference — *exact-match accuracy* — punishes correct answers for cosmetic reasons.
 
-The metric that matters is **execution accuracy**: run both queries against the database and compare result sets. That's what I'm building the golden-query evals around for DBWhisper, and it's why I'm running it against [Spider](https://yale-lily.github.io/spider), whose harness scores execution.
+The metric that matters is **execution accuracy**: run both queries against the database and compare result sets. That is what DBWhisper's golden-query set scores, and it is why the benchmark run uses [Spider](https://yale-lily.github.io/spider), whose harness scores execution rather than text.
 
-"The model felt right" is not a number. Until the eval runs, the honest state is *in progress* — which is exactly how it's shown on [Evals](/evals), not dressed up as a result I don't have yet.
+Both runs have since completed. The scoped Spider dev run scored 73% (101/139), and the end-to-end golden-query set scored 82% exact result-set match — 95% if you credit answers that returned a correct extra column. That gap between 82% and 95% is the point: *exact* match is a deliberately harsh reading, and publishing the harsh one is the only version worth anything.
+
+"The model felt right" is not a number. Both figures, their methods, and the nine questions a provider rate-limit forced out of the sample are on [Evals](/evals).

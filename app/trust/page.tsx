@@ -1,4 +1,5 @@
 import type { Metadata } from "next";
+import Link from "next/link";
 
 import { Section } from "@/components/layout/section";
 import { PageHeader } from "@/components/ui/page-header";
@@ -25,12 +26,6 @@ export const metadata: Metadata = {
   },
 };
 
-const TRUST_METRICS = [
-  { label: "Signal", value: "4 live production products" },
-  { label: "Signal", value: "Reproducible evals and decision logs" },
-  { label: "Signal", value: "Public changelog for trust-impacting decisions" },
-];
-
 export default function TrustPage() {
   return (
     <>
@@ -48,16 +43,19 @@ export default function TrustPage() {
       </Section>
       <Section space="md" className={PAGE_BODY_BAND}>
         <dl className="divide-y divide-border border-y border-border">
-          {TRUST_METRICS.map((metric, i) => (
+          {trust.signals.map((metric, i) => (
             <div
               key={metric.value}
               className="grid gap-2 py-5 sm:grid-cols-[8rem_1fr] sm:items-baseline sm:gap-8"
               style={stagger(i + 1)}
             >
-              <dt className={LABEL}>
-                {metric.label} {i + 1}
-              </dt>
-              <dd className="text-sm leading-6 text-ink-secondary">{metric.value}</dd>
+              <dt className={LABEL}>{metric.label}</dt>
+              <dd className="text-sm leading-6 text-ink-secondary">
+                {metric.value}{" "}
+                <Link href={metric.href} prefetch={false} className="link-underline text-ink">
+                  Check it
+                </Link>
+              </dd>
             </div>
           ))}
         </dl>

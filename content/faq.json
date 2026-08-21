@@ -2,7 +2,7 @@
   "faq": [
     {
       "question": "What has Mubin actually shipped in production?",
-      "answer": "Four live AI products, each multi-user and running right now on a free-tier stack, plus production healthcare-AI systems at his day job. The four public products are: DBWhisper (a natural-language-to-SQL agent), LLM Studio (a multi-user ChatGPT-style chat SaaS), TradePulse (an honest quant backtesting platform), and CrownWager (an ML-driven sports-analytics platform). At Sevina Technologies he builds and ships production AI and automation systems for healthcare — data-extraction pipelines, a clinical decision-support platform, and GenAI document-analysis assistants. These aren't demos or screenshots; each public product links to the real deployed app and its source.",
+      "answer": "Four live AI products, all running right now on a free-tier stack, plus production healthcare-AI systems at his day job. The four public products are: DBWhisper (a natural-language-to-SQL agent), LLM Studio (a multi-user ChatGPT-style chat SaaS), TradePulse (an honest quant backtesting platform), and CrownWager (an ML-driven sports-analytics platform). At Sevina Technologies he builds and ships production AI and automation systems for healthcare — data-extraction pipelines, a clinical decision-support platform, and GenAI document-analysis assistants. These aren't demos or screenshots; each public product links to the real deployed app and its source.",
       "source": "profile · projects (all four) · Sevina Technologies role"
     },
     {

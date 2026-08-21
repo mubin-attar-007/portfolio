@@ -11,7 +11,7 @@ order: 4
 
 ## Executive Summary
 
-CrownWager is a sports-betting analytics platform (in the spirit of dimers.com) built around a **validated XGBoost NBA moneyline model** and a hard rule: never publish a number you can't defend. It turns model probabilities into fair-odds edge, expected value, and Kelly-sized stakes; finds cross-book arbitrage; and — the part most such products skip — keeps a **verifiable, graded track record** by settling every published pick against the *real* final score. A Claude-powered assistant (CrownBot) answers questions grounded strictly in the current best bets. The whole system is a ground-up rebuild of a legacy monolith that scored 2.3/10 on a 12-dimension assessment, re-architected into a Django/DRF backend, a decoupled FastAPI ML service, and a Next.js frontend — with graceful degradation so the product runs even when every external dependency is down.
+CrownWager is a sports-betting analytics platform (in the spirit of dimers.com) built around a **validated XGBoost NBA moneyline model** and a hard rule: never publish a number you can't defend. It turns model probabilities into fair-odds edge, expected value, and Kelly-sized stakes; finds cross-book arbitrage; and — the part most such products skip — keeps a **verifiable, graded track record** by settling every published pick against the *real* final score. A Claude-powered assistant (CrownBot) answers questions grounded strictly in the current best bets. The whole system is a ground-up rebuild of a legacy monolith I audited and judged unshippable (no rate limiting, secrets in the repo, no auth hardening), re-architected into a Django/DRF backend, a decoupled FastAPI ML service, and a Next.js frontend — with graceful degradation so the product runs even when every external dependency is down.
 
 ## Problem
 
@@ -62,7 +62,7 @@ Django 5.1 + DRF backend  ──► PostgreSQL (odds, best bets, graded results)
 - **Track record grades against reality.** Picks settle only on FINAL scores; results are stored per pick and aggregated by edge tier, with an explicit `insufficient` flag below 20 settled picks. Nothing is backfilled.
 - **`Decimal` money math** across EV, Kelly, and the arbitrage allocator — no floating-point drift in stakes or payouts.
 - **Arbitrage finder** takes the best price per outcome across books and flags a guaranteed profit when `Σ (1/odds) < 1`, sizing each leg proportionally to equalize payout.
-- **Production-hardened rebuild** of a 2.3/10 legacy monolith: proxy-aware per-IP rate limiting, constant-time token comparison, optional admin 2FA (TOTP), DSN-gated Sentry, CSP + error boundaries, and blocking `bandit` + `gitleaks` + dependency audits in CI, with a tested backup/restore runbook.
+- **Production-hardened rebuild** of the legacy monolith: proxy-aware per-IP rate limiting, constant-time token comparison, optional admin 2FA (TOTP), DSN-gated Sentry, CSP + error boundaries, and blocking `bandit` + `gitleaks` + dependency audits in CI, with a tested backup/restore runbook.
 
 ## Lessons
 
