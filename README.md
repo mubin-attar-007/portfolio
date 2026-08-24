@@ -57,23 +57,55 @@ Other scripts:
 npm run build      # production build — fails on invalid content
 npm run lint       # eslint
 npm test           # node:test — lib/ + content schema fixtures
-npm run test:a11y  # axe-core WCAG 2.2 AA gate; needs a server on :3200
 npx tsc --noEmit   # type check
+```
+
+The gates below need a production server on `:3200`
+(`npm run build && PORT=3200 node .next/standalone/server.js`):
+
+```bash
+npm run test:a11y         # axe-core WCAG 2.2 AA — 18 routes x 2 themes x 3 viewports
+npm run test:hue          # accent-drift guard; THEME=light|dark
+npm run test:interaction   # 26 behaviour contracts: reveals, specimen, modals
+npm run test:screens      # 6 widths x 2 themes; horizontal overflow + console errors
+npm run test:print        # /resume prints as a document, not a screenshot
+npm run test:metadata     # OG images, titles, indexing/freshness
+npm run test:lighthouse   # perf/a11y/SEO budgets (CI numbers are the real ones)
 ```
 
 ## Documentation
 
-`/docs` is the source of truth. Start with
-[`12_ARCHITECTURE.md`](docs/12_ARCHITECTURE.md),
-[`02_DESIGN_SYSTEM.md`](docs/02_DESIGN_SYSTEM.md), and
-[`13_DESIGN_DECISIONS.md`](docs/13_DESIGN_DECISIONS.md).
-`spec/` holds the older, longer-form specification and remains useful as
-engineering reference; where the two disagree, `/docs` and `CLAUDE.md` win.
+Start with [`design-system.md`](design-system.md) — the shipped design system,
+kept in step with `styles/tokens.css`.
+
+Every significant decision is an ADR in
+[`spec/decisions/`](spec/decisions/). Read them newest-first; a later ADR that
+amends an earlier one says so in its Status line. The current identity is
+[ADR-011](spec/decisions/ADR-011-evidence-paths-identity.md), the reference
+fidelity work is [ADR-012](spec/decisions/ADR-012-clerk-fidelity.md), the
+palette is [ADR-013](spec/decisions/ADR-013-openrouter-palette.md), and motion,
+disclosure and modal semantics are
+[ADR-014](spec/decisions/ADR-014-motion-and-modality.md).
+
+`spec/` also holds the longer-form specification —
+[`ARCHITECTURE.md`](spec/ARCHITECTURE.md), [`ENGINEERING.md`](spec/ENGINEERING.md),
+[`CONTENT_MODEL.md`](spec/CONTENT_MODEL.md), [`DESIGN.md`](spec/DESIGN.md) — and
+`docs/flagship-transformation/` holds the audit trail from the redesign program.
+Where any two disagree, the newest ADR and `CLAUDE.md` win.
 
 ## CI and deploy
 
 `.github/workflows/ci.yml` runs on every push to `main` and every pull request:
-install → lint → type-check → test → build → **accessibility gate** (axe-core
-across all routes in light and dark). A WCAG 2.2 AA violation fails the build.
+install → type-check → lint → test → build → **browser gates** → Lighthouse.
+
+The browser gates run against one production server and any of them fails the
+build: **accessibility** (axe-core, 18 routes × 2 themes × 3 viewports, plus both
+dialog states), **interaction** (26 behaviour contracts), **accent drift** (both
+themes), and **print**. `npm run test:screens` is deliberately local — it writes
+144 files and is the slowest of the set.
+
+Lighthouse numbers from CI are the ones that count; a local run on a developer
+machine reports performance 20-25 points lower for reasons that do not transfer
+(see ADR-014 § Consequences).
 
 Vercel builds and deploys from `main`. See [`DEPLOY.md`](DEPLOY.md).

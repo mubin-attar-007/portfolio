@@ -78,18 +78,25 @@ flat hex — our tokens feed `color-mix()` and gradients that need a real colour
 and their 44% tier measures 3.1:1, a placeholder tier rather than a body-text
 one.
 
-### The accent has two roles in dark
+### One accent per theme — and the accent belongs to the THEME, not the surface
 
-**Lime is ACTION** — buttons, links, active state, hover answers. **Violet is
-the DISPLAY voice** — the hero accent line. The reference's own `h1` is neutral
-`#fcfcfe` with lime reserved for the primary control; a whole display line in
-lime reads acid, and splitting the roles also keeps the two-line headline device
-continuous across themes.
+Violet `#7624f4` in light, lime `#c8ff00` in dark, and in each theme that accent
+carries **everything**: buttons, links, active state, hover answers, gradients,
+display lines. An earlier build split dark into "lime for action, violet for
+display"; it was overruled, correctly. A visitor does not experience a colour as
+a role — they experience two brand colours on one screen.
 
-A dark BAND inside the light page (`.tone-invert`) keeps the lifted violet
-`#a99cff` (8.3:1): those bands belong to the light theme's scroll, and a lime
-button inside one under a violet button above it would read as two brands on one
-page. The accent is a property of the THEME, not of the surface.
+The one apparent exception is not a second accent. A dark BAND inside the LIGHT
+page (`.tone-invert`) keeps the lifted violet `--dark-accent-band` `#a99cff`
+(8.3:1), because that band belongs to the light theme's scroll — a lime button
+inside it, under a violet button above it, is the same defect mirrored. Inside a
+full-dark document that band is just another dark surface, so
+`:root[data-theme="dark"] .tone-invert` overrides the accent back to lime. That
+override was missing once and shipped visible purple into the dark theme.
+
+Guarded by `npm run test:hue`, which walks 14 routes per theme and fails on any
+computed colour outside that theme's accent family. See
+[ADR-013 § 4](spec/decisions/ADR-013-openrouter-palette.md).
 
 **Accent budget: ≤2 accent elements per viewport.** The primary button and the
 band eyebrow usually spend both.
@@ -175,13 +182,41 @@ differently.
 
 ## 6. Motion
 
-One curve (`--ease-out`), three durations: **micro 150ms · standard 260/320ms ·
-reveal 500ms**. Tailwind reads `--default-transition-*`, so a bare `transition`
-lands on the right curve without per-element easing.
+Durations are a ladder, not a free choice: `--motion-instant` **120ms** (state
+flips) · `--motion-fast` **130ms** (colour, icon nudge) · `--motion-base`
+**200ms** (standard) · `--motion-slow` **300ms** (elevation, disclosure) ·
+`--motion-reveal` **450ms** (component entrance) · `--motion-section` **560ms**
+(section entrance, the slowest thing on the page).
 
-**Permitted:** opacity/transform reveals (≤8px rise, once), a 4px card lift, a
+Two curves, and the split is deliberate. `--ease-out`
+`cubic-bezier(0.4, 0.36, 0, 1)` is tuned for 130–300ms interaction feedback and
+reads abrupt over half a second; `--ease-enter`
+`cubic-bezier(0.16, 1, 0.3, 1)` has the long decelerating tail an entrance
+wants, so a section *arrives* rather than snaps. `--ease-emphasized` and
+`--ease-spring` are the measured reference curves for emphasis and overshoot.
+Tailwind reads `--default-transition-*`, so a bare `transition` lands on
+`--motion-base` + `--ease-out` without per-element easing.
+
+**Permitted:** opacity/transform reveals (≤16px rise, once), a 4px card lift, a
 1.015 product-shot scale, an icon nudge, one slow travelling dash on the hero
-motif, and the stack wall's dwelling cycle.
+motif, the stack wall's dwelling cycle, and the flagship specimen's 2800ms
+stage run (which any manual selection stops permanently).
+
+**The section reveal is inverted, and this is a hard rule.** Only elements that
+were *below the fold at mount* are ever hidden; anything already on screen is
+left alone, and a 1.6s timer unhides everything regardless of what the observer
+did. Two earlier implementations hid content up front and revealed on
+intersection — both blanked the page body in captures. Content is never hidden
+unless JS has already proven, in the same tick, that it can unhide it. See
+[ADR-014 § 1](spec/decisions/ADR-014-motion-and-modality.md).
+
+**Two entrance devices, and which one a page gets is a content decision.** The
+homepage uses the scroll-triggered `[data-reveal]` because it is a long
+argument where sequence is the point. Interior pages use the load-orchestrated
+`.reveal` / `.reveal-stagger`, which fires once on arrival regardless of scroll
+position — because they are documents, and body copy that fades in under a
+reader who is already reading it is a worse experience than no animation at
+all. Both are neutralised in print and under reduced motion.
 
 **Banned:** cursor followers, spotlight-follows-mouse, marquees and logo
 carousels, typewriter effects, tilt cards, scroll-jacking, parallax, animated
@@ -193,9 +228,14 @@ animation. `scripts/a11y.mjs` fails the build if any computed animation or
 transition duration on `/` exceeds **80ms** under reduced motion, or if any
 `.reveal` element is left below `opacity: 0.99`.
 
-Two worked examples: the hero's travelling dash is not *rendered at all* under
+Three worked examples: the hero's travelling dash is not *rendered at all* under
 reduced motion, so it cannot freeze mid-route as an unexplained mark; the stack
-wall's timer never starts, so it renders as a static row of five tools.
+wall's timer never starts, so it renders as a static row of five tools; and the
+flagship specimen keeps every stage selectable but does not render a transport
+at all, because a Play button that cannot play is worse than no button.
+
+`npm run test:interaction` asserts the still poses directly — that nothing is
+hidden, that the reveal never arms, and that no inert transport is rendered.
 
 **One recorded exception:** the disclosure panel transitions
 `grid-template-rows` (a layout property). Animating to an unknown auto height
@@ -239,6 +279,18 @@ Non-negotiables:
 - **No horizontal document overflow** at any tested viewport; the gate throws on
   `scrollWidth > clientWidth + 1`.
 - Touch targets ≥ 44×44px.
+- **A modal makes the rest of the page `inert`** — not just focus-trapped.
+  Trapping `Tab` alone still leaves the document in the accessibility tree, so a
+  screen-reader user can walk out of the dialog by virtual cursor. Applied by
+  `lib/use-inert-background.ts` to `body > header|main|footer`, so the portalled
+  dialog is never caught by its own boundary.
+  Watch the sharp edge: both launchers live in the header, i.e. *inside the
+  inerted subtree*, so focus restoration on close must happen **after** the
+  boundary is released — restoring in the same tick is a silent no-op that
+  strands focus on `<body>`. See
+  [ADR-014 § 4](spec/decisions/ADR-014-motion-and-modality.md).
+- **Disclosure uses native `<details>`.** Keyboard-operable, announced
+  correctly, openable by find-in-page, and prints expanded — for free.
 
 ---
 

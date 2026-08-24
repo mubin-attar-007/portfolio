@@ -57,13 +57,33 @@ what we had:
    lifted violet: those bands are part of the light theme's scroll, and a lime
    button inside one under a violet button above it would read as two brands on
    one page. The lime applies only when the whole document is dark.
-4. **Lime is rationed to ACTION; violet remains the DISPLAY voice.** The first
-   build put the lime on the hero's display line and it read acid — and the
-   measurement says the reference does not do that either: their `h1` is
-   `#fcfcfe`, with lime reserved for the primary control and the logomark. So
-   in dark: lime on buttons, links, active state and hover answers; the violet
-   gradient on the hero accent line, which also keeps the two-line headline
-   device continuous across themes.
+4. **The dark theme is single-accent lime. Superseded — see below.**
+
+   *Originally decided:* lime rationed to ACTION, violet kept as the DISPLAY
+   voice — lime on buttons, links and active state; the violet gradient on the
+   hero accent line, so the two-line headline device stayed continuous across
+   themes. The reasoning was that the reference does the same (their `h1` is
+   `#fcfcfe`, lime reserved for the primary control and the logomark), and that
+   lime on a display line reads acid.
+
+   *Overruled by the owner*, who pointed at the dark hero and the dark
+   "Engineered reliability" band and said the violet should not be there. That
+   is the correct call and the reasoning above was too clever: a visitor does
+   not experience a colour as "the display voice" — they experience two
+   different brand colours on one screen. A theme gets one accent.
+
+   So in dark, `--color-accent` resolves to the lime for **everything**,
+   gradients and display lines included. The violet survives in exactly one
+   place, and it is not a second accent: `--dark-accent-band` is what a dark
+   `.tone-invert` band uses **inside the light page**, where the document accent
+   is still violet and a lime button under a violet button above it would be the
+   same defect in the other direction.
+
+   The defect was invisible to every gate we had — axe checks contrast, the
+   screens sweep checks overflow, and neither notices a stray hue. That is why
+   `scripts/theme-audit.mjs` (`npm run test:hue`) exists: it walks 14 routes per
+   theme and fails on any computed colour outside that theme's accent family.
+   Dark allows 55–100° only.
 5. **The ambient wash stays cool in dark.** A lime glow behind a lime button is
    muddy, and the reference's dark page runs no coloured wash at all — the
    glows fall back to the blue at half strength.
