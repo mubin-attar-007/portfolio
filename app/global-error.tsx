@@ -5,7 +5,7 @@
 // document with what this returns, which means `app/layout.tsx` never runs: no
 // font variables, no `data-theme`, no pre-paint script.
 //
-// That is why the <html> below carries `data-theme="light"` and the same inline
+// That is why the <html> below carries `data-theme="dark"` and the same inline
 // theme script the root layout uses. Without them the failure state rendered
 // theme-less and in a system font — the one screen a visitor sees when something
 // has gone badly wrong was the only screen that looked like a different site.
@@ -29,11 +29,11 @@ type GlobalErrorProps = {
 };
 
 /** Mirrors app/layout.tsx: light is the brand, dark is a remembered choice. */
-const THEME_SCRIPT = `(function(){try{var t=localStorage.getItem('theme');document.documentElement.setAttribute('data-theme',t==='dark'?'dark':'light');}catch(e){}})();`;
+const THEME_SCRIPT = `(function(){try{var t=localStorage.getItem('theme');document.documentElement.setAttribute('data-theme',t==='light'?'light':'dark');}catch(e){}})();`;
 
 export default function GlobalError({ error, reset }: GlobalErrorProps) {
   return (
-    <html lang="en" data-theme="light" suppressHydrationWarning>
+    <html lang="en" data-theme="dark" suppressHydrationWarning>
       <head>
         <script dangerouslySetInnerHTML={{ __html: THEME_SCRIPT }} />
       </head>

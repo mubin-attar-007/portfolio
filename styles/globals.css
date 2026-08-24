@@ -23,6 +23,16 @@ html {
   /* Anchor targets must clear the sticky header (64px) plus a breath, or a deep
      link lands with its own heading hidden behind the nav. */
   scroll-padding-top: 5.5rem;
+  /* Native UI follows the page: scrollbars, the assistant's textarea, form
+     controls, and the <details> marker. Keyed to OUR [data-theme] rather than
+     to `light dark`, because the site never consults prefers-color-scheme — and
+     with dark as the default, an unset color-scheme would put a light scrollbar
+     down the edge of a near-black page. */
+  color-scheme: dark;
+}
+
+html[data-theme="light"] {
+  color-scheme: light;
 }
 
 body {

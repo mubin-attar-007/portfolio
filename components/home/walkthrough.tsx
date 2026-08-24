@@ -53,10 +53,21 @@ export type WalkthroughProps = {
  * A11y: a real disclosure pattern — each stage is a `<button aria-expanded>`
  * controlling a named region; exactly one stage is open, and the open state is
  * carried by a spine, a rotated chevron AND full-ink text, never colour alone.
- * The specimen panel is `aria-live="polite"` labelled by the active stage so a
- * screen-reader user hears the swap. Height animation is the recorded 0fr→1fr
- * disclosure exception; the swap collapses to instant under reduced motion via
- * the global rule.
+ * Height animation is the recorded 0fr→1fr disclosure exception; the swap
+ * collapses to instant under reduced motion via the global rule.
+ *
+ * ANNOUNCEMENTS ARE USER-DRIVEN ONLY, and this is the rule that matters most
+ * here. The specimen body used to be `aria-live="polite"` itself, which was
+ * right while a click was the only thing that could change it. Once the run
+ * advances on its own, that same markup re-announces the ENTIRE panel — schema
+ * rows, SQL, results — five times in fourteen seconds, unprompted. And polite
+ * regions queue rather than replace, so the listener hears a backlog long after
+ * the animation finished.
+ *
+ * So: the panel is not a live region at all, and a small visually-hidden status
+ * region carries a one-line summary instead ("Stage 3 of 5: Validate"), updated
+ * ONLY when the visitor drove the change. Automatic advancement is decorative
+ * motion, and decorative motion is not announced.
  *
  * The refusal example is illustrative of real validator behaviour and the
  * specimen says so — it is not presented as a logged incident.
@@ -68,6 +79,8 @@ export function FlagshipWalkthrough(props: WalkthroughProps) {
   const [active, setActive] = useState<WalkthroughStage["id"]>("retrieve");
   const [playing, setPlaying] = useState(false);
   const [started, setStarted] = useState(false);
+  /** Only a visitor-initiated change is announced (see the A11y note above). */
+  const [announced, setAnnounced] = useState<string | null>(null);
   const rootRef = useRef<HTMLDivElement>(null);
   const reduced = useReducedMotion();
   const stage = props.stages.find((s) => s.id === active) ?? props.stages[0]!;
@@ -75,14 +88,23 @@ export function FlagshipWalkthrough(props: WalkthroughProps) {
   const last = index === props.stages.length - 1;
 
   /** Any manual selection stops the run — the reader has taken over. */
-  const select = useCallback((id: WalkthroughStage["id"]) => {
-    setPlaying(false);
-    setActive(id);
-  }, []);
+  const select = useCallback(
+    (id: WalkthroughStage["id"]) => {
+      setPlaying(false);
+      setActive(id);
+      const i = props.stages.findIndex((x) => x.id === id);
+      const picked = props.stages[i];
+      if (picked) setAnnounced(`Stage ${i + 1} of ${props.stages.length}: ${picked.label}`);
+    },
+    [props.stages],
+  );
 
   const replay = useCallback(() => {
     setActive(props.stages[0]!.id);
     setPlaying(true);
+    // The run itself is silent, so the announcement describes the ACTION rather
+    // than narrating each stage the visitor is about to be shown.
+    setAnnounced("Replaying the pipeline from stage 1.");
   }, [props.stages]);
 
   // The run starts ONCE, when the section is first reached — not on load,
@@ -130,6 +152,17 @@ export function FlagshipWalkthrough(props: WalkthroughProps) {
     return () => document.removeEventListener("visibilitychange", onHide);
   }, []);
 
+  /**
+   * Keyboard focus reaching the rail stops the run.
+   *
+   * Tabbing to a stage button does not activate it, so without this the run
+   * keeps advancing and flips `aria-expanded` on the control the visitor is
+   * currently focused on — the state of the thing under their cursor changing
+   * by itself. Clicking already stops the run via select(); this covers the
+   * visitor who arrives by keyboard and has not committed to a stage yet.
+   */
+  const stopForFocus = useCallback(() => setPlaying(false), []);
+
   return (
     <div className={styles.layout} ref={rootRef}>
       {/* ---- rail ---- */}
@@ -140,7 +173,13 @@ export function FlagshipWalkthrough(props: WalkthroughProps) {
         </h2>
         <p className="mt-3 max-w-[42ch] text-pretty text-base text-ink-secondary">{props.body}</p>
 
-        <ol className={styles.stageList}>
+        {/* The focus-pause belongs on the STAGE LIST, not on the rail.
+            React's onFocus bubbles, and the transport lives in the rail too —
+            so a rail-level handler fired on mousedown-focus of the Pause
+            button, set playing=false, and then the click toggled it back to
+            true. The Pause button resumed the run. Caught by
+            "specimen: pause holds the active stage". */}
+        <ol className={styles.stageList} onFocus={stopForFocus}>
           {props.stages.map((s, i) => {
             const open = s.id === active;
             return (
@@ -235,11 +274,20 @@ export function FlagshipWalkthrough(props: WalkthroughProps) {
             step {index + 1} of {props.stages.length}
           </span>
         </div>
-        {/* Keyed remount restarts the entrance animation on every swap. */}
-        <div key={stage.id} className={`${styles.specimenBody} ${styles.panelEnter}`} aria-live="polite">
+        {/* Keyed remount restarts the entrance animation on every swap. NOT a
+            live region — see the A11y note at the top of this file. */}
+        <div key={stage.id} className={`${styles.specimenBody} ${styles.panelEnter}`}>
           <Specimen {...props} stageId={stage.id} />
         </div>
       </div>
+
+      {/* The only live region: one line, and only for changes the visitor made.
+          Rendered unconditionally so assistive tech has it registered before
+          any text lands in it — a live region created at the same moment as its
+          first content is unreliably announced. */}
+      <p className="sr-only" role="status" aria-live="polite">
+        {announced}
+      </p>
     </div>
   );
 }

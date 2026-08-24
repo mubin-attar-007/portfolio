@@ -67,22 +67,30 @@ export const metadata: Metadata = {
  * surface instead of drawing a seam above it.
  */
 export const viewport: Viewport = {
-  themeColor: [
-    { media: "(prefers-color-scheme: light)", color: "#fcfcfe" },
-    { media: "(prefers-color-scheme: dark)", color: "#03080a" },
-  ],
+  // A single value, not a prefers-color-scheme pair. The site's theme comes from
+  // a stored choice, never from the OS, so keying the chrome to the OS would put
+  // a light address bar above a dark page for every dark-default visitor whose
+  // system happens to prefer light. This is the DEFAULT theme's ground; the
+  // toggle rewrites the live <meta> when a visitor opts out.
+  themeColor: "#03080a",
 };
 
 /**
  * Pre-paint theme application (no flash).
  *
- * LIGHT is the brand: the page renders light unless the visitor has explicitly
- * chosen dark and that choice was stored. `prefers-color-scheme` is deliberately
- * not consulted — the light page with its dark bands IS the identity, not a mode
- * the OS gets to pick. The server renders `data-theme="light"` below, so the
- * first paint is already correct for everyone who has not opted in.
+ * DARK is the default: the page renders dark unless the visitor has explicitly
+ * chosen light and that choice was stored. `prefers-color-scheme` is still
+ * deliberately not consulted — the theme is OURS to pick and the visitor's to
+ * override, not the OS's to decide. The server renders `data-theme="dark"`
+ * below, so the first paint is already correct for everyone who has not opted
+ * out, and the script only ever has to act for the light minority.
+ *
+ * Note the inversion in the ternary: the stored value must equal 'light'
+ * exactly to move off dark. An absent, corrupt, or unreadable value all land on
+ * the default, which is the behaviour you want from a bootstrap that runs
+ * before anything else on the page.
  */
-const THEME_SCRIPT = `(function(){document.documentElement.classList.add('js');try{var t=localStorage.getItem('theme');document.documentElement.setAttribute('data-theme',t==='dark'?'dark':'light');}catch(e){}})();`;
+const THEME_SCRIPT = `(function(){document.documentElement.classList.add('js');try{var t=localStorage.getItem('theme');document.documentElement.setAttribute('data-theme',t==='light'?'light':'dark');}catch(e){}})();`;
 const IS_VERCEL_DEPLOYMENT = process.env.VERCEL === "1";
 
 export default function RootLayout({ children }: Readonly<{ children: React.ReactNode }>) {
@@ -90,7 +98,7 @@ export default function RootLayout({ children }: Readonly<{ children: React.Reac
   return (
     <html
       lang="en"
-      data-theme="light"
+      data-theme="dark"
       className={`${geistSans.variable} ${geistMono.variable} ${newsreader.variable}`}
       suppressHydrationWarning
     >

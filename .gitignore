@@ -79,3 +79,4 @@ srv.err.log
 
 # Binary archive of the docs/ tree — the source files are committed alongside it.
 docs/*.rar
+release-diff.json

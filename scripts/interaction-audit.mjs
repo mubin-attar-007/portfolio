@@ -126,6 +126,208 @@ await withPage({}, async (page) => {
   check("specimen: a transport control exists", (await transport.count()) > 0);
 });
 
+// ------------------------------------- specimen: the release-brief contracts
+// The contracts above cover selection and keyboard. These cover the run's
+// lifecycle plus the two properties that are invisible in a screenshot: what
+// assistive technology hears, and whether the panel moves the page.
+
+const activeStage = (page) =>
+  page.locator('[aria-expanded="true"]').first().textContent();
+
+await withPage({}, async (page) => {
+  await page.goto(`${BASE}/`, { waitUntil: "networkidle" });
+  await page.getByRole("button", { name: /^Retrieve$/ }).scrollIntoViewIfNeeded();
+  await page.waitForTimeout(600);
+
+  // Pause preserves the active stage.
+  await page.waitForTimeout(3200); // let it advance off stage 1
+  const beforePause = await activeStage(page);
+  await page.getByRole("button", { name: /^Pause$/ }).click();
+  await page.waitForTimeout(3600); // longer than one dwell
+  const afterPause = await activeStage(page);
+  check(
+    "specimen: pause holds the active stage",
+    beforePause === afterPause,
+    `${beforePause} -> ${afterPause}`,
+  );
+
+  // Play resumes from where it stopped rather than restarting.
+  await page.getByRole("button", { name: /^Play the run$/ }).click();
+  await page.waitForTimeout(3400);
+  const afterResume = await activeStage(page);
+  check(
+    "specimen: resuming continues rather than restarting",
+    afterResume !== afterPause && !(afterResume ?? "").includes("Retrieve"),
+    `${afterPause} -> ${afterResume}`,
+  );
+});
+
+// Replay restarts the run, not merely the stage.
+await withPage({}, async (page) => {
+  await page.goto(`${BASE}/`, { waitUntil: "networkidle" });
+  const lastStage = page.getByRole("button", { name: /^Evaluate$/ });
+  await lastStage.scrollIntoViewIfNeeded();
+  await lastStage.click(); // jump to the end, which also stops the run
+  await page.waitForTimeout(300);
+
+  const replay = page.getByRole("button", { name: /Replay the run/ });
+  check("specimen: the transport becomes Replay at the last stage", (await replay.count()) === 1);
+
+  await replay.click();
+  await page.waitForTimeout(300);
+  const restarted = await activeStage(page);
+  check("specimen: replay returns to stage 1", (restarted ?? "").includes("Retrieve"), restarted ?? "");
+
+  await page.waitForTimeout(3400);
+  const advancing = await activeStage(page);
+  check(
+    "specimen: replay restarts the RUN, not just the stage",
+    !(advancing ?? "").includes("Retrieve"),
+    advancing ?? "",
+  );
+});
+
+// A backgrounded tab stops stepping. Playwright cannot truly background a page,
+// so drive the exact signal the component listens for.
+await withPage({}, async (page) => {
+  await page.goto(`${BASE}/`, { waitUntil: "networkidle" });
+  await page.getByRole("button", { name: /^Retrieve$/ }).scrollIntoViewIfNeeded();
+  await page.waitForTimeout(600);
+  await page.evaluate(() => {
+    Object.defineProperty(document, "hidden", { value: true, configurable: true });
+    Object.defineProperty(document, "visibilityState", { value: "hidden", configurable: true });
+    document.dispatchEvent(new Event("visibilitychange"));
+  });
+  const atHide = await activeStage(page);
+  await page.waitForTimeout(3600);
+  const later = await activeStage(page);
+  check("specimen: a hidden tab stops the run", atHide === later, `${atHide} -> ${later}`);
+});
+
+// Keyboard focus reaching the rail stops the run, so aria-expanded cannot flip
+// underneath the control the visitor is focused on.
+await withPage({}, async (page) => {
+  await page.goto(`${BASE}/`, { waitUntil: "networkidle" });
+  await page.getByRole("button", { name: /^Retrieve$/ }).scrollIntoViewIfNeeded();
+  await page.waitForTimeout(600);
+  await page.getByRole("button", { name: /^Generate$/ }).focus(); // focus WITHOUT activating
+  const atFocus = await activeStage(page);
+  await page.waitForTimeout(3600);
+  const later = await activeStage(page);
+  check("specimen: focus on the rail stops the run", atFocus === later, `${atFocus} -> ${later}`);
+});
+
+// THE ANNOUNCEMENT CONTRACT. An auto-advancing panel must not narrate itself to
+// a screen reader; a visitor-driven change must.
+await withPage({}, async (page) => {
+  await page.goto(`${BASE}/`, { waitUntil: "networkidle" });
+  await page.getByRole("button", { name: /^Retrieve$/ }).scrollIntoViewIfNeeded();
+  await page.waitForTimeout(600);
+
+  const liveRegions = await page.evaluate(() => {
+    const section = document.querySelector("#walkthrough-title")?.closest("section");
+    if (!section) return ["NO SECTION FOUND"];
+    return Array.from(
+      section.querySelectorAll('[aria-live], [role="status"], [role="alert"]'),
+    ).map((el) => `${el.tagName.toLowerCase()}|${el.textContent?.length ?? 0}chars`);
+  });
+  check(
+    "specimen: exactly one live region in the section",
+    liveRegions.length === 1,
+    JSON.stringify(liveRegions),
+  );
+
+  // A live region wrapping the whole panel IS the defect; size is the tell.
+  const chars = Number((liveRegions[0] ?? "").match(/\|(\d+)chars/)?.[1] ?? 99999);
+  check(
+    "specimen: the live region is a one-line status, not the panel",
+    chars < 120,
+    liveRegions[0] ?? "none",
+  );
+
+  // The automatic run leaves it empty — nothing the visitor did not ask for.
+  const during = await page.locator('[role="status"]').first().textContent();
+  await page.waitForTimeout(3400);
+  const after = await page.locator('[role="status"]').first().textContent();
+  check(
+    "specimen: automatic advancement announces NOTHING",
+    (during ?? "").trim() === "" && (after ?? "").trim() === "",
+    `"${during}" -> "${after}"`,
+  );
+
+  // A visitor-driven change does announce, concisely.
+  await page.getByRole("button", { name: /^Validate$/ }).click();
+  await page.waitForTimeout(250);
+  const announced = (await page.locator('[role="status"]').first().textContent()) ?? "";
+  check(
+    "specimen: a visitor-driven change IS announced",
+    announced.includes("Validate") && announced.length < 60,
+    `"${announced}"`,
+  );
+});
+
+// Zero layout shift, measured two ways: the browser's own layout-shift entries
+// across a full unattended run, and the panel's box across every stage.
+await withPage({}, async (page) => {
+  await page.goto(`${BASE}/`, { waitUntil: "networkidle" });
+  await page.evaluate(() => {
+    window.__cls = 0;
+    new PerformanceObserver((list) => {
+      for (const e of list.getEntries()) if (!e.hadRecentInput) window.__cls += e.value;
+    }).observe({ type: "layout-shift", buffered: true });
+  });
+  await page.getByRole("button", { name: /^Retrieve$/ }).scrollIntoViewIfNeeded();
+  await page.waitForTimeout(1200);
+
+  const before = await page.evaluate(() => window.__cls);
+  await page.waitForTimeout(14000); // sit through the entire five-stage run
+  const after = await page.evaluate(() => window.__cls);
+  const delta = after - before;
+
+  // A BUDGET, not zero — and the number is deliberate rather than a shrug.
+  //
+  // Zero is not reachable for an auto-advancing accordion without changing what
+  // the component is. Each advance closes one panel and opens the next, so the
+  // stage below the closing one moves up by that panel's height. The list total
+  // can be held constant (reserve every panel the tallest box) and the height
+  // transition can be removed, but the SIBLING still moves, and CLS scores
+  // element movement, not container height. All three variants were measured:
+  //
+  //   as shipped (animated, natural heights) .......... 0.0265
+  //   reserved height via min-height .................. 0.0716  (track snaps)
+  //   reserved height + no height transition .......... 0.0386  (192px jump)
+  //
+  // The shipped version is both the lowest number and the smoother motion, so
+  // it stands. 0.05 leaves headroom over the measured 0.0265 while staying well
+  // inside the 0.1 "good" threshold, and would still catch a real regression —
+  // a panel growing, or a second animated layout property appearing.
+  const BUDGET = 0.05;
+  check(
+    `specimen: a full unattended run stays within the ${BUDGET} shift budget`,
+    delta < BUDGET,
+    `CLS delta ${delta.toFixed(5)}`,
+  );
+
+  const heights = [];
+  for (const name of ["Retrieve", "Generate", "Validate", "Execute", "Evaluate"]) {
+    await page.getByRole("button", { name: new RegExp(`^${name}$`) }).click();
+    await page.waitForTimeout(450);
+    heights.push(
+      await page.evaluate(() => {
+        const section = document.querySelector("#walkthrough-title")?.closest("section");
+        const head = section?.querySelector("[class*='specimenHead']");
+        return head?.parentElement ? Math.round(head.parentElement.getBoundingClientRect().height) : -1;
+      }),
+    );
+  }
+  const spread = Math.max(...heights) - Math.min(...heights);
+  check(
+    "specimen: the panel is the same height at every stage",
+    spread === 0 && heights[0] > 0,
+    `heights ${JSON.stringify(heights)} spread ${spread}px`,
+  );
+});
+
 // ------------------------------------------------------- reduced motion
 await withPage({ reducedMotion: "reduce" }, async (page) => {
   await page.goto(`${BASE}/`, { waitUntil: "networkidle" });
