@@ -20,15 +20,33 @@ export function Assistant() {
 
   // Restore to the launcher that is actually visible at the current breakpoint.
   // getClientRects() is robust for both fixed and in-flow controls.
+  //
+  // Deferred by a frame, and that frame is load-bearing. While the panel is
+  // open the page behind it is `inert`, and the launcher lives in the header —
+  // inside that inert subtree. Focusing it in the same tick as `setOpen(false)`
+  // would silently do nothing: the panel has not unmounted yet, so the header
+  // is still inert and inert elements cannot take focus. The frame lets React
+  // commit the unmount and run the boundary's cleanup first.
   const close = useCallback(() => {
     setOpen(false);
-    const launchers = document.querySelectorAll<HTMLElement>(`[${ASSISTANT_LAUNCHER_ATTR}]`);
-    for (const el of launchers) {
-      if (el.getClientRects().length > 0) {
-        el.focus();
-        return;
+    const restore = () => {
+      const launchers = document.querySelectorAll<HTMLElement>(
+        `[${ASSISTANT_LAUNCHER_ATTR}]`,
+      );
+      for (const el of launchers) {
+        if (el.getClientRects().length > 0) {
+          el.focus();
+          return document.activeElement === el;
+        }
       }
-    }
+      return true;
+    };
+    // One retry. Effect-flush timing is a scheduler detail, not a contract, so
+    // if the first attempt lands while the header is still inert we take the
+    // next frame rather than leaving focus stranded on <body> (WCAG 2.4.3).
+    requestAnimationFrame(() => {
+      if (!restore()) requestAnimationFrame(restore);
+    });
   }, []);
 
   useEffect(() => {

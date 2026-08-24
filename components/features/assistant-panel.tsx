@@ -2,6 +2,7 @@
 
 import { useCallback, useEffect, useId, useRef, useState } from "react";
 import { createPortal } from "react-dom";
+import { useInertBackground } from "@/lib/use-inert-background";
 import { X } from "lucide-react";
 
 /**
@@ -120,6 +121,10 @@ export function AssistantPanel({ onClose }: { onClose: () => void }) {
   const streamingTextRef = useRef("");
   const streamFrameRef = useRef<number | null>(null);
   const activeRequestRef = useRef<AbortController | null>(null);
+
+  // The panel only exists while it is open, so the boundary is unconditional:
+  // everything behind it is inert for exactly as long as this component lives.
+  useInertBackground(true);
 
   const updateStreamingMessage = useCallback((patch: Partial<Msg>) => {
     const idx = streamingIndexRef.current;

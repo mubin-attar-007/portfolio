@@ -7,6 +7,7 @@ import { usePathname } from "next/navigation";
 import { Menu, X } from "lucide-react";
 import { NAV, PRIMARY_CTA } from "@/config/nav";
 import { buttonVariants } from "@/components/ui/button";
+import { useInertBackground } from "@/lib/use-inert-background";
 
 const DESKTOP_QUERY = "(min-width: 64rem)";
 
@@ -35,6 +36,10 @@ export function MobileNav() {
   const toggleRef = useRef<HTMLButtonElement>(null);
   const afterCloseRef = useRef<(() => void) | null>(null);
   const closeFallbackRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+
+  // The page behind an open menu is inert — a real modal boundary, not just a
+  // dimmed rectangle.
+  useInertBackground(mounted);
 
   const finishClose = useCallback(() => {
     if (closeFallbackRef.current !== null) {
