@@ -1,6 +1,6 @@
 import type { Metadata } from "next";
 import Link from "next/link";
-import { ArrowUpRight, Check } from "lucide-react";
+import { ArrowUpRight, Check, ChevronDown } from "lucide-react";
 import { Section } from "@/components/layout/section";
 import { PageHeader } from "@/components/ui/page-header";
 import { PAGE_BODY_BAND, PAGE_HEADER_BAND } from "@/constants/page";
@@ -97,12 +97,35 @@ function EvalCard({ e }: { e: EvalRow }) {
             {e.system} · {e.benchmark}
           </p>
           <p className="mt-2 text-base font-medium text-ink">{e.metric}</p>
-          <p className="mt-3 max-w-[var(--width-prose)] text-sm leading-relaxed text-ink-secondary">
-            {e.note}
-          </p>
+          {/* The method is the point of this registry, so it is never hidden —
+              it is COLLAPSED, in a native <details>. That distinction matters:
+              a native disclosure is keyboard-operable, announced correctly,
+              open-able by find-in-page, and prints expanded, all without a
+              line of JavaScript. The summary carries the first sentence so a
+              closed row still says what was measured. */}
+          {e.note ? (
+            <details className="group/method mt-3 max-w-[var(--width-prose)]">
+              <summary className="cursor-pointer list-none text-sm leading-relaxed text-ink-secondary marker:content-none">
+                {e.note.split(". ")[0]}.
+                <span className="ml-1.5 inline-flex items-center gap-1 whitespace-nowrap text-accent">
+                  <span className="group-open/method:hidden">Full method</span>
+                  <span className="hidden group-open/method:inline">Hide method</span>
+                  <ChevronDown
+                    size={12}
+                    strokeWidth={2.25}
+                    aria-hidden
+                    className="transition-transform duration-fast ease-[var(--ease-out)] group-open/method:rotate-180"
+                  />
+                </span>
+              </summary>
+              <p className="mt-3 border-l-[length:var(--stripe-width)] border-l-border-strong pl-4 text-sm leading-relaxed text-ink-secondary">
+                {e.note}
+              </p>
+            </details>
+          ) : null}
           {e.link ? (
             <span className="mt-3 block">
-              <ResultLink href={e.link}>method</ResultLink>
+              <ResultLink href={e.link}>evidence</ResultLink>
             </span>
           ) : null}
         </div>
