@@ -36,13 +36,38 @@ jobs:
       - name: Install Playwright (chromium)
         run: npx playwright install --with-deps chromium
 
-      - name: Accessibility gate (axe, all routes × light/dark)
+      # One server, every gate that needs one. Kept in a single step on purpose:
+      # a background process started with `&` surviving into a later step is a
+      # runner implementation detail, not a guarantee.
+      - name: Browser gates (a11y, interaction, accent drift, print)
         run: |
+          set -euo pipefail
           cp -R .next/static .next/standalone/.next/static
           cp -R public .next/standalone/public
           PORT=3200 HOSTNAME=127.0.0.1 node .next/standalone/server.js &
           for i in $(seq 1 40); do curl -sf http://localhost:3200 >/dev/null && break; sleep 2; done
-          BASE_URL=http://localhost:3200 npm run test:a11y
+          export BASE_URL=http://localhost:3200
+
+          echo "::group::Accessibility (axe, all routes × light/dark × 3 viewports)"
+          npm run test:a11y
+          echo "::endgroup::"
+
+          echo "::group::Interaction contracts"
+          npm run test:interaction
+          echo "::endgroup::"
+
+          # Accent drift is invisible to axe and to the overflow sweep; a violet
+          # section inside the lime theme shipped once because nothing looked.
+          echo "::group::Accent drift — dark"
+          THEME=dark npm run test:hue
+          echo "::endgroup::"
+          echo "::group::Accent drift — light"
+          THEME=light npm run test:hue
+          echo "::endgroup::"
+
+          echo "::group::Print gate"
+          npm run test:print
+          echo "::endgroup::"
 
       - name: Lighthouse budgets and social-preview gate
         if: github.event_name == 'push' || github.base_ref == 'main'

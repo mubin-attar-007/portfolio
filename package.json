@@ -13,7 +13,9 @@
     "test:metadata": "node scripts/lighthouse-budget.mjs --metadata-only",
     "test:lighthouse": "node scripts/lighthouse-budget.mjs",
     "test:screens": "node scripts/screenshot.mjs",
-    "test:print": "node scripts/print-check.mjs"
+    "test:print": "node scripts/print-check.mjs",
+    "test:hue": "node scripts/theme-audit.mjs",
+    "test:interaction": "node scripts/interaction-audit.mjs"
   },
   "dependencies": {
     "@opennextjs/cloudflare": "^1.20.2",
