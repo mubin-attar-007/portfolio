@@ -17,7 +17,8 @@
     "test:hue": "node scripts/theme-audit.mjs",
     "test:interaction": "node scripts/interaction-audit.mjs",
     "test:lh-diagnose": "node scripts/lighthouse-diagnose.mjs",
-    "test:release-diff": "node scripts/release-diff.mjs"
+    "test:release-diff": "node scripts/release-diff.mjs",
+    "test:smoke": "node scripts/smoke.mjs"
   },
   "dependencies": {
     "@opennextjs/cloudflare": "^1.20.2",
