@@ -56,35 +56,40 @@ preference** (`[data-theme="dark"]`). `prefers-color-scheme` is deliberately not
 consulted. Both consumers read one `--dark-*` ramp, so a band and the theme
 cannot drift apart.
 
-| Token | Light | Note |
-|---|---|---|
-| `--color-bg` | `#f8f8fa` | page |
-| `--color-bg-subtle` | `#f1f1f4` | alternate bands, inline code, wells |
-| `--color-surface` | `#ffffff` | cards, panels, product frames |
-| `--color-surface-raised` | `#fcfcfd` | a panel stacked on a white panel |
-| `--color-ink` | `#17171c` | 16.8:1 on bg |
-| `--color-ink-secondary` | `#62636f` | 5.6:1 on bg · 5.3:1 on bg-subtle |
-| `--color-ink-tertiary` | `#6b6c79` | 4.9:1 on bg · 4.6:1 on bg-subtle |
-| `--color-border` | `#e5e5ea` | hairlines |
-| `--color-border-strong` | `#d7d7de` | inputs, emphasised dividers |
-| `--color-accent` | `#6552f0` | 5.2:1 surface · 4.9:1 bg · 4.6:1 bg-subtle |
-| `--color-accent-hover` | `#5544d6` | 6.6:1 on surface |
-| `--color-on-accent` | `#ffffff` | 5.2:1 on the accent fill |
-| `--color-accent-soft` | `#eeecfe` | accent-tinted ground — never behind body text |
-| `--color-ambient` | `#4d7fe0` | ambient gradients and data visuals ONLY |
-| `--color-positive` | `#146b33` | 6.5:1 surface · 5.9:1 bg-subtle |
+| Token | Light | Dark | Note |
+|---|---|---|---|
+| `--color-bg` | `#fcfcfe` | `#03080a` | the page |
+| `--color-bg-subtle` | `#f4f4f6` | `#060b0d` | alternate bands, wells |
+| `--color-surface` | `#ffffff` | `#080d0f` | cards sit brighter than the page |
+| `--color-ink` | `#03080a` | `#fcfcfe` | 19.7:1 both themes |
+| `--color-ink-secondary` | `#505456` | `#9fa1a3` | 7.5:1 / 7.8:1 |
+| `--color-ink-tertiary` | `#676a6c` | `#808284` | 5.3:1 / 5.2:1 |
+| `--color-border` | `#e8e9eb` | `#fcfcfe`@10% | hairlines |
+| `--color-border-strong` | `#dddddf` | `#fcfcfe`@19% | inputs, emphasised dividers |
+| `--color-accent` | `#7624f4` | **`#c8ff00`** | 6.2:1 / 17.0:1 |
+| `--color-on-accent` | `#fcfcfe` | `#03080a` | 6.2:1 / 17.0:1 on the fill |
+| `--color-ambient` | `#035ade` | — | gradients and data visuals ONLY |
 
-**Two values are deliberately off the obvious.** `--color-ink-tertiary` is one
-step darker than `#7c7d89` because mono microcopy runs at 12px, which WCAG counts
-as normal text, and `#7c7d89` measures 3.85:1 on the page. `--color-positive` is
-darker than `#15803d` because that measured 4.45:1 on `--color-bg-subtle`, which
-the accessibility gate caught on the syntax tokens in the hero stage. Both were
-fixed at the token, not at the call site — every other use sat on the same margin.
+Adapted from openrouter.ai, measured live (ADR-013). The architecture is the
+part worth copying: **one ink per theme**, with the whole neutral ramp expressed
+as alpha overlays of the opposite colour. That is why the two themes read as one
+system rather than as a palette and its inversion. We resolve those overlays to
+flat hex — our tokens feed `color-mix()` and gradients that need a real colour,
+and their 44% tier measures 3.1:1, a placeholder tier rather than a body-text
+one.
 
-**Dark ramp:** `--dark-bg #15151a`, `--dark-surface #1e1f25`, borders as
-`rgb(255 255 255 / 0.10)`, ink `#f5f5f7`, secondary `#a8a9b4` (7.8:1). The accent
-lifts to `#a99cff` (7.7:1) — `#6552f0` measures 3.5:1 on the dark plane and
-cannot be reused.
+### The accent has two roles in dark
+
+**Lime is ACTION** — buttons, links, active state, hover answers. **Violet is
+the DISPLAY voice** — the hero accent line. The reference's own `h1` is neutral
+`#fcfcfe` with lime reserved for the primary control; a whole display line in
+lime reads acid, and splitting the roles also keeps the two-line headline device
+continuous across themes.
+
+A dark BAND inside the light page (`.tone-invert`) keeps the lifted violet
+`#a99cff` (8.3:1): those bands belong to the light theme's scroll, and a lime
+button inside one under a violet button above it would read as two brands on one
+page. The accent is a property of the THEME, not of the surface.
 
 **Accent budget: ≤2 accent elements per viewport.** The primary button and the
 band eyebrow usually spend both.

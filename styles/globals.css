@@ -264,10 +264,13 @@ button:disabled,
   --color-ink-tertiary: var(--dark-ink-tertiary);
   --color-border: var(--dark-border);
   --color-border-strong: var(--dark-border-strong);
-  --color-accent: var(--dark-accent);
-  --color-accent-hover: var(--dark-accent-hover);
-  --color-on-accent: var(--dark-on-accent);
-  --color-accent-soft: var(--dark-accent-soft);
+  /* The BAND accent — violet. A dark band inside the light page belongs to the
+     light theme's scroll (ADR-013); the lime is the full-dark theme's accent
+     and is applied by [data-theme="dark"] below. */
+  --color-accent: var(--dark-accent-band);
+  --color-accent-hover: var(--dark-accent-band-hover);
+  --color-on-accent: var(--dark-on-accent-band);
+  --color-accent-soft: var(--dark-accent-band-soft);
   /* Status colours must be scoped here too: without them a Metric delta dropped
      into a dark band keeps the LIGHT #15803d / #b91c1c against the dark surface
      (~3:1, below AA). A valid component in a valid container can never render an
@@ -291,11 +294,15 @@ button:disabled,
 /* Under the full-dark preference there is no light↔dark flip left to make, so a
    dark band would vanish into the page. Recess it one step instead — the band
    still reads as a distinct plate, by depth rather than by inversion. */
+/* In the full-dark theme the page is already near-black, so a band cannot
+   recess — there is no room below #03080a. It steps UP instead: the plate reads
+   as raised out of the page rather than sunk into it, which is the only
+   direction this ground allows and still keeps the band a distinct object. */
 :root[data-theme="dark"] .tone-invert {
-  --color-bg: #0f0f13;
-  --color-bg-subtle: #16161b;
-  --color-surface: #1b1c22;
-  --color-surface-raised: #212229;
+  --color-bg: #0a1013;
+  --color-bg-subtle: #0e1417;
+  --color-surface: #12181b;
+  --color-surface-raised: #171d20;
 }
 
 /* ---- device 4: hairlines that dissolve --------------------------------- */

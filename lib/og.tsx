@@ -17,12 +17,12 @@ export const OG_CONTENT_TYPE = "image/png";
 // updated together with it: nothing tests OG colour (the gate only checks that
 // an image/* byte-stream comes back), so a drift here ships silently across all
 // 17 OG routes.
-const BG = "#f8f8fa"; // --color-bg
-const INK = "#17171c"; // --color-ink
-const INK_2 = "#62636f"; // --color-ink-secondary
-const INK_3 = "#6b6c79"; // --color-ink-tertiary
-const BORDER = "#d7d7de"; // --color-border-strong
-const ACCENT = "#6552f0"; // --color-accent
+const BG = "#fcfcfe"; // --color-bg
+const INK = "#03080a"; // --color-ink
+const INK_2 = "#505456"; // --color-ink-secondary
+const INK_3 = "#676a6c"; // --color-ink-tertiary
+const BORDER = "#dddddf"; // --color-border-strong
+const ACCENT = "#7624f4"; // --color-accent
 export function formatOgEyebrow(label: string) {
   return `${SITE.name} · ${label}`;
 }

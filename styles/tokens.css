@@ -18,43 +18,50 @@
 
 @theme {
   /* ---- colour: the light page (the brand) --------------------------------
-     Every pair below is measured. The ratios in the comments are computed
-     against the ground the token is actually used on, and the a11y gate
-     (scripts/a11y.mjs) re-checks them on every route in both themes. */
-  --color-bg: #f8f8fa;              /* page — cool near-white */
-  --color-bg-subtle: #f1f1f4;       /* alternate bands, inline code, wells */
-  --color-surface: #ffffff;         /* cards, panels, product frames */
-  --color-surface-raised: #fcfcfd;  /* a panel stacked ON a white panel */
-  --color-ink: #17171c;             /* primary text — 16.8:1 on bg */
-  --color-ink-secondary: #62636f;   /* supporting text — 5.6:1 on bg, 5.3:1 on bg-subtle */
-  /* Tertiary is one step darker than the "obvious" #7c7d89: mono microcopy runs
-     at 12px, which WCAG counts as normal text (4.5:1), and #7c7d89 measures
-     3.85:1 on the page. #6b6c79 clears 4.6:1 on the DARKEST light ground
-     (bg-subtle) and still reads as a third tier. */
-  --color-ink-tertiary: #6b6c79;
-  --color-border: #e5e5ea;          /* hairlines */
-  --color-border-strong: #d7d7de;   /* inputs, emphasised dividers, card hover */
+     Adapted from openrouter.ai, measured live (ADR-013). Their architecture is
+     the part worth copying: ONE ink per theme (#03080a light / #fcfcfe dark),
+     with the entire neutral ramp expressed as alpha overlays of the OPPOSITE
+     colour. That is why their two themes read as one system rather than as a
+     palette and its inversion.
 
-  /* The accent. Held at #6552f0 rather than a lighter violet because it must
-     clear AA as TEXT on all three light grounds — 5.2:1 on surface, 4.9:1 on bg,
-     4.6:1 on bg-subtle — and still carry white at 5.2:1 when used as a fill.
-     One accent, rationed: action, active state, and measured evidence. */
-  --color-accent: #6552f0;
-  --color-accent-hover: #5544d6;    /* 6.6:1 on surface */
-  --color-on-accent: #ffffff;       /* text on an accent fill (5.2:1) */
-  --color-accent-soft: #eeecfe;     /* accent-tinted ground — never behind body text */
-  /* The one non-accent hue in the system: a cool blue that appears ONLY in
-     ambient gradients and data visuals (never as text, never as a control), so
-     the palette stays single-accent where it counts. */
-  --color-ambient: #4d7fe0;
+     We resolve those overlays to flat hex rather than shipping alpha, for two
+     reasons: our tokens feed `color-mix()` and gradients that need a real
+     colour, and — measured — their tier-9/10 (44% alpha) lands at 3.1:1, which
+     is a placeholder tier, not the body-text tier our 12px mono microcopy
+     needs. Our tertiary is their ramp at ~60% instead, which clears AA.
+
+     Every ratio below is computed against the ground the token is used on, and
+     scripts/a11y.mjs re-checks them on every route in both themes. */
+  --color-bg: #fcfcfe;              /* page — their --slate-1 */
+  --color-bg-subtle: #f4f4f6;       /* their --slate-3, resolved */
+  --color-surface: #ffffff;         /* cards sit BRIGHTER than the page */
+  /* On this palette the page is already near-white, so there is no lighter step
+     above `surface`: a stacked panel is separated by shadow, not by fill. */
+  --color-surface-raised: #ffffff;
+  --color-ink: #03080a;             /* their --slate-12 — 19.7:1 on bg */
+  --color-ink-secondary: #505456;   /* their ramp @69% — 7.5:1 on bg */
+  --color-ink-tertiary: #676a6c;    /* their ramp @60% — 5.3:1 on bg, 5.0:1 on bg-subtle */
+  --color-border: #e8e9eb;          /* their --slate-6, resolved */
+  --color-border-strong: #dddddf;   /* their --slate-7, resolved */
+
+  /* Their violet, adopted verbatim — and it is a genuine upgrade on ours:
+     6.2:1 as text on the page against our previous 4.9:1, while carrying the
+     near-white at the same 6.2:1 as a fill. One accent, rationed to action,
+     active state and measured evidence. */
+  --color-accent: #7624f4;
+  --color-accent-hover: #5f18cc;    /* 8.3:1 on bg */
+  --color-on-accent: #fcfcfe;       /* text on an accent fill (6.2:1) */
+  --color-accent-soft: #f1ebfd;     /* accent-tinted ground — never behind body text */
+  /* The one non-accent hue: their blue, used ONLY in ambient gradients and data
+     visuals — never as text, never as a control. */
+  --color-ambient: #035ade;
   /* The display gradient — the one place the two hues meet. Reserved for the
-     hero's accent line and the primary button. Both endpoints clear 3:1 on the
-     page (large-text AA): #6552f0 at 4.9:1, #3f6fd8 at 4.0:1. */
-  --gradient-accent: linear-gradient(100deg, #5b48e8 10%, #7a5cf5 55%, #3f6fd8 100%);
-  /* Controls get a single-hue luminance ramp (the reference's bevel), never the
-     two-hue sweep — a 44px button whose corners are different brand colours
-     reads broken, not rich. */
-  --gradient-accent-control: linear-gradient(180deg, #7a5cf5, #6552f0);
+     hero accent line. Both endpoints clear 3:1 on the page (large-text AA):
+     #7624f4 at 6.2:1, #035ade at 5.8:1. */
+  --gradient-accent: linear-gradient(100deg, #6a1fdb 10%, #7624f4 55%, #035ade 100%);
+  /* Controls get a single-hue luminance ramp, never the two-hue sweep — a 44px
+     button whose corners are different brand colours reads broken, not rich. */
+  --gradient-accent-control: linear-gradient(180deg, #8a3df7, #7624f4);
   /* Specimen frames sit one radius step above cards, per the reference. */
   --radius-xl: 16px;
 
@@ -175,47 +182,47 @@
     0 15px 35px -5px rgb(47 48 55 / 0.2),
     0 4px 6px rgb(34 42 53 / 0.04);
   --shadow-lg:
-    0 0 0 0.5px rgb(23 23 28 / 0.07),
-    0 4px 8px rgb(23 23 28 / 0.05),
-    0 18px 40px -10px rgb(23 23 28 / 0.16);
+    0 0 0 0.5px rgb(3 8 10 / 0.07),
+    0 4px 8px rgb(3 8 10 / 0.05),
+    0 18px 40px -10px rgb(3 8 10 / 0.16);
   --shadow-overlay: var(--shadow-lg);
   /* The scrim behind a modal overlay. One value, because the assistant panel and
      the mobile menu are the same kind of surface and dimming the page by
      different amounts made them read as two systems. */
-  --scrim: rgb(23 23 28 / 0.2);
+  --scrim: rgb(3 8 10 / 0.2);
 
   /* The one tactile control: an inset top highlight + a close drop, so the
      primary button reads as a raised, pressable plane. */
-  --shadow-btn: inset 0 1px 0 rgb(255 255 255 / 0.22), 0 1px 2px rgb(23 23 28 / 0.24);
+  --shadow-btn: inset 0 1px 0 rgb(255 255 255 / 0.22), 0 1px 2px rgb(3 8 10 / 0.24);
 
   /* Product surfaces — the frames that stand for a real application. The inset
      top highlight is what stops a white panel on a white-ish page from reading
      as a flat rectangle. */
   --shadow-surface:
     inset 0 1px 0 rgb(255 255 255 / 0.9),
-    0 0 0 0.5px rgb(23 23 28 / 0.05),
-    0 1px 2px rgb(23 23 28 / 0.04),
-    0 6px 16px -6px rgb(23 23 28 / 0.07),
-    0 16px 36px -12px rgb(23 23 28 / 0.08);
+    0 0 0 0.5px rgb(3 8 10 / 0.05),
+    0 1px 2px rgb(3 8 10 / 0.04),
+    0 6px 16px -6px rgb(3 8 10 / 0.07),
+    0 16px 36px -12px rgb(3 8 10 / 0.08);
   --shadow-surface-hover:
     inset 0 1px 0 rgb(255 255 255 / 0.9),
-    0 0 0 0.5px rgb(23 23 28 / 0.07),
-    0 2px 4px rgb(23 23 28 / 0.05),
-    0 12px 24px -8px rgb(23 23 28 / 0.09),
-    0 28px 56px -16px rgb(23 23 28 / 0.12);
+    0 0 0 0.5px rgb(3 8 10 / 0.07),
+    0 2px 4px rgb(3 8 10 / 0.05),
+    0 12px 24px -8px rgb(3 8 10 / 0.09),
+    0 28px 56px -16px rgb(3 8 10 / 0.12);
   /* The hero stage sits highest on the page and earns one step more depth. */
   --shadow-stage:
     inset 0 1px 0 rgb(255 255 255 / 0.9),
-    0 0 0 0.5px rgb(23 23 28 / 0.06),
-    0 2px 6px rgb(23 23 28 / 0.04),
-    0 18px 40px -14px rgb(23 23 28 / 0.12),
-    0 48px 88px -32px rgb(23 23 28 / 0.16);
+    0 0 0 0.5px rgb(3 8 10 / 0.06),
+    0 2px 6px rgb(3 8 10 / 0.04),
+    0 18px 40px -14px rgb(3 8 10 / 0.12),
+    0 48px 88px -32px rgb(3 8 10 / 0.16);
   /* A floating evidence card over the stage: reads as a layer ABOVE the product,
      so it carries a tighter ring and a longer throw than the stage itself. */
   --shadow-float:
-    0 0 0 0.5px rgb(23 23 28 / 0.07),
-    0 2px 6px rgb(23 23 28 / 0.06),
-    0 14px 30px -10px rgb(23 23 28 / 0.14);
+    0 0 0 0.5px rgb(3 8 10 / 0.07),
+    0 2px 6px rgb(3 8 10 / 0.06),
+    0 14px 30px -10px rgb(3 8 10 / 0.14);
 
   /* ---- ambient light -----------------------------------------------------
      Two soft radials, never a mesh: one violet (the accent's own light) and one
@@ -245,25 +252,57 @@
    dark palette is exactly how a band and a theme drift apart.
    ============================================================================ */
 :root {
-  --dark-bg: #15151a;
-  --dark-bg-subtle: #1a1a20;
-  --dark-surface: #1e1f25;
-  --dark-surface-raised: #24252c;
-  --dark-ink: #f5f5f7;
-  --dark-ink-secondary: #a8a9b4;   /* 7.8:1 on --dark-bg */
-  --dark-ink-tertiary: #8b8c99;    /* 5.5:1 on --dark-bg, 4.9:1 on --dark-surface */
-  --dark-border: rgb(255 255 255 / 0.1);
-  --dark-border-strong: rgb(255 255 255 / 0.18);
-  /* The accent must clear AA as text on the dark plane, which #6552f0 does not
-     (3.5:1). This is the same hue lifted into the light half of the ramp:
-     7.7:1 on --dark-bg, 7.0:1 on --dark-surface. */
-  --dark-accent: #a99cff;
-  --dark-accent-hover: #c0b6ff;
-  --dark-on-accent: #1b1440;       /* 7.3:1 on the lifted-violet fill */
-  --dark-accent-soft: #241f4d;
-  --dark-positive: #4ade80;
+  /* The dark neutrals, from the same measured source: their near-black carries
+     a faint cyan cast (#03080a), and every step above it is that ink's opposite
+     at a low alpha, resolved here to flat hex. */
+  --dark-bg: #03080a;
+  --dark-bg-subtle: #060b0d;
+  --dark-surface: #080d0f;         /* their card ground */
+  --dark-surface-raised: #0d1214;
+  --dark-ink: #fcfcfe;             /* 19.7:1 on --dark-bg */
+  --dark-ink-secondary: #9fa1a3;   /* their ramp @63% — 7.8:1 on --dark-bg */
+  --dark-ink-tertiary: #808284;    /* their ramp @50% — 5.2:1 on bg, 5.1:1 on surface */
+  --dark-border: rgb(252 252 254 / 0.1);
+  --dark-border-strong: rgb(252 252 254 / 0.19);
+
+  /* TWO dark accents, because the accent is a property of the THEME, not of the
+     surface.
+
+     `band` is the lifted violet, used by a dark BAND sitting inside the light
+     page (.tone-invert). Those bands are part of the light theme's scroll, and
+     a lime button inside them under a violet button above them would read as
+     two brands on one page.
+
+     `theme` is their lime, used when the whole document is dark. It is what
+     gives this theme a personality instead of making it "violet, dimmer", and
+     it is the most legible colour on the page at 17:1. */
+  --dark-accent-band: #a99cff;     /* 8.5:1 on --dark-bg */
+  --dark-accent-band-hover: #c0b6ff;
+  --dark-on-accent-band: #1b1440;  /* 7.3:1 on the lifted-violet fill */
+  --dark-accent-band-soft: #241f4d;
+
+  --dark-accent-theme: #c8ff00;    /* their lime — 17.0:1 on --dark-bg */
+  --dark-accent-theme-hover: #d9ff4d;
+  --dark-on-accent-theme: #03080a; /* 17.0:1 on the lime fill */
+  --dark-accent-theme-soft: #131b07;  /* deepened: tertiary clears 4.5:1 here */
+
+  --dark-positive: #4ade80;        /* 11.6:1 on --dark-bg */
   --dark-negative: #f87171;
   --dark-warning: #fbbf24;
+
+  /* TWO ROLES, and the split is deliberate. The reference's own h1 is neutral
+     (#fcfcfe, measured) — they ration lime to controls and the logomark. A
+     whole display line in it reads acid, so:
+
+       lime    = ACTION      buttons, links, active state, hover answers
+       violet  = DISPLAY     the hero's accent line, i.e. the brand voice
+
+     That keeps the identity continuous across themes (the two-line headline
+     device survives) while lime stays the scarce, loud thing it should be.
+     Both display endpoints clear AA on the near-black: #a99cff at 8.5:1,
+     #6f9dff at 7.6:1. */
+  --dark-gradient-accent: linear-gradient(100deg, #a99cff 10%, #b9a9ff 55%, #6f9dff 100%);
+  --dark-gradient-accent-control: linear-gradient(180deg, #d4ff33, #c8ff00);
 
   --dark-shadow-sm: 0 0 0 0.5px rgb(255 255 255 / 0.07), 0 1px 2px rgb(0 0 0 / 0.5);
   --dark-shadow-md: 0 0 0 0.5px rgb(255 255 255 / 0.08), 0 8px 20px -6px rgb(0 0 0 / 0.55);
@@ -300,10 +339,24 @@
   --color-ink-tertiary: var(--dark-ink-tertiary);
   --color-border: var(--dark-border);
   --color-border-strong: var(--dark-border-strong);
-  --color-accent: var(--dark-accent);
-  --color-accent-hover: var(--dark-accent-hover);
-  --color-on-accent: var(--dark-on-accent);
-  --color-accent-soft: var(--dark-accent-soft);
+  --color-accent: var(--dark-accent-theme);
+  --color-accent-hover: var(--dark-accent-theme-hover);
+  --color-on-accent: var(--dark-on-accent-theme);
+  --color-accent-soft: var(--dark-accent-theme-soft);
+  --gradient-accent: var(--dark-gradient-accent);
+  --gradient-accent-control: var(--dark-gradient-accent-control);
+  /* The ambient light stays COOL in dark: the lime is a control colour, and a
+     lime wash behind a lime button is muddy. Halved, and blue-only. */
+  --glow-accent: radial-gradient(
+    50% 55% at 70% 22%,
+    color-mix(in srgb, var(--color-ambient) 12%, transparent),
+    transparent 70%
+  );
+  --glow-ambient: radial-gradient(
+    46% 52% at 22% 34%,
+    color-mix(in srgb, var(--color-ambient) 8%, transparent),
+    transparent 68%
+  );
   --color-positive: var(--dark-positive);
   --color-negative: var(--dark-negative);
   --color-warning: var(--dark-warning);
