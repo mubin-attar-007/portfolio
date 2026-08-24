@@ -230,6 +230,30 @@ button:disabled,
   );
 }
 
+/* ---- device: the section reveal ----------------------------------------
+   The hidden state is applied by JS, and ONLY to elements that were below the
+   fold at mount (see components/ui/reveal.tsx). That inversion is the whole
+   design: an element already on screen is never hidden, so a reveal that fails
+   to fire costs an animation, never content.
+
+   Two earlier attempts hid content declaratively — a CSS `view()` timeline and
+   a JS-hidden observer — and both blanked the page body in captures and edge
+   contexts. Third time: nothing is hidden unless JS has already proven it can
+   unhide it, and a 1.6s timer unhides everything regardless. */
+@media (prefers-reduced-motion: no-preference) {
+  [data-reveal] {
+    opacity: 0;
+    transform: translateY(16px);
+    transition:
+      opacity var(--motion-section) var(--ease-enter),
+      transform var(--motion-section) var(--ease-enter);
+  }
+  [data-reveal][data-inview] {
+    opacity: 1;
+    transform: none;
+  }
+}
+
 /* ---- device 2: the animated underline ---------------------------------- */
 .link-underline {
   background-image: linear-gradient(currentColor, currentColor);
@@ -303,6 +327,17 @@ button:disabled,
   --color-bg-subtle: #0e1417;
   --color-surface: #12181b;
   --color-surface-raised: #171d20;
+  /* The accent reverts to the THEME's. `.tone-invert` sets the violet band
+     accent for bands inside the LIGHT page; inside a dark document that band is
+     just another dark surface, and keeping the violet there put two accents on
+     one scroll — exactly the incoherence the band/theme split exists to
+     prevent. */
+  --color-accent: var(--dark-accent-theme);
+  --color-accent-hover: var(--dark-accent-theme-hover);
+  --color-on-accent: var(--dark-on-accent-theme);
+  --color-accent-soft: var(--dark-accent-theme-soft);
+  --gradient-accent: var(--dark-gradient-accent);
+  --gradient-accent-control: var(--dark-gradient-accent-control);
 }
 
 /* ---- device 4: hairlines that dissolve --------------------------------- */

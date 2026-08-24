@@ -83,7 +83,22 @@ for (const theme of themes) {
       page.on("pageerror", (e) => consoleErrors.push(`pageerror: ${e.message}`));
 
       await page.goto(`${BASE}${route}`, { waitUntil: "networkidle" });
-      await page.waitForTimeout(400);
+
+      // Scroll the page through before capturing. Section entrances are
+      // viewport-triggered, so a capture taken without scrolling tests a state
+      // no reader ever sees — and would report an entrance mid-flight as a
+      // defect. This walks the document the way a person does, then returns to
+      // the top so the capture starts where the page starts.
+      await page.evaluate(async () => {
+        const step = Math.round(window.innerHeight * 0.8);
+        for (let y = 0; y < document.body.scrollHeight; y += step) {
+          window.scrollTo(0, y);
+          await new Promise((r) => setTimeout(r, 60));
+        }
+        window.scrollTo(0, 0);
+        await new Promise((r) => setTimeout(r, 120));
+      });
+      await page.waitForTimeout(700);
 
       // Horizontal overflow, with the offending elements named. Reporting only
       // "the page is 16px too wide" costs an afternoon; naming the node that

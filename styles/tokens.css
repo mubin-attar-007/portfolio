@@ -69,7 +69,7 @@
      on bg-subtle, which is under AA for the 12px syntax tokens in the hero
      stage — fixed here rather than at the call site, because every other use
      (metric deltas, status text) sat on the same margin. */
-  --color-positive: #146b33;
+  --color-positive: #0f7a52;        /* emerald, matched to the dark ramp */
   --color-negative: #b91c1c;        /* regressions / before-values */
   --color-warning: #b45309;         /* caution callouts */
 
@@ -156,15 +156,21 @@
      One curve, three durations. Micro 150ms · standard 260/320ms · reveal 500ms.
      Tailwind reads --default-transition-* so every bare `transition` in the
      codebase lands on the same curve without per-element easing. */
+  --motion-instant: 120ms;   /* state flip: focus ring, tab select */
   --motion-fast: 130ms;      /* micro-interaction: colour, icon nudge */
   --motion-base: 200ms;      /* standard transition */
   --motion-slow: 300ms;      /* the slower reach: elevation, disclosure */
-  --motion-reveal: 450ms;    /* section entrance */
+  --motion-reveal: 450ms;    /* component entrance */
+  --motion-section: 560ms;   /* section entrance — the slowest thing on the page */
   --stagger-step: 60ms;      /* per-sibling delay in staggered groups */
   --motion-reduced: 0.01ms;
   --ease-out: cubic-bezier(0.4, 0.36, 0, 1);         /* measured off clerk.com */
   --ease-emphasized: cubic-bezier(0.33, 1, 0.68, 1); /* measured off clerk.com */
   --ease-spring: cubic-bezier(0.175, 0.885, 0.32, 1.1); /* measured off clerk.com */
+  /* Entrance easing: a long decelerating tail, so a section arrives rather
+     than snaps. Distinct from --ease-out, which is tuned for 130-300ms
+     interaction feedback and reads abrupt over half a second. */
+  --ease-enter: cubic-bezier(0.16, 1, 0.3, 1);
 
   --default-transition-duration: var(--motion-base);
   --default-transition-timing-function: var(--ease-out);
@@ -286,22 +292,18 @@
   --dark-on-accent-theme: #03080a; /* 17.0:1 on the lime fill */
   --dark-accent-theme-soft: #131b07;  /* deepened: tertiary clears 4.5:1 here */
 
-  --dark-positive: #4ade80;        /* 11.6:1 on --dark-bg */
+  --dark-positive: #34d399;        /* emerald — 10.5:1, and ~80° clear of the lime accent */
   --dark-negative: #f87171;
   --dark-warning: #fbbf24;
 
-  /* TWO ROLES, and the split is deliberate. The reference's own h1 is neutral
-     (#fcfcfe, measured) — they ration lime to controls and the logomark. A
-     whole display line in it reads acid, so:
+  /* ONE accent in dark, end to end — owner-directed after the split shipped
+     and read as leftover purple rather than as a second role.
 
-       lime    = ACTION      buttons, links, active state, hover answers
-       violet  = DISPLAY     the hero's accent line, i.e. the brand voice
-
-     That keeps the identity continuous across themes (the two-line headline
-     device survives) while lime stays the scarce, loud thing it should be.
-     Both display endpoints clear AA on the near-black: #a99cff at 8.5:1,
-     #6f9dff at 7.6:1. */
-  --dark-gradient-accent: linear-gradient(100deg, #a99cff 10%, #b9a9ff 55%, #6f9dff 100%);
+     The display line takes a gradient rather than the flat lime: at 84px a
+     single #c8ff00 slab vibrates, while a lime -> green sweep across the words
+     gives it depth and keeps the hue honest. All three stops clear AA on the
+     near-black (17.0 / 13.9 / 11.3:1). */
+  --dark-gradient-accent: linear-gradient(100deg, #c8ff00 8%, #b0f000 52%, #7fd900 100%);
   --dark-gradient-accent-control: linear-gradient(180deg, #d4ff33, #c8ff00);
 
   --dark-shadow-sm: 0 0 0 0.5px rgb(255 255 255 / 0.07), 0 1px 2px rgb(0 0 0 / 0.5);

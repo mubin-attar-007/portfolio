@@ -1,8 +1,9 @@
 "use client";
 
-import { useState } from "react";
+import { useCallback, useEffect, useRef, useState } from "react";
 import Link from "next/link";
-import { ArrowRight, Check, ChevronRight, CircleCheck, X } from "lucide-react";
+import { ArrowRight, Check, ChevronRight, CircleCheck, Pause, Play, RotateCcw, X } from "lucide-react";
+import { useReducedMotion } from "@/lib/use-reduced-motion";
 import { EyebrowChip } from "@/components/ui/eyebrow-chip";
 import { buttonVariants } from "@/components/ui/button";
 import styles from "./walkthrough.module.css";
@@ -60,12 +61,77 @@ export type WalkthroughProps = {
  * The refusal example is illustrative of real validator behaviour and the
  * specimen says so — it is not presented as a logged incident.
  */
+/** How long one stage holds before the run advances. */
+const DWELL_MS = 2800;
+
 export function FlagshipWalkthrough(props: WalkthroughProps) {
   const [active, setActive] = useState<WalkthroughStage["id"]>("retrieve");
+  const [playing, setPlaying] = useState(false);
+  const [started, setStarted] = useState(false);
+  const rootRef = useRef<HTMLDivElement>(null);
+  const reduced = useReducedMotion();
   const stage = props.stages.find((s) => s.id === active) ?? props.stages[0]!;
+  const index = props.stages.findIndex((s) => s.id === stage.id);
+  const last = index === props.stages.length - 1;
+
+  /** Any manual selection stops the run — the reader has taken over. */
+  const select = useCallback((id: WalkthroughStage["id"]) => {
+    setPlaying(false);
+    setActive(id);
+  }, []);
+
+  const replay = useCallback(() => {
+    setActive(props.stages[0]!.id);
+    setPlaying(true);
+  }, [props.stages]);
+
+  // The run starts ONCE, when the section is first reached — not on load,
+  // where it would finish unseen, and not on every re-entry, which would make
+  // scrolling past feel like the page was resetting itself.
+  useEffect(() => {
+    if (reduced || started) return;
+    const el = rootRef.current;
+    if (!el || !("IntersectionObserver" in window)) return;
+    const io = new IntersectionObserver(
+      (entries) => {
+        for (const e of entries) {
+          if (!e.isIntersecting) continue;
+          setStarted(true);
+          setPlaying(true);
+          io.disconnect();
+        }
+      },
+      { threshold: 0.35 },
+    );
+    io.observe(el);
+    return () => io.disconnect();
+  }, [reduced, started]);
+
+  // Advance while playing; stop AT the last stage rather than looping — a
+  // pipeline that runs forever is an animation, not a demonstration.
+  //
+  // The terminal state is derived (`last`), never set: writing state from
+  // inside this effect would schedule a cascading render on the frame the run
+  // ends. The transport reads `last` directly to become a Replay control.
+  useEffect(() => {
+    if (!playing || reduced || last) return;
+    const id = setTimeout(() => {
+      setActive(props.stages[index + 1]!.id);
+    }, DWELL_MS);
+    return () => clearTimeout(id);
+  }, [playing, reduced, index, last, props.stages]);
+
+  // A backgrounded tab should not keep stepping.
+  useEffect(() => {
+    const onHide = () => {
+      if (document.hidden) setPlaying(false);
+    };
+    document.addEventListener("visibilitychange", onHide);
+    return () => document.removeEventListener("visibilitychange", onHide);
+  }, []);
 
   return (
-    <div className={styles.layout}>
+    <div className={styles.layout} ref={rootRef}>
       {/* ---- rail ---- */}
       <div className={styles.rail}>
         <EyebrowChip>{props.eyebrow}</EyebrowChip>
@@ -80,13 +146,15 @@ export function FlagshipWalkthrough(props: WalkthroughProps) {
             return (
               <li
                 key={s.id}
-                className={`${styles.stageItem} ${open ? styles.stageItemOpen : ""}`}
+                className={`${styles.stageItem} ${open ? styles.stageItemOpen : ""} ${
+                  open && playing && !last ? styles.stageItemPlaying : ""
+                }`}
               >
                 <button
                   type="button"
                   aria-expanded={open}
                   aria-controls={`walkthrough-panel-${s.id}`}
-                  onClick={() => setActive(s.id)}
+                  onClick={() => select(s.id)}
                   className={styles.stageBtn}
                 >
                   <span className={styles.stageN} aria-hidden>
@@ -115,10 +183,43 @@ export function FlagshipWalkthrough(props: WalkthroughProps) {
           })}
         </ol>
 
+        {/* Transport. Small, and only meaningful while motion is allowed — under
+            reduced motion there is no run to control, so the controls are not
+            rendered at all rather than sitting there inert. */}
+        {!reduced ? (
+          <div className={styles.transport}>
+            <button
+              type="button"
+              onClick={() => (last ? replay() : setPlaying((p) => !p))}
+              className={styles.transportBtn}
+            >
+              {last ? (
+                <>
+                  <RotateCcw size={13} strokeWidth={2} aria-hidden />
+                  Replay the run
+                </>
+              ) : playing ? (
+                <>
+                  <Pause size={13} strokeWidth={2} aria-hidden />
+                  Pause
+                </>
+              ) : (
+                <>
+                  <Play size={13} strokeWidth={2} aria-hidden />
+                  Play the run
+                </>
+              )}
+            </button>
+            <span className={styles.transportStep} aria-hidden>
+              {index + 1} / {props.stages.length}
+            </span>
+          </div>
+        ) : null}
+
         <Link
           href={props.cta.href}
           prefetch={false}
-          className={`${buttonVariants("primary", "md")} mt-7 w-fit`}
+          className={`${buttonVariants("primary", "md")} mt-6 w-fit`}
         >
           {props.cta.label}
           <ArrowRight size={15} strokeWidth={2.25} aria-hidden />
@@ -130,6 +231,9 @@ export function FlagshipWalkthrough(props: WalkthroughProps) {
         <div className={styles.specimenHead}>
           <span className={styles.specimenDot} aria-hidden />
           dbwhisper · {stage.label}
+          <span className={styles.specimenStep} aria-hidden>
+            step {index + 1} of {props.stages.length}
+          </span>
         </div>
         {/* Keyed remount restarts the entrance animation on every swap. */}
         <div key={stage.id} className={`${styles.specimenBody} ${styles.panelEnter}`} aria-live="polite">

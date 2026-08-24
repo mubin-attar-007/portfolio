@@ -84,6 +84,33 @@
 .stageItemOpen {
   box-shadow: inset 2px 0 0 var(--color-accent);
 }
+
+/* The dwell line: a 2px accent rule that fills across the open stage while the
+   run is playing. It is the section's ONE continuously moving element, it runs
+   for a fixed 2.8s rather than looping, and it is absent entirely under reduced
+   motion (the component does not render a run at all there). */
+.stageItemOpen.stageItemPlaying {
+  position: relative;
+}
+.stageItemOpen.stageItemPlaying::after {
+  content: "";
+  position: absolute;
+  left: 0;
+  bottom: -1px;
+  height: 2px;
+  width: 100%;
+  transform-origin: left;
+  background: var(--color-accent);
+  animation: dwell 2800ms linear forwards;
+}
+@keyframes dwell {
+  from {
+    transform: scaleX(0);
+  }
+  to {
+    transform: scaleX(1);
+  }
+}
 .stageItemOpen .stageBtn,
 .stageItemOpen .stagePanel {
   padding-left: 0.875rem;
@@ -174,6 +201,51 @@
     color-mix(in srgb, var(--color-ambient) 45%, transparent) 75%,
     transparent 96%
   );
+}
+
+/* ---- transport ----------------------------------------------------------
+   Deliberately quiet: a text-scale control and a step counter, not a media
+   player. The run is a demonstration the reader can take over, and the moment
+   they touch a stage the run yields to them. */
+.transport {
+  margin-top: 1.5rem;
+  display: flex;
+  align-items: center;
+  gap: 0.875rem;
+}
+
+.transportBtn {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.4375rem;
+  min-height: 2rem;
+  padding: 0.3125rem 0.75rem;
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-sm);
+  background: var(--color-surface);
+  font-size: 0.8125rem;
+  font-weight: 500;
+  color: var(--color-ink-secondary);
+  transition:
+    color var(--motion-fast) var(--ease-out),
+    border-color var(--motion-fast) var(--ease-out);
+}
+.transportBtn:hover {
+  color: var(--color-ink);
+  border-color: var(--color-border-strong);
+}
+
+.transportStep {
+  font-family: var(--font-mono);
+  font-size: 0.6875rem;
+  font-variant-numeric: tabular-nums;
+  color: var(--color-ink-tertiary);
+}
+
+.specimenStep {
+  margin-left: auto;
+  font-variant-numeric: tabular-nums;
+  color: var(--color-ink-tertiary);
 }
 
 .specimenHead {
