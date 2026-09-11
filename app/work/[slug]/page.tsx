@@ -87,26 +87,26 @@ const DEMO_SHOTS: Record<
   { alt: string; caption: string; width: number; height: number }
 > = {
   dbwhisper: {
-    alt: "Silent screen tour of DBWhisper's live site — plain-English questions turned into validated read-only SQL, run, and answered.",
-    caption: "Silent tour of the live product — plain English in, a fail-closed read-only query and answer out.",
+    alt: "Recorded scroll through the DBWhisper product website.",
+    caption: "Product website recording. Some on-screen claims predate the scoped results and limitations documented in this case study.",
     width: 768,
     height: 456,
   },
   crownwager: {
-    alt: "Silent screen tour of CrownWager's live site — model-vs-market best bets with edge, expected value, and model win probability.",
-    caption: "Silent tour of the live product — model probabilities turned into +EV picks (informational only, no real-money wagering).",
+    alt: "Recorded scroll through the CrownWager product website.",
+    caption: "Product website recording. The on-screen training count differs from the current five-fold evaluation on 15,115 games documented below.",
     width: 1280,
     height: 760,
   },
   tradepulse: {
-    alt: "Silent screen tour of TradePulse's live site — an honest backtesting terminal for building and running trading strategies.",
-    caption: "Silent tour of the live product — an honest backtesting terminal, “no cherry-picked numbers.”",
+    alt: "Recorded scroll through the TradePulse product website.",
+    caption: "Product website recording. Market data is delayed; older on-screen references to real-time charting are not the current data contract.",
     width: 1280,
     height: 760,
   },
   "llm-studio": {
-    alt: "Silent screen tour of LLM Studio's live app — a private multi-model chat workspace with token streaming and model switching.",
-    caption: "Silent tour of the live app — a private, multi-model chat workspace: streaming answers, model switching, and per-user quotas.",
+    alt: "Recorded LLM Studio chat interface with conversation history and model selection.",
+    caption: "Application recording — a multi-model chat workspace with per-user history and model switching.",
     width: 1280,
     height: 720,
   },

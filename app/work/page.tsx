@@ -18,13 +18,13 @@ import cardStyles from "@/components/work/project-card.module.css";
 export const metadata: Metadata = {
   title: "Work",
   description:
-    "Case studies for four live AI systems — architecture, key decisions, and measured results. Not screenshots.",
+    "Four applied AI projects, with architecture, engineering decisions, source code, and measured results.",
   alternates: { canonical: `${SITE.url}/work` },
   openGraph: {
     siteName: SITE.name,
     title: "Work — Mubin Attar",
     description:
-      "Case studies for four live AI systems — architecture, key decisions, and measured results. Not screenshots.",
+      "Four applied AI projects, with architecture, engineering decisions, source code, and measured results.",
     url: `${SITE.url}/work`,
     type: "website",
   },
@@ -148,7 +148,7 @@ export default function WorkIndex() {
                 <span className="h-[0.4375rem] w-[0.4375rem] rounded-[var(--radius-pill)] bg-border-strong" />
               </span>
               <span className="font-mono text-[0.6875rem] text-ink-tertiary">
-                {flagship.slug}.app
+                DBWhisper · product website
               </span>
             </div>
             {/* The full-resolution capture (1920px), not the 768px card webp:
@@ -160,9 +160,9 @@ export default function WorkIndex() {
               alt={flagship.card.alt}
               width={1920}
               height={1140}
-              className="h-auto w-full [mask-image:linear-gradient(to_bottom,black_84%,transparent)]"
-              sizes="(min-width: 64rem) 56vw, 100vw"
-              priority
+              className="h-auto w-full"
+              sizes="(min-width: 79rem) 40rem, (min-width: 64rem) 52vw, 100vw"
+              loading="eager"
             />
           </figure>
         </div>

@@ -15,7 +15,9 @@
     "test:screens": "node scripts/screenshot.mjs",
     "test:print": "node scripts/print-check.mjs",
     "test:hue": "node scripts/theme-audit.mjs",
-    "test:interaction": "node scripts/interaction-audit.mjs",
+    "test:interaction": "node scripts/interaction-audit.mjs && node scripts/walkthrough-input-audit.mjs && node scripts/boundary-audit.mjs && node scripts/walkthrough-disclosure-audit.mjs",
+    "test:motion": "node scripts/motion-audit.mjs",
+    "test:links": "node scripts/link-audit.mjs",
     "test:lh-diagnose": "node scripts/lighthouse-diagnose.mjs",
     "test:release-diff": "node scripts/release-diff.mjs",
     "test:smoke": "node scripts/smoke.mjs"

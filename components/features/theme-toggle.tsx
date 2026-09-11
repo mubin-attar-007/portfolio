@@ -7,11 +7,10 @@ import { Moon, Sun } from "lucide-react";
  * ThemeToggle — switches light/dark by setting `data-theme` on <html> and
  * persisting the choice to localStorage.
  *
- * DARK is the default; light is an explicit, remembered preference. The OS
- * `prefers-color-scheme` is deliberately never consulted (ADR-011), so this
- * button is the only thing that can move the site off dark.
+ * LIGHT is the default; dark is an explicit, remembered preference. The OS
+ * `prefers-color-scheme` is deliberately never consulted.
  *
- * SSR renders the dark-state icon — matching the `data-theme="dark"` the server
+ * SSR renders the light-state icon — matching the `data-theme="light"` the server
  * puts on <html> — so there is no hydration mismatch, and the pre-paint script
  * in the layout has already corrected the attribute for a returning visitor
  * before this component mounts.
@@ -30,16 +29,14 @@ type Theme = "light" | "dark";
 const CHROME: Record<Theme, string> = { light: "#fcfcfe", dark: "#03080a" };
 
 export function ThemeToggle() {
-  const [theme, setTheme] = useState<Theme>("dark");
+  const [theme, setTheme] = useState<Theme>("light");
 
   useEffect(() => {
-    const stored = localStorage.getItem("theme");
+    // The layout has already applied the stored preference before paint.
+    // Reading the DOM also works when browser policy blocks localStorage.
     const current: Theme =
-      stored === "dark" || stored === "light"
-        ? stored
-        : ((document.documentElement.getAttribute("data-theme") as Theme | null) ?? "dark");
-    // One-time read of the persisted theme (else the dark default) on mount —
-    // we intentionally do NOT follow the OS scheme.
+      document.documentElement.getAttribute("data-theme") === "dark" ? "dark" : "light";
+    document.querySelector('meta[name="theme-color"]')?.setAttribute("content", CHROME[current]);
     // eslint-disable-next-line react-hooks/set-state-in-effect
     setTheme(current);
   }, []);
@@ -50,8 +47,12 @@ export function ThemeToggle() {
     document
       .querySelector('meta[name="theme-color"]')
       ?.setAttribute("content", CHROME[next]);
-    localStorage.setItem("theme", next);
     setTheme(next);
+    try {
+      localStorage.setItem("theme", next);
+    } catch {
+      // Storage policy must not prevent changing the current page's theme.
+    }
   }
 
   const isDark = theme === "dark";

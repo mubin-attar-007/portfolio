@@ -1,19 +1,25 @@
 WEBVTT
 
 00:06.000 --> 00:13.000
-LLM Studio — a private, multi-model AI workspace with real accounts.
+LLM Studio: a multi-model chat workspace
+with accounts and per-user history.
 
 00:13.000 --> 00:22.000
-Ask anything — answers stream token-by-token, ChatGPT-style.
+Ask a question; the reply streams
+token by token.
 
 00:22.000 --> 00:27.000
-Each conversation is private to your account, saved server-side.
+Saved conversations are scoped
+to the authenticated account.
 
 00:27.000 --> 00:33.000
-Switch models on the fly — one OpenAI-compatible seam over cloud and local providers.
+Choose a model through one interface
+for cloud providers and local Ollama.
 
-00:33.000 --> 00:41.000
-Follow-ups keep the context; a shared key with a fair per-user daily quota keeps it live.
+00:33.000 --> 00:38.000
+Follow-ups use chat context.
+Daily quotas limit shared-key usage.
 
-00:41.000 --> 00:45.000
-The full SaaS shape: Argon2id auth, per-user tenancy, 31 tests — on a $0 stack.
+00:38.000 --> 00:42.720
+Argon2id auth, 31 tests in the case study,
+and free-tier hosting.

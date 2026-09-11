@@ -11,7 +11,7 @@ order: 4
 
 ## Executive Summary
 
-CrownWager is a sports-betting analytics platform (in the spirit of dimers.com) built around a **validated XGBoost NBA moneyline model** and a hard rule: never publish a number you can't defend. It turns model probabilities into fair-odds edge, expected value, and Kelly-sized stakes; finds cross-book arbitrage; and — the part most such products skip — keeps a **verifiable, graded track record** by settling every published pick against the *real* final score. A Claude-powered assistant (CrownBot) answers questions grounded strictly in the current best bets. The whole system is a ground-up rebuild of a legacy monolith I audited and judged unshippable (no rate limiting, secrets in the repo, no auth hardening), re-architected into a Django/DRF backend, a decoupled FastAPI ML service, and a Next.js frontend — with graceful degradation so the product runs even when every external dependency is down.
+CrownWager is a sports-betting analytics platform built around a **validated XGBoost NBA moneyline model**. It turns model probabilities into fair-odds edge, expected value, and Kelly-sized stakes; finds cross-book arbitrage; and keeps a **graded track record** by settling published picks against the final score. A Claude-powered assistant (CrownBot) receives current best-bets data as context. The system is a rebuild of a legacy monolith I audited, separating it into a Django/DRF backend, a FastAPI ML service, and a Next.js frontend, with rate limiting, authentication hardening, and labeled fallback modes for handled dependency failures.
 
 ## Problem
 
@@ -25,7 +25,7 @@ CrownWager was built to be defensible on all three — the model is cross-valida
 
 ## Architecture
 
-Three decoupled services so heavy ML never blocks web requests:
+Three decoupled services keep model loading and inference outside the web backend:
 
 ```
 Next.js 15 / React 19 frontend
@@ -52,7 +52,7 @@ Django 5.1 + DRF backend  ──► PostgreSQL (odds, best bets, graded results)
 
 **3. A verifiable, graded track record — not a wall of pending picks.** Every published pick is settled only once its game is **FINAL with both scores present**: moneyline picks grade on which team actually won; over/unders parse the line and check the real total; anything unmappable is **voided and excluded** rather than fudged. The record is then computed **per edge tier** (0–2%, 2–5%, 5–10%, 10%+) as win rate, units profit, and ROI — and flagged `insufficient` until at least 20 picks have settled, so there's no fabricated early history. Trade-off: the track record starts empty and grows slowly; that's the price of it being real.
 
-**4. Graceful degradation everywhere.** A **circuit breaker** on the ML client opens after 3 consecutive failures and fast-fails for 30 seconds instead of hanging on timeouts, falling back to labeled demo predictions. The Odds API, the ML service, and CrownBot's LLM each have a clean fallback; the product keeps running (in clearly-labeled demo mode) even if all of them are down. Trade-off: more fallback code to maintain, for a system that never hard-fails in front of a user.
+**4. Explicit dependency fallbacks.** A **circuit breaker** on the ML client opens after 3 consecutive failures and fast-fails for 30 seconds instead of hanging on timeouts, falling back to labeled demo predictions. The Odds API, the ML service, and CrownBot's LLM each have a fallback for handled failures. Trade-off: more paths to maintain and test, with reduced functionality while dependencies are unavailable.
 
 **5. A grounded assistant over a persuasive one.** CrownBot runs on Claude (with OpenAI-compatible fallbacks) and is grounded in the current best-bets data injected into the prompt. Its system prompt forbids telling anyone to place a specific wager, forbids promising profit, mandates responsible-gambling messaging, and instructs it to **say plainly when the data doesn't cover something**. With no API key configured, it degrades to a deterministic data summary. Trade-off: a less "salesy" assistant — which is the entire point for a responsible, informational product.
 
@@ -61,12 +61,12 @@ Django 5.1 + DRF backend  ──► PostgreSQL (odds, best bets, graded results)
 - **XGBoost NBA moneyline model, ~65% accuracy via 5-fold stratified cross-validation** (not a single split) — a real, measured edge above the base home-win rate, with the model kept shallow to resist overfitting.
 - **Track record grades against reality.** Picks settle only on FINAL scores; results are stored per pick and aggregated by edge tier, with an explicit `insufficient` flag below 20 settled picks. Nothing is backfilled.
 - **`Decimal` money math** across EV, Kelly, and the arbitrage allocator — no floating-point drift in stakes or payouts.
-- **Arbitrage finder** takes the best price per outcome across books and flags a guaranteed profit when `Σ (1/odds) < 1`, sizing each leg proportionally to equalize payout.
+- **Arbitrage finder** takes the best price per outcome across books and flags a theoretical arbitrage opportunity when `Σ (1/odds) < 1`, sizing each leg proportionally to equalize payout at the listed odds.
 - **Production-hardened rebuild** of the legacy monolith: proxy-aware per-IP rate limiting, constant-time token comparison, optional admin 2FA (TOTP), DSN-gated Sentry, CSP + error boundaries, and blocking `bandit` + `gitleaks` + dependency audits in CI, with a tested backup/restore runbook.
 
 ## Lessons
 
 - **Cross-validation is the honesty gate for an ML claim.** A single split can flatter any model; 5-fold CV with a fixed seed is what lets you publish "~65%" and mean it.
-- **A graded track record is the most credible thing a predictions product can ship** — and the hardest, because it can't be faked. Voiding unmappable picks and flagging small samples matters more than the headline win rate.
+- **A graded track record makes predictions inspectable.** Voiding unmappable picks and flagging small samples matters more than the headline win rate.
 - **Decouple the ML service and give everything a fallback.** Isolating inference behind HTTP plus a circuit breaker means a slow or dead model degrades gracefully instead of taking the site down.
 - **Responsible-by-design constrains the fun features — correctly.** Forbidding the assistant from pushing wagers or promising profit isn't a limitation; for this domain it's the requirement.

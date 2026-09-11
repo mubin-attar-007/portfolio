@@ -1,12 +1,12 @@
 {
   "name": "Mubin Attar",
-  "role": "AI Systems Engineer",
+  "role": "Applied AI Engineer",
   "focus": "GenAI · LLMs · Agents · MLOps",
   "location": "Ahmedabad, India",
   "email": "sk.mubinattar@gmail.com",
-  "tagline": "I build and ship real, honest AI products — end to end.",
-  "ethos": "Every number a user sees is genuinely computed — never faked. Real products, honest metrics, shipped.",
-  "summary": "AI Systems Engineer shipping production software since 2022 and production AI since 2024 — GenAI/LLM applications, agentic & RAG systems, predictive ML, and healthcare-AI automation. Fluent across the stack (FastAPI, Next.js, PostgreSQL, Docker) with auth, CI/CD, and security hardening baked in. I put deterministic boundaries around models and link every metric to how it was measured.",
+  "tagline": "I build AI products, from the data pipeline to the interface.",
+  "ethos": "Define the boundaries, test the complete system, and publish the method behind the result.",
+  "summary": "Applied AI Engineer with 3+ years in software engineering and a production-AI focus since 2024. I build LLM applications, agentic and RAG systems, predictive ML, and healthcare automation across FastAPI, Next.js, PostgreSQL, and Docker. My work includes authentication, CI/CD, validation, and task-level evaluation.",
   "resume": "/Mubin_Attar_Resume.pdf",
   "headshot": "/mubin.png",
   "socials": {
@@ -17,7 +17,7 @@
     "email": "mailto:sk.mubinattar@gmail.com"
   },
   "stats": [
-    { "value": "4", "label": "live AI products" },
+    { "value": "4", "label": "public AI projects" },
     { "value": "3+", "label": "years shipping" },
     { "value": "$0", "label": "infra — free-tier stack" }
   ]

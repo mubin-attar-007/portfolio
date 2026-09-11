@@ -4,49 +4,16 @@ import { Container } from "@/components/layout/container";
 import { buttonVariants } from "@/components/ui/button";
 import { SITE, STATUS } from "@/config/site";
 import { flagshipHome } from "@/content/home-visual";
-import { EvidenceGraph } from "./evidence-graph";
 
-/**
- * FinalContactCTA — the page's one closing conversion section, and the second
- * (and last) dark plate.
- *
- * It asks a question rather than announcing availability, because the visitor
- * who reaches the bottom of this page has already read the availability line
- * twice — in the bar above the header and in the footer below. The headline is
- * the qualifying question; the body says what a first conversation is actually
- * about.
- *
- * There is no contact FORM here. /hire already owns one, and a duplicate form on
- * the homepage means two places for a message to be typed and one of them to be
- * wrong. The literal email sits underneath for the visitor who would rather not
- * click through at all.
- *
- * The background is the `quiet` variant of the same evidence motif the hero
- * uses, so the page opens and closes on the same drawing.
- *
- * A11y: one `<h2>`; the availability dot is decorative and its sentence carries
- * the meaning; the whole section is a landmark labelled by its heading.
- */
+/** A direct contact invitation, with the address usable without a form. */
 export function FinalContactCTA() {
   const c = flagshipHome.close;
 
   return (
     <section
-      className="tone-invert chamfer relative overflow-hidden pb-[var(--space-section-lg-end)] pt-[var(--space-section-lg)]"
+      className="tone-invert relative overflow-hidden py-[var(--space-section-sm)]"
       aria-labelledby="contact-title"
     >
-      <EvidenceGraph variant="quiet" />
-      {/* The plate's own light: a gradient hairline where the light page meets
-          it, and one violet radial rising behind the headline. */}
-      <div
-        aria-hidden
-        className="pointer-events-none absolute inset-x-0 top-0 h-px bg-[linear-gradient(90deg,transparent_8%,color-mix(in_srgb,var(--color-accent)_65%,transparent)_50%,transparent_92%)]"
-      />
-      <div
-        aria-hidden
-        className="pointer-events-none absolute left-1/2 top-0 h-[26rem] w-[52rem] -translate-x-1/2 rounded-full bg-[radial-gradient(closest-side,color-mix(in_srgb,var(--color-accent)_17%,transparent),transparent)]"
-      />
-
       <Container className="relative">
         <div className="mx-auto flex max-w-[46rem] flex-col items-center text-center">
           <h2

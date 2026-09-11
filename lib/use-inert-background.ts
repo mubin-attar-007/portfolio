@@ -18,23 +18,33 @@ import { useEffect } from "react";
  * them. Recolouring the page to survive being dimmed would have been the wrong
  * fix — content behind a modal is not meant to be read.
  *
- * Targets the layout's own landmarks rather than "every body child", so the
- * portalled dialog (a sibling appended to <body>) is never inerted by accident.
+ * Includes all page chrome, including the skip link and availability strip.
+ * Portalled overlays mark their body children with `data-modal-root` so the
+ * dialog remains reachable. Each modal also locks background scrolling.
  *
  * Older engines without `inert` fall back to `aria-hidden`, which covers the
  * screen-reader half; those engines keep the focus trap the dialog already
  * implements.
  */
-const LANDMARKS = ["header", "main", "footer"] as const;
-
 export function useInertBackground(active: boolean): void {
   useEffect(() => {
     if (!active) return;
 
-    const nodes = LANDMARKS.flatMap((sel) =>
-      Array.from(document.querySelectorAll<HTMLElement>(`body > ${sel}`)),
+    const nodes = Array.from(document.body.children).filter(
+      (node): node is HTMLElement =>
+        node instanceof HTMLElement &&
+        !node.matches("[data-modal-root], script, style, link"),
     );
     const supportsInert = "inert" in HTMLElement.prototype;
+    const previous = nodes.map((node) => ({
+      node,
+      inert: node.inert,
+      hidden: node.getAttribute("aria-hidden"),
+    }));
+    const bodyOverflow = document.body.style.overflow;
+    const rootOverflow = document.documentElement.style.overflow;
+    document.body.style.overflow = "hidden";
+    document.documentElement.style.overflow = "hidden";
 
     for (const node of nodes) {
       if (supportsInert) node.inert = true;
@@ -42,9 +52,12 @@ export function useInertBackground(active: boolean): void {
     }
 
     return () => {
-      for (const node of nodes) {
-        if (supportsInert) node.inert = false;
-        else node.removeAttribute("aria-hidden");
+      document.body.style.overflow = bodyOverflow;
+      document.documentElement.style.overflow = rootOverflow;
+      for (const { node, inert, hidden } of previous) {
+        if (supportsInert) node.inert = inert;
+        else if (hidden === null) node.removeAttribute("aria-hidden");
+        else node.setAttribute("aria-hidden", hidden);
       }
     };
   }, [active]);

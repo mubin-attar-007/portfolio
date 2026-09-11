@@ -2,7 +2,7 @@
 //
 // scripts/a11y.mjs proves the DOM is accessible and scripts/screenshot.mjs
 // proves nothing overflows. Neither can tell you that the product specimen
-// still advances, that a reveal actually revealed, or that reduced motion
+// still advances, that content works without JavaScript, or that reduced motion
 // yields a useful static state rather than a blank one. This does.
 //
 //   BASE_URL=http://localhost:3200 node scripts/interaction-audit.mjs
@@ -12,6 +12,7 @@
 import { chromium } from "playwright";
 
 const BASE = process.env.BASE_URL ?? "http://localhost:3200";
+const WALKTHROUGH_URL = `${BASE}/work/dbwhisper#request-walkthrough`;
 const results = [];
 
 const browser = await chromium.launch();
@@ -35,75 +36,103 @@ async function withPage(opts, fn) {
   }
 }
 
-// ---------------------------------------------------------------- reveals
-await withPage({}, async (page) => {
-  await page.goto(`${BASE}/`, { waitUntil: "networkidle" });
-
-  // Nothing above the fold may ever be armed — that is the rule the whole
-  // reveal design rests on.
-  const armedAboveFold = await page.evaluate(() =>
-    Array.from(document.querySelectorAll("[data-reveal]")).filter((el) => {
-      const r = el.getBoundingClientRect();
-      return r.top < window.innerHeight * 0.9 && !el.hasAttribute("data-inview");
-    }).length,
-  );
-  check("reveal: nothing above the fold is hidden", armedAboveFold === 0, `${armedAboveFold} armed`);
-
-  // After scrolling the page the way a reader does, everything is visible.
-  await page.evaluate(async () => {
-    const step = Math.round(window.innerHeight * 0.8);
-    for (let y = 0; y < document.body.scrollHeight; y += step) {
-      window.scrollTo(0, y);
-      await new Promise((r) => setTimeout(r, 60));
+// ------------------------------------------------------- content resilience
+// Inspect actual content and its ancestors, not the presence of a particular
+// animation component. This catches a faded or hidden section regardless of
+// which implementation introduced it, and fails if the content disappears.
+function headingVisibility() {
+  const headings = Array.from(document.querySelectorAll("main h1, main h2"))
+    .filter((el) => !el.closest(".sr-only"));
+  const unreadable = headings.filter((heading) => {
+    if (heading.getClientRects().length === 0) return true;
+    let opacity = 1;
+    for (let el = heading; el; el = el.parentElement) {
+      const style = getComputedStyle(el);
+      opacity *= Number.parseFloat(style.opacity);
+      if (style.visibility === "hidden" || style.display === "none") return true;
     }
-  });
-  await page.waitForTimeout(900);
-  const stillHidden = await page.evaluate(
-    () =>
-      Array.from(document.querySelectorAll("[data-reveal]")).filter(
-        (el) => Number.parseFloat(getComputedStyle(el).opacity) < 0.99,
-      ).length,
-  );
-  check("reveal: every section is visible after a read-through", stillHidden === 0, `${stillHidden} faded`);
-});
+    return opacity < 0.99;
+  }).map((el) => el.textContent?.trim());
+  return {
+    count: headings.length,
+    belowFold: headings.filter((el) => el.getBoundingClientRect().top >= innerHeight).length,
+    unreadable,
+  };
+}
 
-// The safety valve must unhide even if the observer never fires.
-await withPage({}, async (page) => {
-  await page.addInitScript(() => {
-    // Neuter the observer entirely: arming still happens, revealing must not
-    // depend on it.
-    window.IntersectionObserver = class {
-      observe() {}
-      unobserve() {}
-      disconnect() {}
-    };
+for (const width of [390, 1440]) {
+  await withPage({ javaScriptEnabled: false, viewport: { width, height: 900 } }, async (page) => {
+    await page.goto(`${BASE}/`, { waitUntil: "load" });
+    const h1 = page.locator("main h1");
+    check(`no JavaScript ${width}px: the page has one visible headline`,
+      await h1.count() === 1 && await h1.isVisible());
+    const featuredSelector = 'main a[href="/work/dbwhisper#request-walkthrough"]';
+    const featured = page.locator(featuredSelector).first();
+    check(`no JavaScript ${width}px: the featured case study is reachable`,
+      await featured.isVisible());
+    check(`no JavaScript ${width}px: the email contact link is reachable`,
+      await page.locator('main a[href^="mailto:"]').first().isVisible());
+    const content = await page.evaluate(headingVisibility);
+    check(`no JavaScript ${width}px: real sections remain readable`,
+      content.count >= 5 && content.unreadable.length === 0, JSON.stringify(content));
+    const overflow = await page.evaluate(() => document.documentElement.scrollWidth - document.documentElement.clientWidth);
+    check(`no JavaScript ${width}px: the page fits the viewport`, overflow === 0, `${overflow}px`);
+    // A no-JS document still runs CSS entrances. Wait for this link's finite
+    // ancestor animations without finishing them or bypassing actionability.
+    // Poll from Node: in-page timer callbacks do not resume with JS disabled.
+    const runningEntrance = () => page.evaluate((selector) => {
+      const target = document.querySelector(selector);
+      if (!target) return true;
+      for (let element = target; element; element = element.parentElement) {
+        const moving = element.getAnimations().some((animation) =>
+          animation.playState === "running" &&
+          Number.isFinite(animation.effect?.getComputedTiming().endTime));
+        if (moving) return true;
+      }
+      return false;
+    }, featuredSelector);
+    const entranceDeadline = Date.now() + 1500;
+    while (await runningEntrance()) {
+      if (Date.now() >= entranceDeadline) throw new Error("Featured-link entrance did not settle within 1500ms");
+      await page.waitForTimeout(50);
+    }
+
+    // Own the destination wait explicitly: click's implicit pre-navigation
+    // wait occasionally remained pending after a successful no-JS navigation.
+    await Promise.all([
+      page.waitForURL(WALKTHROUGH_URL, { waitUntil: "commit" }),
+      featured.click({ noWaitAfter: true }),
+    ]);
+    const destination = page.locator("#request-walkthrough #walkthrough-title");
+    await destination.waitFor({ state: "visible" });
+    await page.waitForLoadState("load");
+    check(`no JavaScript ${width}px: the featured link opens the case-study walkthrough`,
+      await destination.isVisible());
   });
-  await page.goto(`${BASE}/`, { waitUntil: "networkidle" });
-  await page.waitForTimeout(2200);
-  const hidden = await page.evaluate(
-    () =>
-      Array.from(document.querySelectorAll("[data-reveal]")).filter(
-        (el) => Number.parseFloat(getComputedStyle(el).opacity) < 0.99,
-      ).length,
-  );
-  check("reveal: content survives a dead IntersectionObserver", hidden === 0, `${hidden} stuck hidden`);
+}
+
+await withPage({}, async (page) => {
+  await page.goto(`${BASE}/`, { waitUntil: "domcontentloaded" });
+  const content = await page.evaluate(headingVisibility);
+  check("homepage: below-fold sections are readable immediately, before scrolling",
+    content.belowFold >= 3 && content.unreadable.length === 0, JSON.stringify(content));
 });
 
 // ------------------------------------------------------- product specimen
 await withPage({}, async (page) => {
-  await page.goto(`${BASE}/`, { waitUntil: "networkidle" });
+  await page.goto(WALKTHROUGH_URL, { waitUntil: "networkidle" });
   const rail = page.getByRole("button", { name: /^Retrieve$/ });
   await rail.scrollIntoViewIfNeeded();
   await page.waitForTimeout(600);
 
   // The run starts on arrival and advances on its own.
   const first = await page
-    .locator('[aria-expanded="true"]')
+    .locator('#request-walkthrough [aria-expanded="true"]')
     .first()
     .textContent();
   await page.waitForTimeout(3400);
   const second = await page
-    .locator('[aria-expanded="true"]')
+    .locator('#request-walkthrough [aria-expanded="true"]')
     .first()
     .textContent();
   check("specimen: the run advances once the section is reached", first !== second, `${first} -> ${second}`);
@@ -111,14 +140,14 @@ await withPage({}, async (page) => {
   // A manual selection takes over from the run.
   await page.getByRole("button", { name: /^Validate$/ }).click();
   await page.waitForTimeout(3400);
-  const held = await page.locator('[aria-expanded="true"]').first().textContent();
+  const held = await page.locator('#request-walkthrough [aria-expanded="true"]').first().textContent();
   check("specimen: selecting a stage stops the run", (held ?? "").includes("Validate"), held ?? "");
 
   // Keyboard reaches every stage.
   await page.getByRole("button", { name: /^Retrieve$/ }).focus();
   await page.keyboard.press("Enter");
   await page.waitForTimeout(250);
-  const viaKeyboard = await page.locator('[aria-expanded="true"]').first().textContent();
+  const viaKeyboard = await page.locator('#request-walkthrough [aria-expanded="true"]').first().textContent();
   check("specimen: stages are keyboard-operable", (viaKeyboard ?? "").includes("Retrieve"), viaKeyboard ?? "");
 
   // The transport pauses.
@@ -132,10 +161,10 @@ await withPage({}, async (page) => {
 // assistive technology hears, and whether the panel moves the page.
 
 const activeStage = (page) =>
-  page.locator('[aria-expanded="true"]').first().textContent();
+  page.locator('#request-walkthrough [aria-expanded="true"]').first().textContent();
 
 await withPage({}, async (page) => {
-  await page.goto(`${BASE}/`, { waitUntil: "networkidle" });
+  await page.goto(WALKTHROUGH_URL, { waitUntil: "networkidle" });
   await page.getByRole("button", { name: /^Retrieve$/ }).scrollIntoViewIfNeeded();
   await page.waitForTimeout(600);
 
@@ -164,7 +193,7 @@ await withPage({}, async (page) => {
 
 // Replay restarts the run, not merely the stage.
 await withPage({}, async (page) => {
-  await page.goto(`${BASE}/`, { waitUntil: "networkidle" });
+  await page.goto(WALKTHROUGH_URL, { waitUntil: "networkidle" });
   const lastStage = page.getByRole("button", { name: /^Evaluate$/ });
   await lastStage.scrollIntoViewIfNeeded();
   await lastStage.click(); // jump to the end, which also stops the run
@@ -190,7 +219,7 @@ await withPage({}, async (page) => {
 // A backgrounded tab stops stepping. Playwright cannot truly background a page,
 // so drive the exact signal the component listens for.
 await withPage({}, async (page) => {
-  await page.goto(`${BASE}/`, { waitUntil: "networkidle" });
+  await page.goto(WALKTHROUGH_URL, { waitUntil: "networkidle" });
   await page.getByRole("button", { name: /^Retrieve$/ }).scrollIntoViewIfNeeded();
   await page.waitForTimeout(600);
   await page.evaluate(() => {
@@ -207,7 +236,7 @@ await withPage({}, async (page) => {
 // Keyboard focus reaching the rail stops the run, so aria-expanded cannot flip
 // underneath the control the visitor is focused on.
 await withPage({}, async (page) => {
-  await page.goto(`${BASE}/`, { waitUntil: "networkidle" });
+  await page.goto(WALKTHROUGH_URL, { waitUntil: "networkidle" });
   await page.getByRole("button", { name: /^Retrieve$/ }).scrollIntoViewIfNeeded();
   await page.waitForTimeout(600);
   await page.getByRole("button", { name: /^Generate$/ }).focus(); // focus WITHOUT activating
@@ -220,7 +249,7 @@ await withPage({}, async (page) => {
 // THE ANNOUNCEMENT CONTRACT. An auto-advancing panel must not narrate itself to
 // a screen reader; a visitor-driven change must.
 await withPage({}, async (page) => {
-  await page.goto(`${BASE}/`, { waitUntil: "networkidle" });
+  await page.goto(WALKTHROUGH_URL, { waitUntil: "networkidle" });
   await page.getByRole("button", { name: /^Retrieve$/ }).scrollIntoViewIfNeeded();
   await page.waitForTimeout(600);
 
@@ -246,9 +275,9 @@ await withPage({}, async (page) => {
   );
 
   // The automatic run leaves it empty — nothing the visitor did not ask for.
-  const during = await page.locator('[role="status"]').first().textContent();
+  const during = await page.locator('#request-walkthrough [role="status"]').textContent();
   await page.waitForTimeout(3400);
-  const after = await page.locator('[role="status"]').first().textContent();
+  const after = await page.locator('#request-walkthrough [role="status"]').textContent();
   check(
     "specimen: automatic advancement announces NOTHING",
     (during ?? "").trim() === "" && (after ?? "").trim() === "",
@@ -258,7 +287,7 @@ await withPage({}, async (page) => {
   // A visitor-driven change does announce, concisely.
   await page.getByRole("button", { name: /^Validate$/ }).click();
   await page.waitForTimeout(250);
-  const announced = (await page.locator('[role="status"]').first().textContent()) ?? "";
+  const announced = (await page.locator('#request-walkthrough [role="status"]').textContent()) ?? "";
   check(
     "specimen: a visitor-driven change IS announced",
     announced.includes("Validate") && announced.length < 60,
@@ -269,7 +298,7 @@ await withPage({}, async (page) => {
 // Zero layout shift, measured two ways: the browser's own layout-shift entries
 // across a full unattended run, and the panel's box across every stage.
 await withPage({}, async (page) => {
-  await page.goto(`${BASE}/`, { waitUntil: "networkidle" });
+  await page.goto(WALKTHROUGH_URL, { waitUntil: "networkidle" });
   await page.evaluate(() => {
     window.__cls = 0;
     new PerformanceObserver((list) => {
@@ -333,21 +362,21 @@ await withPage({ reducedMotion: "reduce" }, async (page) => {
   await page.goto(`${BASE}/`, { waitUntil: "networkidle" });
   await page.waitForTimeout(500);
 
-  const hidden = await page.evaluate(
-    () =>
-      Array.from(document.querySelectorAll("[data-reveal], .reveal")).filter(
-        (el) => Number.parseFloat(getComputedStyle(el).opacity) < 0.99,
-      ).length,
-  );
-  check("reduced motion: nothing is hidden", hidden === 0, `${hidden} faded`);
+  const content = await page.evaluate(headingVisibility);
+  check("reduced motion: the homepage sections are readable", content.count >= 5 && content.unreadable.length === 0,
+    JSON.stringify(content));
 
-  const armed = await page.locator("[data-reveal]").count();
-  check("reduced motion: the reveal never arms", armed === 0, `${armed} armed`);
+  await page.goto(WALKTHROUGH_URL, { waitUntil: "networkidle" });
+  await page.getByRole("button", { name: /^Retrieve$/ }).scrollIntoViewIfNeeded();
+  const initial = await page.locator('#request-walkthrough [aria-expanded="true"]').first().textContent();
+  await page.waitForTimeout(3400);
+  const held = await page.locator('#request-walkthrough [aria-expanded="true"]').first().textContent();
+  check("reduced motion: the specimen does not advance by itself", initial === held, `${initial} -> ${held}`);
 
   // The specimen must still be usable, just not self-advancing.
   await page.getByRole("button", { name: /^Execute$/ }).click();
   await page.waitForTimeout(200);
-  const stage = await page.locator('[aria-expanded="true"]').first().textContent();
+  const stage = await page.locator('#request-walkthrough [aria-expanded="true"]').first().textContent();
   check("reduced motion: stages still selectable", (stage ?? "").includes("Execute"), stage ?? "");
 
   const transport = await page.getByRole("button", { name: /Play the run|Pause/ }).count();
@@ -426,8 +455,8 @@ for (const modal of [
     await modal.open(page);
 
     const inert = await page.evaluate(() =>
-      ["header", "main", "footer"]
-        .flatMap((sel) => Array.from(document.querySelectorAll(`body > ${sel}`)))
+      Array.from(document.body.children)
+        .filter((el) => el instanceof HTMLElement && !el.matches("[data-modal-root],script,style,link"))
         .map((el) => el.inert === true || el.getAttribute("aria-hidden") === "true"),
     );
     check(
@@ -443,15 +472,23 @@ for (const modal of [
       .evaluate((el) => !el.closest("[inert]"));
     check(`${modal.name}: the dialog itself stays reachable`, dialogReachable);
 
+    const locked = await page.evaluate(() =>
+      document.body.style.overflow === "hidden" && document.documentElement.style.overflow === "hidden",
+    );
+    check(`${modal.name}: background scrolling is locked`, locked);
+
     await page.keyboard.press("Escape");
     await page.waitForTimeout(700);
 
     const released = await page.evaluate(() =>
-      ["header", "main", "footer"]
-        .flatMap((sel) => Array.from(document.querySelectorAll(`body > ${sel}`)))
+      Array.from(document.body.children)
+        .filter((el) => el instanceof HTMLElement && !el.matches("[data-modal-root],script,style,link"))
         .every((el) => el.inert !== true && el.getAttribute("aria-hidden") !== "true"),
     );
     check(`${modal.name}: closing releases the boundary`, released);
+    check(`${modal.name}: closing releases the scroll lock`, await page.evaluate(() =>
+      document.body.style.overflow !== "hidden" && document.documentElement.style.overflow !== "hidden",
+    ));
 
     // The regression the boundary can cause: focus restored INTO an element
     // that is still inert is silently dropped on <body>.
@@ -465,6 +502,61 @@ for (const modal of [
     );
   });
 }
+
+// Shortcuts hand off from the menu rather than creating competing dialogs.
+await withPage({ viewport: { width: 390, height: 844 } }, async (page) => {
+  await page.goto(`${BASE}/`, { waitUntil: "networkidle" });
+  await page.getByRole("button", { name: "Open menu" }).click();
+  await page.getByRole("dialog", { name: "Menu" }).waitFor();
+  await page.keyboard.press("Control+k");
+  const assistant = page.getByRole("dialog", { name: "Ask about my work" });
+  await assistant.waitFor();
+  check("assistant shortcut: menu hands off to exactly one dialog", await page.getByRole("dialog").count() === 1);
+  check("assistant shortcut: the new modal retains its boundary", await page.locator("main").evaluate((el) => el.inert));
+  await page.keyboard.press("Escape");
+  await assistant.waitFor({ state: "detached" });
+});
+
+// A delayed mocked response reproduces typing the next question while busy.
+// No live model request or quota is needed to test the complete UI path.
+await withPage({}, async (page) => {
+  let requests = 0;
+  let releaseResponse;
+  const responseReady = new Promise((resolve) => { releaseResponse = resolve; });
+  const payload = [
+    'event: meta\ndata: {"mode":"fallback"}\n\n',
+    'event: token\ndata: {"text":"The validator checks the generated SQL before execution."}\n\n',
+    'event: sources\ndata: {"citations":[{"source":"DBWhisper case study — Architecture"}]}\n\n',
+    'event: done\ndata: {}\n\n',
+  ].join("");
+  await page.route("**/api/chat", async (route) => {
+    requests += 1;
+    await responseReady;
+    await route.fulfill({ status: 200, contentType: "text/event-stream", body: payload });
+  });
+  await page.goto(`${BASE}/`, { waitUntil: "networkidle" });
+  await page.getByRole("button", { name: /Ask this site/ }).first().click();
+  const question = page.getByRole("textbox", { name: "Your question" });
+  await question.fill("How does DBWhisper validate SQL?");
+  const requested = page.waitForRequest("**/api/chat");
+  await question.press("Enter");
+  await requested;
+  await page.getByRole("log").locator('[aria-busy="true"]').waitFor();
+  const nextQuestion = "What happens if the validator rejects it?";
+  await question.fill(nextQuestion);
+  await question.press("Enter");
+  check("assistant: Enter while busy preserves the next draft", await question.inputValue() === nextQuestion);
+  check("assistant: Enter while busy starts no second request", requests === 1, `${requests} requests`);
+  releaseResponse();
+  const citation = page.getByRole("dialog").getByRole("link", { name: "DBWhisper" });
+  await citation.waitFor();
+  await page.waitForFunction(() => document.querySelector('button[type="submit"]')?.disabled === false);
+  check("assistant: completion preserves the next draft and unlocks sending", await question.inputValue() === nextQuestion);
+  check("assistant: the cited project is a usable same-site link", await citation.getAttribute("href") === "/work/dbwhisper");
+  await citation.click();
+  await page.waitForURL("**/work/dbwhisper");
+  check("assistant: reading a source closes the dialog", await page.getByRole("dialog").count() === 0);
+});
 
 await browser.close();
 

@@ -14,6 +14,7 @@
 import { chromium } from "playwright";
 
 const BASE = (process.env.BASE_URL ?? "http://127.0.0.1:3200").replace(/\/$/, "");
+const WALKTHROUGH_URL = `${BASE}/work/dbwhisper#request-walkthrough`;
 const results = [];
 
 function check(name, pass, detail = "") {
@@ -38,7 +39,7 @@ async function withPage(opts, fn) {
 
 // ---------------------------------------------------------------- routes
 const ROUTES = [
-  { path: "/", must: /Production AI systems/i, name: "homepage" },
+  { path: "/", must: /AI systems,\s*built for the real world/i, name: "homepage" },
   { path: "/work", must: /Work/i, name: "work" },
   { path: "/work/dbwhisper", must: /DBWhisper/i, name: "DBWhisper case study" },
   { path: "/evals", must: /eval/i, name: "evals" },
@@ -61,7 +62,7 @@ for (const route of ROUTES) {
   });
 }
 
-// ------------------------------------------------------------ dark theme
+// ------------------------------------------------------------ light theme
 await withPage({}, async (page) => {
   await page.goto(`${BASE}/`, { waitUntil: "networkidle" });
   const state = await page.evaluate(() => ({
@@ -71,15 +72,15 @@ await withPage({}, async (page) => {
     chrome: document.querySelector('meta[name="theme-color"]')?.getAttribute("content"),
   }));
   check(
-    "dark theme is the default for a first-time visitor",
-    state.theme === "dark" && state.bg === "rgb(3, 8, 10)",
+    "light theme is the default for a first-time visitor",
+    state.theme === "light" && state.bg === "rgb(252, 252, 254)",
     JSON.stringify(state),
   );
-  check("color-scheme follows the theme (native UI, scrollbars)", state.scheme === "dark", state.scheme);
-  check("browser chrome matches the default ground", state.chrome === "#03080a", state.chrome ?? "none");
+  check("color-scheme follows the theme (native UI, scrollbars)", state.scheme === "light", state.scheme);
+  check("browser chrome matches the default ground", state.chrome === "#fcfcfe", state.chrome ?? "none");
 
-  // And the visitor can still get to light, with the chrome following.
-  await page.getByRole("button", { name: /Switch to light theme/i }).click();
+  // And the visitor can still get to dark, with the chrome following.
+  await page.getByRole("button", { name: /Switch to dark theme/i }).click();
   await page.waitForTimeout(300);
   const after = await page.evaluate(() => ({
     theme: document.documentElement.getAttribute("data-theme"),
@@ -87,18 +88,36 @@ await withPage({}, async (page) => {
     stored: localStorage.getItem("theme"),
   }));
   check(
-    "the toggle reaches light, persists it, and moves the chrome with it",
-    after.theme === "light" && after.stored === "light" && after.chrome === "#fcfcfe",
+    "the toggle reaches dark, persists it, and moves the chrome with it",
+    after.theme === "dark" && after.stored === "dark" && after.chrome === "#03080a",
     JSON.stringify(after),
   );
 });
 
-// A returning visitor who chose light stays light.
-await withPage({}, async (page) => {
-  await page.addInitScript(() => localStorage.setItem("theme", "light"));
+// Remembered themes must also restore the matching mobile browser chrome.
+for (const preference of [{ theme: "light", chrome: "#fcfcfe" }, { theme: "dark", chrome: "#03080a" }]) {
+  await withPage({}, async (page) => {
+    await page.addInitScript((theme) => localStorage.setItem("theme", theme), preference.theme);
+    await page.goto(`${BASE}/`, { waitUntil: "networkidle" });
+    const state = await page.evaluate(() => ({
+      theme: document.documentElement.getAttribute("data-theme"),
+      chrome: document.querySelector('meta[name="theme-color"]')?.getAttribute("content"),
+    }));
+    check(`a stored ${preference.theme} preference restores the page and browser chrome`,
+      state.theme === preference.theme && state.chrome === preference.chrome, JSON.stringify(state));
+  });
+}
+
+await withPage({}, async (page, errors) => {
+  await page.addInitScript(() => {
+    Object.defineProperty(window, "localStorage", {
+      get() { throw new DOMException("Storage disabled", "SecurityError"); },
+    });
+  });
   await page.goto(`${BASE}/`, { waitUntil: "networkidle" });
-  const theme = await page.evaluate(() => document.documentElement.getAttribute("data-theme"));
-  check("a stored light preference survives a reload", theme === "light", theme ?? "none");
+  await page.getByRole("button", { name: "Switch to dark theme" }).click();
+  await page.getByRole("button", { name: "Switch to light theme" }).waitFor();
+  check("theme toggle works when storage is blocked", errors.length === 0, errors.join(" | "));
 });
 
 // ---------------------------------------------------------- assistant modal
@@ -146,18 +165,26 @@ await withPage({ reducedMotion: "reduce" }, async (page) => {
   await page.waitForTimeout(600);
   const faded = await page.evaluate(
     () =>
-      Array.from(document.querySelectorAll("[data-reveal], .reveal, .reveal-stagger > *")).filter(
-        (el) => Number.parseFloat(getComputedStyle(el).opacity) < 0.99,
-      ).length,
+      Array.from(document.querySelectorAll("main h1, main h2"))
+        .filter((el) => !el.closest(".sr-only"))
+        .filter((heading) => {
+          if (heading.getClientRects().length === 0) return true;
+          for (let el = heading; el; el = el.parentElement) {
+            const style = getComputedStyle(el);
+            if (Number.parseFloat(style.opacity) < 0.99 || style.visibility === "hidden") return true;
+          }
+          return false;
+        }).length,
   );
   check("reduced motion: no content is left hidden", faded === 0, `${faded} faded`);
 
+  await page.goto(WALKTHROUGH_URL, { waitUntil: "networkidle" });
   const transport = await page.getByRole("button", { name: /Play the run|Pause/ }).count();
   check("reduced motion: the specimen renders no inert transport", transport === 0, `${transport}`);
 
   await page.getByRole("button", { name: /^Validate$/ }).click();
   await page.waitForTimeout(300);
-  const open = await page.locator('[aria-expanded="true"]').first().textContent();
+  const open = await page.locator('#request-walkthrough [aria-expanded="true"]').first().textContent();
   check("reduced motion: the specimen is still fully usable", (open ?? "").includes("Validate"), open ?? "");
 });
 

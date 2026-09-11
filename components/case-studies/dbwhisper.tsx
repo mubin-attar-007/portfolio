@@ -7,12 +7,14 @@ import { FailureLog } from "@/components/mdx/failure-log";
 import { MetricsTable } from "@/components/ui/metric";
 import { dbwhisperDiagram } from "@/components/diagrams/data/dbwhisper";
 import { evals } from "@/content/evals";
+import { FlagshipWalkthroughSection } from "./request-walkthrough";
 
 export const DBWHISPER_SECTIONS: readonly CaseStudySection[] = [
   { id: "context", title: "Context" },
   { id: "constraints", title: "Constraints" },
   { id: "architecture", title: "System architecture" },
   { id: "data-flow", title: "Data flow" },
+  { id: "request-walkthrough", title: "Request walkthrough" },
   { id: "key-decisions", title: "Key decisions" },
   { id: "what-failed", title: "What failed" },
   { id: "performance-cost", title: "Performance & cost" },
@@ -37,9 +39,9 @@ export function DBWhisperBody() {
           Natural-language-to-SQL is easy to demo and hard to trust. Calling an LLM to write SQL takes
           an afternoon; the reason most such tools never reach production is that a model will happily
           emit <strong>DROP TABLE</strong>, a multi-statement payload, or a query against a table that
-          doesn&apos;t exist. DBWhisper turns a plain-English question into safe, read-only SQL across
-          Postgres, MySQL, and SQL Server, runs it, and explains the answer — with the guarantee that
-          it can read your data but never change it.
+          doesn&apos;t exist. DBWhisper turns a plain-English question into SQL across Postgres,
+          MySQL, and SQL Server, validates it, runs it through a read-only database connection,
+          and explains the answer.
         </p>
       </CS>
 
@@ -86,6 +88,8 @@ export function DBWhisperBody() {
         </p>
       </CS>
 
+      <FlagshipWalkthroughSection />
+
       <CS id="key-decisions" title="Key decisions">
         <p>The decisions that make it trustworthy — each with the alternative it beat and the cost it accepted.</p>
         <DecisionLog
@@ -101,14 +105,14 @@ export function DBWhisperBody() {
               choice: "Defense in depth, not a single gate",
               alternatives: ["rely on the validator alone"],
               reason:
-                "Below the validator: read-only DB users (a probe warns if a connection looks writable), a query timeout + row cap, and log sanitization that masks passwords, API keys, and SQL literals. Any one layer failing doesn't expose the database.",
+                "Below the validator: read-only DB users (a probe warns if a connection looks writable), a query timeout + row cap, and log sanitization that masks passwords, API keys, and SQL literals. The warning probe does not replace correctly configured database permissions.",
               tradeoff: "More moving parts to maintain and test.",
             },
             {
               choice: "Multi-provider LLM fallback over single-vendor lock-in",
               alternatives: ["one provider (e.g. OpenAI only)"],
               reason:
-                "A priority chain (OpenAI → OpenRouter → DeepSeek → Groq → Anthropic → Gemini) picks the first provider with credentials and always keeps Gemini's free tier as a final fallback, so no single outage or quota exhaustion takes the product down — and it stays free to run.",
+                "A priority chain (OpenAI → OpenRouter → DeepSeek → Groq → Anthropic → Gemini) picks the first provider with credentials, with Gemini configured as the final fallback. Requests still depend on available credentials, provider capacity, and quota.",
               tradeoff: "Six provider adapters to keep working behind one interface.",
             },
             {
@@ -140,12 +144,12 @@ export function DBWhisperBody() {
 
       <CS id="performance-cost" title="Performance & cost">
         <p>
-          Safety is a property of the architecture, not a single number — but the pipeline is still
-          measured end to end. The structural guarantees first, then the results.
+          The controls and the measurements answer different questions. These are the configured
+          execution boundaries, followed by the observed evaluation results.
         </p>
         <MetricsTable
           rows={[
-            { label: "write access to your data", value: "none", method: "Fail-closed validator + read-only DB user; a query is rejected if it references a table outside the enrolled schema." },
+            { label: "query execution", value: "read-only", method: "Fail-closed validator + read-only DB user; a query is rejected if it references a table outside the enrolled schema." },
             { label: "LLM providers", value: "6", method: "One fallback interface; Gemini free tier is the final fallback so it runs with zero paid keys." },
             { label: "SQL dialects", value: "3", method: "Postgres, MySQL, SQL Server via SQLAlchemy 2.0 + ODBC." },
             { label: "per-run guardrails", value: "k=4 · ≤8 calls · 30s", method: "Retrieval returns the top 4 tables; each tool is capped at 8 calls per run; execution runs under a 30s timeout, a 1000-row cap, and a 5000-char SQL limit." },
@@ -159,7 +163,8 @@ export function DBWhisperBody() {
             Results (measured)
           </p>
           <p className="mt-2 max-w-[var(--width-prose)] text-sm text-ink-secondary">
-            The pipeline is scored end to end — two real runs, each linked to its method:
+            Two evaluation scopes: the complete pipeline on the golden set, and the generation
+            core on a Spider dev subset. Each result states its method and limitations:
           </p>
           <dl className="mt-4 flex flex-col gap-4">
             {dbEvals.map((e) => (

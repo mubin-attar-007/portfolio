@@ -6,7 +6,7 @@ import { SITE_URL } from "@/lib/env";
  */
 export const SITE = {
   name: "Mubin Attar",
-  role: "AI Systems Engineer",
+  role: "Applied AI Engineer",
   url: SITE_URL,
   email: "sk.mubinattar@gmail.com",
   location: "Ahmedabad, India",

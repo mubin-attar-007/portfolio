@@ -18,6 +18,17 @@ const ASSISTANT_LAUNCHER_ATTR = "data-assistant-launcher";
 export function Assistant() {
   const [open, setOpen] = useState(false);
 
+  const launch = useCallback(() => {
+    if (document.getElementById("mobile-menu")) {
+      window.dispatchEvent(new CustomEvent("close-menu-for-assistant"));
+      return;
+    }
+    // Respect any other modal that owns focus rather than layering another.
+    const dialog = document.querySelector('[role="dialog"][aria-modal="true"]');
+    if (dialog && dialog.id !== "assistant-panel-dialog") return;
+    setOpen(true);
+  }, []);
+
   // Restore to the launcher that is actually visible at the current breakpoint.
   // getClientRects() is robust for both fixed and in-flow controls.
   //
@@ -55,7 +66,7 @@ export function Assistant() {
       // even while typing (that's the convention users reach for).
       if ((e.metaKey || e.ctrlKey) && !e.altKey && (e.key === "k" || e.key === "K")) {
         e.preventDefault();
-        setOpen(true);
+        launch();
         return;
       }
       // "/" also opens, but only when the user isn't typing in a field.
@@ -66,27 +77,27 @@ export function Assistant() {
         (el.tagName === "INPUT" || el.tagName === "TEXTAREA" || el.isContentEditable);
       if (typing) return;
       e.preventDefault();
-      setOpen(true);
+      launch();
     };
     // Mobile nav (and any other trigger) can open the same panel via this event.
-    const onOpen = () => setOpen(true);
+    const onOpen = launch;
     document.addEventListener("keydown", onKey);
     window.addEventListener("open-assistant", onOpen);
     return () => {
       document.removeEventListener("keydown", onKey);
       window.removeEventListener("open-assistant", onOpen);
     };
-  }, []);
+  }, [launch]);
 
   return (
     <>
       <button
         {...{ [ASSISTANT_LAUNCHER_ATTR]: "" }}
         type="button"
-        onClick={() => setOpen(true)}
+        onClick={launch}
         aria-expanded={open}
         aria-controls={open ? "assistant-panel-dialog" : undefined}
-        title="Ask this site — a grounded assistant that answers only from this site's content (case studies, writing, résumé), with citations. Press ⌘K or / to open."
+        title="Ask this site — answers about my projects and background, with sources to read. Press ⌘K or / to open."
         aria-label="Ask this site — a grounded, cited assistant over this site's content. Press command-K or slash to open."
         className="icon-btn inline-flex h-9 w-9 items-center justify-center rounded-[var(--radius-sm)] text-ink-secondary hover:text-ink xl:h-8 xl:w-auto xl:gap-2 xl:rounded-[var(--radius-sm)] xl:border xl:border-border xl:bg-surface xl:px-2.5 xl:text-[0.8125rem] xl:text-ink-secondary xl:shadow-[var(--shadow-sm)] xl:hover:border-border-strong xl:hover:text-ink"
       >

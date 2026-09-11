@@ -74,6 +74,9 @@ export function MobileNav() {
   }, [finishClose]);
 
   const openMenu = () => {
+    // The assistant is lazy-loaded. Its launcher reflects the pending open
+    // state before the dialog exists, closing that brief overlap window too.
+    if (document.querySelector('[data-assistant-launcher][aria-expanded="true"]')) return;
     if (mountedRef.current) {
       closeMenu();
       return;
@@ -93,15 +96,11 @@ export function MobileNav() {
     return () => cancelAnimationFrame(frame);
   }, [mounted]);
 
-  // Scroll lock, focus trap, Escape close, and focus return all share the
+  // Focus trap, Escape close, and focus return all share the
   // mounted lifetime so the closing transition cannot release the page early.
   useEffect(() => {
     if (!mounted) return;
     const toggle = toggleRef.current;
-    const previousBodyOverflow = document.body.style.overflow;
-    const previousRootOverflow = document.documentElement.style.overflow;
-    document.body.style.overflow = "hidden";
-    document.documentElement.style.overflow = "hidden";
 
     const focusFrame = requestAnimationFrame(() => {
       const preferred =
@@ -135,12 +134,23 @@ export function MobileNav() {
     document.addEventListener("keydown", onKey);
     return () => {
       cancelAnimationFrame(focusFrame);
-      document.body.style.overflow = previousBodyOverflow;
-      document.documentElement.style.overflow = previousRootOverflow;
       document.removeEventListener("keydown", onKey);
       toggle?.focus();
     };
   }, [closeMenu, mounted]);
+
+  // Keyboard and external assistant launchers use the same close-then-open
+  // path as the menu button, so two modal focus traps can never compete.
+  useEffect(() => {
+    const handOff = () => {
+      if (!mountedRef.current) return;
+      afterCloseRef.current = () =>
+        window.dispatchEvent(new CustomEvent("open-assistant"));
+      closeMenu();
+    };
+    window.addEventListener("close-menu-for-assistant", handOff);
+    return () => window.removeEventListener("close-menu-for-assistant", handOff);
+  }, [closeMenu]);
 
   // A persistent header can survive both navigation and a responsive resize;
   // neither should leave a portalled mobile overlay stranded on screen.
@@ -187,7 +197,7 @@ export function MobileNav() {
       {mounted &&
         typeof document !== "undefined" &&
         createPortal(
-          <div className="fixed inset-0 z-50">
+          <div data-modal-root className="fixed inset-0 z-50">
             <div
               role="presentation"
               onClick={closeMenu}

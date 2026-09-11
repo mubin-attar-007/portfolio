@@ -9,6 +9,7 @@
 // config/site.ts. Read from there rather than restated here — a profile URL
 // written down twice is a profile URL that will eventually disagree with itself.
 import { SITE } from "@/config/site";
+import { projects } from "./projects";
 
 /**
  * Homepage + about copy that is NOT the homepage's own layout data.
@@ -35,7 +36,7 @@ export const home = {
     employer: "Sevina Technologies",
     employerNote: "healthcare-AI automation, by day",
     stats: [
-      { value: "4", label: "products live in production", href: "/work" },
+      { value: String(projects.length), label: "public project case studies", href: "/work" },
       { value: "3+ yrs", label: "shipping software", href: "/resume" },
       { value: "$0", label: "free-tier infrastructure", href: "/uses" },
     ],
@@ -44,15 +45,15 @@ export const home = {
   principles: [
     {
       title: "Evidence over demos",
-      body: "Every number is genuinely computed. If a number can’t be shared, I describe the mechanism and say so — I never invent one.",
+      body: "Publish the method, sample size, and limitations alongside the result. Where details are confidential, describe the engineering without disclosing the data.",
     },
     {
-      title: "Safety is structural, not statistical",
-      body: "When an action can do damage, I put a deterministic gate in front of it that the model cannot talk its way past — and fail closed, refusing when safety can’t be proven.",
+      title: "Bound the model's authority",
+      body: "Validate generated output before execution. Use permissions, explicit rules, and refusal paths to limit what the model can do.",
     },
     {
-      title: "Constraints force good engineering",
-      body: "A $0 stack rules out waste: retrieval-scoped prompts, bounded agent loops, lean containers. The limits shaped the design from the start.",
+      title: "Design for the operating constraints",
+      body: "Free-tier hosting shaped the projects: scoped retrieval, bounded agent loops, and lean containers, with cold starts and quotas treated as part of the design.",
     },
   ],
 } as const;
@@ -76,7 +77,7 @@ export const pages = {
     kicker: "Case studies",
     title: "Systems, taken apart.",
     lede:
-      "Not screenshots — the real engineering. Each write-up walks the architecture, the decisions that mattered, and the trade-offs, with links to the live app and its source.",
+      "The problem, the architecture, and the decisions behind each project. Explore the trade-offs, published evaluations, source code, and deployment links.",
     flagshipKicker: "Flagship",
     flagshipCta: "Read the full write-up",
     othersKicker: "More",
@@ -84,9 +85,9 @@ export const pages = {
   },
   writing: {
     kicker: "Writing",
-    title: "Essays on building AI honestly.",
+    title: "Notes from building AI systems.",
     lede:
-      "Essays and guides on AI systems, evaluation, and honest ML — mined from the decisions and failures in my case studies.",
+      "Essays and guides on AI systems and evaluation, drawn from the decisions and failures in my projects.",
     feedCta: "RSS",
     feedHref: "/writing/feed.xml",
     crossCta: "Shorter, single-decision notes",
@@ -96,7 +97,7 @@ export const pages = {
     kicker: "Notes",
     title: "One decision per note.",
     lede:
-      "A running notebook — short notes on the decisions behind the work: retrieval, evals, agents, and the infrastructure that keeps four products live.",
+      "A running notebook on retrieval, evaluation, agents, and the infrastructure behind the projects.",
     feedCta: "RSS",
     feedHref: "/rss.xml",
     crossCta: "Essays and implementation guides",
@@ -106,11 +107,11 @@ export const pages = {
 
 export const about = {
   kicker: "About",
-  headline: "Solo engineer, real products.",
+  headline: "From healthcare workflows to AI products.",
   body: [
-    "I'm an AI systems engineer — shipping software since 2022 and focused on production AI since 2024: GenAI/LLM applications, agentic and RAG systems, and predictive ML. I work across the stack: FastAPI, Next.js, Postgres, and Docker, with auth, CI/CD, and security hardening baked in.",
-    "By day I build healthcare-AI automation at Sevina Technologies — clinical-compliance and reimbursement pipelines (constrained by HIPAA, so shown here only in the abstract). On my own time I ship live AI products on a $0 free-tier stack, which forces discipline: no waste, real engineering, shipped.",
-    "The one rule across all of it: every number a user sees is genuinely computed — never faked.",
+    `I'm an ${SITE.role.toLowerCase()} with 3+ years in software engineering and a production-AI focus since 2024. I work across the system: data pipelines, APIs, retrieval, model integration, and the interface people use.`,
+    "At Sevina Technologies I build healthcare automation, including clinical-compliance and reimbursement workflows. I describe that work at the system level here to protect confidential information. My independent projects make the architecture, implementation, and evaluations available to explore.",
+    "The work I enjoy most is connecting a useful model to reliable software: defining what it can do, handling failures, and measuring whether the complete system solves the problem.",
   ],
   // The page's action pair. Previously typed straight into app/about/page.tsx,
   // where a lone primary button sat beside four plain text links and read as
@@ -130,7 +131,7 @@ export const about = {
   // Framing for the /about "how I think" section, which renders home.principles.
   thinking: {
     kicker: "How I think",
-    title: "Three rules I don't break",
+    title: "How I approach the work",
   },
 } as const;
 
@@ -139,12 +140,12 @@ export const about = {
  * "How I work" links to real decision notes so the claim is backed, not asserted.
  */
 export const hire = {
-  kicker: "Hire me",
-  title: "Let's build something honest.",
+  kicker: "Contact",
+  title: "Let's talk about what you're building.",
   lede:
-    "I design, build, ship, and maintain AI systems end to end — and I show the evidence. If that's the kind of engineer you need, here's how I work and how to reach me.",
+    "I work on LLM applications, AI platforms, and production software. Share the problem, the team, and what you need the system to do.",
   howIWork: {
-    body: "Solo and end to end: architecture, implementation, deploy, and the honest numbers. I put deterministic boundaries around models rather than trusting them, I measure what I ship, and I'd rather show a lower real number than a higher invented one. A few decisions that show how I think:",
+    body: "I connect architecture decisions to working software: clear interfaces, validated model output, and tests that cover the deployed workflow. My case studies explain the decisions and the costs I accepted. These notes give a shorter view:",
     notes: [
       { label: "One agent, three SQL dialects", href: "/notes/one-agent-three-sql-dialects" },
       { label: "Six LLM providers behind one interface", href: "/notes/six-providers-one-interface" },
@@ -180,7 +181,7 @@ export const uses = {
   kicker: "Uses",
   title: "The stack",
   intro:
-    "The tools behind four live products — chosen to be boring, cheap, and reliable. A $0 free-tier stack, on purpose: the constraint rules out waste.",
+    "The tools behind the projects, from model integration to deployment. Free-tier infrastructure keeps the hosting setup small and makes quotas, storage limits, and cold starts explicit design constraints.",
   /**
    * How the "$0" claim is actually met. It is stated here because /about and
    * /hire both show "$0 free-tier infrastructure" and link to this page to back
@@ -188,7 +189,7 @@ export const uses = {
    * with a hyperlink attached.
    */
   costNote:
-    "Every service below runs on its published free tier: Vercel Hobby for the frontends, Hugging Face Spaces for the containerised backends, Neon for Postgres, and GitHub Actions for CI. No paid plan, no trial credit, and no card on file — which is why cold starts are a real trade-off rather than a footnote.",
+    "The project hosting setup uses free tiers: Vercel Hobby for frontends, Hugging Face Spaces for containerised backends, Neon for Postgres, and GitHub Actions for CI. The $0 figure describes that hosting setup, not an unlimited workload budget. Provider quotas, cold starts, and model API usage remain operating constraints.",
   // The page asserts "four live products"; this is the link that lets a reader
   // check the claim rather than take it. Label only — it adds no new claim.
   cta: { label: "See the four products", href: "/work" },
@@ -234,7 +235,7 @@ export const trust = {
   signals: [
     {
       label: "Shipped",
-      value: "Four products live in production, each with a public case study.",
+      value: "Four public projects with case studies, source code, and deployment links.",
       href: "/work",
     },
     {
@@ -248,20 +249,20 @@ export const trust = {
       href: "/notes",
     },
   ],
-  title: "I publish what ships and what changed.",
-  body: "This site is built as an engineering portfolio, so the trust page is evidence-first: security posture, delivery promises, and the standards behind what I claim.",
+  title: "The evidence behind the work.",
+  body: "The case studies describe the controls, the evaluations, and the trade-offs behind the projects. They give you a way to assess the implementation and its limits.",
   principles: [
     {
       title: "Transparent risk handling",
-      body: "If I discover reliability or quality issues, I log them, fix them, and keep a running record visible. No bug is 'buried' if it affects confidence.",
+      body: "The case studies include failures and subsequent changes so you can see how the implementation evolved.",
     },
     {
       title: "Deterministic safety boundaries",
-      body: "LLM layers can be non-deterministic; the guardrails must not be. Validation, allowlists, and fallback paths are designed to fail closed and be auditable.",
+      body: "Validation, allowlists, permissions, and refusal paths constrain model output. Each project's case study describes where those controls apply.",
     },
     {
       title: "Single-sourced metrics",
-      body: "Every public figure in the portfolio is linked to its source: a project write-up, an eval, or a reproducible artifact.",
+      body: "Evaluation results link to a project write-up or registry entry with the method, sample, and scope of the run.",
     },
   ],
   controls: [
@@ -275,7 +276,7 @@ export const trust = {
     },
     {
       title: "Operational trust",
-      items: ["Zero-downtime deployment practices", "Rollback and incident playbooks", "Post-change notes for shipped decisions", "A running record of shipped decisions on /now"],
+      items: ["Versioned deployment configuration", "CI workflows alongside the source", "Project change logs and decision notes", "Dated updates on /now"],
     },
   ],
 } as const;

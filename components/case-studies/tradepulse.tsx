@@ -29,7 +29,7 @@ export function TradePulseBody() {
           backtesters lie in subtle ways: they let a strategy act on the same bar&apos;s close it used
           to decide, ignore trading costs, drift on float money, and let an AI narrate figures it
           invented. TradePulse&apos;s entire thesis is <strong>honesty over flattering numbers</strong>
-          — those lies are engineered to be structurally impossible, not merely discouraged.
+          — next-bar execution, explicit trading costs, and tests for the engine&apos;s invariants.
         </p>
       </CS>
 
@@ -139,7 +139,7 @@ export function TradePulseBody() {
       <CS id="operations" title="Operations">
         <p>
           Live ingestion and paper trading run on an ARQ worker; the paper engine is the backtest
-          engine with <strong>close_at_end=False</strong>, guaranteed to agree by a parity test. The
+          engine with <strong>close_at_end=False</strong>, with agreement checked by a parity test. The
           AI copilot runs on Gemini (free tier) or local Ollama behind one provider contract, with
           per-user (200K/day) and global (5M/day) token budgets.
         </p>

@@ -23,7 +23,7 @@ const csp = [
   `connect-src 'self' ${DBWHISPER}${isDev ? " ws:" : ""}`,
   "object-src 'none'",
   "base-uri 'self'",
-  "form-action 'self'",
+  "form-action 'self' https://buttondown.com",
   "frame-ancestors 'none'",
   // Only force http→https upgrades where HTTPS actually exists (the Vercel
   // deploy). A local `next start` served over http:// on a LAN IP has no HTTPS

@@ -1,25 +1,33 @@
 WEBVTT
 
 00:07.000 --> 00:14.000
-Find the edge — bet with numbers, not vibes.
+CrownWager compares model estimates
+with sportsbook odds.
 
 00:14.000 --> 00:22.000
-CrownWager compares a validated model's probabilities against the sportsbook's odds.
+An XGBoost NBA moneyline model estimates
+home-win probabilities.
 
 00:22.000 --> 00:29.000
-It surfaces positive-EV picks with Kelly-sized stakes — Decimal-precise, never float.
+Estimated EV and half-Kelly stakes use
+Decimal arithmetic.
 
 00:29.000 --> 00:37.000
-Best bets, model predictions, odds comparison, and a cross-book arbitrage finder.
+Model predictions, odds comparisons,
+and cross-book arbitrage calculations.
 
 00:37.000 --> 00:44.000
-A validated XGBoost model: 65% accuracy on 5-fold cross-validation — not a lucky split.
+65.2% ± 0.8% accuracy: five-fold
+cross-validation over 15,115 NBA games.
 
 00:44.000 --> 00:50.000
-Model the game, compare to the market, surface the edge.
+Model estimates feed odds comparisons
+and stake-size calculations.
 
 00:50.000 --> 00:56.000
-Every pick is graded against the real final score — a verifiable track record.
+Picks settle on final scores; the track record
+is marked insufficient below 20 settled picks.
 
-00:56.000 --> 01:03.000
-Informational only. No real-money wagering. Responsible by design.
+00:56.000 --> 01:01.440
+Informational only.
+No real-money wagering in the app.

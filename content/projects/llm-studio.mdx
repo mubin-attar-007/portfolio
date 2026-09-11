@@ -17,8 +17,8 @@ LLM Studio is a production-shaped, multi-user AI chat SaaS — not a toy ChatGPT
 
 "Wrap an LLM API in a chat UI" is a weekend project. Turning that into something multiple people can actually sign into is where the real engineering lives:
 
-1. **Real auth and isolation.** Passwords hashed correctly, sessions that can be revoked, and a hard guarantee that user A can never read or overwrite user B's chats.
-2. **A shared key without abuse.** One model key powers everyone, so you need a fair per-user daily budget that can't be circumvented.
+1. **Real auth and isolation.** Passwords hashed correctly, sessions that can be revoked, and repository queries scoped to the authenticated chat owner.
+2. **A shared key with usage limits.** One model key powers everyone, so the server checks a per-user daily budget before a model call.
 3. **Streaming that survives proxies.** Token-by-token output through a reverse proxy, without buffering swallowing the stream.
 4. **Provider flexibility.** Not locking the whole product to a single LLM vendor.
 5. **Production hygiene.** CSP, HSTS, rate limits, upload limits, structured logging, CI — the unglamorous layer that separates a demo from a deployment.
@@ -52,7 +52,7 @@ FastAPI  ──► Argon2id auth + DB-backed sessions
 
 **1. DB-backed sessions over stateless JWTs.** Auth uses **Argon2id** (with rehash-on-login support) and issues an opaque `secrets.token_urlsafe` session token stored server-side, delivered as an **HttpOnly, SameSite=Lax** cookie. Validation is a token lookup → expiry check → active-user check → `last_seen` update. Trade-off: a DB read per authenticated request versus a self-contained JWT — bought back by real **revocation** (logout deletes the row), session tracking, and clean expiry, which matter more than shaving a query for a chat app.
 
-**2. Tenancy enforced at the repository layer, not sprinkled in routes.** Every `/api/*` route requires auth, and ownership is enforced where data is accessed: lists filter `owner_id == owner`, and the chat upsert **silently refuses to touch a chat owned by someone else** (`if existing.owner_id not in (None, owner_id): continue`), as does delete. Trade-off: the "silent skip" is less chatty than a 403, but it's a single, auditable choke point that makes cross-tenant reads/writes structurally impossible.
+**2. Tenancy enforced at the repository layer, not sprinkled in routes.** Every `/api/*` route requires auth, and ownership is enforced where data is accessed: lists filter `owner_id == owner`, and the chat upsert **silently refuses to touch a chat owned by someone else** (`if existing.owner_id not in (None, owner_id): continue`), as does delete. Trade-off: the "silent skip" is less chatty than a 403; keeping these ownership checks in the repository makes them easier to review and test together.
 
 **3. Quota checked before the stream, not after.** The server holds one shared model key; each user gets a daily message budget keyed by `user_id + YYYYMMDD` in a `usage_daily` table, atomically incremented. The check runs **before** the LLM call so an over-quota user gets a clean 429 (with a "resets at midnight UTC" message) instead of burning an API call. First registered user is admin/unlimited. Trade-off: a coarse per-message budget rather than per-token metering — simpler, predictable, and enough to keep a shared free-tier key alive.
 

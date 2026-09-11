@@ -11,7 +11,7 @@ order: 3
 
 ## Executive Summary
 
-TradePulse is a quant backtesting platform whose entire thesis is **honesty over flattering numbers**. Most retail backtesters lie in subtle ways — they let strategies "peek" at the signal bar's close, ignore trading costs, use float money that drifts, and let an AI narrate results it invented. TradePulse is engineered so those lies are *structurally impossible*: an event-driven engine where decisions read only closed bars and orders fill on the **next** bar's open; `Decimal` money end-to-end; commission + slippage modeled on every fill by default; hard risk limits enforced at entry, not reported after the fact; and an AI copilot that is contractually forbidden from inventing figures. Every result is reproducible from a spec hash + engine version + data fingerprint. It runs on a free stack: Next.js + FastAPI + Postgres/TimescaleDB + Redis, with free market data (CCXT + yfinance).
+TradePulse is a quant backtesting platform built around explicit execution rules and testable results. Its event-driven engine reads closed bars and fills orders on the **next** bar's open; uses `Decimal` money end-to-end; models commission + slippage on every fill by default; and enforces risk limits at entry. Its AI copilot receives the computed results and is instructed to use those figures, while generated strategy specifications pass validation before a user runs them. Each result carries a spec hash, engine version, and data fingerprint. The stack is Next.js + FastAPI + Postgres/TimescaleDB + Redis, with market data from CCXT + yfinance.
 
 ## Problem
 
@@ -45,7 +45,7 @@ FastAPI  ──►  StrategySpec DSL (canonical, declarative, non-Turing-complet
      │                          snapshot-diff alerts (idempotent)
      │
      └──►  AI copilot (Gemini / Ollama): NL → validated spec · grounded narration
-                                          never auto-executes · never invents numbers
+                                          user-triggered execution · supplied result context
 ```
 
 **The StrategySpec DSL is the keystone.** A single canonical, declarative, **non-Turing-complete** spec is the source of truth shared by the builder UI, backtest engine, paper trading, and the AI layer. Operands can only reference a *closed catalog* of indicators and price fields evaluated on **closed bars — so look-ahead is structurally impossible, not just discouraged.** Exit logic, position sizing, and risk limits are **mandatory fields**, which makes the legacy "optimistic, entry-only" strategy literally un-authorable.
@@ -74,6 +74,6 @@ Real, and honest about their assumptions:
 ## Lessons
 
 - **Correctness invariants belong in the type system and the test suite, not the docs.** A non-Turing-complete spec that only reads closed bars makes look-ahead unrepresentable; a canary test proves it stayed that way. That's stronger than any warning label.
-- **One engine, reused, beats two that "should match."** Paper trading runs the *same* engine as backtesting with a single flag change, and a parity test guarantees they agree — no drift between "simulated" and "live."
+- **One engine, reused, beats two that "should match."** Paper trading runs the *same* engine as backtesting with a single flag change, and a parity test checks agreement on the covered scenarios.
 - **The honest number is the valuable one.** Costs-on-by-default and always-shown drawdown make results less flattering and far more useful. A tool that tells comfortable lies is worthless for real capital.
 - **A financial AI should refuse before it guesses.** Grounding the copilot to provided numbers, and having it decline rather than extrapolate, is the difference between an assistant and a liability.

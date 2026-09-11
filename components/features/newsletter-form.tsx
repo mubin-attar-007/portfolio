@@ -31,12 +31,13 @@ export function NewsletterForm() {
         in one click.
       </p>
       <p id="newsletter-help" className="sr-only">
-        Enter your email address, then select Subscribe.
+        Enter your email address, then select Subscribe. Buttondown opens in a new tab to confirm your subscription.
       </p>
       <form
         action={`https://buttondown.com/api/emails/embed-subscribe/${BUTTONDOWN_USER}`}
         method="post"
         target="_blank"
+        rel="noopener noreferrer"
         aria-label="Newsletter subscription"
         className="mt-5 flex flex-col gap-3 sm:flex-row"
       >

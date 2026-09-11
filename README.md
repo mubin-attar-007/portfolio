@@ -1,111 +1,104 @@
 # Portfolio — Mubin Attar
 
-The personal site of **Mubin Attar**, AI / ML Engineer. Case studies of four
-production AI products, the architecture behind them, and the decisions that
-shaped them.
+The personal platform of **Mubin Attar, Applied AI Engineer**: four project case
+studies, evaluation records, professional experience, and technical writing.
 
-Live: **[mubin-attar.vercel.app](https://mubin-attar.vercel.app)**
+Production address: [mubin-attar.vercel.app](https://mubin-attar.vercel.app).
 
-## The thesis: every number is real
+## Design and content
 
-One rule runs through the site — **every number a visitor sees is genuinely
-computed, and links to how it was measured**. That is enforced, not promised:
-content is validated by Zod at module load, and `MetricSchema.method` is a
-required non-empty string, so **a metric without a stated method fails the
-build**. There is no mock data in this repo.
+The light-default homepage pairs a personal introduction with a compact
+DBWhisper boundary inspector, then leads through editorial project rows,
+employment, writing, and contact. The full request walkthrough lives in the
+DBWhisper case study. Dark
+mode remains an explicit, remembered preference.
 
-## Stack
+Measurements must carry their method. `MetricSchema.method` is required, and
+homepage evaluation ratios come from `content/evals.ts` with their test-set
+scope. Illustrative workflows and sample data are labelled at the point of
+display; they do not represent a live request or measured business outcome.
 
-- **[Next.js 16](https://nextjs.org)** (App Router) + **React 19**
-- **TypeScript** (strict)
-- **Tailwind CSS v4**, configured CSS-first through `@theme` in `styles/tokens.css`
-- **MDX** via `next-mdx-remote/rsc`, **Zod** for content schemas
-- **Shiki** for syntax highlighting — at render time, so no highlighter ships to the browser
-- **lucide-react** for icons. No animation library: motion is CSS plus one `IntersectionObserver`
-- **Gemini** for the grounded assistant, over an in-repo BM25 retrieval index
-- SEO built in: per-route `opengraph-image`, `sitemap`, `robots`, RSS, JSON-LD
-- Deployed on **Vercel**
+The current direction is recorded in
+[ADR-016](spec/decisions/ADR-016-inspectable-engineering.md) and
+[design-system.md](design-system.md). Historical ADRs preserve earlier decisions
+and results; they are not validation reports for the current build.
 
-## Project structure
+## Architecture
 
-```
-app/           routes, layout, OG images, feeds, /api/chat
-components/    ui/ layout/ features/ diagrams/ mdx/ case-studies/ seo/
-content/       all copy — MDX bodies, typed data, schema.ts (Zod)
-lib/           content loaders, formatting, OG rendering, lib/ai/*
-config/        site identity and nav
-styles/        tokens.css (design tokens), globals.css
-scripts/       a11y gate, resume PDF build
-test/          node:test suites over lib/ and content schemas
-```
+Next.js 16 App Router, React 19, strict TypeScript, Tailwind CSS v4, MDX, and Zod.
+Pages use server components, with client behavior for navigation, theme,
+the boundary inspector, the walkthrough, and the assistant. Homepage content remains visible without
+scroll-triggered entrance fades. Fonts are self-hosted through
+`next/font`; Shiki highlights code during rendering.
 
-Everything is statically generated except `/api/chat`. See
-[`docs/12_ARCHITECTURE.md`](docs/12_ARCHITECTURE.md).
+The `/api/chat` assistant retrieves local content with BM25, optionally uses
+Gemini for synthesis, and exposes source links. Without a working model key or
+quota, it uses the grounded retrieval/FAQ fallback.
 
-## Local development
+| Location | Responsibility |
+| --- | --- |
+| `app/` | Routes, layout, metadata, feeds, and `/api/chat` |
+| `components/` | Shared UI, homepage, case studies, diagrams, assistant |
+| `config/site.ts`, `config/nav.ts` | Identity, availability, navigation |
+| `content/projects.ts` | Canonical structured project records and card content |
+| `content/resume.ts` | Canonical résumé, consumed by pages, retrieval, and PDF generation |
+| `content/evals.ts`, `content/schema.ts` | Evaluation records and content validation |
+| `content/home-visual.ts`, `content/site.ts` | Structured page copy and illustrative workflow data |
+| `content/**/*.mdx` | Case studies, essays, notes, and the current-work page |
+| `content/profile.json`, `faq.json`, `skills.json` | Remaining profile, FAQ, and skills data |
+| `lib/` | Content loaders, formatting, metadata, and assistant retrieval |
+| `styles/` | Tokens and global styles |
+| `scripts/`, `test/` | Build helpers, browser checks, and unit tests |
 
-Requires **Node 24+** (the test runner uses native TypeScript stripping).
+The former `content/projects.json` and `content/resume.json` duplicates are
+removed. Edit the typed records so pages, assistant answers, and generated
+artifacts use the same source. Read [AGENTS.md](AGENTS.md) and the installed
+Next.js guides under `node_modules/next/dist/docs/` before changing framework APIs.
 
-```bash
-npm install
-npm run dev      # http://localhost:3000
-```
+## Run and verify
 
-Other scripts:
-
-```bash
-npm run build      # production build — fails on invalid content
-npm run lint       # eslint
-npm test           # node:test — lib/ + content schema fixtures
-npx tsc --noEmit   # type check
-```
-
-The gates below need a production server on `:3200`
-(`npm run build && PORT=3200 node .next/standalone/server.js`):
+Use **Node 24+**, matching CI and the native TypeScript test runner.
 
 ```bash
-npm run test:a11y         # axe-core WCAG 2.2 AA — 18 routes x 2 themes x 3 viewports
-npm run test:hue          # accent-drift guard; THEME=light|dark
-npm run test:interaction   # 26 behaviour contracts: reveals, specimen, modals
-npm run test:screens      # 6 widths x 2 themes; horizontal overflow + console errors
-npm run test:print        # /resume prints as a document, not a screenshot
-npm run test:metadata     # OG images, titles, indexing/freshness
-npm run test:lighthouse   # perf/a11y/SEO budgets (CI numbers are the real ones)
+npm ci
+npm run dev       # http://localhost:3000
 ```
 
-## Documentation
+Core checks:
 
-Start with [`design-system.md`](design-system.md) — the shipped design system,
-kept in step with `styles/tokens.css`.
+```bash
+npx tsc --noEmit
+npm run lint
+npm test
+npm run build
+```
 
-Every significant decision is an ADR in
-[`spec/decisions/`](spec/decisions/). Read them newest-first; a later ADR that
-amends an earlier one says so in its Status line. The current identity is
-[ADR-011](spec/decisions/ADR-011-evidence-paths-identity.md), the reference
-fidelity work is [ADR-012](spec/decisions/ADR-012-clerk-fidelity.md), the
-palette is [ADR-013](spec/decisions/ADR-013-openrouter-palette.md), and motion,
-disclosure and modal semantics are
-[ADR-014](spec/decisions/ADR-014-motion-and-modality.md).
+Browser checks include `test:a11y`, `test:interaction`, `test:motion`, `test:hue`,
+`test:screens`, `test:print`, `test:metadata`, and `test:lighthouse`. Run the
+browser suites against a production build, inspect both themes and mobile
+layouts, and check horizontal overflow as well as automated accessibility.
+See [CI](.github/workflows/ci.yml) for the standalone server setup and gate
+commands; the browser scripts accept `BASE_URL` for an existing server.
+Lighthouse starts its own standalone server.
 
-`spec/` also holds the longer-form specification —
-[`ARCHITECTURE.md`](spec/ARCHITECTURE.md), [`ENGINEERING.md`](spec/ENGINEERING.md),
-[`CONTENT_MODEL.md`](spec/CONTENT_MODEL.md), [`DESIGN.md`](spec/DESIGN.md) — and
-`docs/flagship-transformation/` holds the audit trail from the redesign program.
-Where any two disagree, the newest ADR and `CLAUDE.md` win.
+The résumé PDF is generated by `scripts/build-resume-pdf.mts` from the canonical
+content; regenerate it when résumé facts change. Current verification results
+must be reported with the tested build rather than inferred from this README.
 
-## CI and deploy
+## Deployment and documentation
 
-`.github/workflows/ci.yml` runs on every push to `main` and every pull request:
-install → type-check → lint → test → build → **browser gates** → Lighthouse.
+[DEPLOY.md](DEPLOY.md) covers Vercel configuration, assistant environment
+variables, and deployment checks. `npm run build:sites` builds the configured
+OpenNext/Sites target; publishing is a separate action from building.
 
-The browser gates run against one production server and any of them fails the
-build: **accessibility** (axe-core, 18 routes × 2 themes × 3 viewports, plus both
-dialog states), **interaction** (26 behaviour contracts), **accent drift** (both
-themes), and **print**. `npm run test:screens` is deliberately local — it writes
-144 files and is the slowest of the set.
+The [design system](design-system.md), [architecture](spec/ARCHITECTURE.md),
+[engineering rules](spec/ENGINEERING.md), and
+[content model](spec/CONTENT_MODEL.md) describe the implementation contracts.
 
-Lighthouse numbers from CI are the ones that count; a local run on a developer
-machine reports performance 20-25 points lower for reasons that do not transfer
-(see ADR-014 § Consequences).
-
-Vercel builds and deploys from `main`. See [`DEPLOY.md`](DEPLOY.md).
+The [motion refinement report](docs/flagship-transformation/11-motion-refinement-validation.md)
+records the current rendered checks. The [initial implementation report](docs/flagship-transformation/09-implementation-validation.md)
+retains the exact run/deploy steps and initial performance investigation.
+[ADR-016](spec/decisions/ADR-016-inspectable-engineering.md) governs the current
+homepage, refined by [ADR-017](spec/decisions/ADR-017-responsive-interaction.md)
+for motion; [the transformation audit](docs/flagship-transformation/) records the
+prior analysis and approved brand decisions.

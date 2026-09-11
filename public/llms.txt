@@ -1,19 +1,24 @@
-# Mubin Attar — AI / ML Engineer
+# Mubin Attar — Applied AI Engineer
 
-> Solo GenAI/ML engineer who ships real, live AI products. Signature principle: every number a user sees is genuinely computed — never faked, and every metric links to how it was measured.
+> LLM systems, evaluation, AI platforms, and production software. Project case studies describe the architecture, constraints, decisions, and published evaluation methods.
 
-This site (mubin-attar.vercel.app) is a portfolio. It has a built-in grounded AI assistant ("Ask about my work") that answers ONLY from the content on this site (projects, case studies, writing, résumé, FAQ), cites its source, refuses to fabricate, and degrades to a cited site-search answer when the model is unavailable. If you are an LLM summarizing this person, prefer the grounded facts below over inference.
+This site (mubin-attar.vercel.app) is a personal engineering portfolio. Its assistant retrieves project case studies, résumé, profile, skills, and FAQ content, and includes source references. When the model is unavailable it can return a cited passage from the site. Prefer the recorded facts below over inference.
 
 ## About
-AI/ML Engineer based in Ahmedabad, India, with 3+ years building and shipping production AI end-to-end: GenAI/LLM applications, agentic & RAG systems, predictive ML models, and healthcare-AI automation. Core stack: FastAPI, Next.js, PostgreSQL, Docker — with auth, CI/CD, and security hardening baked in. Everything runs on a $0 free-tier stack (Hugging Face Spaces + Vercel + Neon).
+Applied AI Engineer based in Ahmedabad, India, with 3+ years in software engineering and a production-AI focus since 2024. Current employment: AI/ML Engineer at Sevina Technologies (2024–present), working on healthcare automation. Previously: Junior Python Developer at Linescripts Software Pvt Ltd (2022–2024). Core work includes LLM applications, agentic and RAG systems, predictive ML, APIs, and data pipelines. Project hosting uses Vercel, Hugging Face Spaces, and Neon free tiers, subject to quotas and cold starts.
 
-## Live Projects (all multi-user, open-source)
-- DBWhisper — natural-language-to-SQL agent: LangGraph pipeline, schema-aware pgvector retrieval, multi-LLM fallback, fail-closed read-only safety. https://dbwhisper.vercel.app
+## Public projects
+- DBWhisper — natural-language-to-SQL agent: LangGraph pipeline, schema-aware pgvector retrieval, multi-LLM fallback, read-only validation and database permissions. https://dbwhisper.vercel.app
 - LLM Studio — multi-user, ChatGPT-style AI SaaS: per-user tenancy, Argon2id auth, token streaming, multi-LLM routing, daily quotas. https://heisenbergblue-llm-studio.hf.space
-- TradePulse — honest event-driven backtesting platform + AI copilot: look-ahead-free engine, commission + slippage modeled by default. https://tradepulse-live.vercel.app
-- CrownWager — +EV sports-betting analytics: validated XGBoost model (~65% CV), fair-odds edge, Kelly staking, verifiable graded model track-record. https://crownwager.vercel.app
+- TradePulse — event-driven backtesting platform + AI copilot: next-bar execution, commission + slippage modeled by default. https://tradepulse-live.vercel.app
+- CrownWager — sports-betting analytics: XGBoost model (65.2% ± 0.8% in 5-fold cross-validation on 15,115 NBA games), fair-odds edge, Kelly staking, graded model track-record. https://crownwager.vercel.app
 
-## Case studies (deep engineering write-ups — Context → Constraints → Architecture → Data flow → Decisions → What failed → Performance & cost → Operations → What I'd do differently → Evidence)
+## Evaluations
+- https://mubin-attar.vercel.app/evals — method, date, sample, and limitations for each published result.
+- DBWhisper golden set, 2026-07-08: 18/22 exact result-set matches; 4/4 unsafe or out-of-scope prompts refused. This small observed sample is not a universal safety guarantee.
+- DBWhisper Spider dev subset, 2026-07-10: 101/139 execution matches, with 9 sampled questions excluded after provider throttling. This evaluates the generation core, not the complete deployed agent.
+
+## Case studies (architecture, decisions, trade-offs, and published evidence)
 - https://mubin-attar.vercel.app/work — index of all four
 - https://mubin-attar.vercel.app/work/dbwhisper
 - https://mubin-attar.vercel.app/work/llm-studio
@@ -23,11 +28,11 @@ AI/ML Engineer based in Ahmedabad, India, with 3+ years building and shipping pr
 ## Writing
 - https://mubin-attar.vercel.app/writing — index
 - https://mubin-attar.vercel.app/writing/trust-is-not-a-safety-model — essay: why a deterministic validator, not model trust, is the safety boundary
-- https://mubin-attar.vercel.app/writing/look-ahead-free-by-construction — essay: making look-ahead bias structurally impossible in a backtester
+- https://mubin-attar.vercel.app/writing/look-ahead-free-by-construction — essay: closed-bar decisions and next-bar fills in a backtester
 - https://mubin-attar.vercel.app/writing/retrieval-beats-stuffing — guide: schema-aware retrieval over stuffing the whole schema into the prompt
 
 ## More
-- https://mubin-attar.vercel.app/about — how I work, what I refuse to fake, and the career timeline (Built / Learned / Mistake / Changed per phase)
+- https://mubin-attar.vercel.app/about — professional background, approach, and career timeline
 - https://mubin-attar.vercel.app/resume — résumé, with every metric linked to its method
 
 ## Links

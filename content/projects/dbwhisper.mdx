@@ -11,7 +11,7 @@ order: 1
 
 ## Executive Summary
 
-DBWhisper turns a plain-English question into **safe, read-only SQL** across PostgreSQL, MySQL, and SQL Server, runs it, and explains the answer. The interesting engineering isn't "call an LLM to write SQL" — anyone can do that. It's the parts that make it *trustworthy in production*: a **LangGraph agent** that retrieves only the relevant slice of a schema via **pgvector** before generating, a **fail-closed read-only validator** that gates every query before it touches a database, a **multi-provider LLM fallback chain** so one outage doesn't take the app down, and a **verified-query flywheel** that makes the agent more accurate on a given database the more it's used. It runs live on a $0 stack: Next.js on Vercel → FastAPI on a Hugging Face Docker Space → Neon Postgres + pgvector.
+DBWhisper turns a plain-English question into **validated, read-only SQL** across PostgreSQL, MySQL, and SQL Server, runs it, and explains the answer. A **LangGraph agent** retrieves relevant schema context via **pgvector** before generating SQL. A **fail-closed read-only validator** checks queries before execution, a **multi-provider LLM fallback chain** reduces dependence on one provider, and a **verified-query flywheel** retrieves human-approved examples for similar questions. The deployment uses Next.js on Vercel, FastAPI on a Hugging Face Docker Space, and Neon Postgres + pgvector.
 
 ## Problem
 
@@ -20,7 +20,7 @@ Natural-language-to-SQL has two failure modes that keep it out of production:
 1. **Hallucinated / unsafe SQL.** An LLM will happily emit `DROP TABLE`, a multi-statement payload, or a query against a table that doesn't exist. Trusting the model is not a safety model.
 2. **Schema blindness at scale.** Real databases have dozens to hundreds of tables. You can't paste the whole schema into a prompt — it's too large, too noisy, and the model picks the wrong tables. The agent needs to *retrieve* the right tables for each question.
 
-DBWhisper is built around the premise: **it can read your data, never change it** — and it has to figure out *which* tables to read on its own.
+DBWhisper retrieves the relevant tables, then applies **SELECT-only validation and a read-only database connection** before executing a generated query.
 
 ## Architecture
 
@@ -67,9 +67,9 @@ Per-run guardrails keep the loop bounded: each tool result is cached per run, an
 
 **1. Fail-closed SQL validator over LLM-trust.** `app/core/sql_validator.py` uses `sqlparse` (not a fragile regex-only check) to enforce: statement must start with `SELECT`/`WITH`; no DML/DDL/EXEC keywords (checked on tokenized keywords, skipping strings and comments to avoid false positives); single statement only; no `SELECT … INTO`; no `information_schema` / `sys.` / `pg_catalog.` access. The decisive design choice: when a `db_flag` is supplied, it loads that database's enrolled `schema_index.yaml` and **rejects any query referencing a table not in the enrolled schema — and if no schema index exists, it fails closed rather than open** ("a db_flag must have a readable schema index, otherwise we cannot vouch for the tables it touches"). CTE names defined in the same query are allowed. Trade-off: this rejects some exotic-but-valid queries and adds an enrollment step — deliberately, because a false "safe" is far more expensive than a false "unsafe."
 
-**2. Defense in depth, not a single gate.** The validator is one layer. Below it: **read-only DB users** (a best-effort probe warns if a connection looks writable), a **query timeout + row cap**, and **log sanitization** that masks connection-string passwords, API keys, and SQL literals before anything is written to logs. Any one layer failing doesn't expose the database.
+**2. Defense in depth, not a single gate.** The validator is one layer. Below it: **read-only DB users** (a best-effort probe warns if a connection looks writable), a **query timeout + row cap**, and **log sanitization** that masks connection-string passwords, API keys, and SQL literals before anything is written to logs. These controls address different failure modes; the warning probe does not replace correctly configured database permissions.
 
-**3. Multi-provider fallback over single-vendor lock-in.** A priority chain (OpenAI → OpenRouter → DeepSeek → Groq → Anthropic → Gemini) picks the first provider with credentials, and **always keeps Gemini's free tier as a final fallback** so the app runs even with zero paid keys. Result summarization retries down the same chain on failure. Trade-off: more provider adapters to maintain, but no single outage or quota exhaustion takes the product down — and it stays free to run.
+**3. Multi-provider fallback over single-vendor lock-in.** A priority chain (OpenAI → OpenRouter → DeepSeek → Groq → Anthropic → Gemini) picks the first provider with credentials, with **Gemini configured as the final fallback**. Result summarization retries down the same chain on failure. Trade-off: more provider adapters to maintain, and requests still depend on a configured provider having available capacity and quota.
 
 **4. Retrieval over context-stuffing.** Rather than dump a schema into the prompt, schemas are documented, embedded, and semantically retrieved per question. This is what lets it work on large databases at all, and it keeps token cost (and hallucination surface) low.
 
@@ -77,7 +77,7 @@ Per-run guardrails keep the loop bounded: each tool result is cached per run, an
 
 Honest, qualitative-where-appropriate — no invented benchmark numbers:
 
-- **Safety is structural, not statistical.** Every generated query is gated by the validator *before* execution; the read-only guarantee doesn't depend on the model behaving. The validator has unit tests (`ruff` + `pytest` gate CI, alongside a `gitleaks` secret scan).
+- **Validation before execution.** Generated queries pass SELECT-only, single-statement, and enrolled-table checks before using the read-only database connection. The validator has unit tests (`ruff` + `pytest` gate CI, alongside a `gitleaks` secret scan).
 - **The verified-query flywheel is real and compounding.** Once a question→SQL pair is human-approved for a database, future similar questions retrieve and adapt it — accuracy on a given database improves with curated use, rather than staying static.
 - **Runs on $0 infra.** Live split-deploy (Vercel + Hugging Face Docker Space + Neon Postgres + pgvector) with hosted-Google embeddings by default and a fully-local HuggingFace embedding path available for offline use.
 - **Multi-database, multi-provider by construction** — Postgres, MySQL, and SQL Server via SQLAlchemy 2.0 + ODBC; six LLM providers behind one fallback interface.

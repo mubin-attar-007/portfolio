@@ -8,9 +8,12 @@
 import test from "node:test";
 import assert from "node:assert/strict";
 
-import { retrieve, retrieveBestFaq, corpusSize } from "../lib/ai/retrieval.ts";
+import { retrieve, retrieveBestFaq, corpusSize, allPassages } from "../lib/ai/retrieval.ts";
 import { TEST_QUESTIONS } from "../lib/ai/test-questions.ts";
 import { looksLikeInjection } from "../lib/ai/guard.ts";
+import { resume } from "../content/resume.ts";
+import { projects } from "../content/projects.ts";
+import { SITE } from "../config/site.ts";
 
 // Clearly off-topic queries. With the tuned relevance floor these must retrieve
 // NOTHING, so the route hits the honest "not on the site" branch and the
@@ -54,6 +57,27 @@ const LEGIT_QUESTIONS: string[] = [
 
 test("corpus ingested a non-trivial number of passages", () => {
   assert.ok(corpusSize() >= 25, `expected >= 25 passages, got ${corpusSize()}`);
+});
+
+test("assistant uses the site's canonical identity and employment records", () => {
+  const passages = allPassages();
+  const profile = passages.find((passage) => passage.id === "profile-summary");
+  assert.ok(profile?.text.includes(SITE.role));
+  assert.ok(profile?.text.includes(resume.summary));
+
+  for (const role of resume.experience) {
+    const passage = passages.find((entry) => entry.source === `Résumé — ${role.org} (${role.role})`);
+    assert.ok(passage, `missing canonical role: ${role.org}`);
+    assert.ok(passage.text.includes(role.period));
+    for (const point of role.points) assert.ok(passage.text.includes(point));
+  }
+
+  for (const project of projects) {
+    assert.ok(
+      passages.some((passage) => passage.source.startsWith(`${project.title} case study —`)),
+      `missing case-study passages: ${project.slug}`,
+    );
+  }
 });
 
 test("every starter chip grounds (retrieves a passage + a fallback FAQ)", () => {

@@ -4,7 +4,7 @@ import { ArrowUpRight, ChevronRight } from "lucide-react";
 
 /**
  * TextLink — the site's ONE "read more" affordance: a small bold label with a
- * tight right-pointing chevron that nudges forward on hover.
+ * tight directional arrow that responds to hover and keyboard focus.
  *
  * Why it exists: the same `group inline-flex … ArrowRight … group-hover:translate-x-0.5`
  * block had been retyped in nine places, which meant nine chances for the size,
@@ -28,13 +28,13 @@ import { ArrowUpRight, ChevronRight } from "lucide-react";
  * focus uses the global focus ring. External links carry `rel="noopener
  * noreferrer"` and the arrow glyph is the conventional "opens a new tab" cue.
  *
- * Motion: colour and transform only, at `--motion-fast`, the site's dominant
- * interaction duration. The global `prefers-reduced-motion` rule collapses both
- * transitions, so the nudge disappears without a per-component guard.
+ * Motion: directional icons share the control rules in globals.css. Movement
+ * only exists when reduced motion is not requested; underline and focus feedback
+ * remain visible in the still presentation.
  */
 const TONE: Record<"accent" | "quiet", string> = {
-  accent: "text-accent hover:text-accent-hover",
-  quiet: "text-ink-secondary hover:text-ink",
+  accent: "text-accent hover:text-accent-hover focus-visible:text-accent-hover",
+  quiet: "text-ink-secondary hover:text-ink focus-visible:text-ink",
 };
 
 export function TextLink({
@@ -50,9 +50,6 @@ export function TextLink({
   className?: string;
   children: ReactNode;
 }) {
-  // A NAMED group: these links sit inside cards that are themselves `group`,
-  // and an unnamed `group-hover` would fire from the card's hover instead of
-  // the link's — the nudge has to mean "you are on the link".
   // `w-fit` is load-bearing, not decoration. A flex item is blockified, so
   // `inline-flex` computes to `flex` and the default `align-items: stretch`
   // makes the link fill the cross axis — inside a COLUMN flex parent
@@ -60,20 +57,15 @@ export function TextLink({
   // area silently spanned the whole 62ch column. `w-fit` pins it to its content
   // and is a no-op in row-flex and block contexts, where the link already
   // shrink-wraps.
-  const classes = `group/link inline-flex w-fit items-center gap-1 text-sm font-medium transition-colors duration-fast ease-[var(--ease-out)] ${TONE[tone]} ${className}`;
+  const classes = `text-link-control inline-flex min-h-11 w-fit items-center gap-1 text-sm font-medium transition-colors duration-fast ease-[var(--ease-out)] ${TONE[tone]} ${className}`;
   const Glyph = external ? ArrowUpRight : ChevronRight;
   const body = (
     <>
-      {children}
+      <span className="link-underline">{children}</span>
       <Glyph
         size={14}
         strokeWidth={2.25}
         aria-hidden
-        className={`transition-transform duration-fast ease-[var(--ease-out)] ${
-          external
-            ? "group-hover/link:-translate-y-0.5 group-hover/link:translate-x-0.5"
-            : "group-hover/link:translate-x-0.5"
-        }`}
       />
     </>
   );

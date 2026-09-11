@@ -1,0 +1,65 @@
+/* Writing stays in place while its destination answers hover and keyboard focus. */
+.postLink {
+  position: relative;
+  isolation: isolate;
+  display: flex;
+  align-items: flex-start;
+  gap: 1.25rem;
+  padding-block: 1.25rem;
+  border-bottom: 1px solid var(--color-border-strong);
+  transition: border-color var(--motion-fast) var(--ease-out);
+}
+
+.postLink::before {
+  content: "";
+  position: absolute;
+  z-index: -1;
+  inset-block: 0;
+  inset-inline: -0.75rem;
+  border-radius: var(--radius-sm);
+  background: transparent;
+  pointer-events: none;
+  transition: background-color var(--motion-fast) var(--ease-out);
+}
+
+.postTitle {
+  color: var(--color-ink);
+  transition: color var(--motion-fast) var(--ease-out);
+}
+
+.postArrow {
+  flex-shrink: 0;
+  margin-top: 0.25rem;
+  color: var(--color-ink-tertiary);
+  transition: color var(--motion-fast) var(--ease-out);
+}
+
+.postLink:hover,
+.postLink:focus-visible {
+  border-color: var(--color-ink-secondary);
+}
+
+.postLink:hover::before,
+.postLink:focus-visible::before {
+  background: var(--color-surface);
+}
+
+.postLink:hover .postTitle,
+.postLink:focus-visible .postTitle,
+.postLink:hover .postArrow,
+.postLink:focus-visible .postArrow {
+  color: var(--color-accent);
+}
+
+@media (prefers-reduced-motion: no-preference) {
+  .postArrow {
+    transition:
+      color var(--motion-fast) var(--ease-out),
+      transform var(--motion-slow) var(--ease-out);
+  }
+
+  .postLink:hover .postArrow,
+  .postLink:focus-visible .postArrow {
+    transform: translate(var(--motion-nudge), calc(-1 * var(--motion-nudge)));
+  }
+}

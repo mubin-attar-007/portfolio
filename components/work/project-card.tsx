@@ -5,83 +5,67 @@ import type { Project } from "@/content/schema";
 import styles from "./project-card.module.css";
 
 /**
- * ProjectCard — the site's ONE project tile, shared by the homepage bento and
- * the /work index.
- *
- * It exists because those two surfaces had grown separate card treatments: a
- * rich one on the homepage and a plain bordered one on /work, so clicking
- * "See all four projects" took the visitor from a designed gallery to what
- * looked like a different site. One component, two sizes.
- *
- * Everything it renders comes from the project itself (`content/projects.ts`) —
- * including `card.definition`, `card.category` and the screenshot. Nothing about
- * a project is described in a page's copy file, so the homepage and /work cannot
- * describe the same product differently.
- *
- * The single result shown is `metrics[0]`, which `MetricSchema` already forces
- * to carry a `method` — so no card can display a number that nobody had to
- * justify.
- *
- * Interaction: a 4px lift on the card, and the SHOT scales rather than the card
- * (scaling a whole card blurs its own border and its type). Both are removed
- * under `prefers-reduced-motion`.
- *
- * A11y: ONE tab stop per card. The project title is the link and a stretched
- * pseudo-element makes the whole surface clickable; the live/source links sit
- * above that overlay so they stay independently reachable. `:focus-within`
- * mirrors the hover state, so keyboard users get the same affordance.
- *
- * @param priority Pass on the one card likely to be the LCP element.
+ * A shared editorial project row: product, engineering decision, method, capture.
+ * Methods and measured values come directly from the project's metric record.
+ * Text stays selectable; the labelled capture is an ordinary case-study link.
+ * Intrinsic image dimensions reserve space before these lazy captures load.
  */
 export function ProjectCard({
   project,
-  priority = false,
   labels,
 }: {
   project: Project;
-  priority?: boolean;
   labels: { caseStudy: string; live: string; source: string };
 }) {
   const metric = project.metrics[0];
   const { card } = project;
+  const caseStudyHref = `/work/${project.slug}`;
 
   return (
-    <article className={styles.card}>
+    <article className={styles.card} aria-labelledby={`project-${project.slug}`}>
       <div className={styles.body}>
-        <p className={styles.meta}>
-          <span>{card.category}</span>
-          <span className={styles.metaDot}>{project.status}</span>
-        </p>
-
-        <h3 className={styles.name}>
-          <Link href={`/work/${project.slug}`} prefetch={false} className={styles.titleLink}>
+        <p className={styles.meta}>{card.category}</p>
+        <h3 id={`project-${project.slug}`} className={styles.name}>
+          <Link href={caseStudyHref} prefetch={false} className={styles.titleLink}>
             {project.title}
           </Link>
         </h3>
-
         <p className={styles.definition}>{card.definition}</p>
 
         {metric ? (
-          <div className={styles.result}>
-            <span className={styles.resultValue}>{metric.value}</span>
-            <span className={styles.resultLabel}>{metric.label}</span>
+          <div className={styles.decision}>
+            <h4 className={styles.decisionTitle}>{card.decision.title}</h4>
+            {card.decision.showResult ? (
+              <Link
+                href={`${caseStudyHref}#performance-cost`}
+                prefetch={false}
+                className={`text-link-control ${styles.resultLink}`}
+                aria-label={`${metric.value} ${metric.label}. Read ${project.title}'s evaluation method.`}
+              >
+                <span>{metric.value}</span>
+                <span className={styles.resultLabel}>{metric.label}</span>
+                <ArrowUpRight size={14} strokeWidth={1.75} aria-hidden />
+              </Link>
+            ) : null}
+            <p className={styles.method}>{metric.method}</p>
           </div>
         ) : null}
 
         <div className={styles.actions}>
-          <span className={styles.primaryAction}>
+          <Link href={caseStudyHref} prefetch={false} className={`text-link-control ${styles.primaryAction}`}>
             {labels.caseStudy}
-            <ArrowRight className={styles.arrow} strokeWidth={2.25} aria-hidden />
-          </span>
+            <ArrowRight size={15} strokeWidth={1.75} aria-hidden />
+          </Link>
           {project.links.live ? (
             <a
               href={project.links.live}
               target="_blank"
               rel="noopener noreferrer"
-              className={styles.sideAction}
+              className={`text-link-control ${styles.sideAction}`}
+              aria-label={`${project.title} — ${labels.live} (opens in a new tab)`}
             >
               {labels.live}
-              <ArrowUpRight size={13} strokeWidth={2.25} aria-hidden />
+              <ArrowUpRight size={14} strokeWidth={1.75} aria-hidden />
             </a>
           ) : null}
           {project.links.repo ? (
@@ -89,39 +73,39 @@ export function ProjectCard({
               href={project.links.repo}
               target="_blank"
               rel="noopener noreferrer"
-              className={styles.sideAction}
+              className={`text-link-control ${styles.sideAction}`}
+              aria-label={`${project.title} — ${labels.source} (opens in a new tab)`}
             >
               {labels.source}
-              <ArrowUpRight size={13} strokeWidth={2.25} aria-hidden />
+              <ArrowUpRight size={14} strokeWidth={1.75} aria-hidden />
             </a>
           ) : null}
         </div>
       </div>
 
-      <div className={styles.shot}>
-        <div className={styles.chrome} aria-hidden>
-          <span className={styles.chromeDots}>
-            <span />
-            <span />
-            <span />
-          </span>
-          <span className={styles.chromeName}>{project.slug}.app</span>
-        </div>
-        <div className={styles.shotFrame}>
+      <figure className={styles.shot}>
+        <Link
+          href={caseStudyHref}
+          prefetch={false}
+          className={styles.shotFrame}
+          aria-label={`${labels.caseStudy}: ${project.title}`}
+        >
           <Image
             src={card.shot.src}
             alt={card.alt}
-            fill
+            width={card.shot.width}
+            height={card.shot.height}
             className={styles.shotImg}
-            sizes="(min-width: 64rem) 44vw, (min-width: 40rem) 92vw, 100vw"
-            priority={priority}
-            // Never lazy. These WebPs are 14-44KB; deferring them saved nothing
-            // and shipped BLANK evidence frames to anyone scrolling faster than
-            // the observer — the one failure mode this site cannot afford.
-            loading="eager"
+            sizes="(min-width: 79rem) 35.5rem, (min-width: 64rem) calc(50vw - 4rem), (min-width: 48rem) calc(50vw - 3.25rem), (min-width: 40rem) calc(100vw - 3rem), calc(100vw - 2.5rem)"
+            loading="lazy"
           />
-        </div>
-      </div>
+          <span className={styles.shotAction} aria-hidden>
+            {labels.caseStudy}
+            <ArrowUpRight size={15} strokeWidth={1.75} className={styles.shotArrow} />
+          </span>
+        </Link>
+        <figcaption className={styles.caption}>{card.caption}</figcaption>
+      </figure>
     </article>
   );
 }

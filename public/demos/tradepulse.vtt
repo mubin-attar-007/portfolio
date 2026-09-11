@@ -1,22 +1,29 @@
 WEBVTT
 
 00:08.000 --> 00:16.000
-Build, analyze, and automate trading strategies.
+Build and backtest strategies,
+with a copilot and paper-trading workflow.
 
 00:16.000 --> 00:25.000
-A backtesting engine built so the usual backtest lies are structurally impossible.
+The engine models trading costs,
+uses closed bars, and checks risk limits.
 
 00:25.000 --> 00:33.000
-The same engine runs in the open — one reference strategy, net of costs, per run.
+One reference strategy illustrates a run;
+reported results include modeled costs.
 
 00:33.000 --> 00:42.000
-Look-ahead-free by construction: decisions read only closed bars; orders fill next-bar open.
+Decisions read closed bars;
+market orders fill at the next bar's open.
 
 00:42.000 --> 00:48.000
-Honest backtesting · an AI strategy copilot · live charting.
+Backtesting, an AI strategy copilot,
+and charts using delayed market data.
 
 00:48.000 --> 00:55.000
-A visual strategy builder, paper trading on the same engine, and risk-first gating.
+A visual strategy builder; paper trading
+reuses the backtest engine.
 
-00:55.000 --> 01:04.000
-Costs on by default. Decimal money. No cherry-picked numbers — run your own backtest.
+00:55.000 --> 01:03.240
+Commission and slippage are on by default.
+Decimal accounting; hypothetical returns.

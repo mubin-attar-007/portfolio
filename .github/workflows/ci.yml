@@ -39,7 +39,7 @@ jobs:
       # One server, every gate that needs one. Kept in a single step on purpose:
       # a background process started with `&` surviving into a later step is a
       # runner implementation detail, not a guarantee.
-      - name: Browser gates (a11y, interaction, accent drift, print)
+      - name: Browser gates (a11y, interaction, motion, accent drift, print)
         run: |
           set -euo pipefail
           cp -R .next/static .next/standalone/.next/static
@@ -54,6 +54,10 @@ jobs:
 
           echo "::group::Interaction contracts"
           npm run test:interaction
+          echo "::endgroup::"
+
+          echo "::group::Motion and reduced-motion contracts"
+          npm run test:motion
           echo "::endgroup::"
 
           # Accent drift is invisible to axe and to the overflow sweep; a violet

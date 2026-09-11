@@ -2,6 +2,8 @@
 
 import { useCallback, useEffect, useId, useRef, useState } from "react";
 import { createPortal } from "react-dom";
+import Link from "next/link";
+import { citationLinks } from "@/lib/ai/citation-links";
 import { useInertBackground } from "@/lib/use-inert-background";
 import { X } from "lucide-react";
 
@@ -121,6 +123,7 @@ export function AssistantPanel({ onClose }: { onClose: () => void }) {
   const streamingTextRef = useRef("");
   const streamFrameRef = useRef<number | null>(null);
   const activeRequestRef = useRef<AbortController | null>(null);
+  const followTranscriptRef = useRef(true);
 
   // The panel only exists while it is open, so the boundary is unconditional:
   // everything behind it is inert for exactly as long as this component lives.
@@ -210,17 +213,18 @@ export function AssistantPanel({ onClose }: { onClose: () => void }) {
     };
   }, [onClose]);
 
-  // autoscroll the transcript as tokens arrive (not on the empty state, which
-  // would shove the starter questions out of view)
+  // Follow new tokens only while the reader is at the bottom of the transcript.
+  // Scrolling back to an earlier answer must not fight the incoming stream.
   useEffect(() => {
     messagesRef.current = messages;
     if (messages.length === 0) return;
     const el = logRef.current;
-    if (el) el.scrollTop = el.scrollHeight;
+    if (el && followTranscriptRef.current) el.scrollTop = el.scrollHeight;
   }, [messages]);
 
-  useEffect(
-    () => () => {
+  useEffect(() => {
+    mountedRef.current = true;
+    return () => {
       mountedRef.current = false;
       if (activeRequestRef.current) {
         activeRequestRef.current.abort();
@@ -232,9 +236,8 @@ export function AssistantPanel({ onClose }: { onClose: () => void }) {
       }
       streamingIndexRef.current = null;
       streamingTextRef.current = "";
-    },
-    [],
-  );
+    };
+  }, []);
 
   // collapse the input back to one line once it's cleared (after send)
   useEffect(() => {
@@ -244,19 +247,18 @@ export function AssistantPanel({ onClose }: { onClose: () => void }) {
   const ask = useCallback(
     async (question: string) => {
       const q = question.trim();
-      if (!q || busy) return;
+      if (!q || activeRequestRef.current) return;
 
       const history: Msg[] = [...messagesRef.current, { role: "user", content: q }];
-      setMessages((prev) => {
-        const next: Msg[] = [
-          ...prev,
-          { role: "user", content: q },
-          { role: "assistant", content: "", streaming: true },
-        ];
-        streamingIndexRef.current = next.length - 1;
-        streamingTextRef.current = "";
-        return next;
-      });
+      const next: Msg[] = [...history, { role: "assistant", content: "", streaming: true }];
+      streamingIndexRef.current = next.length - 1;
+      streamingTextRef.current = "";
+      followTranscriptRef.current = true;
+      messagesRef.current = next;
+      setMessages(next);
+      // Only an accepted request consumes the draft. Enter during a response
+      // leaves a visitor's next question intact, ready to submit afterwards.
+      setDraft("");
       setBusy(true);
 
       const update = (patch: Partial<Msg>) => updateStreamingMessage({ ...patch });
@@ -328,7 +330,7 @@ export function AssistantPanel({ onClose }: { onClose: () => void }) {
         flushStreamingMessage();
         update({
           content:
-            "The assistant is resting. Everything it would say is on the page — try the work and writing.",
+            "The assistant is unavailable right now. You can still explore the case studies and résumé.",
           streaming: false,
           mode: "fallback",
         });
@@ -347,7 +349,7 @@ export function AssistantPanel({ onClose }: { onClose: () => void }) {
         }
       }
     },
-    [busy, flushStreamingMessage, scheduleStreamingMessage, updateStreamingMessage],
+    [flushStreamingMessage, scheduleStreamingMessage, updateStreamingMessage],
   );
 
   const empty = messages.length === 0;
@@ -360,11 +362,13 @@ export function AssistantPanel({ onClose }: { onClose: () => void }) {
   return createPortal(
     <>
       <div
+        data-modal-root
         className="fixed inset-0 z-50 bg-[var(--scrim)]"
         onClick={onClose}
         aria-hidden="true"
       />
       <div
+        data-modal-root
         id="assistant-panel-dialog"
         ref={panelRef}
         role="dialog"
@@ -374,15 +378,15 @@ export function AssistantPanel({ onClose }: { onClose: () => void }) {
         className="fixed inset-x-0 bottom-0 z-50 flex h-[85dvh] flex-col overflow-hidden rounded-t-[var(--radius-lg)] border border-border bg-surface shadow-[var(--shadow-overlay)] sm:inset-x-auto sm:bottom-6 sm:right-6 sm:h-[min(38rem,calc(100dvh-6rem))] sm:w-[408px] sm:rounded-[var(--radius-lg)]"
       >
         <header className="flex items-center justify-between border-b border-border px-5 py-3">
-            <div>
+          <div className="min-w-0">
             <p id={dialogTitleId} className="text-sm font-medium text-ink">
               Ask about my work
             </p>
             <p className="font-mono text-xs text-ink-tertiary">
-              BM25 keyword search over my case studies, writing &amp; résumé
+              Projects, experience, and the decisions behind them
             </p>
             <p id={dialogDescId} className="sr-only">
-              Use this panel to ask questions about case studies, writing, and résumé details. Press Escape
+              Use this panel to ask questions about case studies and résumé details. Press Escape
               to close.
             </p>
           </div>
@@ -390,7 +394,7 @@ export function AssistantPanel({ onClose }: { onClose: () => void }) {
             type="button"
             onClick={onClose}
             aria-label="Close"
-            className="inline-flex h-11 w-11 items-center justify-center rounded-[var(--radius-md)] text-ink-secondary hover:text-ink"
+            className="inline-flex h-11 w-11 shrink-0 items-center justify-center rounded-[var(--radius-md)] text-ink-secondary hover:text-ink"
           >
             <X size={18} strokeWidth={1.5} aria-hidden />
           </button>
@@ -399,18 +403,23 @@ export function AssistantPanel({ onClose }: { onClose: () => void }) {
         <div
           ref={logRef}
           id={chatLogId}
-          className="flex-1 overflow-y-auto px-5 py-4"
+          className="min-h-0 flex-1 overflow-y-auto overscroll-contain px-5 py-4"
+          onScroll={(event) => {
+            const el = event.currentTarget;
+            followTranscriptRef.current = el.scrollHeight - el.scrollTop - el.clientHeight < 48;
+          }}
           role="log"
           aria-live="polite"
           aria-relevant="additions text"
-          aria-atomic="true"
+          aria-atomic="false"
+          aria-busy={busy}
         >
           {empty ? (
             <div>
               <p className="text-sm leading-relaxed text-ink-secondary">
-                Ask about Mubin&apos;s work. Every answer is pulled straight from this
-                site — case studies, writing, and résumé — and cited to the page. It
-                won&apos;t tell you anything that isn&apos;t already here.
+                Ask about Mubin&apos;s projects and background. Answers use the
+                published case studies, profile, skills, and résumé. Open the
+                sources to check a detail or explore a decision.
               </p>
               <p className="mt-5 font-mono text-xs uppercase tracking-wide text-ink-tertiary">
                 Try one, or ask your own
@@ -453,15 +462,30 @@ export function AssistantPanel({ onClose }: { onClose: () => void }) {
                       ) : null}
                     </div>
                     {m.sources && m.sources.length > 0 ? (
-                      <div className="mt-2 flex flex-wrap gap-1.5">
-                        {m.sources.map((s, si) => (
-                          <span
-                            key={si}
-                            className="rounded-[var(--radius-xs)] border border-border px-2 py-0.5 font-mono text-xs text-ink-tertiary"
-                          >
-                            {s.source}
-                          </span>
-                        ))}
+                      <div className="mt-3 flex flex-col gap-2" aria-label="Answer sources">
+                        {m.sources.map((s, si) => {
+                          const links = citationLinks(s.source);
+                          return (
+                            <div key={si} className="text-xs">
+                              <p className="break-words leading-relaxed text-ink-tertiary">{s.source}</p>
+                              {links.length > 0 ? (
+                                <div className="mt-1 flex flex-wrap gap-x-3 gap-y-1">
+                                  {links.map((link) => (
+                                    <Link
+                                      key={link.href}
+                                      href={link.href}
+                                      prefetch={false}
+                                      onNavigate={onClose}
+                                      className="inline-flex min-h-6 items-center gap-1 text-ink underline decoration-border-strong underline-offset-4 hover:decoration-ink"
+                                    >
+                                      {link.label}<span aria-hidden>↗</span>
+                                    </Link>
+                                  ))}
+                                </div>
+                              ) : null}
+                            </div>
+                          );
+                        })}
                       </div>
                     ) : null}
                   </div>
@@ -475,7 +499,6 @@ export function AssistantPanel({ onClose }: { onClose: () => void }) {
               onSubmit={(e) => {
                 e.preventDefault();
                 ask(draft);
-                setDraft("");
               }}
               aria-label="Ask this site a question"
               className="flex items-end gap-2 border-t border-border px-5 py-3"
@@ -491,10 +514,9 @@ export function AssistantPanel({ onClose }: { onClose: () => void }) {
               e.target.style.height = `${Math.min(e.target.scrollHeight, 112)}px`;
             }}
             onKeyDown={(e) => {
-              if (e.key === "Enter" && !e.shiftKey) {
+              if (e.key === "Enter" && !e.shiftKey && !e.nativeEvent.isComposing) {
                 e.preventDefault();
                 ask(draft);
-                setDraft("");
               }
             }}
             placeholder="Ask about a project or a decision…"

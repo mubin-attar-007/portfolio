@@ -19,12 +19,12 @@ export const resume = {
     experience: "Experience",
     projects: "Featured projects",
     /** Qualifier shown after the projects label — a fact, and a checkable one. */
-    projectsNote: "all live & open-source",
+    projectsNote: "case studies & source code",
     education: "Education",
     skills: "Skills",
   },
   summary:
-    "AI Systems Engineer shipping production software since 2022 and production AI since 2024 — GenAI/LLM applications, agentic and RAG systems, predictive ML, and healthcare-AI automation. Four AI products shipped to production and kept live, with published task-level evaluations for the systems whose behaviour can be scored. Fluent across the stack (FastAPI, Next.js, PostgreSQL, Docker) with auth, CI/CD, and security hardening baked in.",
+    "Applied AI Engineer with 3+ years in software engineering and a production-AI focus since 2024. I build LLM applications, agentic and RAG systems, predictive ML, and healthcare automation across FastAPI, Next.js, PostgreSQL, and Docker. Four public AI projects document my work in authentication, CI/CD, validation, and task-level evaluation.",
   skills: [
     { group: "Languages", items: "Python, JavaScript / TypeScript, SQL" },
     { group: "GenAI / LLM", items: "LangChain, LangGraph, RAG, pgvector, prompt engineering, agents, multi-provider routing (Gemini, GPT, Claude, Groq)" },
@@ -69,7 +69,7 @@ export const resume = {
       tagline: "Natural-language-to-SQL agent — LangGraph pipeline, schema-aware pgvector retrieval, multi-LLM fallback, and a fail-closed read-only safety layer.",
       // Spider figure is the /evals registry number (101/139 execution-match on the
       // dev split) — the only one with a published method. Never round it differently.
-      metric: "73% Spider dev · 82% golden-set exact · 100% fail-closed",
+      metric: "101/139 Spider dev · 18/22 golden-set exact · 4/4 unsafe prompts refused",
       stack: "FastAPI · LangGraph · Next.js",
       method: "/evals",
       live: "https://dbwhisper.vercel.app",
@@ -77,7 +77,7 @@ export const resume = {
     },
     {
       name: "TradePulse",
-      tagline: "Quant backtesting platform engineered so common backtest lies are structurally impossible — look-ahead-free by construction, costs-on-by-default, Decimal money, grounded AI copilot.",
+      tagline: "Quant backtesting platform with next-bar execution, costs modeled by default, Decimal accounting, and an AI copilot grounded in the backtest results.",
       metric: "Look-ahead canary + cash-conservation tests green",
       stack: "FastAPI · Next.js · TimescaleDB · Redis",
       method: "/evals",

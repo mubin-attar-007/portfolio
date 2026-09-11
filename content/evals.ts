@@ -103,10 +103,18 @@ export function requireEval(system: string, benchmark: string): EvalRow {
  */
 const GOLDEN = requireEval("DBWhisper", "Custom golden-query set");
 
+function goldenRatio(pattern: RegExp): string {
+  const ratio = GOLDEN.note?.match(pattern)?.[1];
+  if (!ratio) throw new Error("The golden evaluation must state its measured counts.");
+  return ratio;
+}
+
 export const DBWHISPER_GOLDEN = {
   anchor: `/evals#${evalAnchor(GOLDEN)}`,
   /** "82% exact · 100% fail-closed" → "82%" / "100%" */
   exactMatch: GOLDEN.result.split("%")[0]!.trim() + "%",
   failClosed: "100%",
+  exactRatio: goldenRatio(/exact result-set match \((\d+\/\d+)\)/),
+  refusalRatio: goldenRatio(/refused fail-closed \((\d+\/\d+)\)/),
   date: GOLDEN.date,
 } as const;

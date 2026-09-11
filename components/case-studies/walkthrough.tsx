@@ -24,8 +24,9 @@ export type WalkthroughProps = {
   stages: readonly WalkthroughStage[];
   refusalDemo: { prompt: string; verdict: string; reason: string };
   providers: readonly string[];
-  /** Specimen data lifted from the hero stage so the two surfaces agree. */
+  /** Curated sample data assembled by the server. */
   schema: readonly { name: string; cols: string; selected: boolean }[];
+  question: string;
   sql: string;
   columns: readonly string[];
   rows: readonly (readonly string[])[];
@@ -37,7 +38,7 @@ export type WalkthroughProps = {
 };
 
 /**
- * FlagshipWalkthrough — clerk.com's accordion-rail product section, adapted.
+ * FlagshipWalkthrough — a request path readers can inspect stage by stage.
  *
  * The observed pattern: a narrow copy rail whose accordion drives a dominant
  * product specimen beside it. Here the accordion is DBWhisper's five stages —
@@ -45,10 +46,9 @@ export type WalkthroughProps = {
  * renders the active stage as product UI. This replaces the static request-path
  * panel: the same facts, but the visitor walks them.
  *
- * Content arrives as props (a client component never imports the content layer
- * — that lesson cost 290KB once). The specimen's schema rows, SQL, result rows
- * and scores are the SAME objects the hero stage and the eval registry render,
- * so the surfaces cannot drift apart.
+ * Content arrives as props so the registry and its validation dependencies stay
+ * on the server. Sample SQL and rows share one content module; measured scores
+ * come from the evaluation registry.
  *
  * A11y: a real disclosure pattern — each stage is a `<button aria-expanded>`
  * controlling a named region; exactly one stage is open, and the open state is
@@ -82,6 +82,7 @@ export function FlagshipWalkthrough(props: WalkthroughProps) {
   /** Only a visitor-initiated change is announced (see the A11y note above). */
   const [announced, setAnnounced] = useState<string | null>(null);
   const rootRef = useRef<HTMLDivElement>(null);
+  const manualInteractionRef = useRef(false);
   const reduced = useReducedMotion();
   const stage = props.stages.find((s) => s.id === active) ?? props.stages[0]!;
   const index = props.stages.findIndex((s) => s.id === stage.id);
@@ -90,6 +91,7 @@ export function FlagshipWalkthrough(props: WalkthroughProps) {
   /** Any manual selection stops the run — the reader has taken over. */
   const select = useCallback(
     (id: WalkthroughStage["id"]) => {
+      manualInteractionRef.current = true;
       setPlaying(false);
       setActive(id);
       const i = props.stages.findIndex((x) => x.id === id);
@@ -100,6 +102,7 @@ export function FlagshipWalkthrough(props: WalkthroughProps) {
   );
 
   const replay = useCallback(() => {
+    manualInteractionRef.current = true;
     setActive(props.stages[0]!.id);
     setPlaying(true);
     // The run itself is silent, so the announcement describes the ACTION rather
@@ -111,11 +114,18 @@ export function FlagshipWalkthrough(props: WalkthroughProps) {
   // where it would finish unseen, and not on every re-entry, which would make
   // scrolling past feel like the page was resetting itself.
   useEffect(() => {
-    if (reduced || started) return;
+    if (reduced || started || manualInteractionRef.current) return;
     const el = rootRef.current;
     if (!el || !("IntersectionObserver" in window)) return;
     const io = new IntersectionObserver(
       (entries) => {
+        // Arrival is asynchronous: a click or keyboard focus can arrive first.
+        // Read the synchronous intent ref before starting, including callbacks
+        // already queued when the visitor took control of the stage list.
+        if (manualInteractionRef.current) {
+          io.disconnect();
+          return;
+        }
         for (const e of entries) {
           if (!e.isIntersecting) continue;
           setStarted(true);
@@ -161,7 +171,10 @@ export function FlagshipWalkthrough(props: WalkthroughProps) {
    * by itself. Clicking already stops the run via select(); this covers the
    * visitor who arrives by keyboard and has not committed to a stage yet.
    */
-  const stopForFocus = useCallback(() => setPlaying(false), []);
+  const stopForFocus = useCallback(() => {
+    manualInteractionRef.current = true;
+    setPlaying(false);
+  }, []);
 
   return (
     <div className={styles.layout} ref={rootRef}>
@@ -206,6 +219,7 @@ export function FlagshipWalkthrough(props: WalkthroughProps) {
                   id={`walkthrough-panel-${s.id}`}
                   role="region"
                   aria-label={s.label}
+                  aria-hidden={!open}
                   className={styles.stagePanel}
                 >
                   <div className={styles.stagePanelInner}>
@@ -229,7 +243,11 @@ export function FlagshipWalkthrough(props: WalkthroughProps) {
           <div className={styles.transport}>
             <button
               type="button"
-              onClick={() => (last ? replay() : setPlaying((p) => !p))}
+              onClick={() => {
+                manualInteractionRef.current = true;
+                if (last) replay();
+                else setPlaying((p) => !p);
+              }}
               className={styles.transportBtn}
             >
               {last ? (
@@ -277,6 +295,7 @@ export function FlagshipWalkthrough(props: WalkthroughProps) {
         {/* Keyed remount restarts the entrance animation on every swap. NOT a
             live region — see the A11y note at the top of this file. */}
         <div key={stage.id} className={`${styles.specimenBody} ${styles.panelEnter}`}>
+          <p className="mb-4 text-xs text-ink-secondary">Example: {props.question}</p>
           <Specimen {...props} stageId={stage.id} />
         </div>
       </div>
@@ -320,7 +339,7 @@ function Specimen(props: WalkthroughProps & { stageId: WalkthroughStage["id"] })
             role="region"
             aria-label="Retrieval call, scrollable"
           >
-            {'search_tables("revenue by month") → orders, customers'}
+            {'search_tables("monthly revenue") → orders'}
           </div>
         </div>
       );

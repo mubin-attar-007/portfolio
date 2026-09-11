@@ -33,25 +33,32 @@ export const ProjectSchema = z.object({
   }),
   diagram: z.string().optional(),
   /**
-   * The CARD view of this project — what a gallery tile needs and a case-study
-   * header does not.
+   * The project preview shared by the homepage and work index.
    *
    * It lives on the project rather than in a page's copy file because two
-   * surfaces render it (the homepage bento and /work), and a card definition
+   * surfaces render it (the homepage and /work), and a card definition
    * kept next to one of them is a card definition the other will eventually
    * contradict. `summary` is deliberately NOT reused here: it is a
    * 200-character paragraph written for the case-study header and reads as a
-   * wall at tile size.
+   * wall in a project preview.
    */
   card: z.object({
     /** One line. What the product is, before any mechanism is named. */
     definition: z.string().max(90),
     /** The technical family — not a tag cloud. */
     category: z.string(),
-    /** A real screenshot of the running product, served from /public. */
+    /** The decision explained by the project's first metric and its method. */
+    decision: z.object({
+      title: z.string().min(1),
+      /** Numeric results retain their value and method link in the preview. */
+      showResult: z.boolean().default(false),
+    }),
+    /** A real product or website capture, served from /public. */
     shot: z.object({ src: z.string(), width: z.number(), height: z.number() }),
     /** Describes what the screenshot SHOWS. Never the project name repeated. */
     alt: z.string().min(1),
+    /** Identifies the actual captured surface; never an implied live result. */
+    caption: z.string().min(1),
   }),
   /** Real, dated milestones (newest first), derived from git history / shipped work. */
   changelog: z

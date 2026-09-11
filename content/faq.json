@@ -2,7 +2,7 @@
   "faq": [
     {
       "question": "What has Mubin actually shipped in production?",
-      "answer": "Four live AI products, all running right now on a free-tier stack, plus production healthcare-AI systems at his day job. The four public products are: DBWhisper (a natural-language-to-SQL agent), LLM Studio (a multi-user ChatGPT-style chat SaaS), TradePulse (an honest quant backtesting platform), and CrownWager (an ML-driven sports-analytics platform). At Sevina Technologies he builds and ships production AI and automation systems for healthcare — data-extraction pipelines, a clinical decision-support platform, and GenAI document-analysis assistants. These aren't demos or screenshots; each public product links to the real deployed app and its source.",
+      "answer": "Four public AI projects, with case studies, deployment links, and source code, plus production healthcare-AI systems at his day job. The four public products are: DBWhisper (a natural-language-to-SQL agent), LLM Studio (a multi-user ChatGPT-style chat SaaS), TradePulse (an honest quant backtesting platform), and CrownWager (an ML-driven sports-analytics platform). At Sevina Technologies he builds and ships production AI and automation systems for healthcare — data-extraction pipelines, a clinical decision-support platform, and GenAI document-analysis assistants. The public projects use free-tier hosting, so cold starts and provider quotas can affect availability.",
       "source": "profile · projects (all four) · Sevina Technologies role"
     },
     {
@@ -12,7 +12,7 @@
     },
     {
       "question": "How does DBWhisper stop the LLM from running dangerous SQL?",
-      "answer": "It never trusts the model — it gates it. Every generated statement passes app/core/sql_validator.py, which uses sqlparse (not just regex) to require the query start with SELECT or WITH, reject any DML/DDL/EXEC keyword, reject multiple statements and SELECT INTO, and block access to system schemas. Critically it's fail-closed: when a database is specified it also checks every referenced table against that database's enrolled schema index, and if no schema index exists it refuses rather than allowing the query through. Below the validator sit more layers — read-only DB users, query timeout and row caps, and log sanitization that masks passwords and API keys. The read-only guarantee is structural, not dependent on the model behaving.",
+      "answer": "It validates generated SQL before execution. Every generated statement passes app/core/sql_validator.py, which uses sqlparse (not just regex) to require the query start with SELECT or WITH, reject DML/DDL/EXEC keywords, reject multiple statements and SELECT INTO, and block access to system schemas. It is fail-closed: when a database is specified it checks referenced tables against that database's enrolled schema index, and if no schema index exists it refuses the query. Additional controls include read-only DB users, query timeout and row caps, and log sanitization that masks passwords and API keys. These are specific enforcement layers; they do not establish a universal guarantee against data exposure or service failure.",
       "source": "DBWhisper — app/core/sql_validator.py, SECURITY.md"
     },
     {
@@ -37,7 +37,7 @@
     },
     {
       "question": "What's his experience with LLM agents and multi-provider routing?",
-      "answer": "Substantial and hands-on. DBWhisper is a full LangGraph/LangChain agent with a custom toolset and a six-provider fallback chain (OpenAI, OpenRouter, DeepSeek, Groq, Anthropic, Gemini) that always keeps a free-tier provider as a final fallback. LLM Studio routes across many providers behind one OpenAI-compatible client factory, streaming reasoning models' thinking separately. TradePulse's copilot and CrownWager's CrownBot are grounded assistants that refuse to invent numbers. And at Sevina he built GenAI assistants with multi-provider routing across OpenAI, Claude, and Gemini. Multi-provider routing is a recurring pattern in his work — for resilience and to avoid single-vendor lock-in.",
+      "answer": "Substantial and hands-on. DBWhisper is a full LangGraph/LangChain agent with a custom toolset and a six-provider fallback chain (OpenAI, OpenRouter, DeepSeek, Groq, Anthropic, Gemini), with Gemini configured as the final fallback. LLM Studio routes across many providers behind one OpenAI-compatible client factory, streaming reasoning models' thinking separately. TradePulse's copilot and CrownWager's CrownBot receive computed data and are prompted to use the supplied figures. At Sevina he built GenAI assistants with multi-provider routing across OpenAI, Claude, and Gemini. Multi-provider routing is a recurring pattern in his work — for resilience and to avoid single-vendor lock-in.",
       "source": "DBWhisper agent · LLM Studio router · TradePulse/CrownWager copilots · Sevina role"
     },
     {
@@ -47,7 +47,7 @@
     },
     {
       "question": "What's the strongest evidence of his engineering judgment (senior-level thinking)?",
-      "answer": "The trade-offs he makes deliberately, and the things he refuses to fake. DBWhisper fails closed rather than open on SQL safety. TradePulse encodes look-ahead-freedom into a non-Turing-complete strategy spec so the bias is structurally impossible, then proves it with a canary test — and reuses the exact same engine for paper trading, guaranteed by a parity test. CrownWager reports cross-validated accuracy, keeps a shallow model to resist overfitting, and voids unmappable picks instead of fudging its track record. LLM Studio enforces tenancy at a single repository choke point and caught a real 32-bit epoch-overflow bug in production. Across all of them he also documents what he deliberately does NOT claim — which is itself a senior habit.",
+      "answer": "The trade-offs he makes deliberately, and the limits he documents. DBWhisper fails closed when generated SQL violates its validator rules. TradePulse uses a non-Turing-complete strategy spec that reads closed bars and fills orders on the next bar, with a future-bar canary test for look-ahead leakage. Paper trading reuses the backtest engine and has a parity test. CrownWager reports cross-validated accuracy, keeps a shallow model to resist overfitting, and voids unmappable picks. LLM Studio enforces ownership checks in its repository layer and fixed a 32-bit epoch-overflow bug found in production. The case studies explain each trade-off and the evidence behind it.",
       "source": "DBWhisper validator · TradePulse spec + tests · CrownWager grading · LLM Studio tenancy"
     },
     {

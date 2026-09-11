@@ -21,9 +21,10 @@ import path from "node:path";
 
 import faqData from "@/content/faq.json";
 import profileData from "@/content/profile.json";
-import resumeData from "@/content/resume.json";
+import { resume as resumeData } from "@/content/resume.ts";
 import skillsData from "@/content/skills.json";
-import projectsData from "@/content/projects.json";
+import { projects } from "@/content/projects.ts";
+import { SITE } from "@/config/site";
 
 /** A single retrievable unit of real site content. */
 export type Passage = {
@@ -128,9 +129,9 @@ function buildCorpus(): Passage[] {
     });
   });
 
-  // 2) Case studies — chunk each MDX by ## h2 section.
-  const projectMeta = projectsData.projects;
-  for (const proj of projectMeta) {
+  // 2) Case studies — the same project registry that renders /work supplies
+  // slugs and titles. All technical detail stays in the original MDX passages.
+  for (const proj of projects) {
     let source: string;
     try {
       source = readFileSync(path.join(PROJECTS_DIR, `${proj.slug}.mdx`), "utf8");
@@ -144,8 +145,8 @@ function buildCorpus(): Passage[] {
       passages.push({
         id: `cs-${proj.slug}-${sec.heading.toLowerCase().replace(/[^a-z0-9]+/g, "-")}`,
         // Prefix with project + heading so those terms weigh in retrieval.
-        text: `${proj.name} — ${sec.heading}\n${clean}`,
-        source: `${proj.name} case study — ${sec.heading}`,
+        text: `${proj.title} — ${sec.heading}\n${clean}`,
+        source: `${proj.title} case study — ${sec.heading}`,
         kind: "case-study",
       });
     }
@@ -155,13 +156,13 @@ function buildCorpus(): Passage[] {
   passages.push({
     id: "profile-summary",
     text: [
-      profileData.name,
-      profileData.role,
+      SITE.name,
+      SITE.role,
       profileData.focus,
       profileData.tagline,
       profileData.ethos,
-      profileData.summary,
-      `Based in ${profileData.location}.`,
+      resumeData.summary,
+      `Based in ${SITE.location}.`,
     ].join("\n"),
     source: "Profile — summary & ethos",
     kind: "profile",
@@ -170,12 +171,12 @@ function buildCorpus(): Passage[] {
   // 4) Résumé — one passage per role, plus education.
   for (const exp of resumeData.experience) {
     passages.push({
-      id: `resume-${exp.company.toLowerCase().replace(/[^a-z0-9]+/g, "-")}`,
+      id: `resume-${exp.org.toLowerCase().replace(/[^a-z0-9]+/g, "-")}`,
       text: [
-        `${exp.role} at ${exp.company} (${exp.period}), ${exp.place}.`,
+        `${exp.role} at ${exp.org} (${exp.period}), ${exp.place}.`,
         ...exp.points,
       ].join("\n"),
-      source: `Résumé — ${exp.company} (${exp.role})`,
+      source: `Résumé — ${exp.org} (${exp.role})`,
       kind: "resume",
     });
   }
@@ -258,12 +259,12 @@ function idf(term: string): number {
  * streaming a weakly-related FAQ.
  *
  * Tuned against the grounding proof set (lib/ai/test-questions.ts): every one of
- * the 10 on-topic questions still clears this floor (the weakest — the education
+ * the 16 on-topic questions still clears this floor (the weakest — the education
  * question — scores ~4.9), while clearly off-topic queries (salary, security
  * clearance, weather, visa/relocation, …) all fall below it and return []. See
  * test/retrieval.test.mts for the on-topic-pass / off-topic-refuse assertions.
  */
-export const RELEVANCE_MIN_SCORE = 4.2;
+export const RELEVANCE_MIN_SCORE = 4.6;
 
 export type RetrieveOptions = {
   /** how many passages to return (default 4) */

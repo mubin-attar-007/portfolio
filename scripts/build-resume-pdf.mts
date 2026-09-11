@@ -80,7 +80,7 @@ const html = `<!doctype html><html><head><meta charset="utf-8"><style>
     )
     .join("")}
 
-  <h2>Featured Projects <span style="color:var(--faint);font-weight:400;letter-spacing:0">— all live &amp; open-source</span></h2>
+  <h2>Featured Projects <span style="color:var(--faint);font-weight:400;letter-spacing:0">— ${esc(resume.labels.projectsNote)}</span></h2>
   ${resume.projects
     .map(
       (p) => `<div class="proj">

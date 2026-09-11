@@ -46,7 +46,7 @@ export function CrownWagerBody() {
 
       <CS id="architecture" title="System architecture">
         <p>
-          Three decoupled services so heavy ML never blocks web requests: a Django/DRF backend, a
+          Three services separate model loading and inference from the web backend: Django/DRF, a
           separate FastAPI ML service in its own container, and a Next.js frontend. Django never
           imports XGBoost — all inference happens over HTTP, and a model registry serves only a model
           whose checksum is validated, otherwise a clearly-labeled baseline.
@@ -94,8 +94,8 @@ export function CrownWagerBody() {
               choice: "Graceful degradation everywhere",
               alternatives: ["let a slow dependency hang the request"],
               reason:
-                "A circuit breaker on the ML client, plus fallbacks for the odds API and the assistant, keep the product running (in labeled demo mode) even if every external dependency is down.",
-              tradeoff: "More fallback code to maintain, for a system that never hard-fails in front of a user.",
+                "A circuit breaker on the ML client, plus fallbacks for the odds API and the assistant, provide a labeled demo mode for handled dependency failures.",
+              tradeoff: "More fallback paths to maintain and test, and reduced functionality while dependencies are unavailable.",
             },
             {
               choice: "A grounded assistant over a persuasive one",

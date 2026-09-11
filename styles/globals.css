@@ -26,13 +26,12 @@ html {
   /* Native UI follows the page: scrollbars, the assistant's textarea, form
      controls, and the <details> marker. Keyed to OUR [data-theme] rather than
      to `light dark`, because the site never consults prefers-color-scheme — and
-     with dark as the default, an unset color-scheme would put a light scrollbar
-     down the edge of a near-black page. */
-  color-scheme: dark;
+     native controls remain consistent with the visitor’s selected theme. */
+  color-scheme: light;
 }
 
-html[data-theme="light"] {
-  color-scheme: light;
+html[data-theme="dark"] {
+  color-scheme: dark;
 }
 
 body {
@@ -107,16 +106,50 @@ button:disabled,
     color var(--motion-fast) var(--ease-out),
     background-color var(--motion-fast) var(--ease-out);
 }
-.icon-btn:hover {
+.icon-btn:not(:disabled):not([aria-disabled="true"]):not([aria-busy="true"]):is(:hover, :focus-visible) {
   background-color: color-mix(in srgb, var(--color-ink) 6%, transparent);
 }
-/* The glyph answers with a small spring pop — the reference's icon-tile hover.
-   Transform-only; the blanket reduced-motion rule collapses the duration. */
-.icon-btn svg {
-  transition: transform var(--motion-base) var(--ease-spring);
+
+/* Directional feedback belongs to the actual link or button, never its parent
+   row. Explicit icon names keep loading spinners and other symbols stationary. */
+:is(.button-control, .text-link-control) > :is(.lucide-arrow-right, .lucide-chevron-right) {
+  --control-arrow-x: var(--motion-nudge, calc(var(--spacing) / 2));
 }
-.icon-btn:hover svg {
-  transform: scale(1.12);
+:is(.button-control, .text-link-control) > :is(.lucide-arrow-left, .lucide-chevron-left) {
+  --control-arrow-x: calc(-1 * var(--motion-nudge, calc(var(--spacing) / 2)));
+}
+:is(.button-control, .text-link-control) > .lucide-arrow-up-right {
+  --control-arrow-x: var(--motion-nudge, calc(var(--spacing) / 2));
+  --control-arrow-y: calc(-1 * var(--motion-nudge, calc(var(--spacing) / 2)));
+}
+:is(.button-control, .text-link-control) > :is(.lucide-arrow-down, .lucide-chevron-down) {
+  --control-arrow-y: var(--motion-nudge, calc(var(--spacing) / 2));
+}
+
+@media (prefers-reduced-motion: no-preference) {
+  .button-control {
+    transition-property: color, background-color, border-color, box-shadow, opacity, translate;
+  }
+
+  .button-control:not(:disabled):not([aria-disabled="true"]):not([aria-busy="true"]):active {
+    translate: 0 var(--motion-press, calc(var(--spacing) / 4));
+  }
+
+  :is(.button-control, .text-link-control) > :is(.lucide-arrow-right, .lucide-chevron-right, .lucide-arrow-left, .lucide-chevron-left, .lucide-arrow-up-right, .lucide-arrow-down, .lucide-chevron-down) {
+    transition: transform var(--motion-base) var(--ease-out);
+  }
+
+  :is(.button-control, .text-link-control):not(:disabled):not([aria-disabled="true"]):not([aria-busy="true"]):is(:hover, :focus-visible) > :is(.lucide-arrow-right, .lucide-chevron-right, .lucide-arrow-left, .lucide-chevron-left, .lucide-arrow-up-right, .lucide-arrow-down, .lucide-chevron-down) {
+    transform: translate(var(--control-arrow-x, 0), var(--control-arrow-y, 0));
+  }
+
+  .icon-btn > svg:not(.lucide-loader-circle) {
+    transition: transform var(--motion-base) var(--ease-out);
+  }
+
+  .icon-btn:not(:disabled):not([aria-disabled="true"]):not([aria-busy="true"]):is(:hover, :focus-visible) > svg:not(.lucide-loader-circle) {
+    transform: scale(1.08);
+  }
 }
 
 .skip-link {
@@ -183,11 +216,8 @@ button:disabled,
   }
 }
 
-/* ---- device: the primary-button sheen ----------------------------------
-   A slim band of light that sweeps across the primary action on hover — the
-   one flourish the accent fill is allowed. Pure transform on a pseudo-element
-   (compositor-only), and the whole device lives inside `no-preference`: with
-   reduced motion there is no sheen at all, not a sheen that snaps. */
+/* One short sheen on an enabled primary control. Leaving the target resets the
+   light off-screen, without a second reverse sweep. Reduced motion omits it. */
 @media (prefers-reduced-motion: no-preference) {
   .btn-sheen {
     position: relative;
@@ -201,66 +231,17 @@ button:disabled,
     background: linear-gradient(
       100deg,
       transparent 30%,
-      rgb(255 255 255 / 0.22) 50%,
+      color-mix(in srgb, var(--color-on-accent) 16%, transparent) 50%,
       transparent 70%
     );
-    transition: transform var(--motion-slow) var(--ease-out);
     pointer-events: none;
   }
-  .btn-sheen:hover::after,
-  .btn-sheen:focus-visible::after {
-    transform: translateX(130%) skewX(-18deg);
+  .btn-sheen:not(:disabled):not([aria-disabled="true"]):not([aria-busy="true"]):is(:hover, :focus-visible)::after {
+    animation: control-sheen var(--motion-slow) var(--ease-out) both;
   }
-}
-
-/* ---- device: the notched plate ------------------------------------------
-   The reference's dark-section edge, measured (crop-top-edge / crop-bottom-edge
-   in .screenshots/clerk/): the dark plate keeps FULL-HEIGHT WINGS at the
-   viewport edges while the light section intrudes as a wide centred tab with
-   45° shoulders — ~43px deep, shoulders ~115px in from each edge at 1440.
-   A twelve-point clip-path, mirrored top and bottom. The first version of this
-   device cut the plate's corners instead — geometrically the exact inverse —
-   and shipped that way until the owner put the two screenshots side by side.
-   Geometry is two tokens (--chamfer depth, --chamfer-inset shoulder position),
-   so every plate retunes together. */
-.chamfer {
-  clip-path: polygon(
-    0 0,
-    var(--chamfer-inset) 0,
-    calc(var(--chamfer-inset) + var(--chamfer)) var(--chamfer),
-    calc(100% - var(--chamfer-inset) - var(--chamfer)) var(--chamfer),
-    calc(100% - var(--chamfer-inset)) 0,
-    100% 0,
-    100% 100%,
-    calc(100% - var(--chamfer-inset)) 100%,
-    calc(100% - var(--chamfer-inset) - var(--chamfer)) calc(100% - var(--chamfer)),
-    calc(var(--chamfer-inset) + var(--chamfer)) calc(100% - var(--chamfer)),
-    var(--chamfer-inset) 100%,
-    0 100%
-  );
-}
-
-/* ---- device: the section reveal ----------------------------------------
-   The hidden state is applied by JS, and ONLY to elements that were below the
-   fold at mount (see components/ui/reveal.tsx). That inversion is the whole
-   design: an element already on screen is never hidden, so a reveal that fails
-   to fire costs an animation, never content.
-
-   Two earlier attempts hid content declaratively — a CSS `view()` timeline and
-   a JS-hidden observer — and both blanked the page body in captures and edge
-   contexts. Third time: nothing is hidden unless JS has already proven it can
-   unhide it, and a 1.6s timer unhides everything regardless. */
-@media (prefers-reduced-motion: no-preference) {
-  [data-reveal] {
-    opacity: 0;
-    transform: translateY(16px);
-    transition:
-      opacity var(--motion-section) var(--ease-enter),
-      transform var(--motion-section) var(--ease-enter);
-  }
-  [data-reveal][data-inview] {
-    opacity: 1;
-    transform: none;
+  @keyframes control-sheen {
+    from { transform: translateX(-130%) skewX(-18deg); }
+    to { transform: translateX(130%) skewX(-18deg); }
   }
 }
 
@@ -271,11 +252,16 @@ button:disabled,
   background-repeat: no-repeat;
   background-size: 0% 1px;
   padding-bottom: 1px;
-  transition: background-size var(--motion-base) var(--ease-out);
 }
 .link-underline:hover,
-.link-underline:focus-visible {
+.link-underline:focus-visible,
+.text-link-control:is(:hover, :focus-visible) .link-underline {
   background-size: 100% 1px;
+}
+@media (prefers-reduced-motion: no-preference) {
+  .link-underline {
+    transition: background-size var(--motion-base) var(--ease-out);
+  }
 }
 
 /* ---- device 3: the dark band -------------------------------------------
@@ -355,33 +341,6 @@ button:disabled,
   border: 0;
   height: 1px;
   background: var(--hairline-fade);
-}
-
-/* ---- device 5: the grid field ------------------------------------------
-   The sparse grid the "evidence path" motif is drawn on. Two 1px repeating
-   gradients, masked to fade out before they reach any edge — so it reads as a
-   surface the page is resting on rather than as a texture pasted onto it.
-   Purely decorative: always applied to an aria-hidden element.
-
-   `--grid-step` and `--grid-fade` are local knobs, not global tokens: only the
-   three motif surfaces use them, and each tunes its own density. */
-.grid-field {
-  --grid-step: 64px;
-  --grid-fade: 62%;
-  position: absolute;
-  inset: 0;
-  pointer-events: none;
-  background-image:
-    linear-gradient(to right, color-mix(in srgb, var(--color-ink) 5%, transparent) 1px, transparent 1px),
-    linear-gradient(to bottom, color-mix(in srgb, var(--color-ink) 5%, transparent) 1px, transparent 1px);
-  background-size: var(--grid-step) var(--grid-step);
-  -webkit-mask-image: radial-gradient(closest-side at 50% 40%, #000, transparent var(--grid-fade));
-  mask-image: radial-gradient(closest-side at 50% 40%, #000, transparent var(--grid-fade));
-}
-.tone-invert .grid-field {
-  background-image:
-    linear-gradient(to right, rgb(255 255 255 / 0.05) 1px, transparent 1px),
-    linear-gradient(to bottom, rgb(255 255 255 / 0.05) 1px, transparent 1px);
 }
 
 /* ---- long-form + syntax ------------------------------------------------- */
@@ -490,7 +449,6 @@ button:disabled,
 
   /* Entrance animation must never leave printed content faded out. */
   .reveal,
-  [data-reveal],
   .reveal-stagger > * {
     animation: none !important;
     opacity: 1 !important;

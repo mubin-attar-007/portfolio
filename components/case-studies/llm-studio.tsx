@@ -27,8 +27,8 @@ export function LlmStudioBody() {
         <p>
           &quot;Wrap an LLM API in a chat UI&quot; is a weekend project. Turning that into something
           multiple people can actually sign into is where the engineering lives: passwords hashed
-          correctly, sessions that can be revoked, a hard guarantee that user A can never read user
-          B&apos;s chats, a fair budget on a shared key, and streaming that survives a reverse proxy.
+          correctly, sessions that can be revoked, chat queries scoped to the authenticated owner,
+          a budget on a shared key, and streaming through a reverse proxy.
         </p>
       </CS>
 
@@ -77,7 +77,7 @@ export function LlmStudioBody() {
               alternatives: ["ownership checks sprinkled across routes"],
               reason:
                 "Ownership is enforced where data is accessed: lists filter by owner, and upsert/delete silently refuse a chat owned by someone else — one auditable choke point.",
-              tradeoff: "The 'silent skip' is less chatty than a 403, but cross-tenant access is structurally impossible.",
+              tradeoff: "The 'silent skip' is less chatty than a 403; repository-level checks can be reviewed and tested together.",
             },
             {
               choice: "Quota checked before the stream, not after",
@@ -132,8 +132,8 @@ export function LlmStudioBody() {
 
       <CS id="operations" title="Operations">
         <p>
-          Shipped as a single Docker container; sessions and usage live in Postgres. The tenancy
-          guarantee is one line at the choke point:
+          Shipped as a single Docker container; sessions and usage live in Postgres. The
+          ownership check is visible at the repository boundary:
         </p>
         <CodeBlock
           filename="repository (chat upsert)"

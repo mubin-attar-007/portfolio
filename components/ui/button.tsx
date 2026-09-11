@@ -21,8 +21,9 @@ import { LoaderCircle } from "lucide-react";
  *
  * A11y: renders a real `<button>` with the global `:focus-visible` accent ring.
  * `loading` sets `aria-busy` and disables the control, so a second submit cannot
- * race the first. Motion is colour/shadow/translate only — the press is a single
- * pixel, which reads as tactile without becoming a bounce.
+ * race the first. Enabled controls share arrow feedback for hover and keyboard
+ * focus, one sheen sweep, and a small press response. Movement is opt-in through
+ * prefers-reduced-motion; static colour and focus feedback remain available.
  */
 type Variant = "primary" | "secondary" | "subtle" | "ghost";
 type Size = "sm" | "md" | "lg";
@@ -38,20 +39,20 @@ const VARIANTS: Record<Variant, string> = {
     // The accent gradient under white text, with the sheen sweep on hover. The
     // flat `bg-accent` stays as the paint-order fallback beneath the image, so
     // an engine that drops the gradient still renders a filled control.
-    "btn-sheen bg-accent bg-[image:var(--gradient-accent-control)] text-on-accent shadow-[var(--shadow-btn)] hover:brightness-[1.06]",
+    "btn-sheen bg-accent bg-[image:var(--gradient-accent-control)] text-on-accent shadow-[var(--shadow-btn)] hover:brightness-[1.06] focus-visible:brightness-[1.06]",
   secondary:
-    "border border-border-strong bg-surface text-ink shadow-[var(--shadow-sm)] hover:-translate-y-px hover:border-ink/25 hover:bg-surface-raised",
+    "border border-border-strong bg-surface text-ink shadow-[var(--shadow-sm)] hover:border-ink/25 hover:bg-surface-raised focus-visible:border-ink/25 focus-visible:bg-surface-raised",
   subtle:
-    "bg-bg-subtle text-ink hover:bg-border",
+    "bg-bg-subtle text-ink hover:bg-border focus-visible:bg-border",
   ghost:
-    "text-ink underline decoration-transparent underline-offset-[5px] hover:decoration-current",
+    "text-ink underline decoration-transparent underline-offset-[5px] hover:decoration-current focus-visible:decoration-current",
 };
 
 export function buttonVariants(variant: Variant = "primary", size: Size = "md"): string {
   return [
-    "inline-flex shrink-0 items-center justify-center whitespace-nowrap rounded-[var(--radius-sm)] font-medium",
-    "transition-[color,background-color,border-color,box-shadow,translate,opacity] duration-fast ease-[var(--ease-out)]",
-    "active:translate-y-px disabled:pointer-events-none disabled:opacity-50",
+    "button-control inline-flex shrink-0 items-center justify-center whitespace-nowrap rounded-[var(--radius-sm)] font-medium",
+    "transition-[color,background-color,border-color,box-shadow,opacity] duration-fast ease-[var(--ease-out)]",
+    "disabled:pointer-events-none disabled:opacity-50",
     SIZES[size],
     VARIANTS[variant],
   ].join(" ");
@@ -77,7 +78,7 @@ export function Button({
       disabled={disabled || loading}
       {...props}
     >
-      {loading ? <LoaderCircle aria-hidden size={16} className="animate-spin" /> : null}
+      {loading ? <LoaderCircle aria-hidden size={16} className="motion-safe:animate-spin" /> : null}
       {children}
     </button>
   );

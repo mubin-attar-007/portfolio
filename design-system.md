@@ -7,54 +7,41 @@
 > value here and a value in `tokens.css` disagree, `tokens.css` wins and this
 > document is the bug.**
 >
-> Current identity: see [ADR-011 — "Evidence paths"](./spec/decisions/ADR-011-evidence-paths-identity.md),
-> which supersedes ADR-010. Everything below describes the system as shipped.
+> Current identity: [ADR-016 — Inspectable engineering](./spec/decisions/ADR-016-inspectable-engineering.md).
+> Motion refinement: [ADR-017 — Responsive interaction](./spec/decisions/ADR-017-responsive-interaction.md).
+> These refine ADR-015; earlier ADRs retain the design history.
 
 ---
 
-## 1. Thesis — "Evidence paths"
+## 1. Thesis — The person, the work, and the evidence
 
-The site sells one claim: **production AI systems, built to be trusted.** The
-visual language exists to make that claim legible before a single word is read.
+This is Mubin Attar's personal platform as an **Applied AI Engineer**. The site
+introduces his work clearly, then offers case studies and measured results for
+readers who want depth. The employment title at Sevina remains AI/ML Engineer.
 
-Three ideas do the work:
+- **Light paper, one accent.** Hierarchy comes from typography, spacing, and
+  hairlines. Use colour for actions and state; keep the hero text solid.
+- **Identity beside an explanation.** The split hero pairs personal copy with
+  a manual DBWhisper boundary inspector. Three curated cases explain a read
+  query, a SELECT INTO write, and a missing schema. “Illustrative cases · no
+  query is sent” distinguishes them from actual executions.
+- **Measurements carry context.** Project metrics require a non-empty method
+  in `content/schema.ts`. The inspector footer shows bounded evaluation ratios and
+  links to the corresponding record; sample workflow values are labelled
+  illustrations, never presented as measured outcomes.
 
-- **Light paper, one accent.** The page is a cool near-white; a single violet is
-  rationed to action, active state and measured evidence. Colour is a *signal*,
-  not decoration — if everything is accented, nothing is.
-- **The product is the hero.** The largest object on the homepage is a real
-  DBWhisper run, using the agent's actual tool names. Not a terminal, not a
-  browser mock-up, not a UI kit filled with placeholder text.
-- **Every number carries its method.** No metric renders without a link to how it
-  was measured. Enforced in the type system (`content/schema.ts` requires a
-  non-empty `method` on every project metric), not by convention.
-
-The quality benchmark is Clerk: hierarchy, whitespace, surface precision,
-typographic confidence, restrained motion, deliberate light/dark contrast. What
-is *borrowed* is craft. What is **not** borrowed is identity — no logo, name,
-copy, illustration, screenshot or product UI. The originality budget is spent on
-the artwork and the content, not on avoiding an expected hue (ADR-011).
-
-### The motif
-
-`components/home/evidence-graph.tsx` draws the site's argument: a request routed
-through **retrieve → validate → execute → measure**, in a field of routes not
-taken, with one branch that ends in a refusal rather than a result. Angular
-traces, small nodes, square checkpoints, four faint stage labels.
-
-It appears in exactly two places — behind the hero copy, and behind the closing
-CTA. Decorative, so always `aria-hidden`; the four stages it names are stated in
-prose in the flagship section, so nothing depends on seeing it.
+The decorative evidence graph, repeated reliability/registry sections, and
+animated tech wall are retired. Case studies, evaluations, and the existing
+interactive walkthrough on the DBWhisper case study carry the technical depth.
 
 ---
 
 ## 2. Colour
 
-The light page is the brand. Dark is used two ways: as a **band** inside the
-light page (`.tone-invert`) and as an explicit, remembered **full-page
-preference** (`[data-theme="dark"]`). `prefers-color-scheme` is deliberately not
-consulted. Both consumers read one `--dark-*` ramp, so a band and the theme
-cannot drift apart.
+The server renders `data-theme="light"`. A pre-paint script restores an explicit
+saved dark preference; OS colour preference does not select the initial theme.
+Dark is used for the closing contact band (`.tone-invert`) and the remembered
+full-page preference (`[data-theme="dark"]`). Both consume the `--dark-*` ramp.
 
 | Token | Light | Dark | Note |
 |---|---|---|---|
@@ -80,11 +67,9 @@ one.
 
 ### One accent per theme — and the accent belongs to the THEME, not the surface
 
-Violet `#7624f4` in light, lime `#c8ff00` in dark, and in each theme that accent
-carries **everything**: buttons, links, active state, hover answers, gradients,
-display lines. An earlier build split dark into "lime for action, violet for
-display"; it was overruled, correctly. A visitor does not experience a colour as
-a role — they experience two brand colours on one screen.
+Violet `#7624f4` in light and lime `#c8ff00` in dark carry buttons, links, active
+state, and hover feedback. The hero headline uses ink and secondary ink, not
+an accent gradient. Existing gradient tokens do not authorize decorative use.
 
 The one apparent exception is not a second accent. A dark BAND inside the LIGHT
 page (`.tone-invert`) keeps the lifted violet `--dark-accent-band` `#a99cff`
@@ -98,15 +83,14 @@ Guarded by `npm run test:hue`, which walks 14 routes per theme and fails on any
 computed colour outside that theme's accent family. See
 [ADR-013 § 4](spec/decisions/ADR-013-openrouter-palette.md).
 
-**Accent budget: ≤2 accent elements per viewport.** The primary button and the
-band eyebrow usually spend both.
+**Accent budget: ≤2 accent elements per viewport.** Reserve saturated colour for
+the primary action, active selection, or linked evidence.
 
-### Two dark bands, maximum
+### One closing dark band
 
-The homepage has exactly two: the flagship and the closing CTA. A third turns an
-alternating rhythm into a stripe pattern. Dark bands have a **clean full-bleed
-edge** — the previous "graticule" tick-scale device is retired (ADR-011); a dark
-plate does not need a device to announce that it started.
+The default homepage reserves the dark band for contact. The inspector footer and
+writing use subtle light surfaces. Keep clean edges, without notches, ticks,
+or decorative transition devices.
 
 ---
 
@@ -119,23 +103,23 @@ the site's voice for "this is a measurement".
 Newsreader (italic 400, unpreloaded) reaches exactly one component — the
 long-form `PullQuote` inside an article body. It ships on no marketing route.
 
-Three fluid steps are solved as `intercept + slope*vw` rather than guessed with a
-bare `vw`, so each hits an exact figure at an exact viewport:
+Three fluid tokens define display and section scale (rem assumes the browser's
+default 16px root):
 
-| Token | 360px | 768px | 1440px | Used by |
-|---|---|---|---|---|
-| `--text-display` | 40 | 57 | 84 (cap) | the homepage h1, and nothing else |
-| `--text-section` | 32 | 41 | 52 (cap) | every page h1 and section h2 |
-| `--text-sub` | 24 | 28 | 32 (cap) | h3 |
+| Token | Range | Used by |
+|---|---|---|
+| `--text-display` | 2.75–4.75rem | homepage h1 |
+| `--text-section` | 1.75–2.75rem | page h1 and section h2 |
+| `--text-sub` | 1.5–2rem | h3 |
 
 The display step is reserved for the hero. Arriving on an index route lands one
 step down, so the navigation reads as going a level in. Both are tokens, so the
 gap between them is a decision in `tokens.css` rather than two clamps in two
 files that happen to differ today.
 
-Display weight is **550**, not 600: at these sizes the heavier weight reads as
-generic-bold, and the tighter tracking is what makes a headline read as typeset
-rather than enlarged.
+The homepage headline uses weight **550**, line-height **1.06**, and tight
+tracking. The second phrase uses secondary ink and a controlled measure so the
+split layout remains readable. Keep headings in sentence case.
 
 Measures: `--width-prose` 68ch for reading, ~46ch for a hero lede, ~42–46ch for
 card and band copy.
@@ -144,13 +128,13 @@ card and band copy.
 
 ## 4. Layout and spacing
 
-- `--width-container` **1216px**, one measure for the whole site.
+- `--width-container` **1264px**, one measure for the whole site.
 - Gutters step **20 → 24 → 32px**. The 20px phone gutter is deliberate: at 360px
   a 24px inset costs 13% of the viewport, which is what turns a two-word headline
   line into a three-line headline.
-- Section rhythm: desktop **104–144px**, mobile **72–96px**, slightly asymmetric
-  (a little more weight below) so a band reads as a finished plate rather than
-  content floating between two equal voids.
+- Homepage body sections use `--space-section-sm` (**48–72px**) instead of
+  repeatedly spending the largest section band. The hero uses `md`; internal
+  pages retain the shared section scale.
 - `--space-section-xs` is **half a header seam**: a page header spends it below
   and the body band under it spends the other half, so the header→content gap is
   one reasoned number rather than two paddings that happen to stack.
@@ -159,6 +143,14 @@ Radii are small on purpose — large radii read as consumer-app chrome, tight
 corners read as engineered: `xs 4` (tags, inline code), `sm 6` (buttons, chips),
 `md 8` (cards, panels), `lg 12` (product stages, figures), `pill` for status only.
 
+Homepage order: identity and DBWhisper boundary inspector → three project rows →
+portrait and employment → essays/current interests → contact. The five-stage
+request walkthrough lives on `/work/dbwhisper#request-walkthrough`.
+
+Primary navigation remains Work, Evals, Writing, About, and one contact action
+to `/hire`. The footer links to deeper routes; the assistant and theme toggle
+are utilities. Keep the full route set accessible without expanding the header.
+
 ---
 
 ## 5. Surfaces and elevation
@@ -166,15 +158,15 @@ corners read as engineered: `xs 4` (tags, inline code), `sm 6` (buttons, chips),
 Layered and low-opacity: a hairline ring, a close contact shadow, a wide ambient
 one. Never a single dramatic black drop.
 
-`--shadow-surface` carries an **inset top highlight**, and on a light page that is
-the load-bearing part: without it a white panel on a near-white ground reads as a
-flat rectangle no matter how much drop shadow it has. `--shadow-stage` adds one
-step for the hero product surface; `--shadow-float` is for a card layered *over*
-a product surface.
+The hero inspector uses a flat border. Shared project rows, employment, essays,
+and current interests are flat and ruled. Keep
+elevation for surfaces that need separation, especially overlays;
+retained `--shadow-stage` and `--shadow-float` tokens do not imply stacked
+decorative panels on the homepage.
 
 **One card treatment.** `PANEL` (`constants/page.ts`) for static panels;
-`ProjectCard` (`components/work/project-card.tsx`) for the one interactive tile,
-shared by the homepage bento and `/work`. A project's card content lives on the
+`ProjectCard` (`components/work/project-card.tsx`) for the editorial project row,
+shared by the homepage selected work and `/work`. A project's card content lives on the
 project in `content/projects.ts`, so two surfaces cannot describe a product
 differently.
 
@@ -197,26 +189,30 @@ wants, so a section *arrives* rather than snaps. `--ease-emphasized` and
 Tailwind reads `--default-transition-*`, so a bare `transition` lands on
 `--motion-base` + `--ease-out` without per-element easing.
 
-**Permitted:** opacity/transform reveals (≤16px rise, once), a 4px card lift, a
-1.015 product-shot scale, an icon nudge, one slow travelling dash on the hero
-motif, the stack wall's dwelling cycle, and the flagship specimen's 2800ms
-stage run (which any manual selection stops permanently).
+**Permitted:** feedback follows an interaction or a single initial arrival.
+The inspector's native radio selection moves a neutral surface over 300ms;
+the selected example and outcome update immediately. Only changed checks receive
+a brief background emphasis and icon settle. Unchanged SQL stays stationary.
+The inspector never auto-advances or simulates waiting for a network response.
 
-**The section reveal is inverted, and this is a hard rule.** Only elements that
-were *below the fold at mount* are ever hidden; anything already on screen is
-left alone, and a 1.6s timer unhides everything regardless of what the observer
-did. Two earlier implementations hid content up front and revealed on
-intersection — both blanked the page body in captures. Content is never hidden
-unless JS has already proven, in the same tick, that it can unhide it. See
-[ADR-014 § 1](spec/decisions/ADR-014-motion-and-modality.md).
+Project image links scale their clipped image to 1.025 on hover or keyboard
+focus. The row, text, frame, and permanent case-study label stay in place.
+Navigation and writing links use soft neutral hover surfaces, with equivalent
+keyboard feedback. Shared links animate underlines and directional arrows;
+enabled buttons have a 1px press response and one finite sheen sweep.
+Distances use `--motion-nudge` (2px), `--motion-press` (1px), and
+`--motion-enter-distance` (8px). No extra motion library is required.
 
-**Two entrance devices, and which one a page gets is a content decision.** The
-homepage uses the scroll-triggered `[data-reveal]` because it is a long
-argument where sequence is the point. Interior pages use the load-orchestrated
-`.reveal` / `.reveal-stagger`, which fires once on arrival regardless of scroll
-position — because they are documents, and body copy that fades in under a
-reader who is already reading it is a worse experience than no animation at
-all. Both are neutralised in print and under reduced motion.
+The case-study walkthrough retains its 2800ms stage run; manual selection stops
+it. Project rows never lift or scale as a whole.
+
+**Homepage content is always visible.** Whole-section scroll fades and their
+`Reveal` wrapper are removed. Do not defer text visibility to an observer or
+fade text through low-contrast intermediate states. The hero text and inspector
+settle upward by 8px once on arrival, remaining fully opaque throughout, without
+delays or scroll observers. This supersedes the homepage entrance behavior in
+ADR-014 §1. Interior pages retain their existing
+`.reveal` / `.reveal-stagger` entry styles, disabled in print and reduced motion.
 
 **Banned:** cursor followers, spotlight-follows-mouse, marquees and logo
 carousels, typewriter effects, tilt cards, scroll-jacking, parallax, animated
@@ -228,14 +224,16 @@ animation. `scripts/a11y.mjs` fails the build if any computed animation or
 transition duration on `/` exceeds **80ms** under reduced motion, or if any
 `.reveal` element is left below `opacity: 0.99`.
 
-Three worked examples: the hero's travelling dash is not *rendered at all* under
-reduced motion, so it cannot freeze mid-route as an unexplained mark; the stack
-wall's timer never starts, so it renders as a static row of five tools; and the
-flagship specimen keeps every stage selectable but does not render a transport
-at all, because a Play button that cannot play is worse than no button.
+Under reduced motion, the walkthrough keeps every stage selectable without
+rendering an automatic-play transport. The hero inspector remains manually
+selectable in either motion preference. Its controls are hidden without
+JavaScript while the default illustration and links remain visible.
 
-`npm run test:interaction` asserts the still poses directly — that nothing is
-hidden, that the reveal never arms, and that no inert transport is rendered.
+`npm run test:interaction` checks visible state and reduced-motion walkthrough
+behavior. `npm run test:motion` samples actual in-flight transitions, their
+settled positions, rapid input, keyboard focus, touch affordances, and reduced
+motion. Reduced motion keeps the selection indicator at the selected radio;
+do not erase a transform used to express state when disabling its transition.
 
 **One recorded exception:** the disclosure panel transitions
 `grid-template-rows` (a layout property). Animating to an unknown auto height
@@ -247,17 +245,18 @@ compositor-driven opacity and translate on the contents. See ADR-011.
 ## 7. Content law
 
 - No metric without a linked method. `MetricSchema.method` is `.min(1)`.
-- No invented number, ever — including in the dev component gallery, where every
-  fixture value is deliberately impossible (`999`, `00.0%`) and labelled as such,
-  because `noindex` is not the same as private.
-- No fake logos, testimonials, clients or performance claims. The "trusted by"
-  wall is replaced by a **stack wall** of tools that actually ship the four live
-  products.
+- No invented measurements, professional outcomes, testimonials, clients, or
+  live-availability claims. Illustrative examples and fixtures must be visibly
+  identified and must not stand in for evaluation evidence.
 - Sample data is labelled **at the point of display**, inside the frame — not in
   a footnote.
-- A number shown in two places must have **one source**. The homepage's
-  82% / 100% pair is read through `DBWHISPER_GOLDEN` in `content/evals.ts`, which
-  throws at module load if the row is renamed or removed.
+- A measurement shown in two places must have **one source**. Homepage ratios
+  and walkthrough scores come from `DBWHISPER_GOLDEN` in `content/evals.ts`.
+  Include denominator/scope and a link to the method; a bounded test result is
+  not a guarantee for all future inputs.
+- `content/projects.ts` and `content/resume.ts` are the canonical structured
+  sources for pages, retrieval, and PDF generation. Their former JSON duplicates
+  are removed; MDX remains the long-form source.
 
 ---
 
@@ -282,7 +281,7 @@ Non-negotiables:
 - **A modal makes the rest of the page `inert`** — not just focus-trapped.
   Trapping `Tab` alone still leaves the document in the accessibility tree, so a
   screen-reader user can walk out of the dialog by virtual cursor. Applied by
-  `lib/use-inert-background.ts` to `body > header|main|footer`, so the portalled
+  `lib/use-inert-background.ts` to all direct body children except marked modal roots and resource elements, so the portalled
   dialog is never caught by its own boundary.
   Watch the sharp edge: both launchers live in the header, i.e. *inside the
   inerted subtree*, so focus restoration on close must happen **after** the
@@ -297,23 +296,19 @@ Non-negotiables:
 ## 9. Performance
 
 Budgets in `scripts/lighthouse-budget.mjs`: performance ≥ 0.95; accessibility,
-best-practices and SEO = 1.0; LCP ≤ 2000ms; CLS < 0.05; TBT < 150ms.
-
-**Honest current state:** accessibility, best-practices and SEO are 100 and CLS is
-0.000 on all three measured routes. **Performance and LCP fail, and failed before
-the redesign too** — see ADR-011 § Consequences for the measured before/after. The
-cause is a pre-existing ~550KB app-router JS payload that delays the webfont swap
-defining LCP. This is documented rather than quietly ignored, because the whole
-site argues that a number is reported with its method.
+best-practices and SEO = 1.0; LCP ≤ 2500ms; CLS < 0.05; TBT < 150ms.
+These are required thresholds, not a report of this revision's results. Record
+current measurements with their build, route, and test environment; historical
+ADR scores do not certify a later implementation.
 
 Rules that keep it from getting worse:
 
 - **Client components take props; they do not read `content/`.** Importing the
   content layer into a client component drags the eval registry and Zod across the
   boundary. This shipped once during the redesign and cost 290KB.
-- Server components by default. The homepage's only client islands are the header
-  shell, nav, mobile menu, theme toggle, assistant launcher and the stack wall's
-  single timer.
+- Server components by default. Client behavior is limited to navigation/theme,
+  the assistant, interactive walkthrough, and the finite manual hero inspector.
+  Motion adds no network request or dependency. Below-fold project images are lazy.
 - Product frames declare an aspect ratio so an image cannot resize the layout.
 - No remote hosts — CSP is `img-src 'self' blob: data:` and `font-src 'self'
   data:`. Fonts are self-hosted by `next/font`.
