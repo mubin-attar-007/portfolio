@@ -1,0 +1,117 @@
+name: Keep demos alive
+
+# Free Hugging Face Spaces sleep after 48 hours without traffic, and a sleeping
+# Space takes a minute or more to wake: that is what a visitor clicking a live
+# demo would sit through. Visiting each backend every six hours keeps it warm.
+#
+# The same run is a health monitor. If a demo is still down after a few minutes
+# of retries the job fails, and GitHub emails the repository owner.
+#
+# The free tier runs at most THREE cpu-basic Spaces at once. DEMOS lists the
+# Spaces that should hold those slots; every other Space stays paused so it
+# cannot take a slot from them. To swap a demo in or out, edit DEMOS.
+#
+# A visit wakes a SLEEPING Space but not a PAUSED or crashed one, which needs a
+# restart. Optional: store a fine-grained Hugging Face token with write access
+# to these Spaces as the repository secret HF_TOKEN, and this job restarts a
+# listed Space that is paused, sleeping or crashed. Without it, the job reports
+# the Space and fails, so the owner can restart it on huggingface.co.
+
+on:
+  schedule:
+    - cron: "17 */6 * * *"
+  workflow_dispatch:
+
+permissions:
+  contents: read
+  # Re-enables this workflow on each run. GitHub disables scheduled workflows in
+  # a public repository after 60 days without activity; this is best effort.
+  actions: write
+
+concurrency:
+  group: keep-demos-alive
+  cancel-in-progress: false
+
+jobs:
+  keep-alive:
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    env:
+      HF_TOKEN: ${{ secrets.HF_TOKEN }}
+      # name | Hugging Face Space | backend health URL | public demo URL
+      DEMOS: |
+        DBWhisper|heisenbergblue/dbwhisper|https://heisenbergblue-dbwhisper.hf.space/health|https://dbwhisper.vercel.app
+        TradePulse|heisenbergblue/tradepulse|https://heisenbergblue-tradepulse.hf.space/health|https://tradepulse-live.vercel.app
+        CrownWager|heisenbergblue/crownwager|https://heisenbergblue-crownwager.hf.space/health|https://crownwager.vercel.app
+    steps:
+      - name: Keep this schedule enabled
+        continue-on-error: true
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: gh api -X PUT "repos/${{ github.repository }}/actions/workflows/keep-demos-alive.yml/enable"
+
+      - name: Wake and verify each demo
+        shell: bash
+        run: |
+          set -uo pipefail
+          failures=0
+          summary='| Demo | Space stage | Backend health | Demo site |\n|---|---|---|---|\n'
+
+          stage_of() {
+            curl -s --max-time 20 "https://huggingface.co/api/spaces/$1" | jq -r '.runtime.stage // "UNKNOWN"'
+          }
+
+          # Retries cover a cold start: about five minutes in total.
+          wait_healthy() {
+            local code="000"
+            for attempt in $(seq 1 10); do
+              code=$(curl -s -o /dev/null -w '%{http_code}' --max-time 30 "$1")
+              if [ "$code" = "200" ]; then echo "200"; return 0; fi
+              sleep 30
+            done
+            echo "$code"
+            return 1
+          }
+
+          while IFS='|' read -r name space health site; do
+            [ -z "$name" ] && continue
+            stage=$(stage_of "$space")
+            echo "::group::$name ($space): $stage"
+
+            needs_restart=false
+            [[ "$stage" =~ ^(PAUSED|STOPPED|RUNTIME_ERROR|BUILD_ERROR)$ ]] && needs_restart=true
+
+            if [ -n "${HF_TOKEN:-}" ] && { $needs_restart || [ "$stage" = "SLEEPING" ]; }; then
+              echo "Restarting $space"
+              curl -s -X POST --max-time 30 -H "Authorization: Bearer $HF_TOKEN" \
+                "https://huggingface.co/api/spaces/$space/restart" -o /dev/null -w 'restart request: HTTP %{http_code}\n'
+              needs_restart=false
+            fi
+
+            if $needs_restart; then
+              backend="$stage (needs a restart on huggingface.co)"
+              failures=$((failures + 1))
+              echo "::error::$name: $space is $stage. A visit cannot wake it; restart it at https://huggingface.co/spaces/$space"
+            elif backend=$(wait_healthy "$health"); then
+              :
+            else
+              failures=$((failures + 1))
+              echo "::error::$name: $health did not return 200 (last status $backend)"
+            fi
+
+            site_code=$(curl -s -o /dev/null -w '%{http_code}' --max-time 30 -L "$site")
+            if [ "$site_code" != "200" ]; then
+              failures=$((failures + 1))
+              echo "::error::$name: $site returned $site_code"
+            fi
+
+            echo "backend: $backend; site: $site_code; stage now: $(stage_of "$space")"
+            echo "::endgroup::"
+            summary+="| $name | $stage | $backend | $site_code |\n"
+          done <<< "$DEMOS"
+
+          printf '%b' "$summary" >> "$GITHUB_STEP_SUMMARY"
+          if [ "$failures" -gt 0 ]; then
+            echo "::error::$failures check(s) failed."
+            exit 1
+          fi
