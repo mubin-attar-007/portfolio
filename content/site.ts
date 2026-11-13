@@ -173,7 +173,7 @@ export const nowPage = {
 } as const;
 
 /**
- * /uses — the real stack behind the four live products. Deliberately boring and
+ * /uses — the real stack behind the four shipped products. Deliberately boring and
  * cheap; every tool here actually ships in one of the projects (no aspirational
  * padding). Grouped for scanability.
  */
@@ -190,7 +190,7 @@ export const uses = {
    */
   costNote:
     "The project hosting setup uses free tiers: Vercel Hobby for frontends, Hugging Face Spaces for containerised backends, Neon for Postgres, and GitHub Actions for CI. The $0 figure describes that hosting setup, not an unlimited workload budget. Provider quotas, cold starts, and model API usage remain operating constraints.",
-  // The page asserts "four live products"; this is the link that lets a reader
+  // The page asserts "four shipped products"; this is the link that lets a reader
   // check the claim rather than take it. Label only — it adds no new claim.
   cta: { label: "See the four products", href: "/work" },
   groups: [

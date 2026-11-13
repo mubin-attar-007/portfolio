@@ -11,7 +11,7 @@ const RAW = [
     role: "Independent AI products",
     org: undefined,
     order: 1,
-    built: "Four live AI products on a $0 stack — a NL→SQL agent (DBWhisper), an honest backtester (TradePulse), a +EV sports-ML system (CrownWager), and a multi-user AI chat platform (LLM Studio).",
+    built: "Four shipped AI products on a $0 stack — a NL→SQL agent (DBWhisper), an honest backtester (TradePulse), a +EV sports-ML system (CrownWager), and a multi-user AI chat platform (LLM Studio).",
     learned: "Safety-first LLM systems: deterministic gates around model output, retrieval over context-stuffing, and evaluation before pixels.",
     mistake: "Early on I trusted model output where a deterministic gate was needed — an LLM writing SQL against a live database with only a prompt between it and a mistake.",
     changed: "Fail-closed validators and 'look-ahead-free by construction' became defaults, not afterthoughts — the safety is now a property of the architecture.",

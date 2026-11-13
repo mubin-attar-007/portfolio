@@ -9,7 +9,7 @@ export default function OG() {
   return renderOg({
     eyebrow: formatOgEyebrow(SITE.role),
     title: "I build grounded AI systems — and show how they actually work.",
-    subtitle: "Four live products. Real architecture, real numbers, every metric linked to its method.",
+    subtitle: "Four shipped products. Real architecture, real numbers, every metric linked to its method.",
     footerRight: SITE.url.replace(/^https?:\/\//, ""),
   });
 }
