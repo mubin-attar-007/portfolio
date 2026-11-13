@@ -1,8 +1,8 @@
 import type { ReactNode } from "react";
 
 /**
- * PullQuote — the ONLY place the serif (Newsreader, italic) appears (DESIGN
- * §1.3). Essays only. A11y: real <blockquote>/<cite>.
+ * PullQuote — the ONLY place the serif (Newsreader, italic) appears
+ * (design-system.md §3). Essays only. A11y: real <blockquote>/<cite>.
  */
 export function PullQuote({ children, cite }: { children: ReactNode; cite?: string }) {
   return (

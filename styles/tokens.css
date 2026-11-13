@@ -1,10 +1,10 @@
 /* ============================================================================
-   Design tokens — the single source of truth (spec/DESIGN.md §1, ADR-011).
+   Design tokens — the single source of truth (design-system.md; palette ADR-013).
 
    Consumed by components ONLY through Tailwind utilities or var() inside a CSS
    module. No raw hex / px / ms anywhere else in the codebase.
 
-   IDENTITY (ADR-011 — "evidence paths"): a light, near-monochrome paper with ONE
+   IDENTITY (design-system.md §1–§2): a light, near-monochrome paper with ONE
    violet accent rationed to action, state and evidence. Dark is used two ways:
    as a *band* inside the light page (.tone-invert) and as an explicit, remembered
    full-page preference ([data-theme="dark"]). prefers-color-scheme is deliberately

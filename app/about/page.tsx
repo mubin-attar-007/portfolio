@@ -35,7 +35,7 @@ export const metadata: Metadata = {
  *
  * Structure: the shared PageHeader beside a framed portrait → the honest proof strip → the
  * biography prose → the three principles (home.principles) as a hairline-divided
- * list rather than a card grid (DESIGN §9).
+ * list rather than a card grid (design-system.md §11.6).
  *
  * Design notes — why this shape:
  * - The header band and the body band each spend HALF a section gap
@@ -75,7 +75,7 @@ export default function AboutPage() {
             <div className="reveal mt-8 flex flex-wrap items-center gap-x-6 gap-y-3">
               {about.links.map((l) => (
                 // `quiet`: these are supporting links sitting one row under a
-                // primary button, and DESIGN §9 caps accent at two elements per
+                // primary button, and design-system.md §11.2 caps accent at two elements per
                 // viewport — three accent chevrons here would spend the whole
                 // budget on the least important row on the page.
                 <TextLink key={l.label} href={l.href} external={l.external} tone="quiet">
@@ -116,7 +116,7 @@ export default function AboutPage() {
         <hr className="rule-fade mt-14" />
 
         {/* How I think — the three principles as a hairline-divided list, not a
-            card grid (DESIGN §9). Staggered so the rules arrive one at a time. */}
+            card grid (design-system.md §11.6). Staggered so the rules arrive one at a time. */}
         <div className="mt-14">
           <SectionHeading kicker={about.thinking.kicker}>{about.thinking.title}</SectionHeading>
           <dl className="reveal-stagger mt-10 divide-y divide-border border-y border-border">

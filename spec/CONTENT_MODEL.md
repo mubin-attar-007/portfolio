@@ -1,155 +1,182 @@
 # CONTENT_MODEL.md — Schemas & templates
 
-All copy lives in `content/`. Collections are validated with Zod at build time; a schema
-violation fails the build. Types are inferred — never hand-written.
+Site copy lives in `content/` and `config/site.ts`. Projects, evaluations and the
+timeline are typed TypeScript modules parsed with Zod at module load; writing, notes
+and `/now` frontmatter is validated with Zod when it is loaded. Either way, invalid
+content throws and the build fails, and the types are inferred from the schemas in
+`content/schema.ts` — never hand-written. The résumé and the page-copy modules
+(`site.ts`, `home-visual.ts`, `article.ts`) are `as const` objects that TypeScript
+checks but no schema validates.
 
 ---
 
-## 1. Projects / case studies — `content/projects/*.mdx` (the heart of the site)
+## 1. Projects and case studies (the heart of the site)
 
-### 1.1 Frontmatter schema
+### 1.1 Project record — `content/projects.ts` (`ProjectSchema`)
 
 ```ts
 {
-  title: string,                    // "PDPM audit pipeline" — system name, not marketing name
   slug: string,
-  summary: string,                  // ≤ 160 chars, plain, no adjectives
-  status: "production" | "active-development" | "archived" | "experiment",
-  role: string,                     // "Designed, built, and operate"
-  timeline: string,                 // "2025 — present"
-  featured: boolean,                // exactly ONE project has featured: true
+  title: string,                    // system name, not a marketing name
+  summary: string,                  // ≤ 200 chars; the case-study header paragraph
+  status: "production" | "active-development" | "experiment" | "archived",
+  role: string,                     // "Designed, built, and maintain (solo)"
+  timeline: string,                 // "2025 – present"
+  featured: boolean,                // exactly ONE project is featured (asserted by test/content.test.mts)
   order: number,
-  domain: string[],                 // ["healthcare", "reimbursement"]
-  systems: string[],                // ["deterministic engine", "LLM-assisted review", "dashboards"]
-  links?: { repo?: url, live?: url, writeup?: url },
-  metrics: Array<{                  // 2–4; rendered by <MetricsRow/> in listings and hero of the study
-    label: string,                  // "review time per assessment"
-    before?: string, after: string, // "45 min" → "6 min"
-    direction: "up-good" | "down-good",
-    method: string                  // REQUIRED. One sentence: how measured, over what period/sample.
+  systems: string[],                // ≥ 1
+  metrics: Array<{
+    label: string,
+    value: string,
+    before?: string,
+    direction?: "up-good" | "down-good",
+    method: string                  // REQUIRED, non-empty: how it was measured, over what sample/period
   }>,
-  diagram?: string,                 // id of diagram data file in src/components/diagrams/data/
-  recording?: string,               // /recordings/foo.cast
-  ogTitle?: string
+  links: { live?: url, repo?: url },
+  diagram?: string,                 // id of components/diagrams/data/<id>.ts
+  card: {                           // the preview shared by the homepage and /work
+    definition: string,             // ≤ 90 chars; what the product is
+    category: string,               // the technical family, not a tag cloud
+    decision: { title: string, showResult: boolean },
+    shot: { src: string, width: number, height: number },  // a real capture in /public
+    alt: string,                    // what the capture SHOWS
+    caption: string                 // the captured surface; never an implied live result
+  },
+  changelog: Array<{ date: string, summary: string }>  // real, dated milestones, newest first
 }
 ```
 
-### 1.2 Body structure (fixed section order — headings exactly as written)
+There are four projects (asserted by `test/content.test.mts`): DBWhisper (featured),
+TradePulse, CrownWager, and LLM Studio.
 
-There is deliberately **no "Tech stack" section**. The stack surfaces naturally inside
+### 1.2 Case-study body — `components/case-studies/<slug>.tsx`
+
+Each project's page body is a server component that renders evidence components
+directly (`SystemDiagram`, `DecisionLog`, `FailureLog`, and `MetricsTable` in every
+body; `CodeBlock` or `Callout` where needed) and exports its section list for the
+reading outline. The section order, with these headings:
+
+```
+Context                    what problem, who feels it, what it costs
+Constraints                the real ones; they make the later decisions legible
+System architecture        <SystemDiagram> + one narration paragraph per component
+Data flow                  one representative request traced end to end
+Key decisions              <DecisionLog>: 3–6 entries — choice, rejected alternatives, reason, accepted cost
+What failed                <FailureLog>: v1 → v2 with cause and fix; at least one genuine failure
+Performance & cost         every number with its method; if it can't be shared, say so
+Operations                 how it runs, how failures are handled
+What I'd do differently    2–4 honest items, not humblebrags
+Evidence                   repo, recordings, related writing, sample outputs
+```
+
+The DBWhisper body adds **Request walkthrough** after Data flow
+(`/work/dbwhisper#request-walkthrough`). A project without an authored body falls back
+to `components/case-studies/generic.tsx` (Systems + a plain "write-up in progress"
+note). There is deliberately **no "Tech stack" section**; the stack surfaces inside
 Architecture and Decisions.
 
-```mdx
-## Context
-What business/clinical problem, who feels it, what it costs. 2–3 short paragraphs. No jargon.
+### 1.3 Supporting files
 
-## Constraints
-The real ones: regulatory, budget, latency, data quality, "solo operator", legacy systems.
-Constraints make the later decisions legible.
+- `components/diagrams/data/<slug>.ts` — typed `DiagramSpec` nodes and edges.
+- `content/projects/<slug>.mdx` — a long-form summary (sections: Executive Summary,
+  Problem, Architecture, Key Decisions & Trade-offs, Metrics / Results, Lessons). It is
+  **not rendered on the site**; `lib/ai/retrieval.ts` chunks it by `##` heading into the
+  assistant's corpus, so keep it consistent with the case study. Its frontmatter is not
+  schema-validated.
+- `public/demos/<slug>.webm`, `.vtt`, and `.webp` — the product recording, its
+  captions, and its poster (the poster is also the card capture), wired in
+  `app/work/[slug]/page.tsx`.
+- `content/dbwhisper-walkthrough.ts` and `content/dbwhisper-boundary.ts` — curated,
+  labelled sample data for the walkthrough and the homepage inspector; never measured
+  results.
 
-## System architecture
-<SystemDiagram id="..." />
-One narration paragraph per major component: what it does and *why it exists*.
-(The narration doubles as the diagram's text alternative.)
+### 1.4 Compliance rule (healthcare content)
 
-## Data flow
-Trace ONE representative request/record end-to-end, referencing diagram nodes.
-
-## Key decisions
-<DecisionLog decisions={[
-  { choice: "Deterministic rules engine, not an LLM, for validation",
-    alternatives: ["LLM-as-judge", "hybrid"],
-    reason: "Regulatory rules are enumerable; auditors need reproducibility; per-call cost at daily volume is unjustifiable.",
-    tradeoff: "Rule maintenance burden; slower to cover novel edge cases." },
-  ...
-]} />
-3–6 decisions. Each names rejected alternatives and the accepted cost. This section is
-what senior readers screen for.
-
-## What failed
-<FailureLog entries={[
-  { version: "v1", metric: "false-positive rate", value: "31%",
-    cause: "single-pass retrieval / naive rule X", },
-  { version: "v2", value: "11%", fix: "added reranking / rewrote rule with Y" },
-]} />
-Prose around it: how the failure was noticed, diagnosed, fixed. Minimum ONE genuine failure.
-
-## Performance & cost
-<MetricsTable ... />  — latency, throughput, cost per run/month, quality metrics.
-Every number carries a method footnote. If a number can't be shared, explain the
-mechanism and say so — never invent.
-
-## Operations
-How it runs daily: scheduling, monitoring, failure handling, an incident anecdote.
-This section proves "production", the rarest claim on portfolios.
-
-## What I'd do differently
-2–4 honest items. Not humblebrags.
-
-## Evidence
-Links: repo, recording, related essays/ADRs, sanitized sample outputs.
-```
-
-### 1.3 Compliance rule (healthcare content)
-
-Aggregate metrics and methodology only. No PHI, no resident-level data, no
-facility-identifiable claims figures, no payer contract terms. All screenshots
-reproduced with synthetic data. When in doubt: describe mechanism, omit number.
+Healthcare work, such as the Sevina role, is described by aggregate metrics and
+methodology only. No PHI, no resident-level data, no facility-identifiable claims
+figures, no payer contract terms. All screenshots reproduced with synthetic data. When
+in doubt: describe the mechanism, omit the number.
 
 ---
 
-## 2. Writing — `content/writing/*.mdx`
+## 2. Writing — `content/writing/*.mdx` (`WritingSchema`)
 
 ```ts
-{ title, slug, summary (≤160), date, updated?, 
-  category: "essay" | "guide" | "note",   // Think | Write | Learn pillars
-  topics: string[], draft: boolean, related?: slug[] }
+{ title, summary (≤ 220), date, updated?,
+  category: "essay" | "guide" | "note",
+  topics: string[], draft: boolean }          // slug comes from the file name
 ```
 
-- **essay** — trade-offs & judgment ("Why I replaced the LLM with 291 rules").
+- **essay** — trade-offs and judgment.
 - **guide** — implementation, reproducible, code-heavy.
-- **note** — shorter learning notes; imperfect is fine, dated is required.
+- **note** — a short piece inside the writing archive.
 
-Launch minimum: 2 essays + 1 guide. Each essay should be an extracted DecisionLog
-expanded to ~1,200 words — write case studies first, mine them for essays.
-
----
-
-## 3. Timeline — `content/timeline/*.md`
-
-One file per phase, ordered. Growth over titles:
-
-```ts
-{ period: "2024–2025", role: string, org?: string, order: number }
-```
-Body (4 short labeled lines): **Built:** … · **Learned:** … · **Mistake:** … · **Changed:** how the mistake changed my approach.
-The "Mistake" line is mandatory — it's the credibility engine of this page.
+Loaded by `lib/writing.ts` through `lib/mdx-collection.ts`. Essays are best mined from
+a case study's Key decisions.
 
 ---
 
-## 4. Site copy — `content/site/`
+## 3. Notes and /now
 
-`home.md` (hero headline/sub/CTAs/proof-strip items with method footnotes, section
-intros) · `about.md` (long bio per BRAND_POSITIONING §4, principles, optional portrait)
-· `now.md` (3–5 bullets, dated, updated monthly) · `contact.md` (one sentence + email;
-no forms at launch — email is lower friction and zero spam surface).
+- **Notes — `content/notes/*.mdx` (`NoteSchema`):** `{ title, date, tags (≥ 1),
+  source?: url, draft }`. Short, dated, tag-indexed; `/notes` filters by tag. Loaded by
+  `lib/notes.ts`.
+- **Now — `content/now.mdx` (`NowSchema`):** `{ updated (required), lede, exploring:
+  [{ title, body }] }`. `updated` is required so "Last updated" can never go silently
+  stale; the homepage shows the first three `exploring` items. Loaded by `lib/now.ts`.
+
+Writing and notes share the draft rule: `draft: true` removes an entry from indexes,
+feeds, the sitemap, and generated routes in production, and keeps it previewable in
+`next dev`.
 
 ---
 
-## 5. Resume — `content/resume/resume.md` + `/public/resume.pdf`
+## 4. Structured records
 
-Markdown mirror of the PDF (for the assistant + machine readers). Rule: site, PDF, and
-LinkedIn must carry **identical metrics**. `resume_downloaded` analytics event on the link.
+- **Timeline — `content/timeline.ts` (`TimelineSchema`):** `{ period, role, org?, order,
+  built, learned, mistake, changed }`, rendered on `/about`. Growth over titles; the
+  `mistake` field is required — it is the credibility engine of the section.
+- **Evaluations — `content/evals.ts` (`EvalSchema`):** `{ system, benchmark, metric,
+  result, status: "in-progress" | "complete" | "planned", date?, note?, link? }`. An
+  unfinished run renders muted, never as a result. `evalAnchor()` builds `/evals`
+  anchors; `requireEval()` throws if a referenced row is renamed or removed;
+  `DBWHISPER_GOLDEN` is the single source of the homepage ratios.
+- **Résumé — `content/resume.ts`:** the single source for `/resume`, `/skills`, the
+  assistant, and `public/Mubin_Attar_Resume.pdf` (regenerate with
+  `node --import ./test/alias-loader.mjs scripts/build-resume-pdf.mts`; the loader
+  resolves the `@/` alias that `config/site.ts` imports). Site, PDF, and LinkedIn must
+  carry identical facts. The download link emits the `resume_downloaded` analytics
+  event.
 
 ---
 
-## 6. MDX component map (built Sprint 2, used by all content)
+## 5. Site and page copy
 
-`SystemDiagram` · `DecisionLog` · `FailureLog` · `MetricsTable` · `Metric` ·
-`TerminalRecording` · `Figure` · `Callout` · `CodeBlock` (filename + copy) ·
-`BeforeAfter` · `Footnote`/`Evidence` · `PullQuote` (serif italic, essays only).
-Plain markdown everywhere else — component soup is an anti-pattern; if a section reads
-fine as prose, it stays prose.
+- `config/site.ts` — name, role, email, location, socials, integrations, the
+  availability line (`STATUS`), and footer copy.
+- `config/nav.ts` — primary navigation, the header's one action, and the footer map.
+- `content/home-visual.ts` — homepage copy (`flagshipHome`).
+- `content/site.ts` — copy for `/about`, `/hire`, `/uses`, `/trust`, `/now`, and the
+  index pages (`pages`), plus the proof row and principles.
+- `content/article.ts` — article header and footer labels shared by case studies,
+  essays, and notes.
+- `content/profile.json` — profile fields for the homepage engineer strip and the
+  assistant; `content/faq.json` (14 grounded Q&A) and `content/skills.json` feed the
+  assistant's retrieval only.
+
+There are no contact forms: contact is email, `/hire`, and an optional booking link.
+
+---
+
+## 6. MDX component map
+
+`components/mdx/mdx-components.tsx` binds markdown elements to the shared reading
+scale (`components/mdx/prose.ts`; `h2`/`h3` get slug ids) and exposes six custom
+blocks inside MDX: `Callout` · `PullQuote` (serif italic, long-form only) · `CodeBlock`
+(filename + copy) · `Figure` · `DecisionLog` · `FailureLog`. Other evidence
+components, such as `SystemDiagram` and `MetricsTable`, are imported directly by
+case-study components and are not available in MDX. Plain markdown everywhere else —
+component soup is an anti-pattern; if a section reads fine as prose, it stays prose.
 
 ---
 
@@ -157,5 +184,17 @@ fine as prose, it stays prose.
 
 First person singular. Plain, precise, short sentences. Numbers over adjectives; why
 before what. Sentence case. Banned: passionate, innovative, cutting-edge, seamless,
-leverage(v), revolutionize, world-class, blazing, 10x, "simple yet powerful".
-Every claim must be provable by something on the page.
+leverage(v), revolutionize, world-class, blazing, 10x, ninja/guru/wizard, "simple yet
+powerful". Every claim must be provable by something on the page.
+
+---
+
+## 8. Positioning and off-site alignment
+
+- A positioning line makes one claim that the rest of the page proves: the kind of
+  systems, who they serve, and the evidence. No adjectives, no buzzwords. The approved
+  role (`SITE.role`), supporting descriptor, and experience statement are recorded in
+  ADR-015.
+- LinkedIn, the GitHub profile (pinned repositories that match the case studies), and
+  the résumé PDF state the same role, projects, and metrics as the site; any mismatch
+  costs the trust the site exists to build.

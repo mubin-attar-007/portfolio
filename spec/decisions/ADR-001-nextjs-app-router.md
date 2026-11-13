@@ -1,13 +1,17 @@
 # ADR-001 — Next.js (App Router) as the framework
 
-Status: Accepted
+Status: Accepted. Facts updated 2026-11-13 to match the code (Next.js 16; the assistant
+route runs on the Node.js runtime).
 
 ## Context
-The site is mostly static content (MDX case studies, writing) plus two dynamic needs:
-an edge API for the grounded assistant and interactive islands (diagrams, recordings).
+The site is mostly static content (case studies, writing, notes) plus two dynamic needs:
+a server route for the grounded assistant and interactive islands (diagrams, the
+case-study walkthrough, the homepage inspector, the assistant panel).
 
 ## Decision
-Next.js 15+ with the App Router, RSC-first, static generation for all content routes.
+Next.js with the App Router (now 16), RSC-first, static generation for all content
+routes. The assistant is a route handler, `app/api/chat/route.ts`, on the Node.js runtime
+because retrieval reads content files with `fs`.
 
 ## Alternatives considered
 - **Astro** — genuinely excellent for this content profile (islands, near-zero JS).
@@ -18,4 +22,5 @@ Next.js 15+ with the App Router, RSC-first, static generation for all content ro
 
 ## Consequences
 Must actively defend JS budgets (RSC by default, client allowlist in ARCHITECTURE §5).
-Framework choice itself becomes demonstrable engineering judgment in an essay.
+Next.js 16 differs from older versions; read `node_modules/next/dist/docs/` before
+changing framework APIs (AGENTS.md).

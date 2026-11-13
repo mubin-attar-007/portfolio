@@ -495,7 +495,7 @@ function evaluateRoute(route, reports) {
   // pre-existing floor rather than on a real regression. We always PRINT the
   // number (measure, don't claim) and flag when it exceeds the aspirational
   // budget, but do not fail the build on it. Driving first-load JS toward the
-  // budget is a dedicated optimization task (see NEEDS-INPUT.md).
+  // budget is a dedicated optimization task.
   let jsSummary = "";
   const scriptBudget = SCRIPT_BYTE_BUDGETS[route.label];
   if (scriptBudget) {

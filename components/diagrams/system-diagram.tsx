@@ -11,7 +11,7 @@ import type { DiagramNode, DiagramSpec } from "./types";
  * node; click/Enter PINS it so its real engineering decision (why / instead-of
  * / tradeoff) stays open — this is what makes it explorable on touch too.
  * A visually-hidden narration list is the text alternative for SRs and no-JS.
- * Looks like technical documentation, not a product demo (DESIGN §3).
+ * Looks like technical documentation, not a product demo (design-system.md §11.4).
  *
  * A11y: roving tabindex — the whole diagram is ONE tab stop, and arrow keys /
  * Home / End move between nodes. Making every node tabbable would force a

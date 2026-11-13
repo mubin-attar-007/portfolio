@@ -15,8 +15,8 @@ import { ArrowUpRight, ChevronRight } from "lucide-react";
  * Props:
  * - `href` — destination (a route, or an absolute URL when `external`).
  * - `tone` — `accent` (default) for the primary continue-reading link, `quiet`
- *   for a secondary link that must not spend the band's accent budget (DESIGN §9
- *   caps accent at two elements per viewport, and a section kicker on a dark band
+ *   for a secondary link that must not spend the band's accent budget (design-system.md
+ *   §11.2 caps accent at two elements per viewport, and a section kicker on a dark band
  *   already claims one).
  * - `external` — renders a plain `<a target="_blank">` with an outward arrow
  *   instead of the forward chevron, because the destination leaves the site.

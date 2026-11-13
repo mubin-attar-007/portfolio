@@ -14,20 +14,24 @@ The objective is to build one of the highest-quality AI Engineer personal brand 
 
 # Source of Truth
 
-Before starting any task, always read the relevant documentation under `/docs`.
+Before starting any task, always read the relevant documentation. It lives in
+`design-system.md`, `spec/`, `README.md`, and `AGENTS.md`.
 
 The documentation is the authoritative source for:
 
-- Product vision
-- Brand identity
-- Design system
-- Engineering standards
-- Architecture
-- UI/UX standards
-- Accessibility
-- Performance
-- Review process
-- Roadmap
+- Product vision — `spec/PROJECT_CHARTER.md`
+- Brand identity — `design-system.md` §1–§2 and `spec/decisions/` (ADR-013, ADR-015, ADR-016)
+- Design system — `design-system.md`
+- Engineering standards — `spec/ENGINEERING.md`
+- Architecture — `spec/ARCHITECTURE.md`, `spec/CONTENT_MODEL.md`, `spec/AI_ASSISTANT.md`
+- UI/UX standards — `design-system.md` §11 (design law)
+- Accessibility — `design-system.md` §8 and `spec/ENGINEERING.md` §4
+- Performance — `spec/ENGINEERING.md` §5 and `design-system.md` §9
+- Review process — `spec/ENGINEERING.md` §7–§9
+- Decisions — `spec/decisions/README.md` (the index of ADRs)
+- Commands, checks, and CI — `README.md`; framework rules — `AGENTS.md`
+
+No roadmap document is kept in the repository.
 
 Never ignore or contradict the documentation.
 
@@ -187,7 +191,8 @@ Refactor where necessary.
 
 Whenever a significant architectural or design decision is made:
 
-Update the appropriate document in `/docs`.
+Update the appropriate document: `design-system.md` or a file in `spec/` (decision
+records live in `spec/decisions/`).
 
 Documentation should always match the implementation.
 

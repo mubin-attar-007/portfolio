@@ -1,7 +1,9 @@
 # Deploying this portfolio to Vercel
 
-A Next.js 16 (App Router) site. It deploys to Vercel with zero config beyond one
-environment variable for the AI assistant. The whole thing runs on the free tier.
+A Next.js 16 (App Router) site. It deploys to Vercel with the framework defaults;
+every environment variable is optional. It is designed to stay within free-tier
+limits. Vercel is the complete runtime: the static bundle that `npm run build:sites`
+stages in `dist/` has no `/api/chat` route, so the assistant needs this deployment.
 
 ---
 
@@ -12,10 +14,10 @@ environment variable for the AI assistant. The whole thing runs on the free tier
 2. Vercel auto-detects the framework — leave the defaults:
    - **Framework Preset:** Next.js
    - **Root Directory:** `./` (the repo root — this project is not in a monorepo subfolder)
-   - **Build Command:** `next build` (default)
+   - **Build Command:** default (`next build`)
    - **Output:** managed by Vercel (default)
    - **Install Command:** default (`npm install`)
-3. Add the environment variable below, then **Deploy**.
+3. Add any environment variables below, then **Deploy**.
 
 Production is served at `https://mubin-attar.vercel.app`.
 
@@ -23,17 +25,23 @@ Production is served at `https://mubin-attar.vercel.app`.
 
 ## 2. Environment variables
 
-| Variable | Scope | Required | Purpose |
+All are read in `lib/env.ts`, `lib/ai/gemini.ts`, `app/hire/page.tsx`, and
+`components/features/newsletter-form.tsx`. `.env.example` lists the first three.
+
+| Variable | Scope | Default | Purpose |
 | --- | --- | --- | --- |
-| `GEMINI_API_KEY` | **Server-side only** | Yes (for live AI answers) | Powers the "Ask about Mubin" assistant via the Google Gemini API. |
-| `NEXT_PUBLIC_SITE_URL` | Public | Optional | Overrides the canonical origin used by metadata, canonicals, sitemap, robots, JSON-LD, and OG cards. Defaults to `https://mubin-attar.vercel.app`. Set it to a custom domain if you add one. |
+| `GEMINI_API_KEY` | **Server-side only** | unset | Enables live model answers in the assistant. Without it the assistant serves grounded FAQ answers. |
+| `NEXT_PUBLIC_SITE_URL` | Public | `https://mubin-attar.vercel.app` | Canonical origin for metadata, canonicals, sitemap, robots, JSON-LD, and OG cards. Normalized to an origin; an invalid value falls back to the default. Set it if you add a custom domain. |
+| `ASSISTANT_DAILY_CAP` | Server-side | `500` | Gemini calls allowed per UTC day, per server instance. Clamped to 1–20,000; an invalid value falls back to 500. |
+| `NEXT_PUBLIC_CAL_URL` | Public | the Cal.com URL in `config/site.ts` | Overrides the booking link on `/hire`. Anything other than an absolute http(s) URL, including an empty value, hides it. |
+| `NEXT_PUBLIC_BUTTONDOWN_USERNAME` | Public | the handle in `config/site.ts` | Overrides the newsletter account. An empty value hides the form. |
 
 ### `GEMINI_API_KEY`
 
 The assistant calls the Gemini REST API (`gemini-2.5-flash`) from a **server-side
-route handler** (`app/api/chat/route.ts`) — the key is read from
-`process.env.GEMINI_API_KEY` and is never shipped to the browser, logged, or
-included in any error.
+route handler** (`app/api/chat/route.ts`, Node.js runtime). The key is read from
+`process.env.GEMINI_API_KEY`, sent in the `x-goog-api-key` header rather than the
+URL, and is never shipped to the browser, logged, or included in any error.
 
 Get a **fresh** key so it has its own free-tier quota:
 
@@ -58,24 +66,27 @@ GEMINI_API_KEY=your_key_here
 ## 3. How the assistant degrades gracefully
 
 The assistant is designed to stay useful and honest at **zero LLM quota** — it
-never 500s and never fabricates:
+does not fail a visitor with a 500 and does not fabricate:
 
 - **Retrieval is network-free.** Every answer is grounded in local content
-  (`/content`: profile, projects, resume, FAQ) through an in-memory BM25 index
-  built at module load — no embedding API, no vector store, no external call to
-  retrieve.
-- **With a working key + quota:** Gemini streams a grounded synthesis of the
-  retrieved passages, then cites which content file each fact came from.
-- **On quota exhaustion, an API error, or a missing key:** the route falls back
-  to streaming the single best-matching FAQ answer verbatim, with its citation,
-  labelled so the UI shows it came from the FAQ rather than the live model.
-- **Prompt-injection / config attempts** ("ignore your instructions", etc.) get a
-  polite refusal and the model is **not** called.
-- The route is **rate-limited** per client IP (sliding window) and sanitizes /
-  length-caps input. No PII is logged.
-- A **global daily budget cap** bounds Gemini generation calls per UTC day. Once
-  it is spent the route stops calling Gemini and serves the grounded retrieval
-  fallback, so a traffic burst cannot run up spend or starve the shared quota.
+  (`content/`: FAQ, project write-ups, profile, résumé, skills) through an
+  in-memory BM25 index built at module load — no embedding API, no vector store,
+  no external call to retrieve.
+- **With a working key and quota:** Gemini streams a grounded synthesis of the
+  retrieved passages, then the route sends the sources it used; the panel links
+  each one to the matching page on the site.
+- **On quota exhaustion, an API error, or a missing key:** the route streams the
+  best-matching FAQ answer verbatim (or the best retrieved passage) with its
+  citation, labelled in the panel as coming from site search rather than the
+  live model. An off-topic question gets an honest "not on the site" reply.
+- **Prompt-injection and configuration attempts** ("ignore your instructions",
+  etc.) get a polite refusal and the model is **not** called.
+- The route is **rate-limited** per client IP (15 requests per minute, sliding
+  window, per instance) and sanitizes and length-caps input. Nothing is logged.
+- A **daily budget** (`ASSISTANT_DAILY_CAP`) bounds Gemini calls per UTC day on
+  each server instance. Once it is spent, the route stops calling Gemini and
+  serves the grounded fallback, so a traffic burst cannot run up spend or starve
+  the quota.
 
 So if you deploy **without** `GEMINI_API_KEY` (or the free quota runs out), the
 assistant still answers from the FAQ — it just won't do live LLM synthesis.
@@ -88,16 +99,23 @@ the landing bundle; it loads only when a visitor first opens the assistant.
 
 ## 4. Verify a deploy
 
-- `/` renders the hero + sections; the "Ask about Mubin" button (bottom-right)
-  opens the assistant.
+- `/` renders the hero and the homepage sections; the header's **Ask this site**
+  button (or <kbd>⌘K</kbd> / <kbd>Ctrl+K</kbd>, or <kbd>/</kbd>) opens the assistant.
 - `/work` and each `/work/<slug>` case study render with unique title/description.
-- SEO endpoints resolve: `/sitemap.xml`, `/robots.txt`, `/opengraph-image`,
-  `/work/opengraph-image`, `/work/<slug>/opengraph-image`.
+- SEO endpoints resolve: `/sitemap.xml`, `/robots.txt`, `/rss.xml`,
+  `/opengraph-image`, `/work/opengraph-image`, `/work/<slug>/opengraph-image`.
 - View source on `/` — the `<head>` includes Person + WebSite JSON-LD.
+- Run the smoke test against the deployment:
+
+```
+BASE_URL=https://<deployment-host> npm run test:smoke
+```
 
 Before pushing changes, run locally:
 
 ```
-npm run build   # must be green
-npm run lint    # must be clean
+npx tsc --noEmit   # must be clean
+npm run lint       # must be clean
+npm test           # must pass
+npm run build      # must be green
 ```

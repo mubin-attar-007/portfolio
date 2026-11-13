@@ -1,7 +1,7 @@
 import type { ReactNode } from "react";
 
 /**
- * Tag — xs mono metadata chip. Metadata only, never a skills wall (DESIGN §9).
+ * Tag — xs mono metadata chip. Metadata only, never a skills wall (design-system.md §11.6).
  *
  * A quiet-chip treatment: a filled surface behind the hairline rather than
  * a transparent outline. On a bg / bg-subtle band that fill is what separates

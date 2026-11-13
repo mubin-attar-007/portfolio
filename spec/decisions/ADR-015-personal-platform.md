@@ -1,9 +1,10 @@
 # ADR-015 — A compact personal platform
 
-Status: **Accepted for implementation**, 2026-09-11. Supersedes the homepage
-composition in ADR-011/012 and homepage entrance, motif, and stack-wall motion
-in ADR-014. Retains the palette, accessible interactions, and existing route model.
-Validation results belong in the implementation report, not this decision.
+Status: **Accepted**, 2026-09-11; decisions 2 and 4 refined by ADR-016. Supersedes
+the homepage composition in ADR-011 (removed 2026-11-13; in git history at commit
+`8949fdf`) and ADR-012, and the homepage entrance, motif, and stack-wall motion in
+ADR-014. Retains the palette (ADR-013), accessible interactions, and existing route
+model. Validation results are not recorded in this decision.
 
 ## Context
 
@@ -13,9 +14,16 @@ professional experience appeared late in a long page. The redesign makes the
 person, the work, and the next action easier to find while keeping the detailed
 case studies and evaluation records available.
 
-The canonical personal-brand role is **Applied AI Engineer**, as approved in
-the [program decision log](../../docs/flagship-transformation/07-decision-log.md).
-**AI/ML Engineer** remains the factual employment title at Sevina Technologies.
+The canonical personal-brand role is **Applied AI Engineer**, as approved by the
+owner on 2026-08-14 in the program decision log (formerly
+`docs/flagship-transformation/07-decision-log.md`; removed 2026-11-13 and in git
+history at commit `8949fdf`). **AI/ML Engineer** remains the factual employment
+title at Sevina Technologies. The same log approved the supporting descriptor "LLM
+systems, evaluation, AI platforms, and production software" (used in
+`public/llms.txt`) and the experience statement "3+ years in software engineering,
+with a production-AI focus since 2024" (used in `content/resume.ts`,
+`content/profile.json`, `content/site.ts`, and `public/llms.txt`). The role itself is
+`SITE.role` in `config/site.ts`.
 
 ## Decisions
 
@@ -27,16 +35,23 @@ the [program decision log](../../docs/flagship-transformation/07-decision-log.md
    copy introduces Mubin and his work; the figure explains retrieve, generate,
    validate, and execute. Label it **“Illustrative workflow · no live request”**
    in the figure itself. It is an explanation of the architecture, not proof of
-   a live execution or an interactive query console.
+   a live execution or an interactive query console. *Refined by ADR-016:* the
+   figure is now the boundary inspector, labelled "Illustrative cases · no query
+   is sent".
 3. **Keep proof scoped.** Link the project count and experience start to their
    records. Read golden-query and unsafe-prompt ratios from `DBWHISPER_GOLDEN`
    in `content/evals.ts`, including their test-set scope. An observed refusal
-   rate on a bounded set is not a universal safety guarantee.
+   rate on a bounded set is not a universal safety guarantee. (Since ADR-016 the
+   ratios sit in the inspector footer, and the linked project count and experience
+   are in the proof row on `/about` and `/hire`.)
 4. **Use one short homepage sequence:** identity and illustration → proof →
    three other projects → one existing interactive DBWhisper walkthrough →
    portrait and professional experience → three essays and current interests
    → contact. The closing contact section is the only dark band in the default
    light homepage. Writing and the walkthrough use subtle light surfaces.
+   *Refined by ADR-016:* five sections — identity and inspector, selected work,
+   engineer, writing and current interests, contact — with the walkthrough moved
+   to the DBWhisper case study.
 5. **Remove repeated sections.** Retire the reliability bento, registry preview,
    animated tech wall, and decorative evidence graph. Keep one shared
    `ProjectCard` for the homepage and `/work`; use ruled lists for employment,
@@ -57,8 +72,9 @@ the [program decision log](../../docs/flagship-transformation/07-decision-log.md
 ## Consequences and verification
 
 The homepage becomes an entry into the portfolio rather than a compressed copy
-of every technical page. The illustrative figure is static; the existing
-walkthrough remains the place to explore stages. Below-fold project images
+of every technical page. The illustrative figure was static (since ADR-016 it is
+a manual inspector over three curated cases); the existing walkthrough remains the
+place to explore stages. Below-fold project images
 remain lazy-loaded, and server components assemble content before passing
 props to the walkthrough.
 

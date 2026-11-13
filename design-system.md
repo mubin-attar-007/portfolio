@@ -1,15 +1,18 @@
 # Design System — Mubin Attar
 
-> The single source of truth for tokens, type, spacing, components and motion.
-> Tokens are defined once in `styles/tokens.css` and consumed **only** through
-> Tailwind utilities or `var()` inside a CSS module — no raw hex, px or ms in a
-> component. This document explains *why* each value is what it is. **Where a
-> value here and a value in `tokens.css` disagree, `tokens.css` wins and this
-> document is the bug.**
+> The single source of truth for tokens, type, spacing, components, motion and
+> the design law (§11). Tokens are defined once in `styles/tokens.css` and
+> consumed only through Tailwind utilities, token-reading arbitrary values such
+> as `rounded-[var(--radius-sm)]`, or `var()` inside a CSS module — no raw hex,
+> px or ms in a component (the recorded exceptions are in §11.1). This document
+> explains *why* each value is what it is. **Where a value here and a value in
+> `tokens.css` disagree, `tokens.css` wins and this document is the bug.**
 >
 > Current identity: [ADR-016 — Inspectable engineering](./spec/decisions/ADR-016-inspectable-engineering.md).
 > Motion refinement: [ADR-017 — Responsive interaction](./spec/decisions/ADR-017-responsive-interaction.md).
-> These refine ADR-015; earlier ADRs retain the design history.
+> Both refine [ADR-015](./spec/decisions/ADR-015-personal-platform.md); the palette
+> is [ADR-013](./spec/decisions/ADR-013-openrouter-palette.md). Every kept decision
+> is indexed in [spec/decisions/README.md](./spec/decisions/README.md).
 
 ---
 
@@ -73,18 +76,19 @@ an accent gradient. Existing gradient tokens do not authorize decorative use.
 
 The one apparent exception is not a second accent. A dark BAND inside the LIGHT
 page (`.tone-invert`) keeps the lifted violet `--dark-accent-band` `#a99cff`
-(8.3:1), because that band belongs to the light theme's scroll — a lime button
-inside it, under a violet button above it, is the same defect mirrored. Inside a
-full-dark document that band is just another dark surface, so
-`:root[data-theme="dark"] .tone-invert` overrides the accent back to lime. That
-override was missing once and shipped visible purple into the dark theme.
+(8.3–8.5:1 on the band's grounds), because that band belongs to the light
+theme's scroll — a lime button inside it, under a violet button above it, is the
+same defect mirrored. Inside a full-dark document that band is just another dark
+surface, so `:root[data-theme="dark"] .tone-invert` overrides the accent back to
+lime. That override was missing once and shipped visible purple into the dark
+theme.
 
 Guarded by `npm run test:hue`, which walks 14 routes per theme and fails on any
 computed colour outside that theme's accent family. See
-[ADR-013 § 4](spec/decisions/ADR-013-openrouter-palette.md).
+[ADR-013, decision 4](spec/decisions/ADR-013-openrouter-palette.md).
 
-**Accent budget: ≤2 accent elements per viewport.** Reserve saturated colour for
-the primary action, active selection, or linked evidence.
+**Accent budget: ≤2 accent elements per viewport** (the rule is §11.2). Reserve
+saturated colour for the primary action, active selection, or linked evidence.
 
 ### One closing dark band
 
@@ -121,8 +125,9 @@ The homepage headline uses weight **550**, line-height **1.06**, and tight
 tracking. The second phrase uses secondary ink and a controlled measure so the
 split layout remains readable. Keep headings in sentence case.
 
-Measures: `--width-prose` 68ch for reading, ~46ch for a hero lede, ~42–46ch for
-card and band copy.
+Measures: `--width-prose` 68ch for reading, 40ch for the hero lede, 48–58ch for
+project-row copy, 44ch for the contact band. Page titles wrap at 20ch
+(`PageHeader`) and centred section headings at 24ch.
 
 ---
 
@@ -132,12 +137,14 @@ card and band copy.
 - Gutters step **20 → 24 → 32px**. The 20px phone gutter is deliberate: at 360px
   a 24px inset costs 13% of the viewport, which is what turns a two-word headline
   line into a three-line headline.
-- Homepage body sections use `--space-section-sm` (**48–72px**) instead of
-  repeatedly spending the largest section band. The hero uses `md`; internal
-  pages retain the shared section scale.
+- Homepage sections, the hero included, use `--space-section-sm` (**48–72px**)
+  top and bottom instead of repeatedly spending the largest section band.
+  Internal pages retain the shared section scale.
 - `--space-section-xs` is **half a header seam**: a page header spends it below
   and the body band under it spends the other half, so the header→content gap is
   one reasoned number rather than two paddings that happen to stack.
+- Breakpoints are Tailwind's defaults (640 / 768 / 1024 / 1280 / 1536px);
+  `tokens.css` does not override them.
 
 Radii are small on purpose — large radii read as consumer-app chrome, tight
 corners read as engineered: `xs 4` (tags, inline code), `sm 6` (buttons, chips),
@@ -212,17 +219,20 @@ fade text through low-contrast intermediate states. The hero text and inspector
 settle upward by 8px once on arrival, remaining fully opaque throughout, without
 delays or scroll observers. This supersedes the homepage entrance behavior in
 ADR-014 §1. Interior pages retain their existing
-`.reveal` / `.reveal-stagger` entry styles, disabled in print and reduced motion.
+`.reveal` / `.reveal-stagger` entry styles, disabled in print and reduced motion:
+a fade and 8px rise, once, with siblings delayed by `--stagger-step` (60ms) through
+`stagger(i)` in `constants/page.ts` — never a hand-typed delay in a component.
 
 **Banned:** cursor followers, spotlight-follows-mouse, marquees and logo
 carousels, typewriter effects, tilt cards, scroll-jacking, parallax, animated
-background noise.
+background noise. The full list is §11.6.
 
 Every non-essential effect must live inside `@media (prefers-reduced-motion:
 no-preference)` and have a **designed still pose** — not merely a disabled
-animation. `scripts/a11y.mjs` fails the build if any computed animation or
-transition duration on `/` exceeds **80ms** under reduced motion, or if any
-`.reveal` element is left below `opacity: 0.99`.
+animation. `scripts/a11y.mjs` fails the accessibility gate if any computed
+animation or transition duration on `/` exceeds **80ms** under reduced motion,
+or if any `.reveal` or `.hero-item` element is left below `opacity: 0.99` or
+still transformed.
 
 Under reduced motion, the walkthrough keeps every stage selectable without
 rendering an automatic-play transport. The hero inspector remains manually
@@ -235,10 +245,17 @@ settled positions, rapid input, keyboard focus, touch affordances, and reduced
 motion. Reduced motion keeps the selection indicator at the selected radio;
 do not erase a transform used to express state when disabling its transition.
 
-**One recorded exception:** the disclosure panel transitions
+Transitions and keyframe animations run only on paint and compositor
+properties — opacity, transform and `translate`, colour, background, border
+colour and box-shadow — never on a layout property such as width, height,
+margin, padding or grid tracks.
+
+**One recorded exception:** the walkthrough's stage disclosure
+(`components/case-studies/walkthrough.module.css`) transitions
 `grid-template-rows` (a layout property). Animating to an unknown auto height
 otherwise requires JS measurement; the perceived motion is carried by
-compositor-driven opacity and translate on the contents. See ADR-011.
+compositor-driven opacity and translate on the contents. This section is the
+record of that exception.
 
 ---
 
@@ -277,7 +294,9 @@ Non-negotiables:
   keyboard-only reader cannot reach the end of it.
 - **No horizontal document overflow** at any tested viewport; the gate throws on
   `scrollWidth > clientWidth + 1`.
-- Touch targets ≥ 44×44px.
+- Touch targets: the gate runs axe's WCAG 2.2 `target-size` rule (24×24px
+  minimum). Control heights are 32 / 38 / 44px (`components/ui/button.tsx`);
+  use the 44px `lg` size for primary actions people tap.
 - **A modal makes the rest of the page `inert`** — not just focus-trapped.
   Trapping `Tab` alone still leaves the document in the accessibility tree, so a
   screen-reader user can walk out of the dialog by virtual cursor. Applied by
@@ -296,7 +315,9 @@ Non-negotiables:
 ## 9. Performance
 
 Budgets in `scripts/lighthouse-budget.mjs`: performance ≥ 0.95; accessibility,
-best-practices and SEO = 1.0; LCP ≤ 2500ms; CLS < 0.05; TBT < 150ms.
+best-practices and SEO = 1.0; LCP ≤ 2500ms; CLS < 0.05; TBT < 150ms. First-load
+JavaScript targets (transferred bytes: home 120KB, flagship case study and
+writing 90KB) are printed on every run but are advisory, not failing.
 These are required thresholds, not a report of this revision's results. Record
 current measurements with their build, route, and test environment; historical
 ADR scores do not certify a later implementation.
@@ -306,12 +327,15 @@ Rules that keep it from getting worse:
 - **Client components take props; they do not read `content/`.** Importing the
   content layer into a client component drags the eval registry and Zod across the
   boundary. This shipped once during the redesign and cost 290KB.
-- Server components by default. Client behavior is limited to navigation/theme,
-  the assistant, interactive walkthrough, and the finite manual hero inspector.
-  Motion adds no network request or dependency. Below-fold project images are lazy.
+- Server components by default. Client components are limited to the allowlist
+  in [ARCHITECTURE.md §5](spec/ARCHITECTURE.md#5-client-component-allowlist):
+  navigation and theme, the assistant, the case-study walkthrough and reading
+  outline, the system diagram, list filters, copy buttons, and the finite manual
+  hero inspector. Motion adds no network request or dependency. Below-fold
+  project images are lazy.
 - Product frames declare an aspect ratio so an image cannot resize the layout.
-- No remote hosts — CSP is `img-src 'self' blob: data:` and `font-src 'self'
-  data:`. Fonts are self-hosted by `next/font`.
+- No remote image or font hosts — CSP is `img-src 'self' blob: data:` and
+  `font-src 'self' data:`. Fonts are self-hosted by `next/font`.
 
 ---
 
@@ -333,3 +357,133 @@ printing "(/work)" after every internal link is noise.
 
 Gated by `npm run test:print`, which emulates print media, asserts the chrome is
 gone and nothing printed faded, and writes a real PDF to `.screenshots/`.
+
+---
+
+## 11. Design law
+
+The rules below are not values; they hold whatever the tokens become. They
+were carried over from the former `spec/DESIGN.md` (removed on 2026-11-13; in git
+history at commit `8949fdf`) with its superseded clauses amended to match the
+current code. Litmus test for every screen: *would this look at home inside
+excellent technical documentation?* If not, simplify.
+
+### 11.1 Token discipline
+
+- Components consume tokens, never literals: Tailwind utilities, arbitrary values
+  that read a token (`rounded-[var(--radius-sm)]`), or `var()` in a CSS module.
+  No lint rule enforces this; review does.
+- Palette literals outside `tokens.css` exist only where CSS variables cannot be
+  read or are not yet applied, and a palette change updates them in the same
+  change: `lib/og.tsx` (six Satori literals — nothing tests OG colour), the
+  `theme-color` values in `app/layout.tsx` and
+  `components/features/theme-toggle.tsx` (asserted by `scripts/smoke.mjs`), and
+  the full-dark band grounds and print palette in `styles/globals.css`.
+- Open Graph images are light-only.
+
+### 11.2 Accent budget (hard rule)
+
+The accent may appear in at most **two elements per viewport**: links plus ONE
+of the primary action, the active selection (for example the current nav item),
+or linked evidence. Everything else is ink, secondary ink, and hairlines. If a
+screen feels flat, fix hierarchy with size, weight, and space — never by adding
+accent. Which accent applies is a property of the theme (§2).
+
+### 11.3 Page tempo
+
+Adjacent sections differ in at least one of: background (`bg`, `bg-subtle`, or
+the dark band), density (a single feature versus a list), or scale (display
+versus body type). Never two card grids in a row. The current homepage order is
+in §4.
+
+### 11.4 Component rules
+
+- **Hero** (`components/home/hero.tsx`): a mono name and role line, a two-part
+  headline, one short lede, one primary and one secondary action, and a location
+  and experience line, beside the inspector figure. No badges, no social-icon
+  row, and no motion beyond the single arrival settle (§6).
+- **Buttons** (`components/ui/button.tsx`): variants primary, secondary, subtle
+  and ghost. **One primary button per viewport.** Focus is the global 2px accent
+  outline at a 2px offset.
+- **Links:** in-prose links are ink, underlined at rest with a `border-strong`
+  decoration that turns accent on hover (`components/mdx/prose.ts`). The
+  "continue" affordance is `TextLink`; its `quiet` tone exists so a secondary
+  link does not spend the accent budget.
+- **Static cards and project rows stay flat:** no lift, glow, or scale on hover;
+  hover changes border or colour only. The one zoom is the clipped image inside a
+  project link (§6). `components/ui/card.tsx` still offers an `interactive`
+  hover lift; it is used only on `/dev/components`. Elevation is for things that
+  float — the assistant panel, the mobile menu — and the primary button.
+- **Metric:** a mono, tabular value; a delta pairs an arrow glyph with words;
+  never in a coloured box; every metric links to its method.
+- **Tag:** an xs mono metadata chip (`--radius-xs`) — metadata only, never a
+  skills wall.
+- **Callout:** `bg-subtle` with a 3px left stripe (ink, warning, or accent for a
+  note). No icon required.
+- **CodeBlock:** highlighted by Shiki on the server with the GitHub high-contrast
+  light and dark themes, in a figure with a filename bar and a copy button.
+- **SystemDiagram:** reads as technical documentation, not a product demo —
+  flat nodes (`--radius-md`), orthogonal connectors with rounded elbows, and an
+  active state that changes border and label colour only. One tab stop with
+  arrow, Home and End navigation; a narration list is the text alternative;
+  narrow viewports get a staged HTML map instead of the SVG canvas.
+- **DecisionLog / FailureLog / MetricsTable:** table-like, hairline rows, mono
+  numbers, generous padding, no zebra striping, no coloured headers.
+
+### 11.5 Imagery and icons
+
+- Diagrams and real product captures. Every capture carries a caption naming
+  the surface it shows (`card.caption` in `content/schema.ts`), never an implied
+  live result. The portrait (`public/mubin.png`) appears on the homepage and
+  `/about`. No stock imagery, 3D renders, or AI-generated imagery.
+- Icons come from `lucide-react` and appear only where they carry meaning
+  (external link, copy, menu, close, direction, status). Decorative glyphs are
+  `aria-hidden`. Never decorative icon grids.
+
+### 11.6 Anti-patterns — banned (this section is law)
+
+1. Gradient text, neon, glassmorphism or blurred cards, and glow as decoration.
+   A single soft ambient glow behind a product surface is the most a glow may
+   ever be. Gradients in use: the primary button's single-hue ramp
+   (`--gradient-accent-control`) and its hover sheen; a 2px accent-to-ambient
+   top light on the walkthrough specimen
+   (`components/case-studies/walkthrough.module.css`); and one soft accent
+   radial behind the `/work` page header (`app/work/page.tsx`, inline rather
+   than a token). The two-hue `--gradient-accent` and the `--glow-accent` /
+   `--glow-ambient` tokens are defined but unused. The sticky header's
+   translucent backdrop is the one blurred surface.
+2. A full-dark page as the default theme. Light is server-rendered; dark is an
+   explicit, remembered choice, and `prefers-color-scheme` is never consulted. A
+   dark band (`.tone-invert`) on the light page is not this violation — the
+   default homepage uses exactly one, for contact.
+3. More than one accent per theme, or accent used as decoration: no second hue,
+   no accent gradients, no tinted decorative shapes. The ambient blue
+   (`--color-ambient`) is limited to gradients and data visuals.
+4. Uppercase headings or uppercase body; letter-spaced all-caps buttons. One
+   exception, already in the system: xs mono **kickers** and group labels
+   (`LABEL` in `constants/page.ts`) may be uppercase with light tracking
+   (0.025–0.07em in use). Headings themselves are always sentence case.
+5. Skill-badge walls, logo marquees, star-rating self-assessments ("Python
+   ★★★★★"), and client-logo walls of companies never worked for. A stack display
+   is permitted only as text and hairlines (no logos), non-looping, decorative
+   (`aria-hidden`, with a real text list behind it), and honest about what it
+   claims — "tools I use", never "companies I work with".
+6. Card grids as the *default* layout. A grid is allowed where the content is
+   genuinely parallel and enumerable (a work index, a capability set) — never two
+   grids in a row, and never as a substitute for a section with a point to make
+   (§11.3).
+7. Typing animations, particle, mesh or grid backgrounds, cursor followers and
+   spotlight cursors, tilt cards.
+8. Scroll-jacking, parallax, looping ambient animation, and video that
+   autoplays or has no pause control. Muted, captioned product recordings are
+   permitted as evidence: the case-study demos never autoplay, fetch no video
+   until played (`preload="none"`; only the poster image is preloaded), and keep
+   native controls and a captions track (WCAG 2.2.2).
+9. Stock imagery, 3D blobs, emoji in headings or UI chrome.
+10. Vague superlatives in copy; any metric without a method.
+11. Center-aligned long-form text; measures over 75ch.
+12. **Invented or placeholder social proof** — testimonials, quotes, client
+    names, or logos that are not real and permissioned. A "sample layout" label
+    does not cure it; if it is not real, it does not ship. (Reinforces the
+    charter's "honesty over hype".)
+13. Anything whose only justification is "looks impressive."

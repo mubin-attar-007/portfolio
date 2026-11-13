@@ -7,5 +7,7 @@ conventions, and file structure may differ. **Read the relevant guide in
 `proxy.ts`. `params` is async (`await params`). Heed deprecation notices.
 <!-- END:nextjs-agent-rules -->
 
-Design/engineering law lives in `spec/` and `CLAUDE.md`. The site is **calm, light,
-typography-first** — DESIGN §9 anti-patterns are non-negotiable. When unsure: simplify.
+Design law lives in `design-system.md` (§11; its §11.6 anti-patterns are
+non-negotiable), engineering law in `spec/ENGINEERING.md`, and working standards in
+`CLAUDE.md`. Commands and CI gates are in `README.md`. The site is **calm, light,
+typography-first**. When unsure: simplify.

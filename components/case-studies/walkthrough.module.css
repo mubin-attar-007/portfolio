@@ -116,7 +116,7 @@
   padding-left: 0.875rem;
 }
 
-/* Height animates 0fr -> 1fr (the recorded disclosure exception, ADR-011);
+/* Height animates 0fr -> 1fr (the recorded disclosure exception, design-system.md §6);
    perceived motion is opacity/translate on the inner content. */
 .stagePanel {
   display: grid;
