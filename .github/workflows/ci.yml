@@ -4,22 +4,33 @@ on:
   push:
     branches: [main]
   pull_request:
+  workflow_dispatch:
+
+# Read-only by default; no step here needs to write to the repository.
+permissions:
+  contents: read
+
+# A newer push to the same pull request supersedes the run in flight. Runs on
+# main are never cancelled, so every merged commit keeps its own verdict.
+concurrency:
+  group: ci-${{ github.event.pull_request.number || github.ref }}
+  cancel-in-progress: ${{ github.event_name == 'pull_request' }}
 
 jobs:
   build:
     runs-on: ubuntu-latest
     timeout-minutes: 30
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v7
 
       - name: Set up Node.js
-        uses: actions/setup-node@v4
+        uses: actions/setup-node@v7
         with:
           node-version: 24
           cache: npm
 
       - name: Install dependencies
-        run: npm ci
+        run: npm ci --no-audit --no-fund
 
       - name: Type-check
         run: npx tsc --noEmit
@@ -33,19 +44,22 @@ jobs:
       - name: Build
         run: npm run build
 
+      # Playwright's guidance is not to cache browsers: restoring the cache takes
+      # about as long as the download, and the OS packages cannot be cached.
       - name: Install Playwright (chromium)
         run: npx playwright install --with-deps chromium
 
       # One server, every gate that needs one. Kept in a single step on purpose:
       # a background process started with `&` surviving into a later step is a
       # runner implementation detail, not a guarantee.
-      - name: Browser gates (a11y, interaction, motion, accent drift, print)
+      - name: Browser gates (a11y, interaction, motion, accent drift, print, links, smoke)
         run: |
           set -euo pipefail
           cp -R .next/static .next/standalone/.next/static
           cp -R public .next/standalone/public
-          PORT=3200 HOSTNAME=127.0.0.1 node .next/standalone/server.js &
+          PORT=3200 HOSTNAME=127.0.0.1 node .next/standalone/server.js > server.log 2>&1 &
           for i in $(seq 1 40); do curl -sf http://localhost:3200 >/dev/null && break; sleep 2; done
+          curl -sf http://localhost:3200 >/dev/null || { echo "::error::The production server did not start within 80s (see server.log)."; exit 1; }
           export BASE_URL=http://localhost:3200
 
           echo "::group::Accessibility (axe, all routes × light/dark × 3 viewports)"
@@ -73,8 +87,28 @@ jobs:
           npm run test:print
           echo "::endgroup::"
 
+          echo "::group::Internal links and fragments"
+          npm run test:links
+          echo "::endgroup::"
+
+          # The same smoke test can be pointed at a Vercel preview or production.
+          echo "::group::Smoke test (every surface in a real browser)"
+          npm run test:smoke
+          echo "::endgroup::"
+
       - name: Lighthouse budgets and social-preview gate
         if: github.event_name == 'push' || github.base_ref == 'main'
         env:
           LIGHTHOUSE_RUNS: "3"
         run: npm run test:lighthouse
+
+      - name: Upload diagnostics
+        if: failure()
+        uses: actions/upload-artifact@v7
+        with:
+          name: ci-diagnostics-${{ github.run_id }}-${{ github.run_attempt }}
+          path: |
+            server.log
+            .screenshots/
+          if-no-files-found: ignore
+          retention-days: 7
