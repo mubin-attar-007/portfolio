@@ -39,10 +39,13 @@ jobs:
     env:
       HF_TOKEN: ${{ secrets.HF_TOKEN }}
       # name | Hugging Face Space | backend health URL | public demo URL
+      # Each health URL also checks the backend's database, so a demo whose app
+      # is up but whose database is unreachable counts as down. CrownWager's
+      # Django route needs its trailing slash (without it, a 301).
       DEMOS: |
-        DBWhisper|heisenbergblue/dbwhisper|https://heisenbergblue-dbwhisper.hf.space/health|https://dbwhisper.vercel.app
-        TradePulse|heisenbergblue/tradepulse|https://heisenbergblue-tradepulse.hf.space/health|https://tradepulse-live.vercel.app
-        CrownWager|heisenbergblue/crownwager|https://heisenbergblue-crownwager.hf.space/health|https://crownwager.vercel.app
+        DBWhisper|heisenbergblue/dbwhisper|https://heisenbergblue-dbwhisper.hf.space/ready|https://dbwhisper.vercel.app
+        TradePulse|heisenbergblue/tradepulse|https://heisenbergblue-tradepulse.hf.space/ready|https://tradepulse-live.vercel.app
+        CrownWager|heisenbergblue/crownwager|https://heisenbergblue-crownwager.hf.space/api/health/|https://crownwager.vercel.app
     steps:
       - name: Keep this schedule enabled
         continue-on-error: true
