@@ -98,10 +98,10 @@ export const resume = {
       tagline: "Multi-user, ChatGPT-style AI chat SaaS — Argon2id auth, per-user tenancy, token streaming, OpenAI-compatible multi-LLM routing, and a shared-key daily quota.",
       // Not an eval-registry row — the test count and tenancy model are documented
       // in the case study's metric table, so that is this project's method page.
-      metric: "Per-user tenancy · 31 tests · live on HF + Neon",
+      metric: "Per-user tenancy · 31 tests",
       stack: "FastAPI · Postgres · Docker · CI",
       method: "/work/llm-studio",
-      live: "https://heisenbergblue-llm-studio.hf.space",
+      // No live link while the hosted demo is offline (free-tier Space limit).
       github: "https://github.com/mubin-attar-007/llm_studio",
     },
   ],

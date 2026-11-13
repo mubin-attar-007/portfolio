@@ -73,6 +73,27 @@ async function frames(page) {
   });
 }
 
+// The site scrolls smoothly (`scroll-behavior: smooth`), so a Tab, a focus() or
+// Playwright's own pre-hover scroll can leave the page moving. A pointer placed
+// mid-scroll is carried off its target as the page keeps travelling, and the
+// hover under test silently ends. Bring the target into view instantly, then
+// wait until the document has held still for several frames before measuring.
+async function bringToRest(page, locator) {
+  await locator.evaluate((element) => element.scrollIntoView({ block: "center", behavior: "instant" }));
+  await page.evaluate(() => new Promise((resolve) => {
+    const deadline = performance.now() + 3000;
+    let last = window.scrollY;
+    let still = 0;
+    const tick = () => {
+      still = window.scrollY === last ? still + 1 : 0;
+      last = window.scrollY;
+      if (still >= 3 || performance.now() > deadline) resolve();
+      else requestAnimationFrame(tick);
+    };
+    requestAnimationFrame(tick);
+  }));
+}
+
 async function appearance(locator) {
   return locator.evaluate((element) => {
     const style = getComputedStyle(element);
@@ -93,7 +114,7 @@ async function captureFeedback(page, reduced) {
   await link.evaluate((element) => element.blur());
   await page.mouse.move(0, 0);
   await page.waitForTimeout(400);
-  await link.scrollIntoViewIfNeeded();
+  await bringToRest(page, link);
   const card = page.getByRole("article", { name: "TradePulse", exact: true });
   const text = card.locator("h3");
   const baseline = await appearance(link);
@@ -129,6 +150,7 @@ async function sharedControlFeedback(page) {
   await button.evaluate((element) => element.blur());
   await page.mouse.move(0, 0);
   await page.waitForTimeout(400);
+  await bringToRest(page, button);
   const sample = () => button.evaluate(async (element) => {
     const samples = [];
     for (let frame = 0; frame < 4; frame++) {
@@ -159,7 +181,8 @@ async function sharedControlFeedback(page) {
   check("shared button: directional arrow feedback agrees for hover and focus and then settles",
     hoverArrow.y > 0 && Math.abs(hoverArrow.x) < 0.01 && Math.abs(hoverArrow.y - focusArrow.y) < 0.01
     && await button.evaluate((element) => element.getAnimations({ subtree: true }).every((animation) => animation.playState !== "running"))
-    && await button.getAttribute("href") === "#selected-work");
+    && await button.getAttribute("href") === "#selected-work",
+    JSON.stringify({ hoverArrow: { x: hoverArrow.x, y: hoverArrow.y }, focusArrow: { x: focusArrow.x, y: focusArrow.y } }));
 }
 
 async function writingFeedback(page) {
@@ -170,7 +193,7 @@ async function writingFeedback(page) {
   await link.evaluate((element) => element.blur());
   await page.mouse.move(0, 0);
   await page.waitForTimeout(400);
-  await link.scrollIntoViewIfNeeded();
+  await bringToRest(page, link);
   const text = link.locator(":scope > span");
   const before = await appearance(text);
   const arrowBefore = await appearance(link.locator("svg"));
@@ -188,7 +211,8 @@ async function writingFeedback(page) {
   check("writing row: the arrow animates toward its destination with equivalent hover and focus feedback", animated
     && hoverArrow.x > 0 && hoverArrow.y < 0 && hoverArrow.color !== arrowBefore.color
     && Math.abs(hoverArrow.x - focusArrow.x) < 0.01 && Math.abs(hoverArrow.y - focusArrow.y) < 0.01
-    && hoverArrow.color === focusArrow.color);
+    && hoverArrow.color === focusArrow.color,
+    JSON.stringify({ animated, hoverArrow: { x: hoverArrow.x, y: hoverArrow.y }, focusArrow: { x: focusArrow.x, y: focusArrow.y } }));
   check("writing row: title, summary, and metadata stay fixed and the focused link remains usable",
     [hoverText, focusText].every((state) => Math.abs(state.top - before.top) < 1 && Math.abs(state.left - before.left) < 1
       && Math.abs(state.width - before.width) < 1 && Math.abs(state.height - before.height) < 1)

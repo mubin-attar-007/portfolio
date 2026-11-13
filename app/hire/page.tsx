@@ -155,7 +155,7 @@ export default function HirePage() {
             </div>
 
             <p className="mt-5 text-sm leading-relaxed text-ink-tertiary">
-              Every project here is live and every repository is public — the fastest way to judge
+              Every project here shipped and every repository is public — the fastest way to judge
               the work is to open one.
             </p>
           </section>

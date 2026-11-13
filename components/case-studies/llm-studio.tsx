@@ -151,7 +151,11 @@ export function LlmStudioBody() {
       </CS>
 
       <CS id="evidence" title="Evidence">
-        <p>The app is live and the auth, tenancy, and routing code are in the repository above.</p>
+        <p>
+          The hosted demo is offline: the free Hugging Face tier runs three Spaces at a time, and
+          the other three demos hold those slots. The recording above shows the real app, and the
+          auth, tenancy, and routing code are in the repository above.
+        </p>
       </CS>
     </div>
   );

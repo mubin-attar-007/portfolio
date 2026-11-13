@@ -18,7 +18,7 @@ const isHttps = (url: string | undefined): boolean => {
   }
 };
 
-test("there are exactly 4 live projects", () => {
+test("there are exactly 4 projects", () => {
   assert.equal(projects.length, 4);
 });
 
@@ -46,9 +46,13 @@ test("every metric has a method footnote (content law)", () => {
   }
 });
 
-test("every project's live + repo links are valid https URLs", () => {
+// A live link is optional: a demo whose free-tier host is offline drops it
+// rather than send visitors to an error page. Every project keeps its repository.
+test("every project's repo link, and live link when present, is a valid https URL", () => {
   for (const p of projects) {
-    assert.ok(isHttps(p.links.live), `${p.slug}.links.live must be https (got: ${p.links.live})`);
+    if (p.links.live !== undefined) {
+      assert.ok(isHttps(p.links.live), `${p.slug}.links.live must be https (got: ${p.links.live})`);
+    }
     assert.ok(isHttps(p.links.repo), `${p.slug}.links.repo must be https (got: ${p.links.repo})`);
   }
 });

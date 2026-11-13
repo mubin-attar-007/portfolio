@@ -58,7 +58,7 @@ export default function ResumePage() {
             {resume.download}
           </ResumeDownloadLink>
           {/* `quiet`: the kicker's accent mark and the primary button have already
-              spent this viewport's two-accent budget (DESIGN §9). */}
+              spent this viewport's two-accent budget (design-system.md §11.2). */}
           <TextLink href={resume.cta.href} tone="quiet">
             {resume.cta.label}
           </TextLink>
@@ -108,9 +108,11 @@ export default function ResumePage() {
                   <div className="flex flex-wrap items-baseline justify-between gap-x-3 gap-y-1">
                     <h3 className="text-lg text-ink">{p.name}</h3>
                     <span className="flex items-center gap-3">
-                      <TextLink href={p.live} external tone="quiet">
-                        live
-                      </TextLink>
+                      {"live" in p ? (
+                        <TextLink href={p.live} external tone="quiet">
+                          live
+                        </TextLink>
+                      ) : null}
                       <TextLink href={p.github} external tone="quiet">
                         github
                       </TextLink>

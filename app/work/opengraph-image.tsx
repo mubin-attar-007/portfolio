@@ -1,6 +1,6 @@
 import { renderOg, OG_SIZE, OG_CONTENT_TYPE, formatOgEyebrow } from "@/lib/og";
 
-export const alt = "Work — four live AI systems, deep-dived · Mubin Attar";
+export const alt = "Work — four shipped AI systems, deep-dived · Mubin Attar";
 export const size = OG_SIZE;
 export const contentType = OG_CONTENT_TYPE;
 
@@ -8,7 +8,7 @@ export const contentType = OG_CONTENT_TYPE;
 export default function OG() {
   return renderOg({
     eyebrow: formatOgEyebrow("Selected Work"),
-    title: "Four live AI systems — how each one is built.",
+    title: "Four shipped AI systems — how each one is built.",
     subtitle: "DBWhisper · TradePulse · CrownWager · LLM Studio. Deep case studies with decisions, failures, and methods.",
     footerRight: "/work",
   });

@@ -1,104 +1,110 @@
 # Portfolio — Mubin Attar
 
-The personal platform of **Mubin Attar, Applied AI Engineer**: four project case
-studies, evaluation records, professional experience, and technical writing.
+The personal site of **Mubin Attar, Applied AI Engineer**: four project case
+studies, an evaluation registry, professional experience, technical writing,
+and a grounded assistant that answers questions about the work.
 
-Production address: [mubin-attar.vercel.app](https://mubin-attar.vercel.app).
+Production: [mubin-attar.vercel.app](https://mubin-attar.vercel.app).
 
-## Design and content
+## Stack
 
-The light-default homepage pairs a personal introduction with a compact
-DBWhisper boundary inspector, then leads through editorial project rows,
-employment, writing, and contact. The full request walkthrough lives in the
-DBWhisper case study. Dark
-mode remains an explicit, remembered preference.
+Next.js 16 (App Router), React 19, strict TypeScript, Tailwind CSS v4 with CSS
+tokens, MDX through `next-mdx-remote`, Zod, and Shiki. Pages are server
+components; client code is limited to the allowlist in
+[spec/ARCHITECTURE.md §5](spec/ARCHITECTURE.md#5-client-component-allowlist).
+Fonts are self-hosted through `next/font`.
 
-Measurements must carry their method. `MetricSchema.method` is required, and
-homepage evaluation ratios come from `content/evals.ts` with their test-set
-scope. Illustrative workflows and sample data are labelled at the point of
-display; they do not represent a live request or measured business outcome.
+The `/api/chat` assistant retrieves local content with an in-memory BM25 index,
+optionally uses Gemini (`gemini-2.5-flash`) for a cited synthesis, and falls
+back to grounded FAQ answers when no key or quota is available. See
+[spec/AI_ASSISTANT.md](spec/AI_ASSISTANT.md).
 
-The current direction is recorded in
-[ADR-016](spec/decisions/ADR-016-inspectable-engineering.md) and
-[design-system.md](design-system.md). Historical ADRs preserve earlier decisions
-and results; they are not validation reports for the current build.
-
-## Architecture
-
-Next.js 16 App Router, React 19, strict TypeScript, Tailwind CSS v4, MDX, and Zod.
-Pages use server components, with client behavior for navigation, theme,
-the boundary inspector, the walkthrough, and the assistant. Homepage content remains visible without
-scroll-triggered entrance fades. Fonts are self-hosted through
-`next/font`; Shiki highlights code during rendering.
-
-The `/api/chat` assistant retrieves local content with BM25, optionally uses
-Gemini for synthesis, and exposes source links. Without a working model key or
-quota, it uses the grounded retrieval/FAQ fallback.
+## Repository map
 
 | Location | Responsibility |
 | --- | --- |
-| `app/` | Routes, layout, metadata, feeds, and `/api/chat` |
-| `components/` | Shared UI, homepage, case studies, diagrams, assistant |
-| `config/site.ts`, `config/nav.ts` | Identity, availability, navigation |
-| `content/projects.ts` | Canonical structured project records and card content |
-| `content/resume.ts` | Canonical résumé, consumed by pages, retrieval, and PDF generation |
-| `content/evals.ts`, `content/schema.ts` | Evaluation records and content validation |
-| `content/home-visual.ts`, `content/site.ts` | Structured page copy and illustrative workflow data |
-| `content/**/*.mdx` | Case studies, essays, notes, and the current-work page |
-| `content/profile.json`, `faq.json`, `skills.json` | Remaining profile, FAQ, and skills data |
-| `lib/` | Content loaders, formatting, metadata, and assistant retrieval |
-| `styles/` | Tokens and global styles |
-| `scripts/`, `test/` | Build helpers, browser checks, and unit tests |
+| `app/` | Routes, layout, metadata, OG images, feeds, `/api/chat` |
+| `components/` | UI primitives, layout, homepage, case-study bodies, diagrams, assistant |
+| `config/site.ts`, `config/nav.ts` | Identity, availability line, integrations, navigation |
+| `content/projects.ts` | Canonical project records and card content |
+| `content/resume.ts` | Canonical résumé, used by pages, retrieval, and the PDF |
+| `content/evals.ts`, `content/schema.ts` | Evaluation registry and the Zod content schemas |
+| `content/*.ts` (other) | Homepage, page, and article copy; the career timeline; illustrative inspector and walkthrough data |
+| `content/writing`, `content/notes`, `content/now.mdx` | Essays, notes, and the `/now` page (MDX) |
+| `content/projects/*.mdx` | Long-form project summaries for assistant retrieval |
+| `content/*.json` | Profile, FAQ, and skills data |
+| `lib/` | Content loaders, formatting, analytics, env parsing, assistant (`lib/ai/`) |
+| `styles/` | `tokens.css` and `globals.css` |
+| `scripts/`, `test/` | Browser gates, Lighthouse, résumé PDF, and `node:test` unit tests |
+| `spec/` | Charter, engineering rules, architecture, content model, assistant, decisions |
 
-The former `content/projects.json` and `content/resume.json` duplicates are
-removed. Edit the typed records so pages, assistant answers, and generated
-artifacts use the same source. Read [AGENTS.md](AGENTS.md) and the installed
-Next.js guides under `node_modules/next/dist/docs/` before changing framework APIs.
+Read [AGENTS.md](AGENTS.md) and the installed Next.js guides under
+`node_modules/next/dist/docs/` before changing framework APIs.
 
-## Run and verify
+## Run locally
 
-Use **Node 24+**, matching CI and the native TypeScript test runner.
+Use **Node 24**, matching CI and the native TypeScript test runner.
 
 ```bash
 npm ci
 npm run dev       # http://localhost:3000
 ```
 
-Core checks:
+Copy `.env.example` to `.env.local` to set the optional assistant key and
+overrides; [DEPLOY.md](DEPLOY.md) describes each variable.
+
+## Checks
 
 ```bash
 npx tsc --noEmit
 npm run lint
-npm test
+npm test          # node:test unit tests (test/*.test.mts)
 npm run build
 ```
 
-Browser checks include `test:a11y`, `test:interaction`, `test:motion`, `test:hue`,
-`test:screens`, `test:print`, `test:metadata`, and `test:lighthouse`. Run the
-browser suites against a production build, inspect both themes and mobile
-layouts, and check horizontal overflow as well as automated accessibility.
-See [CI](.github/workflows/ci.yml) for the standalone server setup and gate
-commands; the browser scripts accept `BASE_URL` for an existing server.
-Lighthouse starts its own standalone server.
+Browser gates run against a production server and take `BASE_URL`
+(CI uses the standalone server on port 3200): `test:a11y`, `test:interaction`,
+`test:motion`, `test:hue` (with `THEME=light` or `THEME=dark`), `test:print`,
+`test:screens`, `test:links`, and `test:smoke`. `test:lighthouse` and
+`test:metadata` start their own standalone server from the build unless
+`LIGHTHOUSE_BASE_URL` points at one.
 
-The résumé PDF is generated by `scripts/build-resume-pdf.mts` from the canonical
-content; regenerate it when résumé facts change. Current verification results
-must be reported with the tested build rather than inferred from this README.
+The résumé PDF is generated by `scripts/build-resume-pdf.mts` from
+`content/resume.ts`. When résumé facts change, regenerate it with
+`node --import ./test/alias-loader.mjs scripts/build-resume-pdf.mts` (the loader
+resolves the `@/` path alias, as it does for `npm test`).
 
-## Deployment and documentation
+## CI
 
-[DEPLOY.md](DEPLOY.md) covers Vercel configuration, assistant environment
-variables, and deployment checks. `npm run build:sites` builds the configured
-OpenNext/Sites target; publishing is a separate action from building.
+[`.github/workflows/ci.yml`](.github/workflows/ci.yml) runs on pushes to `main`,
+on pull requests, and on manual dispatch: type-check, lint, unit tests, build,
+then one standalone server for the browser gates — accessibility, interaction,
+motion, accent drift in both themes, print, internal links, and the smoke test.
+The Lighthouse budget and social-preview gate runs on pushes to `main` and on
+pull requests that target `main`. A failed run uploads the server log and the
+`.screenshots/` folder (the print gate's PDFs) as an artifact.
 
-The [design system](design-system.md), [architecture](spec/ARCHITECTURE.md),
-[engineering rules](spec/ENGINEERING.md), and
-[content model](spec/CONTENT_MODEL.md) describe the implementation contracts.
+[`.github/workflows/keep-demos-alive.yml`](.github/workflows/keep-demos-alive.yml)
+runs on a schedule to keep the project demos' free Hugging Face Space backends
+awake, and fails — so GitHub notifies the owner — when a demo stays down. The
+comments in that file explain the optional `HF_TOKEN` repository secret.
 
-The [motion refinement report](docs/flagship-transformation/11-motion-refinement-validation.md)
-records the current rendered checks. The [initial implementation report](docs/flagship-transformation/09-implementation-validation.md)
-retains the exact run/deploy steps and initial performance investigation.
-[ADR-016](spec/decisions/ADR-016-inspectable-engineering.md) governs the current
-homepage, refined by [ADR-017](spec/decisions/ADR-017-responsive-interaction.md)
-for motion; [the transformation audit](docs/flagship-transformation/) records the
-prior analysis and approved brand decisions.
+## Deploy
+
+[DEPLOY.md](DEPLOY.md) covers Vercel configuration, environment variables, the
+assistant's degraded modes, and post-deploy checks. Vercel is the only target
+that runs the whole app, including `/api/chat`. `npm run build:sites` builds an
+OpenNext (Cloudflare) bundle and stages a static copy in `dist/` — prerendered
+pages behind an asset-only worker, with no assistant route; publishing either is
+a separate step.
+
+## Documentation
+
+- [design-system.md](design-system.md) — tokens, typography, motion, and the design law
+- [spec/PROJECT_CHARTER.md](spec/PROJECT_CHARTER.md) — purpose, audiences, principles
+- [spec/ENGINEERING.md](spec/ENGINEERING.md) — standards, budgets, testing, workflow
+- [spec/ARCHITECTURE.md](spec/ARCHITECTURE.md) — structure, routes, rendering, configuration
+- [spec/CONTENT_MODEL.md](spec/CONTENT_MODEL.md) — content files and schemas
+- [spec/AI_ASSISTANT.md](spec/AI_ASSISTANT.md) — the `/api/chat` assistant
+- [spec/decisions/](spec/decisions/README.md) — architecture decision records
+- [CLAUDE.md](CLAUDE.md) and [AGENTS.md](AGENTS.md) — instructions for coding agents

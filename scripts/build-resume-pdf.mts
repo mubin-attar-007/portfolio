@@ -1,9 +1,11 @@
 /**
  * build-resume-pdf — regenerate /public/Mubin_Attar_Resume.pdf from the SINGLE
  * source of truth (content/resume.ts + config/site.ts), so the site and the PDF
- * can never drift. Run: `node scripts/build-resume-pdf.mts` (Node 24 strips the
- * TS types natively). Renders a clean, ATS-friendly A4 résumé via Playwright's
- * print-to-PDF. No fabricated content — every line comes from the résumé data.
+ * can never drift. Run: `node --import ./test/alias-loader.mjs
+ * scripts/build-resume-pdf.mts` (Node 24 strips the TS types natively; the loader
+ * resolves the `@/` alias that config/site.ts imports). Renders a clean,
+ * ATS-friendly A4 résumé via Playwright's print-to-PDF. No fabricated content —
+ * every line comes from the résumé data.
  */
 import { chromium } from "playwright";
 import { fileURLToPath } from "node:url";
@@ -85,7 +87,7 @@ const html = `<!doctype html><html><head><meta charset="utf-8"><style>
     .map(
       (p) => `<div class="proj">
       <div class="projhead"><span class="pname">${esc(p.name)}</span>
-        <span class="plink"><a href="${p.live}">live</a> · <a href="${p.github}">github</a></span></div>
+        <span class="plink">${"live" in p ? `<a href="${p.live}">live</a> · ` : ""}<a href="${p.github}">github</a></span></div>
       <p class="ptag">${esc(p.tagline)}</p>
       <p class="pmeta">${esc(p.metric)} · ${esc(p.stack)}</p></div>`,
     )
