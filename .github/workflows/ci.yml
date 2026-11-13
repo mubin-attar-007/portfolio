@@ -32,6 +32,16 @@ jobs:
       - name: Install dependencies
         run: npm ci --no-audit --no-fund
 
+      # Known advisories in what ships. --omit=dev limits the audit to the
+      # production tree, the code Vercel runs; build tools (OpenNext, wrangler,
+      # ESLint, Lighthouse) are devDependencies and never run there. Every level
+      # passes today, so `low` would too: `high` is chosen so a moderate or low
+      # advisory that has no upstream fix yet does not block every unrelated
+      # pull request, while a high or critical one (the RCE, SSRF and DoS class
+      # that next@16.2.11 shipped with) fails the run until it is patched.
+      - name: Audit production dependencies
+        run: npm audit --omit=dev --audit-level=high
+
       - name: Type-check
         run: npx tsc --noEmit
 
