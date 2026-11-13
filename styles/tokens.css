@@ -153,9 +153,11 @@
   --chamfer-inset: clamp(1.75rem, 8vw, 7.25rem);
 
   /* ---- motion ------------------------------------------------------------
-     One curve, three durations. Micro 150ms · standard 260/320ms · reveal 500ms.
+     Six durations (120 · 130 · 200 · 300 · 450 · 560ms) and four curves:
+     --ease-out for interaction feedback, --ease-enter for entrances, and
+     --ease-emphasized / --ease-spring as measured references.
      Tailwind reads --default-transition-* so every bare `transition` in the
-     codebase lands on the same curve without per-element easing. */
+     codebase lands on --motion-base + --ease-out without per-element easing. */
   --motion-instant: 120ms;   /* state flip: focus ring, tab select */
   --motion-fast: 130ms;      /* micro-interaction: colour, icon nudge */
   --motion-base: 200ms;      /* standard transition */

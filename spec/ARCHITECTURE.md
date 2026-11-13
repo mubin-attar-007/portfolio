@@ -116,8 +116,10 @@ hand-maintained static file — no script generates it. Adding a project means a
   `components/features/resume-download-link.tsx` (analytics event).
 - Error boundaries required by Next.js: `app/error.tsx`, `app/global-error.tsx`.
 
-Client components take props; they never import `content/`. Anything else client-side
-requires a spec change first.
+Client components take props and do not import `content/` (design-system.md §9 explains
+the cost). Known violation: `components/features/writing-list.tsx` imports copy
+constants from `content/article.ts`. Anything else client-side requires a spec change
+first.
 
 ## 6. Assistant data flow (detail in AI_ASSISTANT.md)
 

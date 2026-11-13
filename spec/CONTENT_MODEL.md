@@ -140,7 +140,9 @@ feeds, the sitemap, and generated routes in production, and keeps it previewable
   result, status: "in-progress" | "complete" | "planned", date?, note?, link? }`. An
   unfinished run renders muted, never as a result. `evalAnchor()` builds `/evals`
   anchors; `requireEval()` throws if a referenced row is renamed or removed;
-  `DBWHISPER_GOLDEN` is the single source of the homepage ratios.
+  `DBWHISPER_GOLDEN` derives the homepage's exact and refusal ratios from the
+  registry note. Its `failClosed: "100%"` is still typed by hand (a known defect:
+  derive it, or remove it).
 - **Résumé — `content/resume.ts`:** the single source for `/resume`, `/skills`, the
   assistant, and `public/Mubin_Attar_Resume.pdf` (regenerate with
   `node --import ./test/alias-loader.mjs scripts/build-resume-pdf.mts`; the loader

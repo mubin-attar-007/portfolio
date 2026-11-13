@@ -294,9 +294,11 @@ Non-negotiables:
   keyboard-only reader cannot reach the end of it.
 - **No horizontal document overflow** at any tested viewport; the gate throws on
   `scrollWidth > clientWidth + 1`.
-- Touch targets: the gate runs axe's WCAG 2.2 `target-size` rule (24×24px
-  minimum). Control heights are 32 / 38 / 44px (`components/ui/button.tsx`);
-  use the 44px `lg` size for primary actions people tap.
+- **Touch targets ≥ 44×44px.** The a11y gate runs axe's WCAG 2.2 `target-size`
+  rule, which checks only the 24×24px minimum, so the 44px rule is reviewed by
+  hand. Control heights are 32 / 38 / 44px (`components/ui/button.tsx`); use the
+  44px `lg` size for anything people tap. Known deviations: the 36px header icon
+  buttons with 2px gaps on phones, and some 18–34px inline controls.
 - **A modal makes the rest of the page `inert`** — not just focus-trapped.
   Trapping `Tab` alone still leaves the document in the accessibility tree, so a
   screen-reader user can walk out of the dialog by virtual cursor. Applied by
@@ -314,10 +316,12 @@ Non-negotiables:
 
 ## 9. Performance
 
-Budgets in `scripts/lighthouse-budget.mjs`: performance ≥ 0.95; accessibility,
-best-practices and SEO = 1.0; LCP ≤ 2500ms; CLS < 0.05; TBT < 150ms. First-load
-JavaScript targets (transferred bytes: home 120KB, flagship case study and
-writing 90KB) are printed on every run but are advisory, not failing.
+The CI gate (`scripts/lighthouse-budget.mjs`) fails on performance below 0.95;
+accessibility, best-practices or SEO below 1.0; LCP above 2500ms; CLS of 0.05 or
+more; TBT of 150ms or more. It prints first-load JavaScript without failing on it.
+The budgets themselves are in [ENGINEERING.md §5](spec/ENGINEERING.md), and the
+code does not yet meet all of them: route JS, for one, is budgeted at ≤ 120 KB
+home and ≤ 90 KB content pages but measured at 167–175 KB.
 These are required thresholds, not a report of this revision's results. Record
 current measurements with their build, route, and test environment; historical
 ADR scores do not certify a later implementation.
@@ -444,14 +448,17 @@ in §4.
 
 1. Gradient text, neon, glassmorphism or blurred cards, and glow as decoration.
    A single soft ambient glow behind a product surface is the most a glow may
-   ever be. Gradients in use: the primary button's single-hue ramp
-   (`--gradient-accent-control`) and its hover sheen; a 2px accent-to-ambient
-   top light on the walkthrough specimen
-   (`components/case-studies/walkthrough.module.css`); and one soft accent
-   radial behind the `/work` page header (`app/work/page.tsx`, inline rather
-   than a token). The two-hue `--gradient-accent` and the `--glow-accent` /
-   `--glow-ambient` tokens are defined but unused. The sticky header's
-   translucent backdrop is the one blurred surface.
+   ever be. Sanctioned: the primary button's finite hover sheen (ADR-017) and
+   the sticky header's translucent backdrop, the one blurred surface (it is not
+   a card).
+   Known deviations, recorded as defects or pending decisions rather than
+   precedent: the primary button's single-hue fill ramp
+   (`--gradient-accent-control`) has no recorded decision; the 2px
+   accent-to-ambient top light on the walkthrough specimen
+   (`components/case-studies/walkthrough.module.css`) and the inline accent
+   radial behind the `/work` page header (`app/work/page.tsx`) break items 1
+   and 3 and should be removed. The two-hue `--gradient-accent` and the
+   `--glow-accent` / `--glow-ambient` tokens are defined but unused.
 2. A full-dark page as the default theme. Light is server-rendered; dark is an
    explicit, remembered choice, and `prefers-color-scheme` is never consulted. A
    dark band (`.tone-invert`) on the light page is not this violation — the
@@ -461,8 +468,10 @@ in §4.
    (`--color-ambient`) is limited to gradients and data visuals.
 4. Uppercase headings or uppercase body; letter-spaced all-caps buttons. One
    exception, already in the system: xs mono **kickers** and group labels
-   (`LABEL` in `constants/page.ts`) may be uppercase with light tracking
-   (0.025–0.07em in use). Headings themselves are always sentence case.
+   (`LABEL` in `constants/page.ts`) may be uppercase with the token's 0.04em
+   tracking (`--text-xs--letter-spacing`). Headings themselves are always
+   sentence case. Known deviation: kickers and labels currently use several
+   tracking values between 0.025em and 0.07em; consolidate them on the token.
 5. Skill-badge walls, logo marquees, star-rating self-assessments ("Python
    ★★★★★"), and client-logo walls of companies never worked for. A stack display
    is permitted only as text and hairlines (no logos), non-looping, decorative

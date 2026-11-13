@@ -49,33 +49,43 @@ CLI, mobile form factor with simulated throttling, the median of three runs per 
 (`LIGHTHOUSE_RUNS`), against a local standalone production server. Routes: `/`,
 `/work/dbwhisper`, and `/writing/a-validator-is-not-a-better-prompt`. See ADR-009.
 
-| Metric | Budget | Enforced |
+A budget is the standard the site is held to. The last column says what CI enforces
+today. Where the code misses a budget, the gap is a defect to fix, not a reason to move
+the budget; changing a budget needs an ADR.
+
+| Metric | Budget | Enforced today |
 |---|---|---|
 | Lighthouse | ≥ 95 Performance · 100 Accessibility · 100 Best Practices · 100 SEO | fails the gate |
-| LCP | ≤ 2.5 s | fails the gate |
+| LCP | ≤ 2.5 s (raised from 2.0 s by ADR-012, decision 2) | fails the gate |
 | CLS | < 0.05 | fails the gate |
 | TBT (lab) | < 150 ms | fails the gate |
-| First-load JS (transferred) | ≤ 120 KB home · ≤ 90 KB case study and writing | printed, advisory |
-| INP | < 200 ms | field metric; no lab gate |
-| Fonts | ≤ 130 KB of woff2 downloaded per page, self-hosted by `next/font` | target; not measured |
-| Assistant panel chunk | lazy, loaded on open; ≤ 60 KB target | not measured |
+| Route JS (gzip, first load) | ≤ 120 KB home · ≤ 90 KB content pages | printed, not failing; over budget (CI, 2026-11-13: home 174 KB, case study 175 KB, writing 167 KB) |
+| Assistant panel chunk | lazy, loaded on open; ≤ 60 KB | not yet measured |
+| INP | < 200 ms | field metric; no lab gate and no field data yet |
+| Fonts | ≤ 130 KB woff2 in total, self-hosted by `next/font` | not yet measured |
+| Images | AVIF/WebP through `next/image`, explicit dimensions, lazy below the fold | review |
 
-The first-load JS targets are advisory: the measured transfer is dominated by framework
-chunks that load on every route, so a hard limit would fail on that pre-existing floor
-rather than on a regression (the comment in `scripts/lighthouse-budget.mjs`). Reaching
-the targets is open optimization work.
+The route-JS gate prints rather than fails because framework chunks shared by every
+route make up most of the transfer, so a hard limit would fail on that floor rather than
+on a regression (see the comment in `scripts/lighthouse-budget.mjs`). Whether the budget
+is reachable on this framework is open; meeting it or changing it through an ADR are
+the two ways to close the gap.
 
-Images use `next/image` with explicit dimensions, lazy below the fold. Heavy things are
-lazy by rule: the assistant panel and below-fold images. Static generation for all content
+Heavy things are lazy by rule: the assistant panel, diagrams below the fold, demo videos
+(no video bytes until played), and below-fold images. Static generation for all content
 routes; no client data fetching for content.
 
 ## 6. Testing (right-sized, honest)
 
-- **Unit:** the Node.js test runner (`node:test`). `npm test` runs `test/**/*.test.mts`
-  with `test/alias-loader.mjs` resolving the `@/` alias and extensionless TS imports;
-  Node 24 strips the types natively. As of 2026-11-13: 39 tests in 7 files covering
-  content law (projects, metric methods, links), feeds, formatting, navigation,
-  reading time, citation links, and assistant retrieval.
+- **Unit (requirement):** every exported function in `lib/`, logic-bearing components,
+  and content schema validation have tests. The runner is Node's `node:test`: `npm test`
+  runs `test/**/*.test.mts` with `test/alias-loader.mjs` resolving the `@/` alias and
+  extensionless TS imports; Node 24 strips the types natively.
+  Current coverage (2026-11-13): 39 tests in 7 files covering content law (projects,
+  metric methods, links), feeds, formatting, navigation, reading time, citation links,
+  and assistant retrieval. Gap against the requirement: several exported `lib/`
+  functions have no direct test yet, notably the rate limiter (`lib/ai/rate-limit.ts`),
+  env parsing (`lib/env.ts`) and the MDX collection loader (`lib/mdx-collection.ts`).
 - **Assistant grounding:** `test/retrieval.test.mts` checks the BM25 corpus against the
   question set in `lib/ai/test-questions.ts`, the relevance floor for off-topic queries,
   and the injection screen — without any LLM quota. See AI_ASSISTANT.md §7.

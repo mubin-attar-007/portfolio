@@ -26,3 +26,14 @@ identity, never implemented) and ADR-011 (the "evidence paths" identity, replace
 ADR-013, ADR-015, and ADR-016). They remain in git history at commit `8949fdf`, as do
 the earlier sprint plans, backlog, QA report, brand-positioning template, and
 flagship-transformation audit. The numbering gap is intentional.
+
+Two removed documents record which claims and wording the owner approved; check them
+before changing positioning or published numbers:
+
+- [Decision log](https://github.com/mubin-attar-007/portfolio/blob/8949fdf/docs/flagship-transformation/07-decision-log.md)
+  — the approved role, descriptor, experience statement, and route decisions.
+- [Claim ledger](https://github.com/mubin-attar-007/portfolio/blob/8949fdf/docs/flagship-transformation/03-claim-ledger.md)
+  — each public claim with its evidence status
+  ([CSV](https://github.com/mubin-attar-007/portfolio/blob/8949fdf/docs/flagship-transformation/evidence/claims/claim-ledger.csv)).
+- The former design specification:
+  [spec/DESIGN.md](https://github.com/mubin-attar-007/portfolio/blob/8949fdf/spec/DESIGN.md).
