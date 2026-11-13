@@ -15,7 +15,7 @@ components; client code is limited to the allowlist in
 Fonts are self-hosted through `next/font`.
 
 The `/api/chat` assistant retrieves local content with an in-memory BM25 index,
-optionally uses Gemini (`gemini-2.5-flash`) for a cited synthesis, and falls
+optionally uses Gemini (`gemini-3.5-flash-lite`) for a cited synthesis, and falls
 back to grounded FAQ answers when no key or quota is available. See
 [spec/AI_ASSISTANT.md](spec/AI_ASSISTANT.md).
 

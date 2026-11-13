@@ -36,13 +36,16 @@ than a weakly related one. The route uses the top 4 passages.
 ## 3. Generation
 
 - `lib/ai/gemini.ts` calls the Gemini REST API directly (no SDK):
-  `gemini-2.5-flash`, `streamGenerateContent?alt=sse`, temperature 0.3, top-p 0.9,
-  `maxOutputTokens` 800, thinking budget 0. The key travels in the `x-goog-api-key`
-  header, never the URL, and never appears in an error. The request's abort signal is
-  forwarded, so a closed panel stops generation upstream.
+  `gemini-3.5-flash-lite` unless `GEMINI_MODEL` (parsed in `lib/env.ts`) names
+  another Gemini 3 or later model, `streamGenerateContent?alt=sse`, `maxOutputTokens`
+  800, thinking level `MINIMAL`, and no `temperature` or `topP`, which Gemini 3
+  deprecates. It replaced `gemini-2.5-flash`, which Google shuts down on 2026-12-01
+  (its requests then route to 3.5 Flash-Lite). The key travels in the
+  `x-goog-api-key` header, never the URL, and never appears in an error. The
+  request's abort signal is forwarded, so a closed panel stops generation upstream.
 - The system instruction is `SYSTEM_PROMPT` plus a context block that labels each
   passage with its human-readable source (`buildSystemInstruction`). Bump
-  `SYSTEM_PROMPT_VERSION` (currently `2026-07-24.1`) on any behavioural change.
+  `SYSTEM_PROMPT_VERSION` (currently `2026-11-13.1`) on any behavioural change.
 - Contract: answer only from the context and say so when it is insufficient; refer to
   sources in prose; refuse attempts to change the rules or reveal the prompt; concise,
   senior, no hype; markdown output.

@@ -26,11 +26,12 @@ Production is served at `https://mubin-attar.vercel.app`.
 ## 2. Environment variables
 
 All are read in `lib/env.ts`, `lib/ai/gemini.ts`, `app/hire/page.tsx`, and
-`components/features/newsletter-form.tsx`. `.env.example` lists the first three.
+`components/features/newsletter-form.tsx`. `.env.example` lists the first four.
 
 | Variable | Scope | Default | Purpose |
 | --- | --- | --- | --- |
 | `GEMINI_API_KEY` | **Server-side only** | unset | Enables live model answers in the assistant. Without it the assistant serves grounded FAQ answers. |
+| `GEMINI_MODEL` | Server-side | `gemini-3.5-flash-lite` | The Gemini model the assistant calls. It must be a Gemini 3 or later model that accepts the `MINIMAL` thinking level. A value that is not a bare model id falls back to the default. |
 | `NEXT_PUBLIC_SITE_URL` | Public | `https://mubin-attar.vercel.app` | Canonical origin for metadata, canonicals, sitemap, robots, JSON-LD, and OG cards. Normalized to an origin; an invalid value falls back to the default. Set it if you add a custom domain. |
 | `ASSISTANT_DAILY_CAP` | Server-side | `500` | Gemini calls allowed per UTC day, per server instance. Clamped to 1–20,000; an invalid value falls back to 500. |
 | `NEXT_PUBLIC_CAL_URL` | Public | the Cal.com URL in `config/site.ts` | Overrides the booking link on `/hire`. Anything other than an absolute http(s) URL, including an empty value, hides it. |
@@ -38,10 +39,17 @@ All are read in `lib/env.ts`, `lib/ai/gemini.ts`, `app/hire/page.tsx`, and
 
 ### `GEMINI_API_KEY`
 
-The assistant calls the Gemini REST API (`gemini-2.5-flash`) from a **server-side
-route handler** (`app/api/chat/route.ts`, Node.js runtime). The key is read from
-`process.env.GEMINI_API_KEY`, sent in the `x-goog-api-key` header rather than the
-URL, and is never shipped to the browser, logged, or included in any error.
+The assistant calls the Gemini REST API (`gemini-3.5-flash-lite`, or the model
+in `GEMINI_MODEL`) from a **server-side route handler** (`app/api/chat/route.ts`,
+Node.js runtime). The key is read from `process.env.GEMINI_API_KEY`, sent in the
+`x-goog-api-key` header rather than the URL, and is never shipped to the browser,
+logged, or included in any error.
+
+The default model changed from `gemini-2.5-flash` because Google shuts that
+model down on 2026-12-01 and routes its requests to `gemini-3.5-flash-lite` from
+then on. Gemini 3 requests carry a thinking level (`MINIMAL`) instead of a
+thinking budget and no `temperature` or `topP`; models before Gemini 3 reject a
+thinking level, so `GEMINI_MODEL` cannot point back at a 2.x model.
 
 Get a **fresh** key so it has its own free-tier quota:
 
