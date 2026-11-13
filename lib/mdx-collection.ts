@@ -16,6 +16,7 @@ import fs from "node:fs";
 import path from "node:path";
 import { compileMDX } from "next-mdx-remote/rsc";
 import { mdxComponents } from "@/components/mdx/mdx-components";
+import { CONTENT_SLUG, contentFilePath } from "@/lib/content-slug";
 import { byDateDesc } from "@/lib/feed";
 import { readingMinutes } from "@/lib/reading-time";
 
@@ -99,10 +100,11 @@ export function createMdxCollection<T extends CollectionMeta>(
   dir: string,
   schema: Validator<T>,
 ): MdxCollection<T> {
-  // Keep the dynamic segment below a static content root. Besides preventing
-  // path traversal outside the content boundary, this lets Next's output-file
-  // tracer include only authored content instead of conservatively tracing the
-  // entire project.
+  // A static root under content/ lets Next's output-file tracer include only
+  // authored content instead of conservatively tracing the entire project. It
+  // does not stop path traversal by itself: a slug can arrive from a URL, so
+  // `sourceOf` resolves it through `contentFilePath`, which accepts only a
+  // kebab-case slug whose file stays inside this root.
   const root = path.join(process.cwd(), "content", dir);
 
   const fileSlugs = (): string[] => {
@@ -113,19 +115,27 @@ export function createMdxCollection<T extends CollectionMeta>(
       .map((file) => file.slice(0, -MDX_EXTENSION.length));
   };
 
+  /**
+   * The raw MDX for one slug, or null when there is no such entry. A malformed
+   * slug (`../`, an encoded or backslash form, an absolute path, an empty
+   * string) is "no such entry" too, rejected before the filesystem is touched.
+   */
   const sourceOf = (slug: string): string | null => {
-    const file = path.join(root, `${slug}${MDX_EXTENSION}`);
-    if (!fs.existsSync(file)) return null;
+    const file = contentFilePath(root, slug, MDX_EXTENSION);
+    if (file === null || !fs.existsSync(file)) return null;
     return fs.readFileSync(file, "utf8");
   };
 
   /** Compile frontmatter only — the body is not needed to build an index. */
   const metaOf = async (slug: string): Promise<T> => {
     const source = sourceOf(slug);
-    // The slug came from readdir, so this is unreachable short of a concurrent
-    // delete — fail loudly rather than parsing an empty document.
+    // The slug came from readdir, so null means the file is named outside the
+    // slug pattern (no URL could reach it) or was deleted mid-build. Fail the
+    // build loudly rather than parse an empty document or ship a dead entry.
     if (source === null) {
-      throw new Error(`Missing MDX source: content/${dir}/${slug}${MDX_EXTENSION}`);
+      throw new Error(
+        `Unreadable MDX source: content/${dir}/${slug}${MDX_EXTENSION} (file names must match ${CONTENT_SLUG})`,
+      );
     }
     const { frontmatter } = await compileMDX({ source, options: { parseFrontmatter: true } });
     return schema.parse({ ...(frontmatter as Record<string, unknown>), slug });
