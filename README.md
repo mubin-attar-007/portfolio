@@ -82,7 +82,9 @@ then one standalone server for the browser gates — accessibility, interaction,
 motion, accent drift in both themes, print, internal links, and the smoke test.
 The Lighthouse budget and social-preview gate runs on pushes to `main` and on
 pull requests that target `main`. A failed run uploads the server log and the
-`.screenshots/` folder (the print gate's PDFs) as an artifact.
+`.screenshots/` folder (the print gate's PDFs) as an artifact. A separate `audit` job
+fails on any high or critical advisory in the production dependencies
+(`npm audit --omit=dev --audit-level=high`).
 
 [`.github/workflows/keep-demos-alive.yml`](.github/workflows/keep-demos-alive.yml)
 runs on a schedule to keep the project demos' free Hugging Face Space backends

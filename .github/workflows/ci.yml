@@ -17,6 +17,28 @@ concurrency:
   cancel-in-progress: ${{ github.event_name == 'pull_request' }}
 
 jobs:
+  # Known advisories in what ships. A separate job, so a newly published
+  # advisory (or a registry outage) fails this check without hiding the build
+  # and browser gates' verdict on the change itself. npm audit reads the
+  # lockfile, so no install is needed. --omit=dev limits it to the production
+  # tree, the code Vercel runs; build tools (OpenNext, wrangler, ESLint,
+  # Lighthouse) are devDependencies and never run there. `high` lets a moderate
+  # or low advisory with no upstream fix yet through, while a high or critical
+  # one (the RCE, SSRF and DoS class next@16.2.11 shipped with) fails the check.
+  audit:
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@v7
+
+      - name: Set up Node.js
+        uses: actions/setup-node@v7
+        with:
+          node-version: 24
+
+      - name: Audit production dependencies
+        run: npm audit --omit=dev --audit-level=high
+
   build:
     runs-on: ubuntu-latest
     timeout-minutes: 30
@@ -31,16 +53,6 @@ jobs:
 
       - name: Install dependencies
         run: npm ci --no-audit --no-fund
-
-      # Known advisories in what ships. --omit=dev limits the audit to the
-      # production tree, the code Vercel runs; build tools (OpenNext, wrangler,
-      # ESLint, Lighthouse) are devDependencies and never run there. Every level
-      # passes today, so `low` would too: `high` is chosen so a moderate or low
-      # advisory that has no upstream fix yet does not block every unrelated
-      # pull request, while a high or critical one (the RCE, SSRF and DoS class
-      # that next@16.2.11 shipped with) fails the run until it is patched.
-      - name: Audit production dependencies
-        run: npm audit --omit=dev --audit-level=high
 
       - name: Type-check
         run: npx tsc --noEmit
