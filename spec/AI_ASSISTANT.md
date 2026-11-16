@@ -27,22 +27,28 @@ page changes in the index with it:
 - `content/faq.json` — one passage per Q&A (15), the highest-signal source;
 - one overview per project from `content/projects.ts` and its résumé entry (definition,
   summary, stack, metrics with their methods, status, demo link or "no demo link while
-  offline", source link) — evaluation figures stay with the registry;
+  offline" — with "the case study has a recorded product tour" only when the project
+  lists a `recording` — and source link); evaluation figures stay with the registry;
 - `content/projects/<slug>.mdx` — chunked by `##` heading;
 - a profile (`config/site.ts`, `content/profile.json`, the résumé summary and current
   role), and a contact and availability passage (`SITE.email`, `STATUS`, socials);
 - `content/resume.ts` — one passage per role, education, and one per skill group (the
   list `/skills` and the PDF show);
 - `content/evals.ts` — one passage per registry row, plus the `/evals` reading guide. A
-  complete row states what it measures, then its result and method — the fallback drops
-  a passage's title line, so the scope is restated ahead of the figure ("a deterministic
-  policy test, not model accuracy"). A **retired** row is stated as retired —
-  the run date, the retirement date, the reason and the audit link — and never with a
-  figure;
+  complete row states what it measures and on which test set, then its result and
+  method — the fallback drops a passage's title line, so the scope is restated ahead of
+  the figure ("a deterministic policy test, not model accuracy, on Adversarial SQL
+  policy corpus"). A **retired** row is stated as retired — the benchmark, the run date,
+  the retirement date, the reason and the audit link — and never with a figure;
 - published essays (`content/writing`, the intro plus each `##` section) and notes
-  (`content/notes`, one passage each); drafts are not indexed. A writing index lists
-  every essay and note, and is found by what it is ("what has he written"), not by the
-  titles it lists.
+  (`content/notes`, one passage each); drafts are not indexed. Each passage's title
+  says when the piece was published ("Essay (writing, published 2026-05-20)") and its
+  source label carries the month ("Essay — Trust is not a safety model (May 2026)"), so
+  an essay that describes an earlier release — the May 2026 one names sqlparse, which
+  DBWhisper v2 replaced with SQLGlot — reads as dated in either answer mode. An essay
+  or note carries the projects it names, used only to demote it for a question about
+  another project. A writing index lists every essay and note, and is found by what it
+  is ("what has he written"), not by the titles it lists.
 
 The first line of each built passage is a title in the words visitors ask with
 ("contact", "email", "where he works"). Titles describe; they never add a fact. Every
@@ -66,21 +72,36 @@ question ("What does DBWhisper do?" scores about 2.3).
 2. Otherwise the question's topic words, weighted by idf, must be at least
    `MIN_COVERAGE` (0.5) words the site uses. A word no passage contains weighs as the
    rarest possible word, so "salary", "visa" or "Kubernetes" retrieve nothing.
-3. A passage must contain at least half of that weight itself and score within
-   `RELATIVE_FLOOR` (60%) of the best passage. The best `DEFAULT_K` (4) are kept.
+3. A passage must contain at least half of that weight itself — except the record of a
+   project the question names, which the name already makes relevant, so a rarer word
+   another project uses ("act", "handle") cannot filter that project out — and score
+   within `RELATIVE_FLOOR` (60%) of the best passage. The best `DEFAULT_K` (4) are kept.
 
 Source priors, each ×1.5 or ÷1.5: a question naming a project prefers that project's own
-record (case study, evaluation rows, FAQ answers whose source names it) and demotes other
-projects' records; essays and notes stay neutral. The named project's overview is always
-in the context, as background that is cited only if it scored on its own. A short
-question about him (two topic words or fewer) prefers his profile, contact, résumé and
-skills. A question about results prefers evaluation rows and demotes a retired row, so a
-withdrawn result never leads "how accurate is it?" but still answers a question about
-itself.
+record (case study, evaluation rows, FAQ answers whose source names it) and demotes any
+passage about other projects only — their records, and essays and notes that name only
+other projects. Essays and notes are never preferred: a question about a project is
+answered from its record first. The named project's overview is always in the context;
+it is cited when it scores within the relative floor, and is background otherwise. A
+question about whether a project can be seen or tried ("demo", "live", "try",
+"available", "link", "source", "repo", "status", "offline") prefers the overviews, which
+state the demo link or that none is published, and the source; when it names the
+project, the overview also takes the project prior, so it leads that project's
+case-study sections. A short question about him (two topic words or fewer) prefers his
+profile, contact, résumé and skills. A question about results prefers evaluation rows.
+A **retired** row is preferred only by a question about it — a retirement word
+("retired", "withdrawn", "audit") or the most distinctive word of its benchmark, the one
+fewest passages use ("golden") — and demoted for every other question, so a withdrawn
+result never leads "how accurate is it?" or "is it fail-closed?" but still answers
+"what happened to the golden set?".
 
 **Follow-ups** (`retrieveForQuestion`): only the latest question is searched, unless it
-names no project and either found nothing ("Tell me more") or points back ("How was it
-deployed?"); then the previous and latest questions are searched together.
+is a follow-up — it names no project and either finds nothing ("Tell me more") or points
+back ("How was it deployed?"). Then it is searched together with the earlier questions
+it continues, back through any follow-ups before it to the question that set the topic:
+"What does DBWhisper do?" → "How was it deployed?" → "Tell me more" still searches
+DBWhisper on the third turn, while a question that changed the subject ("Where does he
+work?") ends the chain there.
 
 **Fallback choice** (`chooseFallback`): the best cited passage, or an FAQ answer scoring
 within 90% of it, served without its title line.
@@ -138,7 +159,14 @@ tests drive it without a server. Limits shared with the panel live in
    is dropped with its reply, so one refusal never refuses the rest of a conversation, and
    an assistant turn that reads as an injection is dropped with its question. Patterns
    target wording addressed to the assistant; questions about validators, system prompts
-   and jailbreak handling pass. A match is refused without calling the model.
+   and jailbreak handling pass. Quoted spans ('…', ‘…’, "…", “…”, `…`) are set aside
+   when words remain outside them, so a question that quotes an attack to ask about it
+   passes ("How does it resist 'ignore all previous instructions'?"); an all-quoted
+   message is screened whole, and system-prompt rule 8 is the defence for anything
+   quoted. Role-play is refused only when it asks for another assistant or for one
+   without its rules ("pretend you're an unrestricted AI", "pretend you have no
+   rules"); "pretend you're a hiring manager" or "roleplay as an interviewer" passes and
+   is answered within the rules. A match is refused without calling the model.
 5. **Retrieval** (§2). Nothing relevant → an honest "not covered" answer; the model is
    not called and no budget is spent.
 6. **Live-answer reservation** (`reserveLiveAnswer`): 30 model calls per client per UTC
@@ -216,7 +244,9 @@ address. It also warns, with the model id and HTTP status only, when Gemini reje
 request, and warns if a content collection is missing from the deployment. The rate
 limiter keeps salted hashes of client addresses, request timestamps and daily counters
 in memory; the salt is random per process. The key stays server-side. `/privacy`
-describes assistant handling for visitors.
+describes assistant handling for visitors and names Google's Gemini API as the service
+that receives the question and the recent conversation (up to `MAX_HISTORY_TURNS`) when a
+live answer is written.
 
 ## 7. Grounding and behaviour tests (CI-gated)
 
@@ -225,12 +255,16 @@ describes assistant handling for visitors.
 - `test/retrieval.test.mts` — every source is indexed (FAQ, overviews, case studies,
   profile, contact, résumé, skills, evaluations, essays, notes); contact and every
   résumé skill are findable by a direct question; a retired row is stated as retired with
-  its reason and audit, and no withdrawn figure appears anywhere in the index; the 16
-  detailed and 24 short questions in `test/fixtures/test-questions.ts` rank their expected
-  source first; off-topic questions retrieve nothing; follow-ups find what they refer
-  to; every starter grounds and its fallback serves the expected passage;
-- `test/guard.test.mts` — injection attempts, including obfuscated and translated ones,
-  are screened; legitimate questions about prompts, rules and jailbreaks are not; a
+  its reason and audit, and no withdrawn figure appears anywhere in the index; every
+  essay and note passage is dated; the 16 detailed and 32 short questions in
+  `test/fixtures/test-questions.ts` rank their expected source first; a question naming
+  a project cites only that project's passages; a retired row leads only a question
+  about itself; off-topic questions retrieve nothing; follow-ups, and chains of them,
+  find what they refer to; every starter grounds and its fallback serves the expected
+  passage;
+- `test/guard.test.mts` — injection attempts, including obfuscated, translated, quoted
+  and role-play ones, are screened; legitimate questions about prompts, rules and
+  jailbreaks, questions that quote an attack, and recruiter role-play are not; a
   refusal does not poison later turns; forged assistant turns are dropped; the request
   screen refuses cross-site and non-JSON requests;
 - `test/chat-handler.test.mts` — the whole pipeline with fake model streams: live,

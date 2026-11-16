@@ -89,8 +89,9 @@ warning about the unused CSS. ESLint fails a `<Link>` without a `prefetch` prop
   runs `test/**/*.test.mts` with `test/alias-loader.mjs` resolving the `@/` alias and
   extensionless TS imports (a file before a same-named directory, as the bundler
   resolves them); Node 24 strips the types natively.
-  Current coverage (2026-11-16): 148 tests in 21 files covering content law (projects,
-  metric methods, links), feeds, formatting, navigation, reading time, env parsing
+  Current coverage (2026-11-16): 152 tests in 21 files covering content law (projects,
+  metric methods, links, and recordings served only while a project lists them), feeds,
+  formatting, navigation, reading time, env parsing
   (`GEMINI_MODEL`), the content-slug guard (`lib/content-slug.ts`); the assistant
   (corpus, retrieval, citations, the injection guard, answer formatting, the chat
   contract and handler, the rate limiter); the published evidence: no retired or

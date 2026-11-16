@@ -155,10 +155,14 @@ test("evaluation rows are indexed as the registry states them", () => {
     assert.ok(passage.links.some((link) => link.href === `/evals#${evalAnchor(row)}`));
     if (row.status === "complete") {
       assert.ok(passage.text.includes(row.result), `result missing: ${row.benchmark}`);
-      // The fallback drops the title line; the scope must still come before the figure.
+      // The fallback drops the title line; what the result measures, and on
+      // which test set, must still come before the figure.
       const body = passage.text.slice(passage.text.indexOf("\n") + 1);
-      const scope = body.indexOf(row.metric);
-      assert.ok(scope !== -1 && scope < body.indexOf(row.result), `scope must precede the result: ${row.benchmark}`);
+      const figure = body.indexOf(row.result);
+      for (const scope of [row.metric, row.benchmark]) {
+        const at = body.indexOf(scope);
+        assert.ok(at !== -1 && at < figure, `"${scope}" must precede the result: ${row.benchmark}`);
+      }
     }
     if (row.retired) {
       assert.equal(passage.retired, true);
@@ -167,6 +171,18 @@ test("evaluation rows are indexed as the registry states them", () => {
       assert.ok(passage.text.includes(row.retired.reason), "a retired row must say why");
       assert.ok(passage.text.includes(row.retired.link), "a retired row must link its audit");
     }
+  }
+});
+
+test("every essay and note passage says when it was written", () => {
+  // An essay describes a project as it was on its date: the 2026-05-20 essay
+  // names sqlparse, which the v2 validator replaced with SQLGlot.
+  const pieces = allPassages().filter((p) => p.kind === "writing" || p.kind === "note");
+  assert.ok(pieces.length > 0);
+  for (const passage of pieces) {
+    const title = passage.text.slice(0, passage.text.indexOf("\n"));
+    assert.match(title, /\(writing, published \d{4}-\d{2}-\d{2}/, `${passage.id}: the model sees the date`);
+    assert.match(passage.source, /\((?:Jan|Feb|Mar|Apr|May|Jun|Jul|Aug|Sep|Oct|Nov|Dec) \d{4}\)/, `${passage.id}: the reader sees the date`);
   }
 });
 
@@ -233,14 +249,41 @@ test("a question naming a project keeps that project's overview in the context",
   const overview = hits.find((hit) => hit.id === "project-dbwhisper");
   assert.ok(overview, "the overview is in the context");
   for (const hit of hits.filter((h) => !h.cited)) assert.equal(hit.kind, "project");
+  // Cited when it scores within the relative floor of the best passage.
+  const named = retrieve("Does LangGraph act as the orchestrator in DBWhisper?");
+  assert.ok(named.find((hit) => hit.id === "project-dbwhisper")?.cited, "the overview is cited");
 });
 
-test("a withdrawn result never leads an answer about results", () => {
-  const top = retrieve("How accurate is DBWhisper?")[0];
-  assert.ok(top && !top.retired, `top passage is ${top?.id}`);
-  // …but it still answers a question about itself, as retired.
-  const golden = retrieve("What happened to the golden query set?")[0];
-  assert.ok(golden?.retired, `top passage is ${golden?.id}`);
+test("a question naming a project is answered and cited from that project", () => {
+  // A rare word the question shares with another project ("act" with
+  // TradePulse, "handle" with LLM Studio and CrownWager) used to filter out
+  // the named project's own record, and an essay about another project could
+  // answer for it.
+  for (const [question, slug] of [
+    ["Does LangGraph act as the orchestrator in DBWhisper?", "dbwhisper"],
+    ["How many tables can DBWhisper handle?", "dbwhisper"],
+    ["Can I try LLM Studio?", "llm-studio"],
+    ["Is LLM Studio live right now?", "llm-studio"],
+    ["Does CrownWager have a demo?", "crownwager"],
+    ["Is TradePulse live?", "tradepulse"],
+  ] as const) {
+    const stray = retrieve(question).filter((hit) => hit.cited && !hit.projects.includes(slug));
+    assert.deepEqual(stray.map((hit) => hit.id), [], `"${question}" cites another project's passages`);
+  }
+});
+
+test("a withdrawn result leads only a question about itself", () => {
+  // Not "how accurate is it?", and not a question its metric happens to name:
+  // leading "Is DBWhisper fail-closed?" read as if fail-closed were withdrawn.
+  for (const question of ["How accurate is DBWhisper?", "Is DBWhisper fail-closed?", "How does DBWhisper validate a query?"]) {
+    const top = retrieve(question)[0];
+    assert.ok(top && !top.retired, `"${question}" → ${top?.id}`);
+  }
+  // …but it answers a question about itself — its retirement or its benchmark — as retired.
+  for (const question of ["What happened to the golden query set?", "What is DBWhisper's accuracy on the golden set?", "Which results were retired?"]) {
+    const top = retrieve(question)[0];
+    assert.ok(top?.retired, `"${question}" → ${top?.id}`);
+  }
 });
 
 test("a follow-up searches the question it refers back to", () => {
@@ -256,6 +299,18 @@ test("a follow-up searches the question it refers back to", () => {
   // A new topic is not pulled back to the old one, and off-topic stays empty.
   assert.ok(retrieveForQuestion("What are his skills?", ["What is DBWhisper?"])[0]?.kind === "skills");
   assert.deepEqual(retrieveForQuestion("What's the weather?", ["What is DBWhisper?"]), []);
+});
+
+test("a chain of follow-ups keeps the topic the first question set", () => {
+  // "Tell me more" after "How was it deployed?" used to search only that
+  // question, and drifted to other projects' deployment passages.
+  const chain = retrieveForQuestion("Tell me more", ["What does DBWhisper do?", "How was it deployed?"]);
+  const cited = chain.filter((hit) => hit.cited);
+  assert.ok(cited.length > 0, "the chain retrieves");
+  assert.deepEqual(cited.filter((hit) => !hit.projects.includes("dbwhisper")).map((hit) => hit.id), []);
+  // A question that changed the subject ends the chain: this is about his work, not DBWhisper.
+  const changed = retrieveForQuestion("Tell me more about that.", ["What is DBWhisper?", "Where does he work?"]);
+  assert.ok(changed[0] && !changed[0].projects.includes("dbwhisper"), `→ ${changed[0]?.id}`);
 });
 
 // ---- Starters and the fallback -------------------------------------------------

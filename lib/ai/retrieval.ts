@@ -21,12 +21,14 @@
 //      weighted by rarity, must mostly be words the site uses. A word the site
 //      never uses ("salary", "visa") counts as maximally specific, so a
 //      question about it retrieves nothing and gets an honest "not covered".
-//   3. A passage must match at least half of that weight itself, and score
-//      within RELATIVE_FLOOR of the best passage; the best k are kept.
+//   3. A passage must match at least half of that weight itself — unless it
+//      is the record of the project the question names, which the name
+//      already makes relevant — and score within RELATIVE_FLOOR of the best
+//      passage; the best k are kept.
 // -----------------------------------------------------------------------------
 
 import { SITE } from "@/config/site";
-import { buildCorpus, PROJECT_NAMES, type Passage } from "./corpus";
+import { buildCorpus, COMMENTARY_KINDS, PROJECT_NAMES, type Passage } from "./corpus";
 
 /** A passage with its BM25 score for one question. */
 export type RetrievedPassage = Passage & {
@@ -55,22 +57,37 @@ const RELATIVE_FLOOR = 0.6;
 /**
  * Multiplier for the site's own record of a project — a case study section,
  * an evaluation row, an FAQ answer about it — when the question names exactly
- * that project. The record of a project the question does not name is divided
- * by it. Essays and notes stay neutral: they compete, but a question about
+ * that project. A passage about a project the question does not name — its
+ * record, or an essay or note that names only other projects — is divided by
+ * it. Essays and notes are never boosted: they compete, but a question about
  * DBWhisper is answered from DBWhisper's write-up first. The overview is not
- * boosted: it summarizes everything, so it would outrank the section that
- * actually answers, and it is in the context anyway (see `retrieve`).
+ * boosted either — it summarizes everything, so it would outrank the section
+ * that actually answers, and it is in the context anyway (see `retrieve`) —
+ * except for a question about the project's demo or source, which it answers
+ * (STATUS_BOOST).
  */
 const PROJECT_BOOST = 1.5;
 
 /**
  * Multiplier for evaluation rows when a question asks about results ("How
  * accurate…", "What is the Spider score?"): the registry is where a figure,
- * its method and its scope live together. A retired row is divided by it
- * instead. It still answers a question about itself, but a withdrawn result is
- * never the lead answer to "how accurate is it?".
+ * its method and its scope live together. A retired row is multiplied by it
+ * only when the question asks about that row — its retirement or its
+ * benchmark ("What happened to the golden set?") — and divided by it
+ * otherwise, whatever the question asks: a withdrawn result is never the lead
+ * answer to "how accurate is it?" or "is it fail-closed?".
  */
 const RESULTS_BOOST = 1.5;
+
+/**
+ * Multiplier for project overviews when a question asks whether a project can
+ * be seen or tried ("Is TradePulse live?", "Does CrownWager have a demo?"):
+ * the overview is the passage that states the demo link, or that none is
+ * published while the demo is offline, and the source link. When the question
+ * names the project, the overview also takes PROJECT_BOOST, so it leads that
+ * project's case-study sections.
+ */
+const STATUS_BOOST = 1.5;
 
 /**
  * Multiplier for his profile, contact details, résumé and skills when a short
@@ -191,6 +208,17 @@ const RESULT_TERMS: ReadonlySet<string> = new Set(
   tokenize("accuracy accurate score result benchmark metric evaluation eval measured performance"),
 );
 
+/**
+ * Topic terms that ask whether a project can be seen, tried or read: its demo
+ * and source. Not "repository": LLM Studio's "repository layer" is code.
+ */
+const STATUS_TERMS: ReadonlySet<string> = new Set(
+  tokenize("demo live try available link source repo status offline"),
+);
+
+/** Topic terms that ask about a withdrawn result as such. */
+const RETIREMENT_TERMS: ReadonlySet<string> = new Set(tokenize("retired withdrawn audit"));
+
 // ---------------------------------------------------------------------------
 // Index (built once, at module load)
 // ---------------------------------------------------------------------------
@@ -239,6 +267,23 @@ const PROJECT_SUMMARY = new Map(
 
 const PROFILE = CORPUS.findIndex((passage) => passage.kind === "profile");
 
+/**
+ * For each retired evaluation passage, the words that ask about it: the
+ * retirement words, and the most distinctive word of its benchmark's name —
+ * the one fewest passages use ("golden" in "Custom golden-query set"), not the
+ * generic ones any SQL question uses ("query", "set").
+ */
+const RETIRED_SUBJECTS: ReadonlyMap<string, ReadonlySet<string>> = new Map(
+  CORPUS.flatMap((passage) => {
+    if (!passage.retired || !passage.benchmark) return [];
+    const terms = [...new Set(tokenize(passage.benchmark))];
+    const frequency = (term: string) => DOCUMENT_FREQUENCY.get(term) ?? 0;
+    const rarest = Math.min(...terms.map(frequency));
+    const distinctive = terms.filter((term) => frequency(term) === rarest);
+    return [[passage.id, new Set([...RETIREMENT_TERMS, ...distinctive])] as const];
+  }),
+);
+
 // ---------------------------------------------------------------------------
 // Retrieval
 // ---------------------------------------------------------------------------
@@ -257,6 +302,8 @@ type Reading = {
   refersBack: boolean;
   /** It asks about measured results ("how accurate", "score"). */
   asksForResults: boolean;
+  /** It asks whether a project can be seen or tried ("live", "demo", "source"). */
+  asksForStatus: boolean;
 };
 
 function read(question: string): Reading {
@@ -274,22 +321,45 @@ function read(question: string): Reading {
     person: all.some((word) => PERSON.has(word)),
     refersBack: all.some((word) => REFERS_BACK.has(word)),
     asksForResults: content.some((term) => RESULT_TERMS.has(term)),
+    asksForStatus: content.some((term) => STATUS_TERMS.has(term)),
   };
+}
+
+/**
+ * True when the passage is the site's own record of the projects the question
+ * names (not commentary on them): the question's name alone makes it relevant.
+ */
+function isRecordOf(passage: Passage, q: Reading): boolean {
+  return (
+    q.projects.length > 0 &&
+    passage.projects.length > 0 &&
+    !COMMENTARY_KINDS.has(passage.kind) &&
+    passage.projects.every((slug) => q.projects.includes(slug))
+  );
 }
 
 /** How strongly a passage's subject matches the question's, as a score multiplier. */
 function subjectWeight(passage: Passage, q: Reading): number {
   let weight = 1;
   if (q.projects.length > 0 && passage.projects.length > 0) {
-    const own = passage.projects.every((slug) => q.projects.includes(slug));
     const other = !passage.projects.some((slug) => q.projects.includes(slug));
+    // The overview is the section that answers a status question, so it is
+    // boosted like the rest of the record then, and only then.
+    const answers = passage.kind !== "project" || q.asksForStatus;
     if (other) weight /= PROJECT_BOOST;
-    else if (own && passage.kind !== "project") weight *= PROJECT_BOOST;
+    else if (isRecordOf(passage, q) && answers) weight *= PROJECT_BOOST;
   } else if (q.projects.length === 0 && q.person && q.content.length <= SHORT_QUESTION_TERMS) {
     if (PERSON_KINDS.has(passage.kind)) weight *= PERSON_BOOST;
   }
-  if (passage.kind === "evaluation" && q.asksForResults) {
-    weight = passage.retired ? weight / RESULTS_BOOST : weight * RESULTS_BOOST;
+  if (passage.kind === "project" && q.asksForStatus) weight *= STATUS_BOOST;
+  if (passage.kind === "evaluation") {
+    if (passage.retired) {
+      const subject = RETIRED_SUBJECTS.get(passage.id);
+      const asksAboutIt = q.content.some((term) => subject?.has(term));
+      weight = asksAboutIt ? weight * RESULTS_BOOST : weight / RESULTS_BOOST;
+    } else if (q.asksForResults) {
+      weight *= RESULTS_BOOST;
+    }
   }
   return weight;
 }
@@ -355,36 +425,55 @@ export function retrieve(question: string, { k = DEFAULT_K }: { k?: number } = {
 
   // 3) Score with topic and name terms; a passage must match at least half of
   //    the topic weight itself, so "notice period" does not settle for a
-  //    passage that only says "period".
+  //    passage that only says "period". The record of a project the question
+  //    names is exempt: a rare word elsewhere ("act", "handle") must not
+  //    filter out the project the question is about.
   const scores = scoreAll([...topic, ...q.nameTerms], q);
   const ranked = scores
     .map((score, index) => ({ score, index }))
-    .filter(({ index, score }) => score > 0 && matchedWeight(index, topic) >= MIN_COVERAGE * known)
+    .filter(
+      ({ index, score }) =>
+        score > 0 && (isRecordOf(CORPUS[index]!, q) || matchedWeight(index, topic) >= MIN_COVERAGE * known),
+    )
     .sort((a, b) => b.score - a.score || a.index - b.index);
   const best = ranked[0]?.score ?? 0;
+  const floor = RELATIVE_FLOOR * best;
   const hits = ranked
-    .filter(({ score }) => score >= RELATIVE_FLOOR * best)
+    .filter(({ score }) => score >= floor)
     .slice(0, k)
     .map(({ index, score }) => withScore(index, score, true));
 
-  // A named project's overview is always in the context: background, not a
-  // citation, unless it scored on its own.
+  // A named project's overview is always in the context. It is cited when it
+  // scores within the floor, and is background otherwise.
   for (const slug of q.projects) {
     const overview = PROJECT_SUMMARY.get(slug)?.[0];
     if (overview === undefined || hits.some((hit) => hit.id === CORPUS[overview]!.id)) continue;
     if (hits.length >= k) hits.pop();
-    hits.push(withScore(overview, scores[overview]!, false));
+    const score = scores[overview]!;
+    hits.push(withScore(overview, score, score > 0 && score >= floor));
   }
   return hits;
 }
 
 /**
+ * A question that continues an earlier one rather than starting a topic: it
+ * names no project and either finds nothing on its own ("Tell me more") or
+ * points back ("How was it deployed?").
+ */
+function isFollowUp(question: string, hits: readonly RetrievedPassage[]): boolean {
+  const q = read(question);
+  return q.projects.length === 0 && (hits.length === 0 || q.refersBack);
+}
+
+/**
  * Retrieve for the latest question of a conversation.
  *
- * Only the latest question is searched — unless it reads as a follow-up: it
- * names no project and either found nothing ("Tell me more") or points back
- * ("How was it deployed?"). Then the previous question and the latest one are
- * searched together, so "it" finds what the conversation is about.
+ * Only the latest question is searched — unless it is a follow-up. Then it is
+ * searched together with the earlier questions it continues: back through any
+ * follow-ups before it, to the question that set the topic. "What does
+ * DBWhisper do?" → "How was it deployed?" → "Tell me more" still searches
+ * DBWhisper on the third turn, while a question that changed the subject
+ * ("Where does he work?") ends the chain there.
  */
 export function retrieveForQuestion(
   latest: string,
@@ -392,11 +481,15 @@ export function retrieveForQuestion(
   options: { k?: number } = {},
 ): RetrievedPassage[] {
   const hits = retrieve(latest, options);
-  const previous = earlier[earlier.length - 1];
-  if (!previous) return hits;
-  const q = read(latest);
-  if (q.projects.length > 0 || (hits.length > 0 && !q.refersBack)) return hits;
-  const combined = retrieve(`${previous} ${latest}`, options);
+  if (!isFollowUp(latest, hits)) return hits;
+  const thread: string[] = [];
+  for (let i = earlier.length - 1; i >= 0; i--) {
+    const question = earlier[i]!;
+    thread.unshift(question);
+    if (!isFollowUp(question, retrieve(question, options))) break;
+  }
+  if (thread.length === 0) return hits;
+  const combined = retrieve([...thread, latest].join(" "), options);
   return combined.length > 0 ? combined : hits;
 }
 
