@@ -3,9 +3,9 @@ import { notFound } from "next/navigation";
 import { ArrowUpRight } from "lucide-react";
 import { Section } from "@/components/layout/section";
 import { PAGE_TOP } from "@/constants/page";
-import { routableNoteSlugs, loadNote, noteNeighbours } from "@/lib/notes";
+import { routableNoteSlugs, loadNote, noteDescription, noteNeighbours } from "@/lib/notes";
 import { formatDate } from "@/lib/format";
-import { SITE } from "@/config/site";
+import { absoluteUrl, pageMetadata } from "@/lib/seo";
 import { ArticleJsonLd, BreadcrumbJsonLd } from "@/components/seo/json-ld";
 import {
   NewsletterForm,
@@ -22,8 +22,6 @@ export async function generateStaticParams() {
   return (await routableNoteSlugs()).map((slug) => ({ slug }));
 }
 
-const describe = (tags: string[]) => `A short note on ${tags.join(", ")}.`;
-
 export async function generateMetadata({
   params,
 }: {
@@ -32,23 +30,12 @@ export async function generateMetadata({
   const { slug } = await params;
   const n = await loadNote(slug);
   if (!n) return {};
-  const url = `${SITE.url}/notes/${slug}`;
-  const description = describe(n.meta.tags);
-  return {
+  return pageMetadata({
+    path: `/notes/${slug}`,
     title: n.meta.title,
-    description,
-    alternates: { canonical: url },
-    openGraph: {
-      type: "article",
-      siteName: SITE.name,
-      title: n.meta.title,
-      description,
-      url,
-      publishedTime: n.meta.date,
-      tags: n.meta.tags,
-      authors: [SITE.name],
-    },
-  };
+    description: noteDescription(n.meta),
+    article: { publishedTime: n.meta.date, tags: n.meta.tags },
+  });
 }
 
 export default async function NotePost({ params }: { params: Promise<{ slug: string }> }) {
@@ -58,7 +45,7 @@ export default async function NotePost({ params }: { params: Promise<{ slug: str
   const { meta, content, readingMinutes } = n;
   // Notes are sorted newest-first — same mapping as /writing.
   const { newer, older } = await noteNeighbours(slug);
-  const url = `${SITE.url}/notes/${slug}`;
+  const url = absoluteUrl(`/notes/${slug}`);
 
   return (
     // PAGE_TOP: every route opens 128px from the nav; `space="lg"`'s 192 top
@@ -67,13 +54,13 @@ export default async function NotePost({ params }: { params: Promise<{ slug: str
     <Section space="lg" className={PAGE_TOP}>
       <ArticleJsonLd
         title={meta.title}
-        description={describe(meta.tags)}
+        description={noteDescription(meta)}
         url={url}
         datePublished={meta.date}
       />
       <BreadcrumbJsonLd
         items={[
-          { name: "Notes", url: `${SITE.url}/notes` },
+          { name: "Notes", url: absoluteUrl("/notes") },
           { name: meta.title, url },
         ]}
       />

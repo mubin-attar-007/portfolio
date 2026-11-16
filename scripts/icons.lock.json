@@ -1,0 +1,8 @@
+{
+  "source": "app/icon.svg",
+  "sourceSha256": "29b839398b0441d6509fc2f89564e471f23f27f65ba094c52ff3836db4b76c35",
+  "outputs": {
+    "app/favicon.ico": "0a656f2148a2bb4307da3d132ffa33d60021d89f4ecc20838f1badf5662ccc30",
+    "app/apple-icon.png": "cf9267a6dae9584fe4a8a05e59e479cf9c7753dd75b8ff81fe39ab0fcbf87a22"
+  }
+}

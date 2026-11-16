@@ -3,6 +3,10 @@ import { access, cp, mkdtemp, readFile, rm } from "node:fs/promises";
 import { createServer } from "node:net";
 import { tmpdir } from "node:os";
 import { join, resolve } from "node:path";
+// Node strips the types: the limits and the redirect list are read from the
+// files the site itself uses, so the gate cannot drift from them.
+import { SEO_LIMITS } from "../constants/seo.ts";
+import nextConfig from "../next.config.ts";
 
 const PROJECT_ROOT = resolve(import.meta.dirname, "..");
 const LIGHTHOUSE_CLI = resolve(
@@ -26,6 +30,14 @@ const TITLE_ROUTES = [
   { path: "/trust", expected: "Trust · Mubin Attar" },
   { path: "/privacy", expected: "Privacy policy · Mubin Attar" },
 ];
+// Pages that must never be indexed or claim a canonical URL: the component
+// preview (ADR-007) and the 404, reached through a path that cannot exist.
+const UNINDEXED_ROUTES = [
+  { path: "/dev/components", status: 200 },
+  { path: "/metadata-gate-missing-page", status: 404 },
+];
+// Crawlers get blocking metadata in <head>; browsers may receive it streamed.
+const CRAWLER = { "user-agent": "Googlebot" };
 const CATEGORY_BUDGETS = {
   performance: 0.95,
   accessibility: 1,
@@ -229,151 +241,239 @@ function attribute(tag, name) {
   return match?.[1] ?? match?.[2];
 }
 
-function metaContent(html, key) {
-  const tags = html.match(/<meta\b[^>]*>/gi) ?? [];
-  const tag = tags.find(
+/** Text as a reader sees it: the entities React writes into attributes, decoded. */
+function decodeEntities(text) {
+  return text
+    .replace(/&#x([0-9a-f]+);/gi, (_, hex) => String.fromCodePoint(Number.parseInt(hex, 16)))
+    .replace(/&#(\d+);/g, (_, dec) => String.fromCodePoint(Number(dec)))
+    .replace(/&quot;/g, '"')
+    .replace(/&lt;/g, "<")
+    .replace(/&gt;/g, ">")
+    .replace(/&amp;/g, "&");
+}
+
+function metaTags(html, key) {
+  return (html.match(/<meta\b[^>]*>/gi) ?? []).filter(
     (candidate) =>
       attribute(candidate, "property") === key ||
       attribute(candidate, "name") === key,
   );
-  return tag ? attribute(tag, "content") : undefined;
 }
 
-function canonicalUrl(html) {
-  const tags = html.match(/<link\b[^>]*>/gi) ?? [];
-  const tag = tags.find((candidate) => attribute(candidate, "rel") === "canonical");
-  return tag ? attribute(tag, "href") : undefined;
+function metaContent(html, key) {
+  const tag = metaTags(html, key)[0];
+  const content = tag ? attribute(tag, "content") : undefined;
+  return content === undefined ? undefined : decodeEntities(content);
+}
+
+function linkTags(html, rel) {
+  return (html.match(/<link\b[^>]*>/gi) ?? []).filter(
+    (candidate) => attribute(candidate, "rel") === rel,
+  );
 }
 
 function documentTitle(html) {
-  return html.match(/<title>([^<]+)<\/title>/i)?.[1];
+  const title = html.match(/<title>([^<]+)<\/title>/i)?.[1];
+  return title === undefined ? undefined : decodeEntities(title);
 }
 
-async function verifyImage(
-  url,
-  baseUrl,
-  canonicalOrigin,
-  expectedPath,
-  label,
-) {
-  if (!url) throw new Error(`${label}: missing social image`);
+/** One address however it is spelled: "https://x.app" and "https://x.app/" agree. */
+function sameUrl(a, b) {
+  try {
+    return new URL(a).href === new URL(b).href;
+  } catch {
+    return false;
+  }
+}
+
+/** Every tag an indexed page carries exactly once. */
+const REQUIRED_META = [
+  "description",
+  "og:title",
+  "og:description",
+  "og:site_name",
+  "og:locale",
+  "og:type",
+  "og:image:alt",
+  "og:image:width",
+  "og:image:height",
+  "twitter:card",
+  "twitter:title",
+  "twitter:description",
+];
+
+/** Why a social image would not show, or undefined when it serves an image. */
+async function imageProblem(url, baseUrl, expectedOrigin, expectedPath, served) {
+  if (!url) return "missing";
   const parsed = new URL(url);
-  if (parsed.origin !== canonicalOrigin) {
-    throw new Error(`${label}: social image must be same-origin (${url})`);
-  }
-  if (parsed.pathname !== expectedPath) {
-    throw new Error(
-      `${label}: social image is ${parsed.pathname}; expected ${expectedPath}`,
+  if (parsed.origin !== expectedOrigin) return `not same-origin (${url})`;
+  if (parsed.pathname !== expectedPath) return `is ${parsed.pathname}; expected ${expectedPath}`;
+  const local = new URL(`${parsed.pathname}${parsed.search}`, baseUrl).href;
+  if (!served.has(local)) {
+    const response = await fetch(local, { headers: { "user-agent": "Slackbot 1.0" } });
+    const contentType = response.headers.get("content-type") ?? "";
+    await response.body?.cancel();
+    served.set(
+      local,
+      response.ok && contentType.startsWith("image/")
+        ? undefined
+        : `${parsed.pathname}${parsed.search} returned ${response.status} ${contentType || "without a content type"}`,
     );
   }
-
-  const localImageUrl = new URL(`${parsed.pathname}${parsed.search}`, baseUrl);
-  const response = await fetch(localImageUrl, {
-    headers: { "user-agent": "Slackbot 1.0" },
-  });
-  const contentType = response.headers.get("content-type") ?? "";
-  await response.body?.cancel();
-  if (!response.ok || !contentType.startsWith("image/")) {
-    throw new Error(
-      `${label}: ${parsed.pathname}${parsed.search} returned ${response.status} ${contentType || "without a content type"}`,
-    );
-  }
+  return served.get(local);
 }
 
-async function verifySocialPreviews(baseUrl) {
-  for (const route of ROUTES) {
-    const pageUrl = new URL(route.path, baseUrl).href;
-    const response = await fetch(pageUrl, {
-      headers: { "user-agent": "Slackbot 1.0" },
-    });
-    if (!response.ok) {
-      throw new Error(`${route.label}: ${pageUrl} returned ${response.status}`);
+/**
+ * One sitemap URL, checked as a crawler reads it: it serves, names itself as
+ * its canonical URL and og:url, carries a complete social card whose image
+ * loads, advertises the RSS feed, has one h1, fits a results page (the limits
+ * in constants/seo.ts), and its structured data parses.
+ */
+async function pageProblems(loc, baseUrl, served) {
+  const url = new URL(loc);
+  const response = await fetch(new URL(url.pathname, baseUrl), { headers: CRAWLER });
+  if (response.status !== 200) return [`returned ${response.status}`];
+  const html = await response.text();
+  const problems = [];
+
+  if (url.protocol !== "https:") problems.push(`is advertised as ${loc}; expected an HTTPS URL`);
+  const canonicals = linkTags(html, "canonical").map((tag) => attribute(tag, "href"));
+  if (canonicals.length !== 1 || !sameUrl(canonicals[0], loc)) {
+    problems.push(`canonical is ${canonicals.join(", ") || "missing"}; expected ${loc}`);
+  }
+  const ogUrl = metaContent(html, "og:url");
+  if (!ogUrl || !sameUrl(ogUrl, loc)) {
+    problems.push(`og:url is ${ogUrl ?? "missing"}; expected ${loc}`);
+  }
+  for (const key of REQUIRED_META) {
+    const count = metaTags(html, key).length;
+    if (count !== 1) problems.push(`${count === 0 ? "missing" : `${count} copies of`} ${key}`);
+  }
+  const feeds = linkTags(html, "alternate").filter(
+    (tag) => attribute(tag, "type") === "application/rss+xml",
+  );
+  if (feeds.length === 0) problems.push("advertises no RSS feed");
+
+  const headings = (html.match(/<h1[\s>]/gi) ?? []).length;
+  if (headings !== 1) problems.push(`has ${headings} h1 elements; expected 1`);
+
+  const title = documentTitle(html) ?? "";
+  if (title === "" || title.length > SEO_LIMITS.titleMax) {
+    problems.push(`title is ${title.length} characters ("${title}"); at most ${SEO_LIMITS.titleMax}`);
+  }
+  const description = metaContent(html, "description") ?? "";
+  if (
+    description.length < SEO_LIMITS.descriptionMin ||
+    description.length > SEO_LIMITS.descriptionMax
+  ) {
+    problems.push(
+      `description is ${description.length} characters; expected ${SEO_LIMITS.descriptionMin}–${SEO_LIMITS.descriptionMax} ("${description}")`,
+    );
+  }
+
+  const structured = [
+    ...html.matchAll(/<script type="application\/ld\+json"[^>]*>([\s\S]*?)<\/script>/gi),
+  ];
+  if (structured.length === 0) problems.push("has no structured data");
+  for (const [, json] of structured) {
+    try {
+      JSON.parse(json);
+    } catch (error) {
+      problems.push(`structured data does not parse (${error.message})`);
     }
+  }
+
+  const expectedImage = `${url.pathname.replace(/\/$/, "")}/opengraph-image`;
+  for (const key of ["og:image", "twitter:image"]) {
+    const problem = await imageProblem(
+      metaContent(html, key),
+      baseUrl,
+      url.origin,
+      expectedImage,
+      served,
+    );
+    if (problem) problems.push(`${key} ${problem}`);
+  }
+  return problems;
+}
+
+/** The preview route and the 404 are never indexed, and never name a URL as theirs. */
+async function unindexedProblems(baseUrl) {
+  const problems = [];
+  for (const route of UNINDEXED_ROUTES) {
+    const response = await fetch(new URL(route.path, baseUrl), { headers: CRAWLER });
     const html = await response.text();
-    const openGraphImage = metaContent(html, "og:image");
-    const twitterImage = metaContent(html, "twitter:image");
-    const canonical = canonicalUrl(html);
-    const actualCanonical = canonical ? new URL(canonical) : undefined;
-    const expectedPath = new URL(route.path, baseUrl).pathname.replace(/\/$/, "");
-    const expectedImagePath =
-      route.path === "/"
-        ? "/opengraph-image"
-        : `${route.path.replace(/\/$/, "")}/opengraph-image`;
-
-    for (const key of [
-      "og:title",
-      "og:description",
-      "og:site_name",
-      "og:image:alt",
-      "og:image:width",
-      "og:image:height",
-      "twitter:title",
-      "twitter:description",
-    ]) {
-      if (!metaContent(html, key)) {
-        throw new Error(`${route.label}: missing ${key}`);
-      }
+    const robots = metaTags(html, "robots").map((tag) => attribute(tag, "content")).join(", ");
+    if (response.status !== route.status) {
+      problems.push(`${route.path}: returned ${response.status}; expected ${route.status}`);
     }
-    if (
-      !actualCanonical ||
-      actualCanonical.protocol !== "https:" ||
-      actualCanonical.pathname.replace(/\/$/, "") !== expectedPath
-    ) {
-      throw new Error(
-        `${route.label}: canonical is ${canonical ?? "missing"}; expected an HTTPS URL ending in ${expectedPath || "/"}`,
-      );
+    if (!/\bnoindex\b/i.test(robots)) {
+      problems.push(`${route.path}: robots is "${robots || "missing"}"; expected noindex`);
     }
-    await verifyImage(
-      openGraphImage,
-      baseUrl,
-      actualCanonical.origin,
-      expectedImagePath,
-      route.label,
-    );
-    await verifyImage(
-      twitterImage,
-      baseUrl,
-      actualCanonical.origin,
-      expectedImagePath,
-      route.label,
-    );
+    if (linkTags(html, "canonical").length > 0) problems.push(`${route.path}: declares a canonical URL`);
+    const ogUrl = metaContent(html, "og:url");
+    if (ogUrl) problems.push(`${route.path}: declares og:url ${ogUrl}`);
   }
+  return problems;
+}
 
+/** The exact titles a few pages are known by. */
+async function titleProblems(baseUrl) {
+  const problems = [];
   for (const route of TITLE_ROUTES) {
-    const response = await fetch(new URL(route.path, baseUrl), {
-      headers: { "user-agent": "Googlebot" },
-    });
-    if (!response.ok) {
-      throw new Error(`title: ${route.path} returned ${response.status}`);
-    }
-    const title = documentTitle(await response.text());
+    const response = await fetch(new URL(route.path, baseUrl), { headers: CRAWLER });
+    const title = response.ok ? documentTitle(await response.text()) : undefined;
     if (title !== route.expected) {
-      throw new Error(
-        `title: ${route.path} is ${title ?? "missing"}; expected ${route.expected}`,
-      );
+      problems.push(`title: ${route.path} is ${title ?? `missing (${response.status})`}; expected ${route.expected}`);
     }
   }
+  return problems;
+}
 
-  // Consolidated routes must 301, never 404 (inbound links stay alive).
-  for (const [from, to] of [
-    ["/talks", "/about"],
-    ["/timeline", "/about"],
-    ["/changelog", "/now"],
-  ]) {
-    const redirectResponse = await fetch(new URL(from, baseUrl), {
-      redirect: "manual",
-    });
-    if (redirectResponse.status !== 301 && redirectResponse.status !== 308) {
-      throw new Error(
-        `redirect: ${from} returned ${redirectResponse.status}; expected a permanent redirect to ${to}`,
-      );
+/**
+ * Every permanent redirect in next.config.ts answers with 308 (or 301) to its
+ * destination, never a 404, and is not advertised in the sitemap.
+ */
+async function redirectProblems(baseUrl, sitemapXml) {
+  const problems = [];
+  const redirects = (await nextConfig.redirects()).filter((redirect) => redirect.permanent);
+  for (const { source, destination } of redirects) {
+    const response = await fetch(new URL(source, baseUrl), { redirect: "manual" });
+    await response.body?.cancel();
+    const location = response.headers.get("location") ?? "";
+    if (response.status !== 308 && response.status !== 301) {
+      problems.push(`redirect: ${source} returned ${response.status}; expected a permanent redirect to ${destination}`);
+    } else if (new URL(location, baseUrl).pathname !== destination) {
+      problems.push(`redirect: ${source} points at ${location || "nothing"}; expected ${destination}`);
     }
-    const location = redirectResponse.headers.get("location") ?? "";
-    if (!location.endsWith(to)) {
-      throw new Error(`redirect: ${from} points at ${location || "nothing"}; expected ${to}`);
+    if (sitemapXml.includes(`${source}</loc>`)) {
+      problems.push(`sitemap: redirected route ${source} must not be advertised`);
     }
   }
+  return problems;
+}
 
+/** Freshness comes only from dated content, never from the build. */
+function freshnessProblems(sitemapXml) {
+  const entries = [...sitemapXml.matchAll(/<url>([\s\S]*?)<\/url>/g)].map((match) => match[1]);
+  const aboutEntry = entries.find((item) => item.includes("/about</loc>"));
+  const workEntry = entries.find((item) => item.includes("/work</loc>"));
+  const problems = [];
+  if (!aboutEntry || aboutEntry.includes("<lastmod>")) {
+    problems.push("sitemap: static About route must not claim build-time freshness");
+  }
+  if (!workEntry?.includes("<lastmod>")) {
+    problems.push("sitemap: Work index must inherit freshness from project content");
+  }
+  return problems;
+}
+
+/**
+ * The metadata gate (`npm run test:metadata`): every sitemap URL, the unindexed
+ * routes, the known titles, the redirects, and sitemap freshness. Every problem
+ * is collected before it fails, so one run lists all of them.
+ */
+async function verifyMetadata(baseUrl) {
   const sitemapResponse = await fetch(new URL("/sitemap.xml", baseUrl));
   if (!sitemapResponse.ok) {
     throw new Error(`sitemap: route returned ${sitemapResponse.status}`);
@@ -382,33 +482,26 @@ async function verifySocialPreviews(baseUrl) {
   if (!sitemapXml.includes("<urlset")) {
     throw new Error("sitemap: response is not a sitemap document");
   }
-  for (const removed of ["/talks</loc>", "/timeline</loc>", "/changelog</loc>"]) {
-    if (sitemapXml.includes(removed)) {
-      throw new Error(`sitemap: consolidated route ${removed} must not be advertised`);
+  const locs = [...sitemapXml.matchAll(/<loc>([^<]+)<\/loc>/g)].map((match) => match[1]);
+  if (locs.length === 0) throw new Error("sitemap: lists no URLs");
+
+  const problems = [];
+  const served = new Map();
+  for (const loc of locs) {
+    for (const problem of await pageProblems(loc, baseUrl, served)) {
+      problems.push(`${new URL(loc).pathname}: ${problem}`);
     }
   }
-  const sitemapEntries = [...sitemapXml.matchAll(/<url>([\s\S]*?)<\/url>/g)].map(
-    (match) => match[1],
-  );
-  const aboutEntry = sitemapEntries.find((item) =>
-    item.includes("/about</loc>"),
-  );
-  const workEntry = sitemapEntries.find((item) => item.includes("/work</loc>"));
-  if (!aboutEntry || aboutEntry.includes("<lastmod>")) {
-    throw new Error(
-      "sitemap: static About route must not claim build-time freshness",
-    );
-  }
-  if (!workEntry?.includes("<lastmod>")) {
-    throw new Error(
-      "sitemap: Work index must inherit freshness from project content",
-    );
-  }
+  problems.push(...(await unindexedProblems(baseUrl)));
+  problems.push(...(await titleProblems(baseUrl)));
+  problems.push(...(await redirectProblems(baseUrl, sitemapXml)));
+  problems.push(...freshnessProblems(sitemapXml));
 
-  console.log("Social preview gate: PASS (home, flagship, writing)");
-  console.log("Metadata-title gate: PASS (home, Trust, Changelog, Privacy)");
+  if (problems.length > 0) {
+    throw new Error(`Metadata gate: ${problems.length} problem${problems.length === 1 ? "" : "s"}\n- ${problems.join("\n- ")}`);
+  }
   console.log(
-    "Indexing/freshness gate: PASS (Talks excluded; content dates are honest)",
+    `Metadata gate: PASS (${locs.length} sitemap URLs; ${UNINDEXED_ROUTES.length} unindexed routes; ${TITLE_ROUTES.length} exact titles; redirects; freshness)`,
   );
 }
 
@@ -548,7 +641,7 @@ async function main() {
       server = startServer(port);
     }
     await waitForServer(baseUrl);
-    await verifySocialPreviews(baseUrl);
+    await verifyMetadata(baseUrl);
     if (metadataOnly) {
       console.log("Metadata release gate: PASS");
       return;

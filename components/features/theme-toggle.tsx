@@ -2,6 +2,7 @@
 
 import { useEffect, useState } from "react";
 import { Moon, Sun } from "lucide-react";
+import { BROWSER_CHROME as CHROME, type Theme } from "@/constants/theme";
 
 /**
  * ThemeToggle — switches light/dark by setting `data-theme` on <html> and
@@ -23,11 +24,6 @@ import { Moon, Sun } from "lucide-react";
  * A11y: a labelled button whose icon shows the ACTION (sun = go light), with
  * `aria-pressed` reflecting the current state and a title for pointer users.
  */
-type Theme = "light" | "dark";
-
-/** The `--color-bg` of each theme — the address bar continues the page. */
-const CHROME: Record<Theme, string> = { light: "#fcfcfe", dark: "#03080a" };
-
 export function ThemeToggle() {
   const [theme, setTheme] = useState<Theme>("light");
 

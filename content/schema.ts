@@ -1,10 +1,17 @@
 import { z } from "zod";
+import { SEO_LIMITS } from "@/constants/seo";
 
 /**
  * Content schemas (Zod) — the validated shape of everything in content/.
  * `.parse()` at module load means the build FAILS on invalid content, which is
  * the intent of ADR-003 adapted to our next-mdx-remote stack.
  */
+
+/**
+ * A summary that is also the page's search, social and feed description, so it
+ * is held to the snippet limit here rather than cut later.
+ */
+const Description = z.string().max(SEO_LIMITS.descriptionMax);
 
 export const MetricSchema = z.object({
   label: z.string(),
@@ -19,7 +26,8 @@ export type Metric = z.infer<typeof MetricSchema>;
 export const ProjectSchema = z.object({
   slug: z.string(),
   title: z.string(),
-  summary: z.string().max(200),
+  /** The case-study lede, and the page's search and social description. */
+  summary: Description,
   status: z.enum(["production", "active-development", "experiment", "archived"]),
   role: z.string(),
   timeline: z.string(),
@@ -70,7 +78,8 @@ export type Project = z.infer<typeof ProjectSchema>;
 export const WritingSchema = z.object({
   slug: z.string(),
   title: z.string(),
-  summary: z.string().max(220),
+  /** The article lede, and its search, social and feed description. */
+  summary: Description,
   date: z.string(),
   updated: z.string().optional(),
   category: z.enum(["essay", "guide", "note"]),
@@ -87,6 +96,12 @@ export type WritingMeta = z.infer<typeof WritingSchema>;
 export const NoteSchema = z.object({
   slug: z.string(),
   title: z.string(),
+  /**
+   * Optional one-line description for search, social cards and the feeds.
+   * Without it, the note is described by its opening sentences
+   * (`noteDescription` in lib/notes.ts) — never by its tags.
+   */
+  summary: Description.optional(),
   date: z.string(),
   tags: z.array(z.string()).min(1),
   /** Optional external link the note reacts to (a paper, doc, repo). */

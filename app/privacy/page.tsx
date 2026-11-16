@@ -13,23 +13,21 @@ import {
   stagger,
 } from "@/constants/page";
 import { SITE } from "@/config/site";
+import { pageMetadata } from "@/lib/seo";
 
-const PRIVACY_PATH = "/privacy";
 const LAST_UPDATED = "July 23, 2026";
 
 export const metadata: Metadata = {
-  title: "Privacy policy",
-  description:
-    "Privacy policy for this portfolio: local preferences, assistant interactions, third-party integrations, and contact handling.",
-  alternates: { canonical: `${SITE.url}${PRIVACY_PATH}` },
-  openGraph: {
-    siteName: SITE.name,
-    title: "Privacy Policy — Mubin Attar",
+  ...pageMetadata({
+    path: "/privacy",
+    title: "Privacy policy",
     description:
-      "Minimal collection, deterministic behavior, and explicit controls for this portfolio site.",
-    url: `${SITE.url}${PRIVACY_PATH}`,
-    type: "website",
-  },
+      "Privacy policy for this portfolio: local preferences, assistant interactions, third-party integrations, and contact handling.",
+    social: {
+      description:
+        "Minimal collection, deterministic behavior, and explicit controls for this portfolio site.",
+    },
+  }),
   robots: { index: true, follow: true },
 };
 

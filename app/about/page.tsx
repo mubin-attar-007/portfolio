@@ -10,25 +10,15 @@ import { ProofStrip } from "@/components/features/proof-strip";
 import { CareerTimeline } from "@/components/features/career-timeline";
 import { about, home } from "@/content/site";
 import { timelineIntro } from "@/content/timeline";
-import { SITE } from "@/config/site";
 import { FIGURE, PAGE_BODY_BAND, PAGE_HEADER_BAND, stagger } from "@/constants/page";
+import { pageMetadata } from "@/lib/seo";
 
-const ABOUT_PATH = "/about";
-
-export const metadata: Metadata = {
+export const metadata: Metadata = pageMetadata({
+  path: "/about",
   title: "About",
   description:
     "Mubin Attar — AI software engineer. Who I am, how I think, and the one rule across all of it.",
-  alternates: { canonical: `${SITE.url}${ABOUT_PATH}` },
-  openGraph: {
-    siteName: SITE.name,
-    title: "About — Mubin Attar",
-    description:
-      "Mubin Attar — AI software engineer. Who I am, how I think, and the one rule across all of it.",
-    url: `${SITE.url}${ABOUT_PATH}`,
-    type: "website",
-  },
-};
+});
 
 /**
  * /about — identity, then "how I think".

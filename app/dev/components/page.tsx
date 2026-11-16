@@ -14,9 +14,17 @@ import { FailureLog } from "@/components/mdx/failure-log";
 import { SystemDiagram } from "@/components/diagrams/system-diagram";
 import type { DiagramSpec } from "@/components/diagrams/types";
 
+/**
+ * A preview route, not a page of the site (ADR-007): no canonical and no social
+ * card (`null` clears the root defaults), and noindex. robots.txt also disallows
+ * /dev/, so a crawler that obeys it never reads this tag.
+ */
 export const metadata: Metadata = {
   title: "Components",
+  description: "The component preview: every primitive in its states, with fixture data only.",
   robots: { index: false, follow: false },
+  alternates: null,
+  openGraph: null,
 };
 
 /** This site's assistant, as it ships (ADR-006, spec/AI_ASSISTANT.md). */

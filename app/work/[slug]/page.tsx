@@ -12,7 +12,7 @@ import { projects, projectBySlug, projectNeighbours } from "@/content/projects";
 import { PROJECT_STATUS_LABEL } from "@/content/article";
 import type { Project } from "@/content/schema";
 import { formatDate } from "@/lib/format";
-import { SITE } from "@/config/site";
+import { absoluteUrl, pageMetadata } from "@/lib/seo";
 import { PAGE_BODY_BAND, PAGE_HEADER_BAND } from "@/constants/page";
 import {
   CROWNWAGER_SECTIONS,
@@ -46,25 +46,16 @@ export async function generateMetadata({
   const { slug } = await params;
   const p = projectBySlug(slug);
   if (!p) return {};
-  const url = `${SITE.url}/work/${slug}`;
   const lastPublished = p.changelog[p.changelog.length - 1]?.date;
   const lastUpdated = p.changelog[0]?.date;
 
-  return {
+  return pageMetadata({
+    path: `/work/${slug}`,
     title: `${p.title} — case study`,
     description: p.summary,
-    alternates: { canonical: url },
-    openGraph: {
-      type: "article",
-      siteName: SITE.name,
-      url,
-      title: `${p.title} · Case study`,
-      description: p.summary,
-      publishedTime: lastPublished,
-      modifiedTime: lastUpdated ?? lastPublished,
-      authors: [SITE.name],
-    },
-  };
+    social: { title: `${p.title} · Case study` },
+    article: { publishedTime: lastPublished, modifiedTime: lastUpdated ?? lastPublished },
+  });
 }
 
 /** Projects with an authored deep write-up and a shared section index for the TOC. */
@@ -120,6 +111,7 @@ export default async function CaseStudyPage({ params }: { params: Promise<{ slug
   const sections = template?.sections ?? GENERIC_CASE_STUDY_SECTIONS;
   const demo = DEMO_SHOTS[slug];
   const { previous, next } = projectNeighbours(slug);
+  const url = absoluteUrl(`/work/${slug}`);
 
   return (
     <>
@@ -128,7 +120,7 @@ export default async function CaseStudyPage({ params }: { params: Promise<{ slug
         <ProjectJsonLd
           title={p.title}
           description={p.summary}
-          url={`${SITE.url}/work/${slug}`}
+          url={url}
           timeline={p.timeline}
           role={p.role}
           systems={p.systems}
@@ -137,8 +129,8 @@ export default async function CaseStudyPage({ params }: { params: Promise<{ slug
         />
         <BreadcrumbJsonLd
           items={[
-            { name: "Work", url: `${SITE.url}/work` },
-            { name: p.title, url: `${SITE.url}/work/${slug}` },
+            { name: "Work", url: absoluteUrl("/work") },
+            { name: p.title, url },
           ]}
         />
         {demo ? <DemoPosterPreload href={`/demos/${slug}.webp`} /> : null}

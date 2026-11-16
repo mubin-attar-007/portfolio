@@ -2,7 +2,6 @@ import type { Metadata } from "next";
 import { Section } from "@/components/layout/section";
 import { PageHeader } from "@/components/ui/page-header";
 import { TextLink } from "@/components/ui/text-link";
-import { SITE } from "@/config/site";
 import { uses } from "@/content/site";
 import {
   LABEL,
@@ -11,21 +10,13 @@ import {
   PANEL,
   stagger,
 } from "@/constants/page";
+import { pageMetadata } from "@/lib/seo";
 
-const USES_PATH = "/uses";
-
-export const metadata: Metadata = {
+export const metadata: Metadata = pageMetadata({
+  path: "/uses",
   title: "Uses",
   description: "The stack behind four shipped products — a deliberately boring, $0 free-tier stack.",
-  alternates: { canonical: `${SITE.url}${USES_PATH}` },
-  openGraph: {
-    siteName: SITE.name,
-    title: "Uses — Mubin Attar",
-    description: "The stack behind four shipped products — a deliberately boring, $0 free-tier stack.",
-    url: `${SITE.url}${USES_PATH}`,
-    type: "website",
-  },
-};
+});
 
 /**
  * /uses — the stack page. All content from content/site.ts (Law 3).

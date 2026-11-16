@@ -4,25 +4,17 @@ import { ArrowUpRight, Check, ChevronDown } from "lucide-react";
 import { Section } from "@/components/layout/section";
 import { PageHeader } from "@/components/ui/page-header";
 import { PAGE_BODY_BAND, PAGE_HEADER_BAND } from "@/constants/page";
-import { SITE } from "@/config/site";
 import { formatDate } from "@/lib/format";
+import { pageMetadata } from "@/lib/seo";
 import { evalAnchor, evals, evalsIntro } from "@/content/evals";
 import type { EvalRow } from "@/content/schema";
 
-export const metadata: Metadata = {
+export const metadata: Metadata = pageMetadata({
+  path: "/evals",
   title: "Evals",
   description:
     "The eval registry — how each system is measured, the method, and the honest current state.",
-  alternates: { canonical: `${SITE.url}/evals` },
-  openGraph: {
-    siteName: SITE.name,
-    title: "Evals — Mubin Attar",
-    description:
-      "The eval registry — how each system is measured, the method, and the honest current state.",
-    url: `${SITE.url}/evals`,
-    type: "website",
-  },
-};
+});
 
 /** Status pill — muted for in-progress/planned (never fake-green before a run). */
 function Status({

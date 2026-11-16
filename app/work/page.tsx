@@ -9,26 +9,18 @@ import { ProjectCard } from "@/components/work/project-card";
 import { buttonVariants } from "@/components/ui/button";
 import { FIGURE, PAGE_BODY_BAND, PAGE_HEADER_BAND } from "@/constants/page";
 import { EyebrowChip } from "@/components/ui/eyebrow-chip";
-import { SITE } from "@/config/site";
 import { pages } from "@/content/site";
 import { flagshipHome } from "@/content/home-visual";
 import { featuredProject, secondaryProjects } from "@/content/projects";
+import { pageMetadata } from "@/lib/seo";
 import cardStyles from "@/components/work/project-card.module.css";
 
-export const metadata: Metadata = {
+export const metadata: Metadata = pageMetadata({
+  path: "/work",
   title: "Work",
   description:
     "Four applied AI projects, with architecture, engineering decisions, source code, and measured results.",
-  alternates: { canonical: `${SITE.url}/work` },
-  openGraph: {
-    siteName: SITE.name,
-    title: "Work — Mubin Attar",
-    description:
-      "Four applied AI projects, with architecture, engineering decisions, source code, and measured results.",
-    url: `${SITE.url}/work`,
-    type: "website",
-  },
-};
+});
 
 /**
  * /work — four projects, with the flagship given a shape the other three do not

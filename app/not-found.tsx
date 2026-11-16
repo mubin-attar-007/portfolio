@@ -1,37 +1,61 @@
-import Link from "next/link";
-import { Section } from "@/components/layout/section";
 import type { Metadata } from "next";
+import { Section } from "@/components/layout/section";
+import { PageHeader } from "@/components/ui/page-header";
+import { TextLink } from "@/components/ui/text-link";
+import { NAV } from "@/config/nav";
+import { LABEL, PAGE_BODY_BAND, PAGE_HEADER_BAND } from "@/constants/page";
+import { projects } from "@/content/projects";
+import { pages } from "@/content/site";
 
+/**
+ * A missing page has no canonical URL and no social card of its own: `null`
+ * clears the root layout's defaults instead of letting the 404 describe some
+ * other page, and `noindex` keeps it out of results while `follow` lets
+ * crawlers continue through its links.
+ */
 export const metadata: Metadata = {
-  title: "404 — Not Found",
+  title: "Page not found",
   description: "The page could not be found. Use one of these routes to continue.",
   robots: { index: false, follow: true },
+  alternates: null,
+  openGraph: null,
 };
 
 /**
- * 404 — one honest sentence + routes back into the site. Never a dead end.
+ * 404 — the shared page header, then the routes back in: home, the primary
+ * navigation, and every case study (from content/projects.ts, so a new project
+ * is listed here without an edit). Never a dead end.
+ *
+ * A11y: the page's one h1 comes from PageHeader; the case-study group is an h2.
+ * Every link is a TextLink — a real link with its label as its name and a
+ * 44px target.
  */
 export default function NotFound() {
+  const copy = pages.notFound;
   return (
-    <Section space="lg">
-      <p className="font-mono text-xs uppercase text-ink-tertiary">404</p>
-      <h1 className="mt-6 max-w-[20ch] text-3xl font-bold text-ink sm:text-4xl">
-        That page doesn&apos;t exist.
-      </h1>
-      <p className="mt-6 max-w-[var(--width-prose)] text-lg text-ink-secondary">
-        The link may be old or mistyped. Try the work, the writing, or head home.
-      </p>
-      <div className="mt-8 flex flex-wrap gap-5 text-sm">
-        <Link href="/work" className="text-ink underline decoration-border-strong underline-offset-4 hover:decoration-accent">
-          Work
-        </Link>
-        <Link href="/writing" className="text-ink underline decoration-border-strong underline-offset-4 hover:decoration-accent">
-          Writing
-        </Link>
-        <Link href="/" className="text-ink underline decoration-border-strong underline-offset-4 hover:decoration-accent">
-          Home
-        </Link>
-      </div>
-    </Section>
+    <>
+      <Section space="lg" className={PAGE_HEADER_BAND}>
+        <PageHeader kicker={copy.kicker} title={copy.title} lede={copy.lede}>
+          <TextLink href="/">{copy.home}</TextLink>
+          {NAV.map((item) => (
+            <TextLink key={item.href} href={item.href}>
+              {item.label}
+            </TextLink>
+          ))}
+        </PageHeader>
+      </Section>
+      <Section space="md" className={PAGE_BODY_BAND}>
+        <h2 className={LABEL}>{copy.caseStudies}</h2>
+        <ul className="mt-2 flex flex-wrap gap-x-6">
+          {projects.map((project) => (
+            <li key={project.slug}>
+              <TextLink href={`/work/${project.slug}`} tone="quiet">
+                {project.title}
+              </TextLink>
+            </li>
+          ))}
+        </ul>
+      </Section>
+    </>
   );
 }

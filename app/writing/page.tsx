@@ -6,6 +6,7 @@ import { TextLink } from "@/components/ui/text-link";
 import { PAGE_BODY_BAND, PAGE_HEADER_BAND } from "@/constants/page";
 import { SITE } from "@/config/site";
 import { pages } from "@/content/site";
+import { absoluteUrl, pageMetadata } from "@/lib/seo";
 import { allWriting, loadWriting } from "@/lib/writing";
 import { WritingList } from "@/components/features/writing-list";
 import {
@@ -13,33 +14,13 @@ import {
   NEWSLETTER_ENABLED,
 } from "@/components/features/newsletter-form";
 
-const WRITING_PATH = "/writing";
-
-export const metadata: Metadata = {
+export const metadata: Metadata = pageMetadata({
+  path: "/writing",
   title: "Writing",
-  description:
-    "Essays, guides, and notes on AI systems, evaluation, and honest ML.",
-  alternates: {
-    canonical: `${SITE.url}${WRITING_PATH}`,
-    types: {
-      "application/rss+xml": [
-        { url: `${SITE.url}/rss.xml`, title: `${SITE.name} — Writing & Notes` },
-        {
-          url: `${SITE.url}/writing/feed.xml`,
-          title: `${SITE.name} — Writing`,
-        },
-      ],
-    },
-  },
-  openGraph: {
-    siteName: SITE.name,
-    title: "Writing — Mubin Attar",
-    description:
-      "Essays, guides, and notes on AI systems, evaluation, and honest ML.",
-    url: `${SITE.url}${WRITING_PATH}`,
-    type: "website",
-  },
-};
+  description: "Essays, guides, and notes on AI systems, evaluation, and honest ML.",
+  // The essays-only feed, besides the combined one every page advertises.
+  feeds: [{ url: absoluteUrl(pages.writing.feedHref), title: `${SITE.name} — Writing` }],
+});
 
 export default async function WritingIndex() {
   const posts = await allWriting();

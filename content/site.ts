@@ -103,6 +103,14 @@ export const pages = {
     crossCta: "Essays and implementation guides",
     crossHref: "/writing",
   },
+  /** The 404: the primary routes and every case study, so a dead link is never a dead end. */
+  notFound: {
+    kicker: "404",
+    title: "That page doesn't exist.",
+    lede: "The link may be old or mistyped. These pages lead back into the site.",
+    home: "Home",
+    caseStudies: "Case studies",
+  },
 } as const;
 
 export const about = {

@@ -7,6 +7,13 @@ import { SITE_URL } from "@/lib/env";
 export const SITE = {
   name: "Mubin Attar",
   role: "Applied AI Engineer",
+  /**
+   * What the site is, in one sentence: the homepage's search description and
+   * the default for a page without its own. At most 160 characters
+   * (constants/seo.ts), which the metadata gate checks on every page.
+   */
+  description:
+    "Mubin Attar designs and ships production AI systems: agents, retrieval, deterministic guardrails, and task-level evaluations published with their method.",
   url: SITE_URL,
   email: "sk.mubinattar@gmail.com",
   location: "Ahmedabad, India",

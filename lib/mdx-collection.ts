@@ -17,6 +17,7 @@ import path from "node:path";
 import { compileMDX } from "next-mdx-remote/rsc";
 import { mdxComponents } from "@/components/mdx/mdx-components";
 import { CONTENT_SLUG, contentFilePath } from "@/lib/content-slug";
+import { firstParagraph } from "@/lib/excerpt";
 import { byDateDesc } from "@/lib/feed";
 import { readingMinutes } from "@/lib/reading-time";
 
@@ -45,9 +46,23 @@ type Validator<T> = { parse: (input: unknown) => T };
 /** The rendered MDX body, exactly as next-mdx-remote types it. */
 type CompiledContent = Awaited<ReturnType<typeof compileMDX>>["content"];
 
+/**
+ * One entry as the collection lists it: the validated frontmatter plus what the
+ * loader reads off the body. The derived fields stay out of the schema on
+ * purpose — the schema validates what an author writes, and other readers of the
+ * same files (lib/ai/corpus.ts) parse frontmatter with it.
+ */
+export type Entry<T> = T & {
+  /**
+   * The body's first prose paragraph as plain text (lib/excerpt.ts): what a
+   * note's search and feed description is cut from when it has no `summary`.
+   */
+  excerpt: string;
+};
+
 /** A compiled entry: validated frontmatter plus its rendered MDX body. */
 export type LoadedEntry<T> = {
-  meta: T;
+  meta: Entry<T>;
   content: CompiledContent;
   /**
    * Estimated reading time in whole minutes, measured from the RAW source
@@ -72,12 +87,10 @@ export type Neighbours<T> = {
 };
 
 export type MdxCollection<T extends CollectionMeta> = {
-  /** Slugs of published entries, newest first. Never includes drafts. */
-  publishedSlugs: () => Promise<string[]>;
   /** Slugs that should resolve to a page. Adds drafts in development only. */
   routableSlugs: () => Promise<string[]>;
-  /** Published frontmatter, newest first. */
-  all: () => Promise<T[]>;
+  /** Published entries, newest first. */
+  all: () => Promise<Entry<T>[]>;
   /** Compile one entry, or null if it is missing or an unpublished draft. */
   load: (slug: string) => Promise<LoadedEntry<T> | null>;
   /**
@@ -86,7 +99,7 @@ export type MdxCollection<T extends CollectionMeta> = {
    * would leak it. A draft previewed in dev therefore has no neighbours, which
    * is correct: it has no place in the published sequence yet.
    */
-  neighbours: (slug: string) => Promise<Neighbours<T>>;
+  neighbours: (slug: string) => Promise<Neighbours<Entry<T>>>;
 };
 
 /**
@@ -126,8 +139,17 @@ export function createMdxCollection<T extends CollectionMeta>(
     return fs.readFileSync(file, "utf8");
   };
 
+  /**
+   * The validated frontmatter plus the fields read off the raw body. Read here,
+   * on the source string, because after compileMDX the body is a React tree.
+   */
+  const entryOf = (slug: string, source: string, frontmatter: unknown): Entry<T> => ({
+    ...schema.parse({ ...(frontmatter as Record<string, unknown>), slug }),
+    excerpt: firstParagraph(source),
+  });
+
   /** Compile frontmatter only — the body is not needed to build an index. */
-  const metaOf = async (slug: string): Promise<T> => {
+  const metaOf = async (slug: string): Promise<Entry<T>> => {
     const source = sourceOf(slug);
     // The slug came from readdir, so null means the file is named outside the
     // slug pattern (no URL could reach it) or was deleted mid-build. Fail the
@@ -138,21 +160,19 @@ export function createMdxCollection<T extends CollectionMeta>(
       );
     }
     const { frontmatter } = await compileMDX({ source, options: { parseFrontmatter: true } });
-    return schema.parse({ ...(frontmatter as Record<string, unknown>), slug });
+    return entryOf(slug, source, frontmatter);
   };
 
-  /** Every entry's frontmatter, drafts included, newest first. */
-  const allMeta = async (): Promise<T[]> => {
+  /** Every entry, drafts included, newest first. */
+  const allMeta = async (): Promise<Entry<T>[]> => {
     const metas = await Promise.all(fileSlugs().map(metaOf));
     return metas.sort(byDateDesc);
   };
 
-  const all = async (): Promise<T[]> => (await allMeta()).filter((meta) => !meta.draft);
-
-  const publishedSlugs = async (): Promise<string[]> => (await all()).map((meta) => meta.slug);
+  const all = async (): Promise<Entry<T>[]> => (await allMeta()).filter((meta) => !meta.draft);
 
   const routableSlugs = async (): Promise<string[]> =>
-    DRAFTS_VISIBLE ? (await allMeta()).map((meta) => meta.slug) : publishedSlugs();
+    (DRAFTS_VISIBLE ? await allMeta() : await all()).map((meta) => meta.slug);
 
   const load = async (slug: string): Promise<LoadedEntry<T> | null> => {
     const source = sourceOf(slug);
@@ -162,14 +182,14 @@ export function createMdxCollection<T extends CollectionMeta>(
       options: { parseFrontmatter: true },
       components: mdxComponents,
     });
-    const meta = schema.parse({ ...(frontmatter as Record<string, unknown>), slug });
+    const meta = entryOf(slug, source, frontmatter);
     if (meta.draft && !DRAFTS_VISIBLE) return null;
     // Measured here, on the raw file, because after compileMDX the body is a
     // React tree and the word count would mean walking rendered elements.
     return { meta, content, readingMinutes: readingMinutes(source) };
   };
 
-  const neighbours = async (slug: string): Promise<Neighbours<T>> => {
+  const neighbours = async (slug: string): Promise<Neighbours<Entry<T>>> => {
     const published = await all();
     const index = published.findIndex((meta) => meta.slug === slug);
     // -1 covers both a missing slug and a draft being previewed in dev: neither
@@ -183,5 +203,5 @@ export function createMdxCollection<T extends CollectionMeta>(
     };
   };
 
-  return { publishedSlugs, routableSlugs, all, load, neighbours };
+  return { routableSlugs, all, load, neighbours };
 }

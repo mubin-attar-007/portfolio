@@ -4,34 +4,21 @@ import { Section } from "@/components/layout/section";
 import { PageHeader } from "@/components/ui/page-header";
 import { TextLink } from "@/components/ui/text-link";
 import { PAGE_BODY_BAND, PAGE_HEADER_BAND } from "@/constants/page";
-import { SITE } from "@/config/site";
 import { pages } from "@/content/site";
 import { allNotes } from "@/lib/notes";
+import { pageMetadata } from "@/lib/seo";
 import { NoteList } from "@/components/features/note-list";
 import {
   NewsletterForm,
   NEWSLETTER_ENABLED,
 } from "@/components/features/newsletter-form";
 
-const NOTES_PATH = "/notes";
-
-export const metadata: Metadata = {
+export const metadata: Metadata = pageMetadata({
+  path: "/notes",
   title: "Notes",
   description:
     "A running notebook — short notes on retrieval, evals, agents, and infrastructure.",
-  alternates: {
-    canonical: `${SITE.url}${NOTES_PATH}`,
-    types: { "application/rss+xml": `${SITE.url}/rss.xml` },
-  },
-  openGraph: {
-    siteName: SITE.name,
-    title: "Notes — Mubin Attar",
-    description:
-      "A running notebook — short notes on retrieval, evals, agents, and infrastructure.",
-    url: `${SITE.url}${NOTES_PATH}`,
-    type: "website",
-  },
-};
+});
 
 /**
  * /notes — the digital garden index. Compact, tag-filterable rows grouped by

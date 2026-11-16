@@ -8,21 +8,13 @@ import { ResumeDownloadLink } from "@/components/features/resume-download-link";
 import { SITE } from "@/config/site";
 import { resume } from "@/content/resume";
 import { LABEL, PAGE_BODY_BAND, PAGE_HEADER_BAND, PANEL } from "@/constants/page";
+import { pageMetadata } from "@/lib/seo";
 
-const RESUME_PATH = "/resume";
-
-export const metadata: Metadata = {
+export const metadata: Metadata = pageMetadata({
+  path: "/resume",
   title: "Résumé",
   description: "Mubin Attar — AI Software Engineer. Experience, skills, and education.",
-  alternates: { canonical: `${SITE.url}${RESUME_PATH}` },
-  openGraph: {
-    siteName: SITE.name,
-    title: "Résumé — Mubin Attar",
-    description: "Mubin Attar — AI Software Engineer. Experience, skills, and education.",
-    url: `${SITE.url}${RESUME_PATH}`,
-    type: "website",
-  },
-};
+});
 
 /**
  * /resume — the same facts as /public/Mubin_Attar_Resume.pdf and LinkedIn, from
