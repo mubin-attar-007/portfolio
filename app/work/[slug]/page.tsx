@@ -10,7 +10,6 @@ import { MetricCards } from "@/components/ui/metric";
 import { buttonVariants } from "@/components/ui/button";
 import { projects, projectBySlug, projectNeighbours } from "@/content/projects";
 import { PROJECT_LINKS, PROJECT_STATUS_LABEL } from "@/content/article";
-import { CROWNWAGER_EVIDENCE } from "@/content/evals";
 import type { Project } from "@/content/schema";
 import { formatDate } from "@/lib/format";
 import { absoluteUrl, pageMetadata } from "@/lib/seo";
@@ -67,52 +66,18 @@ const BODIES: Record<string, CaseStudyTemplate> = {
   "llm-studio": { Body: LlmStudioBody, sections: LLM_STUDIO_SECTIONS },
 };
 
-/**
- * Product recordings (public/demos/<slug>.webm), captured from each real
- * deployment — a title card + a captioned feature walkthrough. They stay on the
- * page when a free-tier demo is down, so the case study never depends on a
- * sleeping host. Poster is a real
- * screenshot; older Safari that can't play webm falls back to it. LLM Studio is
- * auth-gated, so its tour is signed into a real account (the chat UI, streaming,
- * and model switching), not a login screen. Rendered once, below the metrics row.
- */
-const DEMO_SHOTS: Record<
-  string,
-  { alt: string; caption: string; width: number; height: number }
-> = {
-  dbwhisper: {
-    alt: "Recorded scroll through the DBWhisper product website.",
-    caption: "Product website recording. The evaluation figures it shows on screen were later retired by DBWhisper's own claim audit; the current results and their limits are documented below.",
-    width: 768,
-    height: 456,
-  },
-  crownwager: {
-    alt: "Recorded scroll through the CrownWager product website.",
-    caption: `Product website recording. The on-screen training count differs from the current ${CROWNWAGER_EVIDENCE.cv.folds}-fold evaluation on ${CROWNWAGER_EVIDENCE.games} games documented below.`,
-    width: 1280,
-    height: 760,
-  },
-  tradepulse: {
-    alt: "Recorded scroll through the TradePulse product website.",
-    caption: "Product website recording. Market data is delayed; older on-screen references to real-time charting are not the current data contract.",
-    width: 1280,
-    height: 760,
-  },
-  "llm-studio": {
-    alt: "Recorded LLM Studio chat interface with conversation history and model selection.",
-    caption: "Application recording — a multi-model chat workspace with per-user history and model switching.",
-    width: 1280,
-    height: 720,
-  },
-};
-
 export default async function CaseStudyPage({ params }: { params: Promise<{ slug: string }> }) {
   const { slug } = await params;
   const p: Project | undefined = projectBySlug(slug);
   if (!p) notFound();
   const template = BODIES[slug];
   const sections = template?.sections ?? GENERIC_CASE_STUDY_SECTIONS;
-  const demo = DEMO_SHOTS[slug];
+  // The product recording (public/demos/<slug>.webm), captured from the real
+  // deployment, stays on the page when a free-tier demo is down, so the case
+  // study does not depend on a sleeping host. Its poster is a real screenshot,
+  // which older Safari shows when it cannot play webm. A project without one
+  // (DBWhisper, until it is re-recorded) opens on its metrics.
+  const demo = p.recording;
   const { previous, next } = projectNeighbours(slug);
   const url = absoluteUrl(`/work/${slug}`);
 

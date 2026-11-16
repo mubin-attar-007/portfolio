@@ -34,6 +34,11 @@ checks but no schema validates.
   }>,
   links: { live?: url, repo?: url },
   diagram?: string,                 // id of components/diagrams/data/<id>.ts
+  recording?: {                     // the product recording the case study plays (§1.3)
+    alt: string,                    // what the recording SHOWS
+    caption: string,                // the captured surface, and any on-screen statement the page does not stand behind
+    width: number, height: number
+  },
   card: {                           // the preview shared by the homepage and /work
     definition: string,             // ≤ 90 chars; what the product is
     category: string,               // the technical family, not a tag cloud
@@ -55,7 +60,8 @@ deployment on free-tier hosting that can sleep or be paused, so it claims no upt
 and no operating users; nothing on the site calls a project "live". A demo that is
 down drops `links.live` — which removes its card link, the case-study "Open demo"
 button and caption link, its résumé and PDF link, and its assistant passage — and
-keeps its recording and source. Restore `links.live` when the host runs again.
+keeps its source, and its recording if it has one. Restore `links.live` when the host
+runs again.
 
 ### 1.2 Case-study body — `components/case-studies/<slug>.tsx`
 
@@ -92,8 +98,15 @@ Architecture and Decisions.
   assistant's corpus, so keep it consistent with the case study. Its frontmatter is not
   schema-validated.
 - `public/demos/<slug>.webm`, `.vtt`, and `.webp` — the product recording, its
-  captions, and its poster (the poster is also the card capture), wired in
-  `app/work/[slug]/page.tsx`.
+  captions, and its poster (the poster is also the card capture). A project lists its
+  recording in `recording` (§1.1), and `app/work/[slug]/page.tsx` plays it above the
+  metrics. `test/content.test.mts` fails when a listed recording is missing one of its
+  files, or when a video or captions file is served for a project that lists none, so
+  withdrawing a recording takes it off the site. DBWhisper has no recording since
+  2026-11-16: its product-site capture showed the withdrawn golden-set figures and the
+  scale and uptime claims its claim audit deleted (§4.4 at `bca0635`), which a caption
+  cannot take off the screen. Its `.webp` stays as the card capture. A new recording
+  is made from the current v2 site and passes the release check in §4.
 - `content/dbwhisper-walkthrough.ts` and `content/dbwhisper-boundary.ts` — curated,
   labelled sample data for the walkthrough and the homepage inspector; never measured
   results. The walkthrough's Evaluate stage is the exception: its counts are read from
@@ -182,9 +195,14 @@ feeds, the sitemap, and generated routes in production, and keeps it previewable
     cases, with no model and no database.
   - Before (re)publishing a project's figure, re-read that project's README and
     claim audit at the commit the row will cite, and link that commit — not a
-    branch.
+    branch. A recording gets the same release check: before it is published, every
+    frame and every caption cue is checked against the project's claim audit, and the
+    captions are timed to the cut. A recording that shows a withdrawn figure or claim
+    is removed, not captioned.
+  - A row's `date` is the date of the run that produced its figures (the commit that
+    recorded them when the run has no other record), never the date a page was edited.
   - `test/evidence.test.mts` fails when any surface quotes a retired figure or a
-    deleted scale claim, when code retypes a registry figure, or when static text
+    deleted scale or availability claim, when code retypes a registry figure, or when static text
     (MDX, captions, `public/llms.txt`) quotes one that disagrees with the registry.
 - **Résumé — `content/resume.ts`:** the single source for `/resume`, `/skills`, the
   assistant, and `public/Mubin_Attar_Resume.pdf`. Each featured project names its

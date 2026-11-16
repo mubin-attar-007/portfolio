@@ -32,7 +32,7 @@ export const ProjectSchema = z.object({
    * What the project is, not whether its host is awake today. `deployed-demo`
    * is a public deployment on free-tier hosting: it can sleep or be paused, so
    * it claims no uptime and no operating users. A demo that is down drops
-   * `links.live` and keeps its recording and source.
+   * `links.live` and keeps its source, and its recording if it has one.
    */
   status: z.enum(["deployed-demo", "active-development", "experiment", "archived"]),
   role: z.string(),
@@ -46,6 +46,24 @@ export const ProjectSchema = z.object({
     repo: z.string().url().optional(),
   }),
   diagram: z.string().optional(),
+  /**
+   * The product recording the case study plays, if the project has one:
+   * `public/demos/<slug>.webm` with its captions (`.vtt`) and its poster
+   * (`.webp`, also the card capture). A recording is evidence, so before one is
+   * published, every frame and caption is checked against the project's claim
+   * audit; one that shows a withdrawn figure or claim is removed, not captioned
+   * (spec/CONTENT_MODEL.md §4).
+   */
+  recording: z
+    .object({
+      /** What the recording SHOWS. */
+      alt: z.string().min(1),
+      /** The captured surface, and any on-screen statement the page does not stand behind. */
+      caption: z.string().min(1),
+      width: z.number(),
+      height: z.number(),
+    })
+    .optional(),
   /**
    * The project preview shared by the homepage and work index.
    *

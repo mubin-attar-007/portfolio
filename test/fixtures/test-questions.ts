@@ -133,4 +133,18 @@ export const SHORT_QUESTIONS: TestQuestion[] = [
   { question: "What is the Spider score?", expectedSource: "Evaluation — DBWhisper · Spider", mustMention: ["Result:"] },
   { question: "Is the DBWhisper demo live?", expectedSource: "DBWhisper — project overview", mustMention: ["Live demo:"] },
   { question: "Is CrownWager live?", expectedSource: "CrownWager — project overview", mustMention: ["Live demo:"] },
+  // Answered from a different project's passages before 2026-11-16: a rarer
+  // word ("act", "handle", "try", "live") filtered out the named project's
+  // own record, or a case-study section outranked the overview that states
+  // the demo's status.
+  { question: "Does LangGraph act as the orchestrator in DBWhisper?", expectedSource: "FAQ — DBWhisper", mustMention: ["LangGraph"] },
+  { question: "How many tables can DBWhisper handle?", expectedSource: "DBWhisper", mustMention: ["16 tables"] },
+  { question: "Can I try LLM Studio?", expectedSource: "LLM Studio — project overview", mustMention: ["Live demo:"] },
+  { question: "Is LLM Studio live right now?", expectedSource: "LLM Studio — project overview", mustMention: ["Live demo:"] },
+  { question: "Does CrownWager have a demo?", expectedSource: "CrownWager — project overview", mustMention: ["Live demo:"] },
+  { question: "Is TradePulse live?", expectedSource: "TradePulse — project overview", mustMention: ["Live demo:"] },
+  // The retired golden-set row used to lead the first (as if fail-closed had
+  // been withdrawn) and to lose the second to the Spider row.
+  { question: "Is DBWhisper fail-closed?", expectedSource: "DBWhisper case study", mustMention: ["fail-closed"] },
+  { question: "What is DBWhisper's accuracy on the golden set?", expectedSource: "(retired)", mustMention: ["retired", "golden-query set"] },
 ];

@@ -29,6 +29,7 @@ import { NoteSchema, WritingSchema, type EvalRow } from "@/content/schema";
 import { FOOTER, SITE, STATUS } from "@/config/site";
 import { CONTENT_SLUG } from "@/lib/content-slug";
 import { byDateDesc } from "@/lib/feed";
+import { formatDate } from "@/lib/format";
 import type { CitationLink } from "./chat-contract";
 import { citationLinks, mergeLinks } from "./citation-links";
 
@@ -68,16 +69,22 @@ export type Passage = {
   /** Site pages a reader can open to check this passage. */
   links: readonly CitationLink[];
   /**
-   * Slugs of the projects this passage is the site's own record of: the
-   * overview, a case-study section, an evaluation row, or an FAQ answer whose
-   * source names the project. Essays and notes discuss projects too, but as
-   * commentary, so they carry none — a question about a project is answered
-   * from its record first.
+   * Slugs of the projects this passage is about. For the site's own record of
+   * a project — the overview, a case-study section, an evaluation row, an FAQ
+   * answer whose source names it — these are the projects it records. Essays
+   * and notes (`COMMENTARY_KINDS`) are commentary: theirs are the projects the
+   * piece names, which keeps them from answering a question about another
+   * project but never puts them ahead of the record of the one asked about.
    */
   projects: readonly string[];
+  /** The benchmark an evaluation passage reports on ("Spider"). */
+  benchmark?: string;
   /** True for an evaluation result the registry has withdrawn. */
   retired?: true;
 };
+
+/** Passage kinds that comment on projects rather than record them. */
+export const COMMENTARY_KINDS: ReadonlySet<PassageKind> = new Set(["writing", "note"]);
 
 /** A project as a question can name it. */
 export type ProjectName = { slug: string; title: string };
@@ -294,11 +301,12 @@ function projectPassages(): Passage[] {
     const entry = resume.projects.find((p) => p.name === project.title);
     const metrics = project.metrics.map((m) => `${m.label}: ${m.value} (${m.method})`);
     // A demo link claims no uptime: the hosting can sleep (PROJECT_LINKS), and a
-    // demo that is down has no link at all, only its recording and source.
+    // demo that is down has no link at all, only its source and, if the project
+    // has one, its recording.
     const demo = project.links.live
       ? `Live demo: ${project.links.live} — a deployed demo on ${PROJECT_LINKS.captionWake}.`
       : project.status === "deployed-demo"
-        ? "Live demo: none published while the hosted demo is offline; the case study has a recorded product tour."
+        ? `Live demo: none published while the hosted demo is offline${project.recording ? "; the case study has a recorded product tour" : ""}.`
         : null;
     return {
       id: `project-${project.slug}`,
@@ -470,7 +478,8 @@ function evaluationPassage(row: EvalRow): Passage {
       id: `eval-${anchor}`,
       text: lines(
         `${title} (retired result)`,
-        `Status: retired on ${row.retired.date}. This result was withdrawn; its figures are not published anywhere on the site and must not be quoted.`,
+        // The fallback drops the title line, so the body names the run too.
+        `Status: retired on ${row.retired.date}. The ${row.benchmark} result was withdrawn; its figures are not published anywhere on the site and must not be quoted.`,
         row.date ? `The run it described: ${row.date}.` : null,
         row.note ? `What it was: ${row.note}` : null,
         `Why it was retired: ${row.retired.reason}`,
@@ -480,6 +489,7 @@ function evaluationPassage(row: EvalRow): Passage {
       kind: "evaluation",
       links,
       projects: slug ? [slug] : [],
+      benchmark: row.benchmark,
       retired: true,
     };
   }
@@ -492,8 +502,8 @@ function evaluationPassage(row: EvalRow): Passage {
       // The grounded fallback serves a passage without its title line, so the
       // scope is restated here, ahead of the figure: a result is never shown
       // without what it measures ("a deterministic policy test, not model
-      // accuracy").
-      `What it measures: ${row.metric}.`,
+      // accuracy") and the test set it was measured on.
+      `What it measures: ${row.metric}, on ${row.benchmark}.`,
       complete
         ? `Result: ${row.result}${row.date ? ` (${row.date})` : ""}.`
         : `Status: ${row.status === "planned" ? "planned — not run yet" : "in progress — no result yet"}.`,
@@ -504,6 +514,7 @@ function evaluationPassage(row: EvalRow): Passage {
     kind: "evaluation",
     links,
     projects: slug ? [slug] : [],
+    benchmark: row.benchmark,
   };
 }
 
@@ -577,12 +588,30 @@ function writingIndexPassage(): Passage {
   };
 }
 
+/**
+ * "Essay (writing, published 2026-05-20)". Essays and notes describe a project
+ * as it was on their date, and a later release can change what they describe
+ * (the validator moved from sqlparse to SQLGlot), so every passage built from
+ * one says when it was written.
+ */
+const writingTitle = (kind: string, meta: { date: string; updated?: string }): string =>
+  `${kind} (writing, published ${meta.date}${meta.updated ? `, updated ${meta.updated}` : ""})`;
+
+/** "Essay — Trust is not a safety model (May 2026)": the citation a reader sees, dated. */
+const writingSource = (kind: string, meta: { title: string; date: string }): string =>
+  `${kind} — ${meta.title} (${formatDate(meta.date)})`;
+
 /** Published essays and guides, chunked by `##` section; the intro is its own passage. */
 function writingPassages(): Passage[] {
   const passages: Passage[] = [];
   for (const { meta, body } of WRITING) {
     const kind = WRITING_KIND[meta.category];
     const link: CitationLink = { label: meta.title, href: `/writing/${meta.slug}` };
+    const title = writingTitle(kind, meta);
+    const source = writingSource(kind, meta);
+    // Read from the whole essay: a section that does not repeat a project's
+    // name is still about it.
+    const named = projectsNamedIn(`${meta.title}\n${meta.summary}\n${body}`);
     for (const section of sectionsOf(body)) {
       const clean = stripMarkdown(section.body);
       if (!clean) continue;
@@ -592,16 +621,16 @@ function writingPassages(): Passage[] {
         text:
           heading === null
             ? lines(
-                `${kind} (writing) — ${meta.title}`,
+                `${title} — ${meta.title}`,
                 meta.summary,
                 clean,
                 meta.topics.length > 0 ? `Topics: ${meta.topics.join(", ")}.` : null,
               )
-            : `${meta.title} — ${heading}\n${clean}`,
-        source: heading === null ? `${kind} — ${meta.title}` : `${kind} — ${meta.title} — ${heading}`,
+            : `${title} — ${meta.title} — ${heading}\n${clean}`,
+        source: heading === null ? source : `${source} — ${heading}`,
         kind: "writing",
         links: [link],
-        projects: [],
+        projects: named,
       });
     }
   }
@@ -613,15 +642,15 @@ function notePassages(): Passage[] {
   return NOTES.map(({ meta, body }) => ({
     id: `note-${meta.slug}`,
     text: lines(
-      `Note (writing) — ${meta.title}`,
+      `${writingTitle("Note", meta)} — ${meta.title}`,
       stripMarkdown(body),
       `Tags: ${meta.tags.join(", ")}.`,
       meta.source ? `Reference: ${meta.source}` : null,
     ),
-    source: `Note — ${meta.title}`,
+    source: writingSource("Note", meta),
     kind: "note" as const,
     links: [{ label: meta.title, href: `/notes/${meta.slug}` }],
-    projects: [],
+    projects: projectsNamedIn(`${meta.title}\n${body}`),
   }));
 }
 

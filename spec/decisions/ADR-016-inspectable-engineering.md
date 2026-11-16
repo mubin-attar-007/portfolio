@@ -1,7 +1,8 @@
 # ADR-016 — Make an engineering decision inspectable
 
 Status: accepted, 11 September 2026. Refines ADR-015. The evaluation counts in
-paragraph 3 were superseded on 16 November 2026 (see the note at the end).
+paragraph 3 were superseded, and the DBWhisper recording withdrawn, on 16 November
+2026 (see the note at the end).
 
 The homepage repeated DBWhisper's request path in its hero and a second large
 walkthrough. Three equal project cards reduced the other systems to screenshots
@@ -54,5 +55,13 @@ The charter's "honesty over hype" outranks this record, so:
   "Deterministic policy test, not model accuracy", with its date and a link to
   its registry row. The walkthrough's Evaluate stage pairs it with the Spider
   sample, scoped "generation model only, no retrieval or policy layer".
+- The DBWhisper recording is withdrawn rather than kept "with corrected
+  subtitles and explicit captions": its frames show the withdrawn counts, "works
+  on databases with hundreds of tables" and "the live demo never goes dark" — the
+  audit's §4.4(e) and (f) — and a caption cannot take a figure off the screen. The
+  case study keeps its card capture, walkthrough, diagram, and demo and source
+  links. A replacement is recorded from the current v2 site and checked frame by
+  frame against the audit before it is published (CONTENT_MODEL §4). The other
+  three recordings stand, as the paragraph on existing recordings describes.
 
 Everything else in this record stands.

@@ -109,8 +109,9 @@ const SPIDER_SCORE = { passed: 101, scored: 139, sampled: 148 } as const;
 
 /**
  * CrownWager's repository at the commit that last changed its model manifest
- * (000651f, 4 Jun 2026); the metrics file beside it was last changed one commit
- * earlier and is identical here.
+ * (000651f, 4 Jun 2026). The metrics file beside it was written by the
+ * training run committed in ac0b2fa (3 Jun 2026), its only commit: it is
+ * identical here and at the repository's head, so the row is dated by that run.
  */
 const CROWNWAGER_AT_METRICS =
   "https://github.com/mubin-attar-007/crownwager/blob/000651fb177a7eeb8667b79248a04fca8ed07ffe";
@@ -181,8 +182,8 @@ const RAW = [
     metric: "Model accuracy (cross-validated)",
     result: CROWNWAGER_CV_RESULT,
     status: "complete",
-    date: "2026-07-02",
-    note: `${CROWNWAGER_MODEL.cv.folds}-fold stratified cross-validation (fixed seed) on ${thousands(CROWNWAGER_MODEL.games)} NBA games — the mean accuracy across the folds, ± their standard deviation — replacing an earlier post-hoc “best of 300 random splits” 68%. The base home-win rate is ${percent(CROWNWAGER_MODEL.baseRate)}, so this is a real ~${CROWNWAGER_EDGE}-point edge. A separate 80/20 hold-out on ${thousands(CROWNWAGER_MODEL.holdout.games)} games scores ${percent(CROWNWAGER_MODEL.holdout.accuracy)} (ROC-AUC ${threeDecimals(CROWNWAGER_MODEL.holdout.rocAuc)}, log-loss ${threeDecimals(CROWNWAGER_MODEL.holdout.logLoss)}). Published picks are then graded against the real final score, and the track record is flagged “insufficient” below 20 settled picks.`,
+    date: "2026-06-03",
+    note: `${CROWNWAGER_MODEL.cv.folds}-fold stratified cross-validation (fixed seed) on ${thousands(CROWNWAGER_MODEL.games)} NBA games (recorded in commit ac0b2fa) — the mean accuracy across the folds, ± their standard deviation — replacing an earlier post-hoc “best of 300 random splits” 68%. The base home-win rate is ${percent(CROWNWAGER_MODEL.baseRate)}, so this is a real ~${CROWNWAGER_EDGE}-point edge. A separate 80/20 hold-out on ${thousands(CROWNWAGER_MODEL.holdout.games)} games scores ${percent(CROWNWAGER_MODEL.holdout.accuracy)} (ROC-AUC ${threeDecimals(CROWNWAGER_MODEL.holdout.rocAuc)}, log-loss ${threeDecimals(CROWNWAGER_MODEL.holdout.logLoss)}). Published picks are then graded against the real final score, and the track record is flagged “insufficient” below 20 settled picks.`,
     link: `${CROWNWAGER_AT_METRICS}/ai/models/model_manifest.yaml`,
   },
   {

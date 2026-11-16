@@ -15,7 +15,8 @@ import {
 import { SITE } from "@/config/site";
 import { pageMetadata } from "@/lib/seo";
 
-const LAST_UPDATED = "July 23, 2026";
+/** When this policy last changed: the date the page shows, and its machine-readable form. */
+const LAST_UPDATED = { label: "November 16, 2026", iso: "2026-11-16" } as const;
 
 export const metadata: Metadata = {
   ...pageMetadata({
@@ -95,6 +96,15 @@ export default function PrivacyPage() {
               <li className="flex items-start gap-2">
                 <span aria-hidden="true">•</span>
                 <span>
+                  <strong>Ask this site</strong> sends your question and the recent conversation to
+                  Google&apos;s Gemini API to write the answer. This site stores no transcript, and
+                  logs one line per answer — how it was answered, timings and token counts — never
+                  the question, the answer or your address.
+                </span>
+              </li>
+              <li className="flex items-start gap-2">
+                <span aria-hidden="true">•</span>
+                <span>
                   Buttondown and Cal.com are only loaded when their public integration settings are
                   enabled for opt-in newsletter or scheduling actions.
                 </span>
@@ -144,7 +154,7 @@ export default function PrivacyPage() {
           <article className={`${PANEL} reveal`} style={stagger(5)}>
             <p className={LABEL}>Change log</p>
             <p className="mt-4 text-sm leading-6 text-ink-secondary">
-              Last updated: <time dateTime="2026-07-23">{LAST_UPDATED}</time>
+              Last updated: <time dateTime={LAST_UPDATED.iso}>{LAST_UPDATED.label}</time>
             </p>
             <p className="mt-3 text-sm leading-6 text-ink-secondary">
               This page may be revised to reflect updated integrations or hosting policy.

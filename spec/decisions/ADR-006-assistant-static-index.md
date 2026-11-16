@@ -57,3 +57,11 @@ stays straightforward if the corpus ever grows by orders of magnitude.
 - **Fallback.** Without a key, quota, or a usable model reply, the route serves the best
   cited passage verbatim — an FAQ answer only when it scores within 90% of that
   passage — rather than always the best FAQ answer.
+- **Named projects (second review, same day).** A short question naming a project was
+  still answered from another project when a rarer shared word ("act", "handle")
+  carried its topic weight. The record of a named project is now exempt from the
+  per-passage share; essays and notes carry the projects they name, so one about another
+  project is demoted; a question about a demo or source prefers the overview; a retired
+  row is preferred only by a question about it; a chain of follow-ups keeps the topic
+  its first question set; and every essay and note passage is dated. Detail:
+  AI_ASSISTANT.md §2.
