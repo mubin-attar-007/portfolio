@@ -76,7 +76,7 @@ export const dbwhisperDiagram: DiagramSpec = {
       row: 2,
       decision: {
         rejected: "A single hardcoded provider",
-        why: "OpenAI → OpenRouter → DeepSeek → Groq → Anthropic → Gemini, ordered by cost. Gemini's free tier is always appended as the last resort, so a quota wall on any one provider is invisible to the user. Every provider failure is logged, not just rate-limits.",
+        why: "OpenAI → OpenRouter → DeepSeek → Groq → Anthropic → Gemini, ordered by cost. A failed or rate-limited generation moves to the next provider that has credentials configured; how many are live depends on the keys set, and with none set, generation fails rather than degrading silently. Every provider failure is logged, not just rate-limits.",
         tradeoff: "Six providers' credentials to manage, and slightly different response shapes to normalize.",
       },
     },

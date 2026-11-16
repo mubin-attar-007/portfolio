@@ -36,6 +36,11 @@ const RAW = [
     },
     links: { live: "https://dbwhisper.vercel.app", repo: "https://github.com/mubin-attar-007/dbwhisper" },
     diagram: "dbwhisper",
+    // No recording. The old product-site capture showed the golden-set figures
+    // and the scale and uptime claims DBWhisper's claim audit withdrew (§4.4 at
+    // bca0635), and a caption cannot take a figure off the screen. Re-record
+    // from the current v2 site, check every frame and caption against the
+    // audit, then add `recording` here (2026-11-16).
     changelog: [
       { date: "2026-07-03", summary: "Schema browser, a verified NL→SQL training flywheel, and the full marketing site." },
       { date: "2026-07-01", summary: "Flagship web console — auto-generated charts, CSV export, sortable results, staged progress." },
@@ -68,6 +73,12 @@ const RAW = [
     },
     links: { live: "https://tradepulse-live.vercel.app", repo: "https://github.com/mubin-attar-007/tradepulse" },
     diagram: "tradepulse",
+    recording: {
+      alt: "Recorded scroll through the TradePulse product website.",
+      caption: "Product website recording. Market data is delayed; older on-screen references to real-time charting are not the current data contract.",
+      width: 1280,
+      height: 760,
+    },
     changelog: [
       { date: "2026-07-03", summary: "Public per-ticker pages, a position-sizing calculator, and real paper-trading email alerts." },
       { date: "2026-07-02", summary: "A public methodology page and a reality pass — cut anything the engine couldn't back." },
@@ -105,6 +116,12 @@ const RAW = [
     // `live: "https://crownwager.vercel.app"` once the Space is running again.
     links: { repo: "https://github.com/mubin-attar-007/crownwager" },
     diagram: "crownwager",
+    recording: {
+      alt: "Recorded scroll through the CrownWager product website.",
+      caption: `Product website recording. The on-screen training count differs from the current ${cw.cv.folds}-fold evaluation on ${cw.games} games documented below.`,
+      width: 1280,
+      height: 760,
+    },
     changelog: [
       { date: "2026-07-02", summary: "A verifiable model track-record and prediction confidence grades; cut a cherry-picked split in a reality pass." },
       { date: "2026-07-01", summary: "Best-bets credibility layer — fair odds, confidence grades, and filters." },
@@ -142,6 +159,14 @@ const RAW = [
     // and the résumé link.
     links: { repo: "https://github.com/mubin-attar-007/llm_studio" },
     diagram: "llm-studio",
+    // Auth-gated, so the tour is signed into a real account (the chat UI,
+    // streaming and model switching), not a login screen.
+    recording: {
+      alt: "Recorded LLM Studio chat interface with conversation history and model selection.",
+      caption: "Application recording — a multi-model chat workspace with per-user history and model switching.",
+      width: 1280,
+      height: 720,
+    },
     changelog: [
       { date: "2026-07-02", summary: "End-to-end account flows (change/forgot password, delete account) and SEO/PWA metadata." },
       { date: "2026-07-01", summary: "A ChatGPT-parity UI overhaul and clearer provider rate-limit / quota error handling." },

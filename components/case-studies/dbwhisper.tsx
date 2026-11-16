@@ -110,7 +110,7 @@ export function DBWhisperBody() {
               choice: "Defense in depth, not a single gate",
               alternatives: ["rely on the validator alone"],
               reason:
-                "Below the validator: read-only DB users (a probe warns if a connection looks writable), a query timeout + row cap, and log sanitization that masks passwords, API keys, and SQL literals. The warning probe does not replace correctly configured database permissions.",
+                "Below the validator: read-only DB users, a query timeout + row cap, and log sanitization that masks passwords, API keys, and SQL literals. Enrollment runs a non-destructive privilege probe and refuses (HTTP 400) a connection that appears writable; the probe is a backstop, not a substitute for a SELECT-only role.",
               tradeoff: "More moving parts to maintain and test.",
             },
             {

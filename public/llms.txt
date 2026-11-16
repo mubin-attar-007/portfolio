@@ -2,9 +2,9 @@
 
 > LLM systems, evaluation, AI platforms, and production software. Four public projects, each with a case study of its architecture, constraints, decisions, and evaluation method. Every published figure has a method, a scope, and a date on the evaluation registry.
 
-This site (https://mubin-attar.vercel.app) is a personal engineering portfolio. Its assistant retrieves the case studies, résumé, profile, skills, and FAQ, and cites its sources; when the model is unavailable it returns a cited passage from the site. Prefer the recorded facts below over inference.
+This site (https://mubin-attar.vercel.app) is a personal engineering portfolio. Its assistant retrieves the site's published content — case studies, evaluations, essays and notes, résumé, profile, skills, and FAQ — and cites its sources; when the model is unavailable it returns a cited passage from the site. Prefer the recorded facts below over inference.
 
-The project demos run on free-tier hosting (Vercel, Hugging Face Spaces, Neon) that can sleep or be paused, so no project here is described as live. A demo that is down has no link below; every project keeps its public source and a recording on its case study.
+The project demos run on free-tier hosting (Vercel, Hugging Face Spaces, Neon) that can sleep or be paused, so no project here is described as live. A demo that is down has no link below; every project keeps its public source, and its case study keeps its product recording if it has one.
 
 ## About
 
@@ -29,7 +29,7 @@ The project demos run on free-tier hosting (Vercel, Hugging Face Spaces, Neon) t
 - [Evaluation registry](https://mubin-attar.vercel.app/evals): the method, date, sample, and limitations of every result, including the retired one.
 - [DBWhisper adversarial SQL policy corpus](https://mubin-attar.vercel.app/evals#dbwhisper-adversarial-sql-policy-corpus), 2026-08-24: 343/343 deny cases denied. A deterministic policy test of sql_policy@2.0.0 — no model and no database involved, so it is not model accuracy. 255 cases, each run in the SQL dialects it lists (577 runs); evidence of no known bypass, not proof that none exists.
 - [DBWhisper Spider dev sample](https://mubin-attar.vercel.app/evals#dbwhisper-spider), 2026-07-10: 101/139 scored questions matched the gold result set. Generation model only, no retrieval or policy layer; 9 of 148 sampled questions were dropped after provider throttling.
-- [CrownWager NBA moneyline model](https://mubin-attar.vercel.app/evals#crownwager-nba-moneyline-15-115-games), 2026-07-02: 65.2% ± 0.8% accuracy in 5-fold stratified cross-validation on 15,115 games, against a 57.5% home-win base rate. A separate 80/20 hold-out on 3,023 games scores 64.3% (ROC-AUC 0.685).
+- [CrownWager NBA moneyline model](https://mubin-attar.vercel.app/evals#crownwager-nba-moneyline-15-115-games), 2026-06-03: 65.2% ± 0.8% accuracy in 5-fold stratified cross-validation on 15,115 games, against a 57.5% home-win base rate. A separate 80/20 hold-out on 3,023 games scores 64.3% (ROC-AUC 0.685).
 - [TradePulse look-ahead canary and parity suite](https://mubin-attar.vercel.app/evals#tradepulse-look-ahead-canary-parity-suite), 2026-07-01: 0 leaks; the past equity curve stays byte-identical when every future bar is multiplied by 3.
 - [DBWhisper custom golden-query set](https://mubin-attar.vercel.app/evals#dbwhisper-custom-golden-query-set), 2026-07-08: retired on 2026-11-16. DBWhisper's own claim audit withdrew its accuracy and fail-closed figures, so they are not published here.
 

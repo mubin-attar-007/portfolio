@@ -65,7 +65,9 @@ const STATIC = [
 
 /**
  * Figures DBWhisper's own claim audit withdrew (golden set: 18/22 exact, 21/22
- * lenient, 4/4 refused, the 22/22 baseline) and the scale claims it deleted.
+ * lenient, 4/4 refused, the 22/22 baseline), the scale claims it deleted
+ * (§4.4(e)), and its availability claims (§4.4(f): "always answers", "never
+ * goes dark", a quota wall "invisible to the user").
  */
 const RETIRED = [
   /\b(?:18|21|22)\s*(?:\/|of)\s*22\b/,
@@ -76,6 +78,9 @@ const RETIRED = [
   /large databases/i,
   /with many tables/i,
   /beyond toy (?:schemas|databases)/i,
+  /always answers/i,
+  /never goes dark/i,
+  /invisible to the user/i,
 ];
 
 test("no page, caption, or file quotes a figure DBWhisper's audit retired", () => {
