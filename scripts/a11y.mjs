@@ -89,6 +89,27 @@ async function runAxe(page) {
   return res.violations;
 }
 
+/**
+ * Wait until every finite animation and transition on the page has finished.
+ * Overlays fade in, and axe samples colours as they are painted, so auditing a
+ * mid-fade frame reports contrast that no user ever sees once it settles.
+ * Infinite animations (a spinner, a pulse) are skipped, and five seconds caps
+ * the wait so one runaway transition cannot hang the gate.
+ */
+async function settleAnimations(page) {
+  await page.evaluate(async () => {
+    const finite = document.getAnimations().filter((animation) => {
+      const timing = animation.effect?.getComputedTiming();
+      return animation.playState === "running" && timing && timing.iterations !== Infinity;
+    });
+    await Promise.race([
+      Promise.all(finite.map((animation) => animation.finished.catch(() => undefined))),
+      new Promise((resolve) => setTimeout(resolve, 5000)),
+    ]);
+    await new Promise((resolve) => requestAnimationFrame(() => requestAnimationFrame(resolve)));
+  });
+}
+
 async function open(page, route, expectedTheme) {
   await page.goto(BASE + route, { waitUntil: "load", timeout: 60000 });
   const applied = await page.evaluate(() =>
@@ -480,6 +501,8 @@ try {
       await open(page, "/", pass.theme);
       await page.getByRole("button", { name: d.trigger }).first().click();
       await page.getByRole("dialog", { name: d.dialog }).waitFor({ timeout: 10000 });
+      // The dialog exists before its entrance finishes; audit the settled state.
+      await settleAnimations(page);
       const v = await runAxe(page);
       total += v.length;
       report(`${prefix} / — ${d.label} open`, v);
