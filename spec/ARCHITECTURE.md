@@ -137,11 +137,13 @@ No vector DB, no embeddings (ADR-006). No conversation persistence server-side.
 
 ## 7. Environment & config
 
-`GEMINI_API_KEY` (server only, optional) · `NEXT_PUBLIC_SITE_URL` (optional; defaults to
+`GEMINI_API_KEY` (server only, optional) · `GEMINI_MODEL` (server only, optional; default
+`gemini-3.5-flash-lite`) · `NEXT_PUBLIC_SITE_URL` (optional; defaults to
 `https://mubin-attar.vercel.app`) · `ASSISTANT_DAILY_CAP` (optional; default 500) ·
 `NEXT_PUBLIC_CAL_URL` and `NEXT_PUBLIC_BUTTONDOWN_USERNAME` (optional overrides of
-`config/site.ts`). `lib/env.ts` parses the site URL and the cap with safe fallbacks — an
-invalid value falls back to its default instead of failing the build or a request.
+`config/site.ts`). `lib/env.ts` parses the site URL, the cap and the model with safe
+fallbacks — an invalid value (for the model, anything but a bare model id) falls back to
+its default instead of failing the build or a request.
 `config/site.ts` holds name, role, email, location, socials, integrations, the
 availability line, and footer copy — by rule the ONLY non-`content/` place copy may
 live. Some copy is still written inline (`app/privacy/page.tsx`, the assistant panel's

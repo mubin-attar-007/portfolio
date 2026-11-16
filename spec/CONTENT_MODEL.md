@@ -104,7 +104,7 @@ in doubt: describe the mechanism, omit the number.
 ```ts
 { title, summary (≤ 220), date, updated?,
   category: "essay" | "guide" | "note",
-  topics: string[], draft: boolean }          // slug comes from the file name
+  topics: string[], draft: boolean }          // slug = file name; must match /^[a-z0-9-]+$/
 ```
 
 - **essay** — trade-offs and judgment.
@@ -120,7 +120,8 @@ a case study's Key decisions.
 
 - **Notes — `content/notes/*.mdx` (`NoteSchema`):** `{ title, date, tags (≥ 1),
   source?: url, draft }`. Short, dated, tag-indexed; `/notes` filters by tag. Loaded by
-  `lib/notes.ts`.
+  `lib/notes.ts`. As for writing, the slug is the file name and must match
+  `/^[a-z0-9-]+$/` (`lib/content-slug.ts`), or the build fails.
 - **Now — `content/now.mdx` (`NowSchema`):** `{ updated (required), lede, exploring:
   [{ title, body }] }`. `updated` is required so "Last updated" can never go silently
   stale; the homepage shows the first three `exploring` items. Loaded by `lib/now.ts`.

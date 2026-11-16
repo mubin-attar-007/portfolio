@@ -81,11 +81,12 @@ routes; no client data fetching for content.
   and content schema validation have tests. The runner is Node's `node:test`: `npm test`
   runs `test/**/*.test.mts` with `test/alias-loader.mjs` resolving the `@/` alias and
   extensionless TS imports; Node 24 strips the types natively.
-  Current coverage (2026-11-13): 39 tests in 7 files covering content law (projects,
+  Current coverage (2026-11-16): 52 tests in 9 files covering content law (projects,
   metric methods, links), feeds, formatting, navigation, reading time, citation links,
-  and assistant retrieval. Gap against the requirement: several exported `lib/`
-  functions have no direct test yet, notably the rate limiter (`lib/ai/rate-limit.ts`),
-  env parsing (`lib/env.ts`) and the MDX collection loader (`lib/mdx-collection.ts`).
+  assistant retrieval, env parsing (`GEMINI_MODEL`), and the content-slug guard
+  (`lib/content-slug.ts`). Gap against the requirement: some exported `lib/` functions
+  have no direct test yet, notably the rate limiter (`lib/ai/rate-limit.ts`) and the
+  MDX collection loader beyond its slug guard (`lib/mdx-collection.ts`).
 - **Assistant grounding:** `test/retrieval.test.mts` checks the BM25 corpus against the
   question set in `lib/ai/test-questions.ts`, the relevance floor for off-topic queries,
   and the injection screen — without any LLM quota. See AI_ASSISTANT.md §7.
@@ -144,5 +145,6 @@ Privacy-first analytics: `@vercel/analytics`, rendered only on Vercel deployment
 (`VERCEL=1`); no cookies, no consent banner. Custom events, sent through
 `lib/analytics.ts`: `case_study_read_depth` (25/50/75/100, from the case-study reading
 outline) and `resume_downloaded`. Error tracking: none beyond the platform's logs. The
-assistant route logs nothing; rate limiting keeps only an in-memory client key and
-timestamps.
+assistant route's only log line is the model id and HTTP status when Gemini rejects a
+request (never the key, the request, the response body, or visitor text); rate limiting
+keeps only an in-memory client key and timestamps.
