@@ -1,77 +1,29 @@
 // -----------------------------------------------------------------------------
-// POST /api/chat — the grounded portfolio assistant.
+// POST /api/chat — the grounded portfolio assistant (spec/AI_ASSISTANT.md §4).
 //
-// Pipeline:
-//   1. Rate-limit by client IP (in-memory sliding window, 15/min) → 429.
-//   2. Validate + sanitize { messages }; cap length; screen prompt-injection.
-//      Injection / config attempts get a polite refusal — the model is NOT called.
-//   3. Retrieve top-k real passages for the latest user message (network-free).
-//   4. Stream a grounded Gemini synthesis over SSE, then emit the citations.
-//   5. On ANY Gemini error/quota → GRACEFUL FALLBACK: stream the single best
-//      retrieved FAQ answer verbatim + its citation. Never 500 to the user.
-//
-// The API key is server-side only and never logged or returned. No PII logged.
+// This file is the HTTP adapter only. The pipeline — request screening, rate
+// limits, injection screening, retrieval, the live model call and its grounded
+// fallback — lives in lib/ai/chat-handler.ts, where tests can drive it without
+// a server. A route file may export only handlers and segment config.
 // -----------------------------------------------------------------------------
 
-import { retrieve, fallbackAnswer } from "@/lib/ai/retrieval";
-import { buildSystemInstruction } from "@/lib/ai/system-prompt";
-import { streamGemini } from "@/lib/ai/gemini";
-import {
-  sanitizeMessages,
-  looksLikeInjection,
-  INJECTION_REFUSAL,
-} from "@/lib/ai/guard";
-import {
-  checkRateLimit,
-  clientKeyFromHeaders,
-  consumeGeminiBudget,
-} from "@/lib/ai/rate-limit";
+import { handleChat } from "@/lib/ai/chat-handler";
 
-// This route is inherently dynamic (reads the body + per-request headers) and
-// must run on Node (uses fs at retrieval import). Never cache.
+// Inherently dynamic (reads the body and per-request headers) and on Node,
+// because retrieval reads content files with `fs`. Never cached.
 export const dynamic = "force-dynamic";
 export const runtime = "nodejs";
 
-// ---- SSE framing -----------------------------------------------------------
+/**
+ * Seconds the platform allows one request. Longer than the handler's own
+ * ANSWER_TIMEOUT_MS (20 s), so the handler's timeout and fallback always run
+ * before the platform kills the function. Must stay a literal: Next reads
+ * segment config statically.
+ */
+export const maxDuration = 30;
 
-type Citation = { source: string };
-
-const enc = new TextEncoder();
-
-/** Encode a named SSE event with a JSON payload. */
-function sse(event: string, data: unknown): Uint8Array {
-  return enc.encode(`event: ${event}\ndata: ${JSON.stringify(data)}\n\n`);
-}
-
-/** A one-shot stream that emits a single text answer + citation + meta. */
-function staticStream(opts: {
-  text: string;
-  citations: Citation[];
-  mode: "fallback" | "refusal";
-  note?: string;
-}): ReadableStream<Uint8Array> {
-  return new ReadableStream({
-    start(controller) {
-      controller.enqueue(sse("meta", { mode: opts.mode, note: opts.note ?? null }));
-      controller.enqueue(sse("token", { text: opts.text }));
-      controller.enqueue(sse("sources", { citations: opts.citations }));
-      controller.enqueue(sse("done", {}));
-      controller.close();
-    },
-  });
-}
-
-function sseResponse(body: ReadableStream<Uint8Array>, status = 200): Response {
-  return new Response(body, {
-    status,
-    headers: {
-      "Content-Type": "text/event-stream; charset=utf-8",
-      "Cache-Control": "no-cache, no-transform",
-      Connection: "keep-alive",
-      // Defeat proxy buffering so tokens flush as they arrive.
-      "X-Accel-Buffering": "no",
-    },
-  });
+export async function POST(request: Request): Promise<Response> {
+  return handleChat(request);
 }
 
 function unsupportedMethodResponse(method: string): Response {
@@ -91,191 +43,8 @@ function unsupportedMethodResponse(method: string): Response {
   );
 }
 
-function serviceUnavailable(note = "assistant-unavailable"): Response {
-  return sseResponse(
-    staticStream({
-      text: "The assistant is temporarily unavailable. Please try again in a moment.",
-      citations: [],
-      mode: "fallback",
-      note,
-    }),
-    503,
-  );
-}
-
-// ---- Handler ---------------------------------------------------------------
-
-export async function POST(request: Request): Promise<Response> {
-  try {
-    // 1) Rate limit.
-    const key = clientKeyFromHeaders(request.headers);
-    const rl = checkRateLimit(key);
-    if (!rl.allowed) {
-      // A refusal is not an answer, so it is not an SSE stream: 429 + Retry-After
-      // is the contract every HTTP client already understands. The UI reads the
-      // header to tell the visitor exactly how long to wait.
-      return Response.json(
-        { error: "rate_limited", retryAfterSec: rl.retryAfterSec },
-        {
-          status: 429,
-          headers: {
-            "Retry-After": String(rl.retryAfterSec),
-            "Cache-Control": "no-store",
-          },
-        },
-      );
-    }
-
-    // 2) Parse + sanitize.
-    let input: unknown;
-    try {
-      input = await request.json();
-    } catch {
-      input = null;
-    }
-    const sanitized = sanitizeMessages(input);
-    if (!sanitized.ok) {
-      const text =
-        sanitized.reason === "too-long"
-          ? "That message is a bit long for me — could you trim it to the essentials and ask again?"
-          : "I didn't catch a question there. Try asking about Mubin's shipped work, a project's architecture, or his experience.";
-      return sseResponse(
-        staticStream({ text, citations: [], mode: "fallback", note: sanitized.reason }),
-      );
-    }
-
-    const { messages, latestUser } = sanitized;
-
-    // 3) Prompt-injection screen — refuse without calling the model. We screen
-    // the latest turn AND the concatenation of recent user turns, so an attacker
-    // can't split a pattern (e.g. "ignore all previous" / "instructions") across
-    // two messages to slip past the single-message regex. Best-effort only — the
-    // system prompt remains the real defense.
-    const recentUserText = messages
-      .filter((m) => m.role === "user")
-      .map((m) => m.content)
-      .join(" ");
-    if (looksLikeInjection(latestUser) || looksLikeInjection(recentUserText)) {
-      return sseResponse(
-        staticStream({
-          text: INJECTION_REFUSAL,
-          citations: [],
-          mode: "refusal",
-          note: "injection-screened",
-        }),
-      );
-    }
-
-    // 4) Retrieve grounded context for the latest user turn.
-    const passages = retrieve(latestUser, { k: 4 });
-    const citations: Citation[] = passages.map((p) => ({ source: p.source }));
-    const systemInstruction = buildSystemInstruction(passages);
-
-    // 4b) Global daily cost cap. If the shared-with-dbwhisper Gemini budget is
-    // exhausted for the day, skip the model entirely and serve the grounded
-    // retrieval fallback (still cited, never a 500). This is a real ceiling on
-    // spend and isolates dbwhisper's quota from any burst here. Consuming a unit
-    // here (rather than just peeking) also counts this served turn against the
-    // budget so the cap can't be nibbled around by rapid retries.
-    if (!consumeGeminiBudget()) {
-      const fb = fallbackAnswer(latestUser);
-      if (fb) {
-        return sseResponse(
-          staticStream({
-            text: fb.answer,
-            citations: [{ source: fb.citation }],
-            mode: "fallback",
-            note: "daily-budget-reached",
-          }),
-        );
-      }
-      return sseResponse(
-        staticStream({
-          text:
-            "I don't have that on Mubin's site yet. Try asking what he's shipped in production, the DBWhisper architecture, or his healthcare-AI experience.",
-          citations: [],
-          mode: "fallback",
-          note: "daily-budget-reached",
-        }),
-      );
-    }
-
-    // 5) Stream Gemini; fall back to the best FAQ answer on any error/quota.
-    const stream = new ReadableStream<Uint8Array>({
-      async start(controller) {
-        let produced = false;
-        try {
-          controller.enqueue(sse("meta", { mode: "live", note: null }));
-          // Hand the request's abort signal to the upstream call. When the visitor
-          // closes the panel or navigates away, Gemini stops generating instead of
-          // running to completion against a socket nobody is reading — real quota
-          // and real money on a shared key.
-          for await (const delta of streamGemini({
-            systemInstruction,
-            messages,
-            signal: request.signal,
-          })) {
-            if (delta) {
-              produced = true;
-              controller.enqueue(sse("token", { text: delta }));
-            }
-          }
-          // Attach the citations actually used for grounding.
-          controller.enqueue(sse("sources", { citations }));
-          controller.enqueue(sse("done", {}));
-          controller.close();
-        } catch {
-          // Client gone: the abort we propagated is what threw. There is nobody
-          // to serve a fallback to, and the controller is already tearing down.
-          if (request.signal.aborted) {
-            try {
-              controller.close();
-            } catch {
-              // Already closed by the platform on disconnect — nothing to do.
-            }
-            return;
-          }
-          // GRACEFUL FALLBACK. If nothing was streamed yet, emit the best FAQ
-          // answer verbatim + its citation. If some tokens already went out, we
-          // still close cleanly with whatever citations we have.
-          if (!produced) {
-            const fb = fallbackAnswer(latestUser);
-            // Re-signal that this turn is a fallback so the UI can label it.
-            controller.enqueue(
-              sse("meta", { mode: "fallback", note: "live-assistant-busy" }),
-            );
-            if (fb) {
-              controller.enqueue(
-                sse("token", {
-                  text: fb.answer,
-                }),
-              );
-              controller.enqueue(sse("sources", { citations: [{ source: fb.citation }] }));
-            } else {
-              controller.enqueue(
-                sse("token", {
-                  text:
-                    "I couldn't find that on Mubin's site. Try asking what he's shipped in production, the DBWhisper architecture, or his healthcare-AI experience.",
-                }),
-              );
-              controller.enqueue(sse("sources", { citations: [] }));
-            }
-          } else {
-            controller.enqueue(sse("sources", { citations }));
-          }
-          controller.enqueue(sse("done", {}));
-          controller.close();
-        }
-      },
-    });
-
-    return sseResponse(stream);
-  } catch {
-    return serviceUnavailable("route-handler-error");
-  }
-}
-
-// Reject non-POST verbs cleanly (no body reveal).
+// Reject non-POST verbs cleanly (no body reveal). OPTIONS answering 405 with no
+// CORS headers is what makes a cross-site JSON request fail its preflight.
 export async function GET(): Promise<Response> {
   return unsupportedMethodResponse("GET");
 }

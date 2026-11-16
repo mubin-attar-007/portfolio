@@ -550,7 +550,12 @@ await withPage({}, async (page) => {
   releaseResponse();
   const citation = page.getByRole("dialog").getByRole("link", { name: "DBWhisper" });
   await citation.waitFor();
-  await page.waitForFunction(() => document.querySelector('button[type="submit"]')?.disabled === false);
+  // Ask is never `disabled` (a focused button that becomes disabled drops focus
+  // to <body>); it reports its state through aria-disabled instead.
+  await page.waitForFunction(() => {
+    const ask = document.querySelector('#assistant-panel-dialog button[type="submit"]');
+    return ask !== null && ask.getAttribute("aria-disabled") !== "true";
+  });
   check("assistant: completion preserves the next draft and unlocks sending", await question.inputValue() === nextQuestion);
   check("assistant: the cited project is a usable same-site link", await citation.getAttribute("href") === "/work/dbwhisper");
   await citation.click();

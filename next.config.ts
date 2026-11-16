@@ -49,6 +49,13 @@ const securityHeaders = [
 
 const nextConfig: NextConfig = {
   output: "standalone",
+  // The assistant's corpus (lib/ai/corpus.ts) reads these MDX folders with fs
+  // when /api/chat loads. The tracer follows the literal reads too; this list
+  // makes the bundle's contents a stated fact rather than an inference, so an
+  // essay or note can never silently drop out of the assistant on Vercel.
+  outputFileTracingIncludes: {
+    "/api/chat": ["./content/projects/*.mdx", "./content/writing/*.mdx", "./content/notes/*.mdx"],
+  },
   async headers() {
     return [
       {

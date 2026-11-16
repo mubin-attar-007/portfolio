@@ -6,8 +6,9 @@
 // process.env server-side only, sent as an `x-goog-api-key` header (never a
 // query parameter), and is NEVER included in any thrown error or log.
 //
-// `args.signal` is forwarded to fetch, so a client disconnect stops generation
-// upstream instead of burning quota on an answer nobody will read.
+// `args.signal` is forwarded to fetch, so a client disconnect or a timeout in
+// the caller stops generation upstream instead of burning quota on an answer
+// nobody will read.
 // -----------------------------------------------------------------------------
 
 import type { ChatMessage } from "./guard";
@@ -32,11 +33,23 @@ export class GeminiError extends Error {
   }
 }
 
+/**
+ * Thrown before any request when GEMINI_API_KEY is unset. A separate class so
+ * the route's log says "not configured" rather than reporting an upstream 503
+ * that Google never sent.
+ */
+export class GeminiNotConfiguredError extends GeminiError {
+  constructor() {
+    super("Assistant is not configured.", 503);
+    this.name = "GeminiNotConfiguredError";
+  }
+}
+
 type GeminiPart = { text: string };
 type GeminiContent = { role: "user" | "model"; parts: GeminiPart[] };
 
 /** Map our chat history to Gemini's contents (assistant → "model"). */
-function toContents(messages: ChatMessage[]): GeminiContent[] {
+function toContents(messages: readonly ChatMessage[]): GeminiContent[] {
   return messages.map((m) => ({
     role: m.role === "assistant" ? "model" : "user",
     parts: [{ text: m.content }],
@@ -45,19 +58,64 @@ function toContents(messages: ChatMessage[]): GeminiContent[] {
 
 export type StreamArgs = {
   systemInstruction: string;
-  messages: ChatMessage[];
+  messages: readonly ChatMessage[];
   signal?: AbortSignal;
 };
 
 /**
- * Stream a grounded completion from Gemini. Async-generates text deltas.
- * Throws GeminiError on quota (429), server (5xx), missing key, or network fail
- * so the caller can trigger the graceful FAQ fallback.
+ * How a stream ended. `stop` is a finished answer; `max-tokens` was cut off
+ * by the output limit; `blocked` was stopped by a safety or recitation filter;
+ * `other` is any other reason Google gives; `unknown` means no reason arrived.
  */
-export async function* streamGemini(args: StreamArgs): AsyncGenerator<string> {
+export type FinishReason = "stop" | "max-tokens" | "blocked" | "other" | "unknown";
+
+/** What the stream reports once it ends: its finish reason and token counts. */
+export type StreamOutcome = {
+  finish: FinishReason;
+  promptTokens?: number;
+  outputTokens?: number;
+};
+
+/** Gemini's finish reasons that mean a filter stopped the answer. */
+const BLOCKED = new Set(["SAFETY", "RECITATION", "BLOCKLIST", "PROHIBITED_CONTENT", "SPII", "IMAGE_SAFETY"]);
+
+function classify(reason: string | undefined): FinishReason {
+  if (reason === undefined) return "unknown";
+  if (reason === "STOP") return "stop";
+  if (reason === "MAX_TOKENS") return "max-tokens";
+  return BLOCKED.has(reason) ? "blocked" : "other";
+}
+
+/** The parts of one streamed chunk this client reads. */
+type Chunk = {
+  candidates?: {
+    content?: { parts?: { text?: string; thought?: boolean }[] };
+    finishReason?: string;
+  }[];
+  promptFeedback?: { blockReason?: string };
+  usageMetadata?: { promptTokenCount?: number; candidatesTokenCount?: number };
+};
+
+/** One `data:` payload as JSON, or null for a keep-alive or partial frame. */
+function parseChunk(payload: string): Chunk | null {
+  try {
+    const value: unknown = JSON.parse(payload);
+    return typeof value === "object" && value !== null ? (value as Chunk) : null;
+  } catch {
+    return null;
+  }
+}
+
+/**
+ * Stream a grounded completion from Gemini: yields text deltas and returns how
+ * the stream ended. Throws GeminiError on a missing key, a network failure, a
+ * non-OK status (quota 429, server 5xx, a rejected model), or a prompt Google
+ * blocks outright — every case where the caller should serve its fallback.
+ */
+export async function* streamGemini(args: StreamArgs): AsyncGenerator<string, StreamOutcome> {
   const key = process.env.GEMINI_API_KEY;
   if (!key) {
-    throw new GeminiError("Assistant is not configured.", 503);
+    throw new GeminiNotConfiguredError();
   }
 
   // The key goes in `x-goog-api-key`, never in the query string. Google accepts
@@ -114,6 +172,9 @@ export async function* streamGemini(args: StreamArgs): AsyncGenerator<string> {
   const reader = res.body.getReader();
   const decoder = new TextDecoder();
   let buffer = "";
+  let finishReason: string | undefined;
+  let promptTokens: number | undefined;
+  let outputTokens: number | undefined;
 
   try {
     while (true) {
@@ -126,29 +187,27 @@ export async function* streamGemini(args: StreamArgs): AsyncGenerator<string> {
       while ((idx = buffer.indexOf("\n")) !== -1) {
         const line = buffer.slice(0, idx).trim();
         buffer = buffer.slice(idx + 1);
-        if (!line || !line.startsWith("data:")) continue;
+        if (!line.startsWith("data:")) continue;
         const payload = line.slice(5).trim();
-        if (payload === "[DONE]") return;
-        try {
-          const json = JSON.parse(payload) as {
-            candidates?: {
-              content?: { parts?: { text?: string; thought?: boolean }[] };
-              finishReason?: string;
-            }[];
-          };
-          const parts = json.candidates?.[0]?.content?.parts;
-          if (parts) {
-            for (const p of parts) {
-              // A thought part is the model's reasoning, never answer text.
-              if (p.text && !p.thought) yield p.text;
-            }
-          }
-        } catch {
-          // Partial/non-JSON keep-alive frame — ignore and continue buffering.
+        if (payload === "[DONE]") return { finish: classify(finishReason), promptTokens, outputTokens };
+        const chunk = parseChunk(payload);
+        if (!chunk) continue; // keep-alive or partial frame
+        // A blocked prompt arrives as feedback with no candidates at all.
+        if (chunk.promptFeedback?.blockReason) throw new GeminiError("Prompt blocked.", 502);
+        const candidate = chunk.candidates?.[0];
+        if (candidate?.finishReason) finishReason = candidate.finishReason;
+        if (chunk.usageMetadata) {
+          promptTokens = chunk.usageMetadata.promptTokenCount ?? promptTokens;
+          outputTokens = chunk.usageMetadata.candidatesTokenCount ?? outputTokens;
+        }
+        for (const part of candidate?.content?.parts ?? []) {
+          // A thought part is the model's reasoning, never answer text.
+          if (part.text && !part.thought) yield part.text;
         }
       }
     }
   } finally {
     reader.releaseLock();
   }
+  return { finish: classify(finishReason), promptTokens, outputTokens };
 }

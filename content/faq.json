@@ -46,7 +46,7 @@
       "source": "TradePulse — ai/service.py + prompts; CrownWager — assistant/services.py"
     },
     {
-      "question": "What's the strongest evidence of his engineering judgment (senior-level thinking)?",
+      "question": "Why hire him — what's the strongest evidence of his engineering judgment (senior-level thinking)?",
       "answer": "The trade-offs he makes deliberately, and the limits he documents. DBWhisper fails closed when generated SQL violates its validator rules. TradePulse uses a non-Turing-complete strategy spec that reads closed bars and fills orders on the next bar, with a future-bar canary test for look-ahead leakage. Paper trading reuses the backtest engine and has a parity test. CrownWager reports cross-validated accuracy, keeps a shallow model to resist overfitting, and voids unmappable picks. LLM Studio enforces ownership checks in its repository layer and fixed a 32-bit epoch-overflow bug found in production. The case studies explain each trade-off and the evidence behind it.",
       "source": "DBWhisper validator · TradePulse spec + tests · CrownWager grading · LLM Studio tenancy"
     },
@@ -69,6 +69,11 @@
       "question": "What's his background and education?",
       "answer": "He holds a Master of Computer Applications (MCA) from Savitribai Phule University of Pune (2021, CGPA 8.0). He started as a Junior Python Developer at Linescripts Software (2022–2024), delivering end-to-end web applications — including a Hospital Management System and e-commerce platforms — with Python, Django/DRF, and responsive frontends, building REST APIs and integrating third-party services. Since 2024 he's been an AI/ML Engineer at Sevina Technologies focused on production healthcare-AI and GenAI systems. He's based in Ahmedabad, India, with 3+ years of shipping experience.",
       "source": "education · Linescripts + Sevina roles · profile"
+    },
+    {
+      "question": "How does TradePulse avoid look-ahead bias?",
+      "answer": "By construction rather than by convention. The engine decides on a closed bar and fills market orders on the next bar's open, so a strategy can never act on a price it only knew after the bar closed. Strategies are written in a declarative, non-Turing-complete spec whose operands can only read indicators and price fields on closed bars, so look-ahead cannot even be expressed. Indicators warm up with honest null gaps instead of producing values from bar 0. A canary test perturbs every future bar 3× and checks that equity up to the cut bar is byte-identical, so a leak fails the build. The cost is a bar of latency between signal and fill, accepted because the alternative is measuring a strategy you can't actually trade.",
+      "source": "TradePulse — backtesting/engine.py, StrategySpec, test_lookahead_canary"
     }
   ]
 }

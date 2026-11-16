@@ -1,8 +1,13 @@
 // -----------------------------------------------------------------------------
-// Grounding proof set. Representative questions (factual + reasoning, across all
-// four projects, the résumé, and the Sevina role) with the source we expect
-// retrieval to surface, plus terms the top passage must mention. Asserts the
-// RETRIEVAL layer is correct WITHOUT any LLM quota (test/retrieval.test.mts).
+// Grounding proof set. Questions with the source retrieval must rank first and
+// terms that passage must mention. test/retrieval.test.mts asserts them with no
+// model quota, so the RETRIEVAL layer is proven before any LLM is involved.
+//
+// Two sets, because visitors ask two kinds of question. TEST_QUESTIONS are the
+// detailed ones (factual and reasoning, across all four projects, the résumé
+// and the Sevina role). SHORT_QUESTIONS are how people actually type into a
+// chat box — four or five words — which a fixed relevance floor tuned only on
+// the first set used to reject outright (P3, 2026-11-16).
 // -----------------------------------------------------------------------------
 
 export type TestQuestion = {
@@ -85,9 +90,11 @@ export const TEST_QUESTIONS: TestQuestion[] = [
     mustMention: ["langgraph", "sql"],
   },
   {
+    // The Lessons section states the mechanism directly ("Paper trading runs the
+    // same engine as backtesting … a parity test checks agreement").
     question: "How does TradePulse guarantee backtest and paper trading match?",
     expectedSource: "TradePulse case study",
-    mustMention: ["fastapi", "postgres"],
+    mustMention: ["same engine", "parity"],
   },
   {
     question: "What database and vector search does DBWhisper use?",
@@ -99,4 +106,31 @@ export const TEST_QUESTIONS: TestQuestion[] = [
     expectedSource: "LLM Studio",
     mustMention: ["llm studio"],
   },
+];
+
+export const SHORT_QUESTIONS: TestQuestion[] = [
+  { question: "What is DBWhisper?", expectedSource: "DBWhisper — project overview", mustMention: ["natural-language-to-SQL"] },
+  { question: "What does DBWhisper do?", expectedSource: "DBWhisper — project overview", mustMention: ["validation"] },
+  { question: "What is TradePulse?", expectedSource: "TradePulse — project overview", mustMention: ["backtesting"] },
+  { question: "What is CrownWager?", expectedSource: "CrownWager — project overview", mustMention: ["XGBoost"] },
+  { question: "What is LLM Studio?", expectedSource: "LLM Studio — project overview", mustMention: ["multi-user"] },
+  { question: "Who is Mubin?", expectedSource: "Profile", mustMention: ["Sevina Technologies"] },
+  { question: "What does he do?", expectedSource: "Profile", mustMention: ["AI"] },
+  { question: "Where does he work?", expectedSource: "Profile", mustMention: ["Sevina Technologies"] },
+  { question: "Where is he based?", expectedSource: "Profile", mustMention: ["Ahmedabad"] },
+  { question: "What did he study?", expectedSource: "Résumé — Education", mustMention: ["MCA"] },
+  { question: "What did he do at Linescripts?", expectedSource: "Résumé — Linescripts", mustMention: ["Django"] },
+  { question: "How can I contact him?", expectedSource: "Contact", mustMention: ["Email:"] },
+  { question: "What's his email?", expectedSource: "Contact", mustMention: ["@"] },
+  { question: "Is he open to work?", expectedSource: "Contact", mustMention: ["Availability:"] },
+  { question: "Is he available for hire?", expectedSource: "Contact", mustMention: ["Availability:"] },
+  { question: "What is his GitHub?", expectedSource: "Contact", mustMention: ["github.com"] },
+  { question: "Does he know Docker?", expectedSource: "Skills — Data / DevOps", mustMention: ["Docker"] },
+  { question: "Does Mubin have AWS experience?", expectedSource: "Skills — Data / DevOps", mustMention: ["AWS"] },
+  { question: "Does he know prompt engineering?", expectedSource: "Skills — GenAI", mustMention: ["prompt engineering"] },
+  { question: "What has he written?", expectedSource: "Writing — essays, guides and notes", mustMention: ["Essay:"] },
+  { question: "How accurate is DBWhisper?", expectedSource: "Evaluation — DBWhisper", mustMention: ["Result:"] },
+  { question: "What is the Spider score?", expectedSource: "Evaluation — DBWhisper · Spider", mustMention: ["Result:"] },
+  { question: "Is the DBWhisper demo live?", expectedSource: "DBWhisper — project overview", mustMention: ["Live demo:"] },
+  { question: "Is CrownWager live?", expectedSource: "CrownWager — project overview", mustMention: ["Live demo:"] },
 ];

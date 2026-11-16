@@ -336,6 +336,121 @@ async function auditOverlayKeyboard(browser) {
   }
 }
 
+/**
+ * The assistant's conversation contracts. Sending — by a starter or by Ask —
+ * never drops focus out of the dialog (WCAG 2.4.3): the control the visitor
+ * used may unmount, so focus lands on the question field. The field's
+ * description stays a short hint however long the conversation grows; it used
+ * to be the whole transcript, read out on every focus (WCAG 1.3.1). Closing
+ * keeps the conversation, and Clear empties it with focus left in the field.
+ * /api/chat is mocked: no model, no quota, the same answer every run.
+ */
+async function auditAssistantConversation(browser) {
+  const context = await browser.newContext({ viewport: DESKTOP });
+  await context.addInitScript(() => {
+    try {
+      window.localStorage.setItem("theme", "light");
+    } catch {
+      // The theme assertion in open() reports storage failures.
+    }
+  });
+  const page = await context.newPage();
+  const answer = [
+    'event: meta\ndata: {"mode":"fallback"}\n\n',
+    'event: token\ndata: {"text":"A mocked answer from the site search."}\n\n',
+    'event: sources\ndata: {"citations":[{"source":"DBWhisper case study — Architecture"}]}\n\n',
+    "event: done\ndata: {}\n\n",
+  ].join("");
+  await page.route("**/api/chat", (route) =>
+    route.fulfill({ status: 200, contentType: "text/event-stream", body: answer }),
+  );
+
+  const isFocused = (locator) => locator.evaluate((el) => el === document.activeElement);
+
+  try {
+    await open(page, "/", "light");
+    const launcher = page.getByRole("button", { name: /^Ask this site/ }).first();
+    await launcher.click();
+    const dialog = page.getByRole("dialog", { name: /^Ask about/ });
+    await dialog.waitFor();
+    const field = dialog.getByRole("textbox", { name: "Your question" });
+    const log = dialog.getByRole("log");
+    const answered = () => dialog.locator('[role="log"][aria-busy="false"]').waitFor();
+
+    // A starter, reached and pressed by keyboard alone.
+    const firstStarter = dialog.getByRole("list").getByRole("button").first();
+    const starter = ((await firstStarter.textContent()) ?? "").trim();
+    for (let i = 0; i < 8 && !(await isFocused(firstStarter)); i++) {
+      await page.keyboard.press("Tab");
+    }
+    if (!(await isFocused(firstStarter))) {
+      throw new Error("Assistant: Tab never reached the first starter question");
+    }
+    await page.keyboard.press("Enter");
+    await firstStarter.waitFor({ state: "detached" });
+    if (!(await isFocused(field))) {
+      throw new Error("Assistant: sending a starter dropped focus out of the question field");
+    }
+    await log.getByText(starter, { exact: true }).waitFor();
+    await answered();
+
+    // A typed question, sent from the Ask button.
+    const typed = "What does the validator reject?";
+    await field.fill(typed);
+    await page.keyboard.press("Tab");
+    if (!(await isFocused(dialog.getByRole("button", { name: "Ask", exact: true })))) {
+      throw new Error("Assistant: Tab from the question field did not reach Ask");
+    }
+    await page.keyboard.press("Enter");
+    await log.getByText(typed, { exact: true }).waitFor();
+    if (!(await isFocused(field))) {
+      throw new Error("Assistant: sending with Ask dropped focus out of the question field");
+    }
+    await answered();
+
+    const description = await field.evaluate((el) =>
+      (el.getAttribute("aria-describedby") ?? "")
+        .split(/\s+/)
+        .filter(Boolean)
+        .map((id) => document.getElementById(id)?.textContent ?? "")
+        .join(" ")
+        .trim(),
+    );
+    if (description.length === 0 || description.length >= 200) {
+      throw new Error(
+        `Assistant: after two answers the question field's description is ${description.length} ` +
+          "characters; it must be a short hint (1–199), never the transcript",
+      );
+    }
+
+    // Closing keeps the conversation; reopening shows it again.
+    await page.keyboard.press("Escape");
+    await dialog.waitFor({ state: "detached" });
+    await launcher.click();
+    await dialog.waitFor();
+    if ((await log.getByText(typed, { exact: true }).count()) !== 1) {
+      throw new Error("Assistant: closing and reopening the panel lost the conversation");
+    }
+
+    // Clear empties it, and focus stays in the dialog, on the field.
+    await dialog.getByRole("button", { name: "Clear conversation" }).focus();
+    await page.keyboard.press("Enter");
+    await dialog.getByRole("list").getByRole("button").first().waitFor();
+    if ((await log.getByText(typed, { exact: true }).count()) !== 0) {
+      throw new Error("Assistant: Clear left the conversation in place");
+    }
+    if (!(await isFocused(field))) {
+      throw new Error("Assistant: Clear dropped focus out of the question field");
+    }
+
+    console.log(
+      "✓ [keyboard] / — assistant keeps focus on send, a short field description, and its conversation",
+    );
+  } finally {
+    await context.close();
+  }
+}
+
 let total = 0;
 const browser = await chromium.launch();
 try {
@@ -375,6 +490,7 @@ try {
   }
   await auditReducedMotion(browser);
   await auditOverlayKeyboard(browser);
+  await auditAssistantConversation(browser);
 } finally {
   await browser.close();
 }
