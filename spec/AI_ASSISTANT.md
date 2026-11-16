@@ -100,7 +100,9 @@ than a weakly related one. The route uses the top 4 passages.
 
 ## 6. Privacy
 
-The route stores no conversation and writes no logs. The rate limiter keeps only a
+The route stores no conversation. Its only log line is the model id and HTTP status when
+Gemini rejects a request; it never logs the key, the request, the response body, or
+visitor text. The rate limiter keeps only a
 client key and request timestamps in memory, pruned as they expire; the daily budget is
 a counter. The key stays server-side. `/privacy` describes assistant handling for
 visitors.

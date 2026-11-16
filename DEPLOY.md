@@ -90,7 +90,10 @@ does not fail a visitor with a 500 and does not fabricate:
 - **Prompt-injection and configuration attempts** ("ignore your instructions",
   etc.) get a polite refusal and the model is **not** called.
 - The route is **rate-limited** per client IP (15 requests per minute, sliding
-  window, per instance) and sanitizes and length-caps input. Nothing is logged.
+  window, per instance) and sanitizes and length-caps input. Its only log line is the
+  model id and HTTP status when Gemini rejects a request (check the function logs after
+  changing `GEMINI_MODEL`); it never logs the key, the request, the response body, or
+  anything the visitor typed.
 - A **daily budget** (`ASSISTANT_DAILY_CAP`) bounds Gemini calls per UTC day on
   each server instance. Once it is spent, the route stops calling Gemini and
   serves the grounded fallback, so a traffic burst cannot run up spend or starve
