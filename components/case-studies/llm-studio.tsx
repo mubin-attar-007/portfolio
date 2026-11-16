@@ -106,10 +106,10 @@ export function LlmStudioBody() {
 
       <CS id="what-failed" title="What failed">
         <p>
-          Millisecond-epoch timestamp columns were overflowing 32-bit <strong>INT4</strong> in
+          Millisecond-epoch timestamp columns were overflowing 32-bit <strong>INT4</strong>{" "}in
           Postgres (values near 2.1×10⁹) while SQLite silently tolerated it — the exact class of bug
-          that&apos;s invisible locally and obvious against a real database. The columns are now
-          <strong> BigInteger</strong>.
+          that&apos;s invisible locally and obvious against a real database. The columns are now{" "}
+          <strong>BigInteger</strong>.
         </p>
         <FailureLog
           entries={[

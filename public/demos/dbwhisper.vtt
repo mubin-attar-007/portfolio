@@ -9,12 +9,16 @@ DBWhisper retrieves schema context,
 validates generated SQL, and returns results.
 
 00:21.000 --> 00:28.000
-Golden set: 18/22 exact answers;
-4/4 unsafe or out-of-scope prompts refused.
+On screen: older accuracy and fail-closed
+scores. DBWhisper's audit retired both.
 
-00:28.000 --> 00:35.000
-Spider dev subset: 101/139 execution matches;
-9 throttled cases excluded. Generation core only.
+00:28.000 --> 00:31.500
+Spider dev sample: the generation model
+alone, with no retrieval or policy layer.
+
+00:31.500 --> 00:35.000
+101/139 matched the gold result set;
+9 of 148 dropped after throttling.
 
 00:35.000 --> 00:41.000
 Editable SQL, charts, follow-ups,

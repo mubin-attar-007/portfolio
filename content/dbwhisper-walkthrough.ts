@@ -1,4 +1,12 @@
-/** Curated sample data and explanatory copy for the case-study request path. */
+import { DBWHISPER_EVIDENCE } from "./evals";
+
+const { policy, spider } = DBWHISPER_EVIDENCE;
+
+/**
+ * Curated sample data and explanatory copy for the case-study request path.
+ * The one stage that cites measurements, Evaluate, reads them from the eval
+ * registry instead of retyping its counts.
+ */
 export const dbwhisperWalkthrough = {
   /* Static example data for the architecture illustration and walkthrough.
      These are sample rows, not customer data or a recorded model request. */
@@ -84,8 +92,11 @@ export const dbwhisperWalkthrough = {
       {
         id: "evaluate",
         label: "Evaluate",
-        body: "The deployed path is scored end to end against a real read-only store — and the numbers are published with their method.",
-        items: ["22 golden queries · 4 unsafe prompts", "Spider generation-core subset · 139 scored, 9 excluded"],
+        body: "Each layer is measured on its own terms: the policy engine against a committed adversarial corpus, the generation model against a Spider sample. Neither is an end-to-end accuracy figure, and both are published with their method.",
+        items: [
+          `Adversarial policy corpus · ${policy.runs} deny runs, no model`,
+          `${spider.label} · ${spider.scored} scored, ${spider.excluded} of ${spider.sampled} dropped`,
+        ],
       },
     ],
     /* Specimen strings that are not already in `stage`. The refusal example is

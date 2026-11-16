@@ -16,8 +16,12 @@ export function Hero() {
         <div className={styles.heroGrid}>
           <div className={styles.intro}>
             <p className={styles.eyebrow}>{SITE.name} <span aria-hidden>/</span> {SITE.role}</p>
+            {/* The space between the spans is for the text, not the layout: both
+                spans are blocks, so it renders nothing, but without it the
+                heading's text reads "AI systems,built for…" to anything that
+                extracts it (search snippets, screen-reader browse, copy). */}
             <h1 id="home-title" className={styles.headline}>
-              <span>{hero.titleLead}</span>
+              <span>{hero.titleLead}</span>{" "}
               <span className={styles.headlineRest}>{hero.titleAccent}</span>
             </h1>
             <p className={styles.lede}>{hero.lede}</p>

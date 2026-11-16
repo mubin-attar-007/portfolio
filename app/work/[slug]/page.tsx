@@ -9,7 +9,8 @@ import { ArticleFooter } from "@/components/ui/article-footer";
 import { MetricCards } from "@/components/ui/metric";
 import { buttonVariants } from "@/components/ui/button";
 import { projects, projectBySlug, projectNeighbours } from "@/content/projects";
-import { PROJECT_STATUS_LABEL } from "@/content/article";
+import { PROJECT_LINKS, PROJECT_STATUS_LABEL } from "@/content/article";
+import { CROWNWAGER_EVIDENCE } from "@/content/evals";
 import type { Project } from "@/content/schema";
 import { formatDate } from "@/lib/format";
 import { absoluteUrl, pageMetadata } from "@/lib/seo";
@@ -67,8 +68,10 @@ const BODIES: Record<string, CaseStudyTemplate> = {
 };
 
 /**
- * Live-product demo tours (public/demos/<slug>.webm), recorded from each real
- * deployment — a title card + a captioned feature walkthrough. Poster is a real
+ * Product recordings (public/demos/<slug>.webm), captured from each real
+ * deployment — a title card + a captioned feature walkthrough. They stay on the
+ * page when a free-tier demo is down, so the case study never depends on a
+ * sleeping host. Poster is a real
  * screenshot; older Safari that can't play webm falls back to it. LLM Studio is
  * auth-gated, so its tour is signed into a real account (the chat UI, streaming,
  * and model switching), not a login screen. Rendered once, below the metrics row.
@@ -79,13 +82,13 @@ const DEMO_SHOTS: Record<
 > = {
   dbwhisper: {
     alt: "Recorded scroll through the DBWhisper product website.",
-    caption: "Product website recording. Some on-screen claims predate the scoped results and limitations documented in this case study.",
+    caption: "Product website recording. The evaluation figures it shows on screen were later retired by DBWhisper's own claim audit; the current results and their limits are documented below.",
     width: 768,
     height: 456,
   },
   crownwager: {
     alt: "Recorded scroll through the CrownWager product website.",
-    caption: "Product website recording. The on-screen training count differs from the current five-fold evaluation on 15,115 games documented below.",
+    caption: `Product website recording. The on-screen training count differs from the current ${CROWNWAGER_EVIDENCE.cv.folds}-fold evaluation on ${CROWNWAGER_EVIDENCE.games} games documented below.`,
     width: 1280,
     height: 760,
   },
@@ -153,7 +156,7 @@ export default async function CaseStudyPage({ params }: { params: Promise<{ slug
               rel="noopener noreferrer"
               className={buttonVariants("secondary", "sm")}
             >
-              Open live <ArrowUpRight size={14} strokeWidth={1.5} />
+              {PROJECT_LINKS.demo} <ArrowUpRight size={14} strokeWidth={1.5} aria-hidden />
             </a>
           ) : null}
           {/* ↗ marks a link that leaves the site in a new tab — the demo
@@ -165,7 +168,7 @@ export default async function CaseStudyPage({ params }: { params: Promise<{ slug
               rel="noopener noreferrer"
               className="inline-flex items-center gap-1 text-sm text-ink underline decoration-border-strong underline-offset-4 hover:decoration-accent"
             >
-              Source
+              {PROJECT_LINKS.source}
               <ArrowUpRight size={14} strokeWidth={1.5} aria-hidden />
             </a>
           ) : null}
@@ -196,9 +199,10 @@ export default async function CaseStudyPage({ params }: { params: Promise<{ slug
                             rel="noopener noreferrer"
                             className="inline-flex items-center gap-0.5 text-accent underline decoration-border-strong underline-offset-2 hover:text-accent-hover hover:decoration-accent"
                           >
-                            Visit the live app
+                            {PROJECT_LINKS.captionDemo}
                             <ArrowUpRight size={12} strokeWidth={1.6} aria-hidden />
-                          </a>
+                          </a>{" "}
+                          ({PROJECT_LINKS.captionWake}).
                         </>
                       ) : null}
                     </>

@@ -2,7 +2,8 @@ import { notFound } from "next/navigation";
 import { formatOgEyebrow, renderOg, OG_SIZE, OG_CONTENT_TYPE } from "@/lib/og";
 import { routableNoteSlugs, loadNote } from "@/lib/notes";
 
-export const alt = "Note — Mubin Attar";
+// One alt for every note card (see app/work/[slug]/opengraph-image.tsx).
+export const alt = "Note card from Mubin Attar's portfolio: the note's title and tags";
 export const size = OG_SIZE;
 export const contentType = OG_CONTENT_TYPE;
 

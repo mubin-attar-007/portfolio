@@ -28,7 +28,13 @@ export const ProjectSchema = z.object({
   title: z.string(),
   /** The case-study lede, and the page's search and social description. */
   summary: Description,
-  status: z.enum(["production", "active-development", "experiment", "archived"]),
+  /**
+   * What the project is, not whether its host is awake today. `deployed-demo`
+   * is a public deployment on free-tier hosting: it can sleep or be paused, so
+   * it claims no uptime and no operating users. A demo that is down drops
+   * `links.live` and keeps its recording and source.
+   */
+  status: z.enum(["deployed-demo", "active-development", "experiment", "archived"]),
   role: z.string(),
   timeline: z.string(),
   featured: z.boolean().default(false),
@@ -130,21 +136,85 @@ export const NowSchema = z.object({
 });
 
 /**
+ * The counted outcome of a run: how many cases met the metric's pass condition,
+ * out of how many were scored. Every label and percentage a page shows for the
+ * run is derived from these counts (content/evals.ts), so a figure is written
+ * down once.
+ */
+export const EvalScoreSchema = z
+  .object({
+    /** Cases that met the pass condition (a matching result, an expected denial). */
+    passed: z.number().int().nonnegative(),
+    /** Cases scored: the denominator. */
+    scored: z.number().int().positive(),
+    /** Cases drawn before exclusions. Omitted when nothing was excluded. */
+    sampled: z.number().int().positive().optional(),
+  })
+  .refine((s) => s.passed <= s.scored, { message: "passed cannot exceed scored" })
+  .refine((s) => s.sampled === undefined || s.sampled >= s.scored, {
+    message: "sampled cannot be smaller than scored",
+  });
+export type EvalScore = z.infer<typeof EvalScoreSchema>;
+
+/**
+ * Why a published result was withdrawn: when this registry retired it, the
+ * reason in a sentence or two, and the audit that withdrew it.
+ */
+export const EvalRetirementSchema = z.object({
+  date: z.string(),
+  reason: z.string().min(1),
+  /** The audit that withdrew the figure — a permanent URL (a fixed commit). */
+  link: z.string().url(),
+});
+
+/**
  * One row of the eval registry. `status` drives the visual state — an
  * `in-progress` row renders muted (infrastructure awaiting data), never a
  * fake-green result. No number is invented: `result` states real progress.
+ *
+ * A `retired` row is a result that turned out not to hold. It stays in the
+ * registry, muted, with the reason and the audit that withdrew it, and it
+ * carries no figure at all: its `result` is a word, and it has no `score`.
  */
-export const EvalSchema = z.object({
-  system: z.string(),
-  benchmark: z.string(),
-  metric: z.string(),
-  result: z.string(),
-  status: z.enum(["in-progress", "complete", "planned"]),
-  date: z.string().optional(),
-  note: z.string().optional(),
-  /** Optional link — external URL or an on-site path (e.g. /work/dbwhisper). */
-  link: z.string().optional(),
-});
+export const EvalSchema = z
+  .object({
+    system: z.string(),
+    benchmark: z.string(),
+    metric: z.string(),
+    result: z.string(),
+    /** The counts behind `result`, for a run that scores cases. */
+    score: EvalScoreSchema.optional(),
+    status: z.enum(["in-progress", "complete", "planned", "retired"]),
+    date: z.string().optional(),
+    note: z.string().optional(),
+    /** Optional link — external URL or an on-site path (e.g. /work/dbwhisper). */
+    link: z.string().optional(),
+    /** Required on a retired row, and only there. */
+    retired: EvalRetirementSchema.optional(),
+  })
+  .superRefine((row, ctx) => {
+    if ((row.status === "retired") !== (row.retired !== undefined)) {
+      ctx.addIssue({
+        code: "custom",
+        path: ["retired"],
+        message: "a retired row, and only a retired row, states why it was retired",
+      });
+    }
+    if (row.status === "retired" && (row.score !== undefined || /\d/.test(row.result))) {
+      ctx.addIssue({
+        code: "custom",
+        path: ["result"],
+        message: "a retired row publishes no figure: no score, and no digits in its result",
+      });
+    }
+    if (row.score && !row.result.includes(`${row.score.passed}/${row.score.scored}`)) {
+      ctx.addIssue({
+        code: "custom",
+        path: ["result"],
+        message: "a scored row's result must show its passed/scored counts",
+      });
+    }
+  });
 export type EvalRow = z.infer<typeof EvalSchema>;
 
 /** One phase of the timeline. Body carries Built/Learned/Mistake/Changed lines. */

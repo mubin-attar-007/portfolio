@@ -117,7 +117,7 @@ export const about = {
   kicker: "About",
   headline: "From healthcare workflows to AI products.",
   body: [
-    `I'm an ${SITE.role.toLowerCase()} with 3+ years in software engineering and a production-AI focus since 2024. I work across the system: data pipelines, APIs, retrieval, model integration, and the interface people use.`,
+    `I'm an ${SITE.roleInSentence} with 3+ years in software engineering and a production-AI focus since 2024. I work across the system: data pipelines, APIs, retrieval, model integration, and the interface people use.`,
     "At Sevina Technologies I build healthcare automation, including clinical-compliance and reimbursement workflows. I describe that work at the system level here to protect confidential information. My independent projects make the architecture, implementation, and evaluations available to explore.",
     "The work I enjoy most is connecting a useful model to reliable software: defining what it can do, handling failures, and measuring whether the complete system solves the problem.",
   ],

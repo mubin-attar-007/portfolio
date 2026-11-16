@@ -66,6 +66,10 @@ jobs:
       - name: Build
         run: npm run build
 
+      # Reads the prerendered HTML, so it needs the build but no server.
+      - name: Copy gate (no words run together)
+        run: npm run test:copy
+
       # Playwright's guidance is not to cache browsers: restoring the cache takes
       # about as long as the download, and the OS packages cannot be cached.
       - name: Install Playwright (chromium)

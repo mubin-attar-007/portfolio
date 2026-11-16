@@ -16,11 +16,24 @@ import type { Project } from "./schema";
  * ("active-development"); a kicker should read as English.
  */
 export const PROJECT_STATUS_LABEL: Record<Project["status"], string> = {
-  production: "Production",
+  "deployed-demo": "Deployed demo",
   "active-development": "Active development",
   experiment: "Experiment",
   archived: "Archived",
 };
+
+/**
+ * Labels for a case study's deployment and source links. The demos run on
+ * free-tier hosting that sleeps when idle, so no label claims an app is live
+ * right now: a link names where the demo is, and the caption says the first
+ * load can be slow. A demo that is down has no link at all.
+ */
+export const PROJECT_LINKS = {
+  demo: "Open demo",
+  source: "Source",
+  captionDemo: "Open the deployed demo",
+  captionWake: "free-tier hosting, so the first load can take a minute",
+} as const;
 
 /** Kickers that name what KIND of page the reader has landed on. */
 export const ARTICLE_KICKER = {

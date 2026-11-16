@@ -10,14 +10,15 @@ import { ProofStrip } from "@/components/features/proof-strip";
 import { CareerTimeline } from "@/components/features/career-timeline";
 import { about, home } from "@/content/site";
 import { timelineIntro } from "@/content/timeline";
+import { SITE } from "@/config/site";
 import { FIGURE, PAGE_BODY_BAND, PAGE_HEADER_BAND, stagger } from "@/constants/page";
 import { pageMetadata } from "@/lib/seo";
 
 export const metadata: Metadata = pageMetadata({
   path: "/about",
   title: "About",
-  description:
-    "Mubin Attar — AI software engineer. Who I am, how I think, and the one rule across all of it.",
+  // What the page holds: the biography, then the three principles (home.principles).
+  description: `${SITE.name} — ${SITE.role}. Who I am, how I approach the work, and the three principles behind it.`,
 });
 
 /**

@@ -4,6 +4,7 @@ import { DecisionLog } from "@/components/mdx/decision-log";
 import { FailureLog } from "@/components/mdx/failure-log";
 import { MetricsTable } from "@/components/ui/metric";
 import { crownwagerDiagram } from "@/components/diagrams/data/crownwager";
+import { CROWNWAGER_EVIDENCE as cw } from "@/content/evals";
 
 export const CROWNWAGER_SECTIONS: readonly CaseStudySection[] = [
   { id: "context", title: "Context" },
@@ -124,10 +125,12 @@ export function CrownWagerBody() {
       </CS>
 
       <CS id="performance-cost" title="Performance & cost">
+        {/* Both evaluations' figures come from the eval registry, which copies
+            them once from the project's metrics file; none is retyped here. */}
         <MetricsTable
           rows={[
-            { label: "accuracy (CV)", value: "65.2% ± 0.8%", method: "5-fold stratified cross-validation on 15,115 NBA games (2012–24), one fixed random split — no cherry-picking. The base home-win rate in the data is 57.5%, so this is a real ~8-point edge." },
-            { label: "held-out test", value: "64.3%", method: "80/20 hold-out on 3,023 unseen games; ROC-AUC 0.685, log-loss 0.628 — the calibration signal that keeps Kelly staking from over-sizing." },
+            { label: "accuracy (CV)", value: cw.cv.result, method: `${cw.cv.folds}-fold stratified cross-validation (fixed seed) on ${cw.games} NBA games (2012–24) — no cherry-picking. The base home-win rate in the data is ${cw.baseRate}, so this is a real ~${cw.edge}-point edge. The hold-out below is a separate evaluation.` },
+            { label: "held-out test", value: cw.holdout.accuracy, method: `80/20 hold-out on ${cw.holdout.games} unseen games; ROC-AUC ${cw.holdout.rocAuc}, log-loss ${cw.holdout.logLoss} — the calibration signal that keeps Kelly staking from over-sizing.` },
             { label: "model shape", value: "106 features · depth 3", method: "750 shallow trees (max_depth 3, learning rate 0.01) over 106 pre-game features; kept deliberately shallow to resist overfitting and stay interpretable." },
             { label: "track record", value: "graded vs finals", method: "Picks settle only on FINAL scores; aggregated per edge tier; unmappable picks voided; flagged insufficient below 20 settled picks." },
             { label: "money math", value: "Decimal", method: "Edge, EV, and half-Kelly (0.5) staking in Decimal; arbitrage flagged when Σ(1/odds) < 1, legs sized to equalize payout." },
@@ -154,7 +157,7 @@ export function CrownWagerBody() {
       </CS>
 
       <CS id="evidence" title="Evidence">
-        <p>The app is live and the backend, ML service, and grading logic are in the repository above.</p>
+        <p>The backend, ML service, and grading logic are in the repository above.</p>
       </CS>
     </div>
   );

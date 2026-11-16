@@ -18,7 +18,7 @@ export function ProjectCard({
   labels,
 }: {
   project: Project;
-  labels: { caseStudy: string; live: string; source: string };
+  labels: { caseStudy: string; demo: string; source: string };
 }) {
   const metric = project.metrics[0];
   const { card } = project;
@@ -65,9 +65,9 @@ export function ProjectCard({
               target="_blank"
               rel="noopener noreferrer"
               className={`text-link-control ${styles.sideAction}`}
-              aria-label={`${project.title} — ${labels.live} (opens in a new tab)`}
+              aria-label={`${project.title} — ${labels.demo} (opens in a new tab)`}
             >
-              {labels.live}
+              {labels.demo}
               <ArrowUpRight size={14} strokeWidth={1.75} aria-hidden />
             </a>
           ) : null}

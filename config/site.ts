@@ -6,7 +6,13 @@ import { SITE_URL } from "@/lib/env";
  */
 export const SITE = {
   name: "Mubin Attar",
+  /** The brand role, title case, as a label or a title (ADR-015). */
   role: "Applied AI Engineer",
+  /**
+   * The same role inside a sentence. Written out rather than derived with
+   * `toLowerCase()`, which lowercases the acronym too ("an applied ai engineer").
+   */
+  roleInSentence: "applied AI engineer",
   /**
    * What the site is, in one sentence: the homepage's search description and
    * the default for a page without its own. At most 160 characters

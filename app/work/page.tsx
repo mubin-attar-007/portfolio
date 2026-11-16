@@ -43,7 +43,7 @@ export default function WorkIndex() {
   const flagship = featuredProject;
   const labels = {
     caseStudy: flagshipHome.work.caseStudy,
-    live: flagshipHome.work.live,
+    demo: flagshipHome.work.demo,
     source: flagshipHome.work.source,
   };
 
@@ -94,14 +94,14 @@ export default function WorkIndex() {
                   href={flagship.links.live}
                   target="_blank"
                   rel="noopener noreferrer"
-                  className="group/live inline-flex items-center gap-1.5 text-sm font-medium text-ink-secondary transition-colors duration-fast ease-[var(--ease-out)] hover:text-ink"
+                  className="group/demo inline-flex items-center gap-1.5 text-sm font-medium text-ink-secondary transition-colors duration-fast ease-[var(--ease-out)] hover:text-ink"
                 >
-                  {labels.live}
+                  {labels.demo}
                   <ArrowUpRight
                     size={14}
                     strokeWidth={2.25}
                     aria-hidden
-                    className="transition-transform duration-fast ease-[var(--ease-out)] group-hover/live:-translate-y-0.5 group-hover/live:translate-x-0.5"
+                    className="transition-transform duration-fast ease-[var(--ease-out)] group-hover/demo:-translate-y-0.5 group-hover/demo:translate-x-0.5"
                   />
                 </a>
               ) : null}

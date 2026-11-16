@@ -9,7 +9,7 @@ import styles from "@/components/work/project-card.module.css";
 /** Three other systems, each explained through a concrete engineering decision. */
 export function SelectedWork() {
   const w = flagshipHome.work;
-  const labels = { caseStudy: w.caseStudy, live: w.live, source: w.source };
+  const labels = { caseStudy: w.caseStudy, demo: w.demo, source: w.source };
 
   return (
     <Section id="selected-work" space="sm" ariaLabelledBy="work-title" className="!pb-[var(--space-section-sm)]">

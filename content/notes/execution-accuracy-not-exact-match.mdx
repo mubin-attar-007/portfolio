@@ -7,8 +7,10 @@ source: "https://yale-lily.github.io/spider"
 
 Two SQL queries can be spelled completely differently and return exactly the same rows. So string-matching generated SQL against a reference — *exact-match accuracy* — punishes correct answers for cosmetic reasons.
 
-The metric that matters is **execution accuracy**: run both queries against the database and compare result sets. That is what DBWhisper's golden-query set scores, and it is why the benchmark run uses [Spider](https://yale-lily.github.io/spider), whose harness scores execution rather than text.
+The metric that matters is **execution accuracy**: run both queries against the database and compare result sets. That is why the benchmark run uses [Spider](https://yale-lily.github.io/spider), whose harness scores execution rather than text.
 
-Both runs have since completed. The scoped Spider dev run scored 73% (101/139), and the end-to-end golden-query set scored 82% exact result-set match — 95% if you credit answers that returned a correct extra column. That gap between 82% and 95% is the point: *exact* match is a deliberately harsh reading, and publishing the harsh one is the only version worth anything.
+The scoped Spider dev run has since completed, on 10 July 2026: DBWhisper's generation model alone — each database's schema in context, no retrieval or policy layer — matched the gold result set on 101/139 scored questions.
 
-"The model felt right" is not a number. Both figures, their methods, and the nine questions a provider rate-limit forced out of the sample are on [Evals](/evals).
+**Correction, 16 November 2026:** an earlier version of this note also quoted an end-to-end golden-query result and called its exact match a harsh reading. DBWhisper's own claim audit has since withdrawn that result: it cannot be reproduced from a clean checkout, it ran on a prompt that has been retired, and it compared result sets as a plain set — which collapses duplicate rows and is looser, not harsher, than a multiset comparison. It is no longer published here.
+
+"The model felt right" is not a number. The Spider figure, its method, and the nine questions a provider rate-limit forced out of the sample are on [Evals](/evals), along with the retired run and the reason it was retired.

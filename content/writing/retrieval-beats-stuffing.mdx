@@ -2,13 +2,14 @@
 title: "Retrieval beats stuffing the schema"
 summary: "A practical approach to natural-language-to-SQL: document the schema, embed it, and retrieve per question instead of pasting the whole thing into the prompt."
 date: "2026-03-08"
+updated: "2026-11-16"
 category: "guide"
 topics: ["RAG", "NL→SQL", "retrieval"]
 ---
 
-Most natural-language-to-SQL tutorials paste the whole schema into the prompt. That works on the tutorial's five-table toy database and falls apart on a real one, which has dozens to hundreds of tables. The schema is too large to fit, too noisy to reason over, and the model reliably picks the wrong tables. Making NL→SQL work at real scale is mostly a retrieval problem, not a prompting one.
+Most natural-language-to-SQL tutorials paste the whole schema into the prompt. That works on the tutorial's five-table toy database and gets worse as a schema grows: the prompt fills with tables the question never needed, the noise is harder to reason over, and the model picks the wrong tables. Keeping the prompt to the right tables is mostly a retrieval problem, not a prompting one.
 
-Here is the approach I used in DBWhisper.
+Here is the approach I used in DBWhisper. Its retrieval has not been benchmarked at scale yet — the largest schema enrolled in its repository has 16 tables — so read what follows as a design, not a measured result.
 
 ## Document the schema, once per database
 
@@ -38,4 +39,4 @@ The verified-query step is the part that compounds. Every time a question→SQL 
 
 ## Why it's worth the enrollment step
 
-The cost of all this is an enrollment pass per database. In exchange you get NL→SQL that works beyond toy schemas, prompts small enough to stay fast and cheap, and a much smaller surface for the model to hallucinate across — because it's only ever looking at the few tables that matter. On a $0 stack, that isn't a nice-to-have; it's the only way the thing runs at all.
+The cost of all this is an enrollment pass per database. In exchange you get prompts small enough to stay fast and cheap however large the schema, and a much smaller surface for the model to hallucinate across — because it's only ever looking at the few tables that matter. On a $0 stack, that isn't a nice-to-have; it's the only way the thing runs at all.

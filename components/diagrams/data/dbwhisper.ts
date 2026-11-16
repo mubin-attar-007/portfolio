@@ -1,7 +1,7 @@
 import type { DiagramSpec } from "../types";
 
 /**
- * DBWhisper — the live agent architecture (grounded in the real system).
+ * DBWhisper — the deployed agent architecture (grounded in the real system).
  * Each node carries the REAL decision behind it (why-not / why / tradeoff),
  * mined from the codebase — this is what makes the diagram explorable.
  */
@@ -37,7 +37,7 @@ export const dbwhisperDiagram: DiagramSpec = {
       row: 0,
       decision: {
         rejected: "Stuffing the whole schema into every prompt",
-        why: "Retrieval runs over documented table summaries, not raw DDL, so it stays accurate on large databases and keeps the prompt small. Top-4 tables per question; the agent is capped at 8 calls per tool per run so it can't loop.",
+        why: "Retrieval runs over documented table summaries, not raw DDL, and returns the top 4 tables per question, so the prompt carries a few tables rather than the whole schema. The agent is capped at 8 calls per tool per run so it can't loop. Retrieval has not been benchmarked at scale; the largest schema enrolled in the repository has 16 tables.",
         tradeoff: "A one-time enrollment step per database to document + embed the schema.",
       },
     },
@@ -89,8 +89,8 @@ export const dbwhisperDiagram: DiagramSpec = {
       row: 3,
       decision: {
         rejected: "Trusting the model to write safe SQL; relying on the DB role alone",
-        why: "A deterministic validator runs before every execution — whether the SQL came from the LLM or a user edit. sqlparse + regex reject DML/DDL/EXEC, multiple statements, SELECT INTO, and system-schema access, and check every table against the enrolled schema index. If the index is missing, it refuses.",
-        tradeoff: "A heuristic parser isn't a formal proof — so it's one layer of defense-in-depth on top of a read-only DB user, timeouts, and row caps.",
+        why: "A deterministic validator runs before every execution — whether the SQL came from the LLM or a user edit. Since v2 a SQLGlot AST policy engine rejects DML/DDL/EXEC, multiple statements, SELECT INTO, system-catalog access and blocked functions, and checks every table against the enrolled schema; the original keyword heuristics run as a second layer. If the schema is missing, it refuses.",
+        tradeoff: "A structural filter isn't a proof — it is bounded by how faithfully the parser reads each dialect — so it's one layer of defense-in-depth on top of a read-only DB user, timeouts, and row caps.",
       },
     },
     {
