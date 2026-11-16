@@ -15,8 +15,6 @@ export const NAV = [
   { label: "About", href: "/about" },
 ] as const;
 
-export type NavItem = (typeof NAV)[number];
-
 /**
  * The header's one action. Lives here rather than in the component so the label
  * and the destination are edited in the same place as the links beside it.

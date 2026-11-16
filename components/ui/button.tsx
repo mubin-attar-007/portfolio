@@ -1,8 +1,5 @@
-import type { ButtonHTMLAttributes } from "react";
-import { LoaderCircle } from "lucide-react";
-
 /**
- * Button — the site's four control treatments.
+ * buttonVariants — the site's four control treatments, as a class string.
  *
  * - `primary`   accent fill, an inset top highlight and a close contact shadow.
  *               ONE per viewport. The highlight is what makes a flat fill read
@@ -17,11 +14,13 @@ import { LoaderCircle } from "lucide-react";
  * Sizes are the site's control heights: 32 / 38 / 44px. `lg` is the 44px touch
  * minimum, so a primary action rendered at `lg` is always tappable.
  *
- * For link-buttons spread `buttonVariants(...)` onto a `next/link` className.
+ * Spread it onto the element the action actually is: a `next/link` or `<a>`
+ * for navigation, a native `<button type="button">` for an action. There is no
+ * wrapper component, so the element — and its semantics — stays visible at the
+ * call site.
  *
- * A11y: renders a real `<button>` with the global `:focus-visible` accent ring.
- * `loading` sets `aria-busy` and disables the control, so a second submit cannot
- * race the first. Enabled controls share arrow feedback for hover and keyboard
+ * A11y: the global `:focus-visible` accent ring; `disabled:` styles a disabled
+ * native button. Enabled controls share arrow feedback for hover and keyboard
  * focus, one sheen sweep, and a small press response. Movement is opt-in through
  * prefers-reduced-motion; static colour and focus feedback remain available.
  */
@@ -56,30 +55,4 @@ export function buttonVariants(variant: Variant = "primary", size: Size = "md"):
     SIZES[size],
     VARIANTS[variant],
   ].join(" ");
-}
-
-export function Button({
-  variant = "primary",
-  size = "md",
-  loading = false,
-  disabled,
-  className = "",
-  children,
-  ...props
-}: ButtonHTMLAttributes<HTMLButtonElement> & {
-  variant?: Variant;
-  size?: Size;
-  loading?: boolean;
-}) {
-  return (
-    <button
-      className={`${buttonVariants(variant, size)} ${className}`}
-      aria-busy={loading || undefined}
-      disabled={disabled || loading}
-      {...props}
-    >
-      {loading ? <LoaderCircle aria-hidden size={16} className="motion-safe:animate-spin" /> : null}
-      {children}
-    </button>
-  );
 }

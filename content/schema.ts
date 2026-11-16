@@ -113,7 +113,6 @@ export const NowSchema = z.object({
     .array(z.object({ title: z.string(), body: z.string() }))
     .default([]),
 });
-export type NowMeta = z.infer<typeof NowSchema>;
 
 /**
  * One row of the eval registry. `status` drives the visual state — an

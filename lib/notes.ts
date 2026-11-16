@@ -8,9 +8,6 @@ import { createMdxCollection } from "@/lib/mdx-collection";
  */
 const notes = createMdxCollection<NoteMeta>("notes", NoteSchema);
 
-/** Slugs of published notes, newest first. Excludes drafts everywhere. */
-export const publishedNoteSlugs = notes.publishedSlugs;
-
 /** Slugs that should resolve to a page — adds drafts in development only. */
 export const routableNoteSlugs = notes.routableSlugs;
 

@@ -2,17 +2,12 @@ import type { Metadata } from "next";
 import Link from "next/link";
 import type { ReactNode } from "react";
 import { Container } from "@/components/layout/container";
-import { AuditLane } from "@/components/features/audit-lane";
-import { Button } from "@/components/ui/button";
-import { Tag } from "@/components/ui/tag";
-import { Card } from "@/components/ui/card";
+import { buttonVariants } from "@/components/ui/button";
 import { Callout } from "@/components/ui/callout";
 import { SectionHeading } from "@/components/ui/section-heading";
-import { home } from "@/content/site";
-import { Metric, MetricsRow, MetricsTable } from "@/components/ui/metric";
+import { Metric, MetricsTable } from "@/components/ui/metric";
 import { Figure } from "@/components/ui/figure";
 import { PullQuote } from "@/components/ui/pull-quote";
-import { BeforeAfter } from "@/components/ui/before-after";
 import { CodeBlock } from "@/components/ui/code-block";
 import { DecisionLog } from "@/components/mdx/decision-log";
 import { FailureLog } from "@/components/mdx/failure-log";
@@ -68,54 +63,24 @@ export default function ComponentsPage() {
         </Link>
         .
       </p>
-      <AuditLane
-        title="Audit lane"
-        items={[
-          ...home.proof.stats.map((stat) => ({
-            href: stat.href,
-            value: stat.value,
-            label: stat.label,
-          })),
-          { href: "/trust", label: "trust policy" },
-          { href: "/now", label: "now" },
-        ]}
-        className="mt-8"
-      />
 
-      <Row title="Buttons">
+      <Row title="Buttons (buttonVariants)">
         <div className="flex flex-wrap items-center gap-4">
-          <Button variant="primary">Primary</Button>
-          <Button variant="secondary">Secondary</Button>
-          <Button variant="ghost">Ghost</Button>
-          <Button variant="primary" disabled>
+          <button type="button" className={buttonVariants("primary")}>
+            Primary
+          </button>
+          <button type="button" className={buttonVariants("secondary")}>
+            Secondary
+          </button>
+          <button type="button" className={buttonVariants("subtle")}>
+            Subtle
+          </button>
+          <button type="button" className={buttonVariants("ghost")}>
+            Ghost
+          </button>
+          <button type="button" className={buttonVariants("primary")} disabled>
             Disabled
-          </Button>
-          <Button variant="primary" loading>
-            Loading
-          </Button>
-        </div>
-      </Row>
-
-      <Row title="Tags">
-        <div className="flex flex-wrap gap-2">
-          <Tag>TypeScript</Tag>
-          <Tag>FastAPI</Tag>
-          <Tag>production</Tag>
-        </div>
-      </Row>
-
-      <Row title="Card (quiet)">
-        <div className="grid gap-4 sm:grid-cols-2">
-          <Card as="article" className="group">
-            <h3 className="text-xl text-ink transition-colors group-hover:text-accent">Card title</h3>
-            <p className="mt-2 text-sm text-ink-secondary">
-              Surface background, hairline border, no lift or glow. Hover shifts the border and the
-              title to accent.
-            </p>
-          </Card>
-          <Card>
-            <p className="text-sm text-ink-secondary">A plain quiet card.</p>
-          </Card>
+          </button>
         </div>
       </Row>
 
@@ -132,11 +97,11 @@ export default function ComponentsPage() {
       </Row>
 
       <Row title="Metrics">
-        <MetricsRow>
+        <div className="flex flex-wrap gap-x-12 gap-y-6">
           <Metric label="review time per assessment" before="999 min" after="000 min" direction="down-good" method="Fixture value — not a measurement. See /evals for real results." />
           <Metric label="false-positive rate" before="99.9%" after="00.0%" direction="down-good" method="Fixture value — not a measurement. See /evals for real results." />
           <Metric label="cost per run" after="$0.0000" direction="down-good" method="Fixture value — not a measurement. See /evals for real results." />
-        </MetricsRow>
+        </div>
         <div className="mt-8">
           <MetricsTable
             rows={[
@@ -146,14 +111,6 @@ export default function ComponentsPage() {
             ]}
           />
         </div>
-      </Row>
-
-      <Row title="Before / after">
-        <BeforeAfter
-          label="v1 → v2"
-          before="Fixture: single-pass retrieval, 99.9% false positives."
-          after="Fixture: added a reranking pass, 00.0% false positives."
-        />
       </Row>
 
       <Row title="Decision log">

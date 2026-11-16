@@ -8,9 +8,6 @@ import { createMdxCollection } from "@/lib/mdx-collection";
  */
 const writing = createMdxCollection<WritingMeta>("writing", WritingSchema);
 
-/** Slugs of published essays, newest first. Excludes drafts everywhere. */
-export const publishedWritingSlugs = writing.publishedSlugs;
-
 /** Slugs that should resolve to a page — adds drafts in development only. */
 export const routableWritingSlugs = writing.routableSlugs;
 

@@ -2,7 +2,7 @@ import type { Metadata, Viewport } from "next";
 import { Geist, Geist_Mono, Newsreader } from "next/font/google";
 import { Analytics } from "@vercel/analytics/next";
 import "@/styles/globals.css";
-import { FOUNDATION_SCOPE, SITE } from "@/config/site";
+import { SITE } from "@/config/site";
 import { AvailabilityBar } from "@/components/layout/availability-bar";
 import { Header } from "@/components/layout/header";
 import { Footer } from "@/components/layout/footer";
@@ -79,7 +79,7 @@ export default function RootLayout({ children }: Readonly<{ children: React.Reac
         <script dangerouslySetInnerHTML={{ __html: THEME_SCRIPT }} />
         <JsonLd />
       </head>
-      <body className="flex min-h-screen flex-col" data-scope={FOUNDATION_SCOPE.phase}>
+      <body className="flex min-h-screen flex-col">
         <a href="#main" className="skip-link">
           Skip to content
         </a>

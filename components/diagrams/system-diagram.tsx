@@ -1,6 +1,5 @@
 "use client";
 
-import Link from "next/link";
 import { useId, useMemo, useRef, useState, type KeyboardEvent } from "react";
 import type { DiagramNode, DiagramSpec } from "./types";
 
@@ -105,14 +104,9 @@ function elbowPath(a: Point, b: Point): string {
 export function SystemDiagram({
   spec,
   caption,
-  compact = false,
-  deepLink = "/work/dbwhisper",
 }: {
   spec: DiagramSpec;
   caption?: string;
-  /** Homepage: short reveal (1–2 lines) + deep link. Case study: full decision essays. */
-  compact?: boolean;
-  deepLink?: string;
 }) {
   const cols = Math.max(...spec.nodes.map((n) => n.col)) + 1;
   const rows = Math.max(...spec.nodes.map((n) => n.row)) + 1;
@@ -299,16 +293,7 @@ export function SystemDiagram({
                         className="mx-2 rounded-b-[var(--radius-md)] border-x border-b border-border bg-surface px-3 py-3 text-sm"
                       >
                         <p className="text-ink-secondary">{node.description}</p>
-                        {node.decision && compact ? (
-                          <Link
-                            href={deepLink}
-                            className="mt-3 inline-flex items-center gap-1.5 font-medium text-accent hover:text-accent-hover"
-                          >
-                            Read the decision
-                            <span aria-hidden>→</span>
-                          </Link>
-                        ) : null}
-                        {node.decision && !compact ? (
+                        {node.decision ? (
                           <dl className="mt-3 flex flex-col gap-3 border-t border-border pt-3">
                             {node.decision.rejected ? (
                               <div>
@@ -545,23 +530,7 @@ export function SystemDiagram({
                 ) : null}
               </div>
               <p className="mt-1 text-ink-secondary">{shown.description}</p>
-              {/* Homepage (compact): 1–2 line reveal + deep link. The full
-                  Instead-of/Why/Tradeoff essays live on the case study. */}
-              {shown.decision && compact ? (
-                <Link
-                  href={deepLink}
-                  className="group mt-3 inline-flex items-center gap-1.5 text-sm font-medium text-accent hover:text-accent-hover"
-                >
-                  Read the decision behind {shown.label}
-                  <span
-                    className="transition-transform duration-fast ease-[var(--ease-out)] group-hover:translate-x-0.5"
-                    aria-hidden
-                  >
-                    →
-                  </span>
-                </Link>
-              ) : null}
-              {shown.decision && !compact ? (
+              {shown.decision ? (
                 <dl className="mt-3 flex flex-col gap-2 border-t border-border pt-3">
                   {shown.decision.rejected ? (
                     <div className="grid gap-0.5 sm:grid-cols-[6.5rem_1fr] sm:gap-3">
@@ -608,23 +577,21 @@ export function SystemDiagram({
         {spec.nodes.map((n) => (
           <span id={`${uid}-${n.id}-description`} key={`${n.id}-description`}>
             {n.description}
-            {!compact && n.decision?.why ? ` Why: ${n.decision.why}` : ""}
+            {n.decision?.why ? ` Why: ${n.decision.why}` : ""}
           </span>
         ))}
       </div>
 
-      {/* Text alternative / narration — screen readers and no-JS. On the compact
-          homepage it narrates only the map (label + description); the full
-          decision essays (why/instead-of/tradeoff) live on the case study
-          (!compact), so they aren't duplicated into the homepage DOM (fixes V2). */}
+      {/* Text alternative / narration — screen readers and no-JS: every node with
+          its description and, where it has one, the decision behind it. */}
       <div className="hidden md:block">
         <ul className="sr-only">
           {spec.nodes.map((n) => (
             <li key={n.id}>
               {n.label}: {n.description}
-              {!compact && n.decision?.why ? ` Why: ${n.decision.why}` : ""}
-              {!compact && n.decision?.rejected ? ` Instead of: ${n.decision.rejected}.` : ""}
-              {!compact && n.decision?.tradeoff ? ` Tradeoff: ${n.decision.tradeoff}` : ""}
+              {n.decision?.why ? ` Why: ${n.decision.why}` : ""}
+              {n.decision?.rejected ? ` Instead of: ${n.decision.rejected}.` : ""}
+              {n.decision?.tradeoff ? ` Tradeoff: ${n.decision.tradeoff}` : ""}
             </li>
           ))}
         </ul>
