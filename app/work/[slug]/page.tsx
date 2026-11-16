@@ -156,14 +156,17 @@ export default async function CaseStudyPage({ params }: { params: Promise<{ slug
               Open live <ArrowUpRight size={14} strokeWidth={1.5} />
             </a>
           ) : null}
+          {/* ↗ marks a link that leaves the site in a new tab — the demo
+              button beside it says so, and so must this. */}
           {p.links.repo ? (
             <a
               href={p.links.repo}
               target="_blank"
               rel="noopener noreferrer"
-              className="text-sm text-ink underline decoration-border-strong underline-offset-4 hover:decoration-accent"
+              className="inline-flex items-center gap-1 text-sm text-ink underline decoration-border-strong underline-offset-4 hover:decoration-accent"
             >
               Source
+              <ArrowUpRight size={14} strokeWidth={1.5} aria-hidden />
             </a>
           ) : null}
         </ArticleHeader>
@@ -191,9 +194,10 @@ export default async function CaseStudyPage({ params }: { params: Promise<{ slug
                             href={p.links.live}
                             target="_blank"
                             rel="noopener noreferrer"
-                            className="text-accent underline decoration-border-strong underline-offset-2 hover:text-accent-hover hover:decoration-accent"
+                            className="inline-flex items-center gap-0.5 text-accent underline decoration-border-strong underline-offset-2 hover:text-accent-hover hover:decoration-accent"
                           >
-                            Visit the live app →
+                            Visit the live app
+                            <ArrowUpRight size={12} strokeWidth={1.6} aria-hidden />
                           </a>
                         </>
                       ) : null}

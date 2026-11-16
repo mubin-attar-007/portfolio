@@ -56,7 +56,7 @@ export function ProofStrip() {
                 i === 0 ? "lg:pl-6" : `${BAND_RULE_SM} sm:pl-6`
               }`}
             >
-              <Link href={s.href} className="group block">
+              <Link href={s.href} prefetch={false} className="group block">
                 <span className="block font-mono text-3xl tabular-nums text-ink transition-colors duration-base group-hover:text-accent">
                   {s.value}
                 </span>

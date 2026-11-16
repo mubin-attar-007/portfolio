@@ -37,7 +37,7 @@ export default function ErrorState({ error, reset }: ErrorState) {
               <RefreshCw size={16} strokeWidth={1.8} aria-hidden />
               Reload this page
             </button>
-            <Link href="/" className={buttonVariants("secondary")}>
+            <Link href="/" prefetch={false} className={buttonVariants("secondary")}>
               <ArrowLeft size={16} strokeWidth={1.8} aria-hidden />
               Back to home
             </Link>

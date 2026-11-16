@@ -24,14 +24,23 @@ function check(name, pass, detail = "") {
 
 const browser = await chromium.launch();
 
+// Chrome reports a preload nobody used about three seconds after the load
+// event — the stylesheet a viewport-prefetched link preloads is the case this
+// catches — so each route stays open past that before its console is read.
+const CONSOLE_SETTLE_MS = 4_000;
+
 async function withPage(opts, fn) {
   const ctx = await browser.newContext({ viewport: { width: 1440, height: 900 }, ...opts });
   const page = await ctx.newPage();
   const errors = [];
-  page.on("console", (m) => m.type() === "error" && errors.push(m.text()));
+  const warnings = [];
+  page.on("console", (m) => {
+    if (m.type() === "error") errors.push(m.text());
+    else if (m.type() === "warning") warnings.push(m.text());
+  });
   page.on("pageerror", (e) => errors.push(String(e)));
   try {
-    await fn(page, errors);
+    await fn(page, errors, warnings);
   } finally {
     await ctx.close();
   }
@@ -48,7 +57,7 @@ const ROUTES = [
 ];
 
 for (const route of ROUTES) {
-  await withPage({}, async (page, errors) => {
+  await withPage({}, async (page, errors, warnings) => {
     const res = await page.goto(`${BASE}${route.path}`, { waitUntil: "networkidle" });
     const status = res?.status() ?? 0;
     const body = await page.textContent("body");
@@ -58,7 +67,10 @@ for (const route of ROUTES) {
       status === 200 && h1 >= 1 && route.must.test(body ?? ""),
       `status=${status} h1=${h1} copy=${route.must.test(body ?? "")}`,
     );
+    await page.waitForTimeout(CONSOLE_SETTLE_MS);
     check(`${route.name}: no console errors`, errors.length === 0, errors.slice(0, 2).join(" | "));
+    // ENGINEERING §2: zero console warnings in production, too.
+    check(`${route.name}: no console warnings`, warnings.length === 0, warnings.slice(0, 2).join(" | "));
   });
 }
 

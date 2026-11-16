@@ -127,6 +127,7 @@ export default function ResumePage() {
                           cue (WCAG 1.4.1 Use of Colour). */}
                       <Link
                         href={p.method}
+                        prefetch={false}
                         aria-label={`method — how the ${p.name} numbers were measured`}
                         className="text-accent underline decoration-from-font underline-offset-2 hover:text-accent-hover"
                       >

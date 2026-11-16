@@ -44,7 +44,7 @@ export function Metric({
         <p className="max-w-[52ch] text-xs text-ink-tertiary">
           Method:{" "}
           {methodHref ? (
-            <Link href={methodHref} className="link-underline text-ink-secondary">
+            <Link href={methodHref} prefetch={false} className="link-underline text-ink-secondary">
               {method}
             </Link>
           ) : (
@@ -94,7 +94,7 @@ export function MetricCards({
             {m.label}
             <span className="mt-4 block border-t border-border pt-3 text-xs leading-relaxed text-ink-tertiary">
               {methodHref ? (
-                <Link href={methodHref} className="link-underline text-ink-secondary">
+                <Link href={methodHref} prefetch={false} className="link-underline text-ink-secondary">
                   How this was measured
                 </Link>
               ) : (

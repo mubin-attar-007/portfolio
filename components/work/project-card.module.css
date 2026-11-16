@@ -217,9 +217,10 @@
     transform: scale(1.025);
   }
 
+  /* Forward, not diagonal: the arrow points at a page of this site. */
   .shotFrame:hover .shotArrow,
   .shotFrame:focus-visible .shotArrow {
-    transform: translate(var(--motion-nudge), calc(-1 * var(--motion-nudge)));
+    transform: translateX(var(--motion-nudge));
   }
 }
 

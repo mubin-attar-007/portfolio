@@ -80,7 +80,7 @@ export default async function NowPage() {
           <h2 className={LABEL}>{nowPage.openTo.title}</h2>
           <p className="mt-4 text-lg text-ink">{STATUS.text}.</p>
           <div className="mt-6">
-            <Link href={nowPage.openTo.cta.href} className={buttonVariants("primary")}>
+            <Link href={nowPage.openTo.cta.href} prefetch={false} className={buttonVariants("primary")}>
               {nowPage.openTo.cta.label}
             </Link>
           </div>

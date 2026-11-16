@@ -60,6 +60,6 @@
 
   .postLink:hover .postArrow,
   .postLink:focus-visible .postArrow {
-    transform: translate(var(--motion-nudge), calc(-1 * var(--motion-nudge)));
+    transform: translateX(var(--motion-nudge));
   }
 }

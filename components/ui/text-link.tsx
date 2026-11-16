@@ -22,11 +22,21 @@ import { ArrowUpRight, ChevronRight } from "lucide-react";
  *   instead of the forward chevron, because the destination leaves the site.
  * - `className` — layout only (margins); never colour or type.
  *
+ * The glyph is a fact about the destination, site-wide: ↗ (ArrowUpRight) only on
+ * a link that opens a new tab or a mail client; a page of this site gets the
+ * chevron here, or → elsewhere — even when it is another section's anchor.
+ *
  * A11y: a real link with its label as the accessible name; the glyph is
  * decorative (`aria-hidden`) so it is never announced. Colour is not the only
  * signal — the chevron and the bolder weight distinguish it from body copy, and
  * focus uses the global focus ring. External links carry `rel="noopener
  * noreferrer"` and the arrow glyph is the conventional "opens a new tab" cue.
+ *
+ * Performance: no prefetch (`prefetch={false}`), the rule for every link
+ * outside the primary nav, which prefetches on intent. A viewport prefetch
+ * downloads the destination's payload and preloads its stylesheet, and Chrome
+ * warns when that stylesheet goes unused for a few seconds — and the site ships
+ * with zero console warnings (spec/ENGINEERING.md §2).
  *
  * Motion: directional icons share the control rules in globals.css. Movement
  * only exists when reduced motion is not requested; underline and focus feedback
@@ -75,7 +85,7 @@ export function TextLink({
       {body}
     </a>
   ) : (
-    <Link href={href} className={classes}>
+    <Link href={href} prefetch={false} className={classes}>
       {body}
     </Link>
   );

@@ -28,7 +28,7 @@ export default function SkillsPage() {
           title="Skills"
           lede="A practical stack map for building production AI/ML systems: language tooling, model architecture, data layers, and safety disciplines."
         >
-          <Link href="/resume" className={buttonVariants("secondary")}>
+          <Link href="/resume" prefetch={false} className={buttonVariants("secondary")}>
             Résumé context
           </Link>
           <TextLink href="/uses" tone="quiet">

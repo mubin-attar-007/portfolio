@@ -55,10 +55,10 @@ export default function AboutPage() {
         <div className="grid gap-10 md:grid-cols-[minmax(0,1fr)_auto] md:items-center md:gap-16">
           <div className="min-w-0">
             <PageHeader kicker={about.kicker} title={about.headline} lede={about.body[0]}>
-              <Link href="/hire" className={buttonVariants("primary")}>
+              <Link href="/hire" prefetch={false} className={buttonVariants("primary")}>
                 {about.ctas.primary}
               </Link>
-              <Link href="/resume" className={buttonVariants("secondary")}>
+              <Link href="/resume" prefetch={false} className={buttonVariants("secondary")}>
                 {about.ctas.secondary}
               </Link>
             </PageHeader>

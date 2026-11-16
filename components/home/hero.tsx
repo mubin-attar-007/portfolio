@@ -1,5 +1,5 @@
 import Link from "next/link";
-import { ArrowDown, ArrowUpRight } from "lucide-react";
+import { ArrowDown, ArrowRight } from "lucide-react";
 import { Container } from "@/components/layout/container";
 import { buttonVariants } from "@/components/ui/button";
 import { SITE } from "@/config/site";
@@ -25,8 +25,9 @@ export function Hero() {
               <Link href={hero.primary.href} prefetch={false} className={buttonVariants("primary", "lg")}>
                 {hero.primary.label}<ArrowDown size={16} aria-hidden />
               </Link>
+              {/* → for a page of this site; ↗ is reserved for a new tab or mail. */}
               <Link href={hero.secondary.href} prefetch={false} className={buttonVariants("secondary", "lg")}>
-                {hero.secondary.label}<ArrowUpRight size={15} aria-hidden />
+                {hero.secondary.label}<ArrowRight size={15} aria-hidden />
               </Link>
             </div>
             <p className={styles.location}>

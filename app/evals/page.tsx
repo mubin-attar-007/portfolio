@@ -59,7 +59,7 @@ function ResultLink({
       {children} <ArrowUpRight size={12} strokeWidth={1.6} aria-hidden />
     </a>
   ) : (
-    <Link href={href} className={cls}>
+    <Link href={href} prefetch={false} className={cls}>
       {children}
     </Link>
   );

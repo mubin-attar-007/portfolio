@@ -134,7 +134,7 @@ export default function PrivacyPage() {
             </p>
             <p className="mt-4 text-sm leading-6 text-ink-secondary">
               Operational requests and abuse reports can also be raised in{" "}
-              <Link href="/hire" className="link-underline">
+              <Link href="/hire" prefetch={false} className="link-underline">
                 /hire
               </Link>{" "}
               or through direct email.

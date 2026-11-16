@@ -125,6 +125,7 @@ function NeighbourCard({
   return (
     <Link
       href={href}
+      prefetch={false}
       className="group/card flex h-full flex-col gap-2 rounded-[var(--radius-md)] border border-border bg-surface p-4 transition-colors duration-fast ease-[var(--ease-out)] hover:border-border-strong"
     >
       <span
