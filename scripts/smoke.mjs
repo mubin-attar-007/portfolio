@@ -204,6 +204,35 @@ for (const path of ["/sitemap.xml", "/robots.txt", "/rss.xml"]) {
   check(`${path} is served`, res.ok, `status ${res.status}`);
 }
 
+// ------------------------------------------------------ social cards (OG)
+// A dynamic OG route may draw a card only for a real entry. An unknown slug
+// once rendered 200 image/png, uncached, so anyone could loop unique URLs to
+// burn function CPU and stamp arbitrary text onto a branded card; an encoded
+// `../` also read a file from outside its collection. The real entry for each
+// collection comes from the sitemap, so renaming content never breaks this.
+const sitemapXml = await (await fetch(`${BASE}/sitemap.xml`)).text();
+const sitemapPaths = [...sitemapXml.matchAll(/<loc>([^<]+)<\/loc>/g)].map((m) => new URL(m[1]).pathname);
+
+for (const collection of ["work", "notes", "writing"]) {
+  const real = sitemapPaths.find((path) => path.startsWith(`/${collection}/`));
+  if (!real) {
+    check(`/${collection}: a published entry is listed in the sitemap`, false, "none found");
+    continue;
+  }
+  const card = await fetch(`${BASE}${real}/opengraph-image`);
+  const type = card.headers.get("content-type") ?? "";
+  check(`${real}/opengraph-image: 200 image/png`, card.status === 200 && type.startsWith("image/png"),
+    `status=${card.status} type=${type}`);
+
+  const unknown = await fetch(`${BASE}/${collection}/does-not-exist/opengraph-image`);
+  check(`/${collection}/does-not-exist/opengraph-image: 404`, unknown.status === 404, `status ${unknown.status}`);
+
+  // The live traversal: `..%2F` re-entering the collection named a real file.
+  const escape = `..%2F${collection}%2F${real.split("/").pop()}`;
+  const traversal = await fetch(`${BASE}/${collection}/${escape}/opengraph-image`);
+  check(`/${collection}/${escape}/opengraph-image: 404`, traversal.status === 404, `status ${traversal.status}`);
+}
+
 await browser.close();
 
 const failed = results.filter((r) => !r.pass);

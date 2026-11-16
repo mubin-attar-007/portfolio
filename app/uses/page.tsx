@@ -16,12 +16,12 @@ const USES_PATH = "/uses";
 
 export const metadata: Metadata = {
   title: "Uses",
-  description: "The stack behind four live products — a deliberately boring, $0 free-tier stack.",
+  description: "The stack behind four shipped products — a deliberately boring, $0 free-tier stack.",
   alternates: { canonical: `${SITE.url}${USES_PATH}` },
   openGraph: {
     siteName: SITE.name,
     title: "Uses — Mubin Attar",
-    description: "The stack behind four live products — a deliberately boring, $0 free-tier stack.",
+    description: "The stack behind four shipped products — a deliberately boring, $0 free-tier stack.",
     url: `${SITE.url}${USES_PATH}`,
     type: "website",
   },

@@ -1,9 +1,11 @@
 # ADR-014 — Motion, disclosure, and the modal boundary
 
-Status: **Accepted**. Extends ADR-011 (identity), ADR-012 (Clerk fidelity) and
-ADR-013 (palette). Nothing here changes routes, content, hierarchy, the claim
-ledger, or the structured data — this is a behaviour pass on top of a settled
-visual system.
+Status: **Accepted; §1 superseded.** Extends ADR-012 (Clerk fidelity) and ADR-013
+(palette). §1's section reveal was removed by ADR-015 — the `Reveal` component no
+longer exists and homepage content is always visible — but its failure analysis is why
+no content is ever hidden behind an engine. The walkthrough in §2 moved to the DBWhisper
+case study (ADR-016). Facts checked against the code on 2026-11-13; point-in-time gate
+counts and local measurements were removed (git history, commit `8949fdf`).
 
 ## Context
 
@@ -29,9 +31,14 @@ Three things, then. Plus one defect the work uncovered.
 
 ## Decisions
 
-### 1. The section reveal is inverted: only below-fold elements are ever hidden
+### 1. The section reveal is inverted: only below-fold elements are ever hidden (superseded)
 
-This is the third implementation. The first two are worth recording because
+*Superseded by ADR-015:* the homepage no longer reveals sections, and interior pages
+use CSS-only `.reveal` entrance styles whose hidden start exists only inside
+`prefers-reduced-motion: no-preference` (`styles/globals.css`). The analysis below
+remains the rule.
+
+This was the third implementation. The first two are worth recording because
 they failed *identically* and the failure is not obvious:
 
 1. An `IntersectionObserver` that hid every section up front and revealed on
@@ -44,35 +51,17 @@ structure: *content is hidden until an engine drives it visible*, so every
 context where that engine has not run — or does not exist — is a context with
 no page. A print, a capture, a crawler, a scroll restoration, a slow hydration.
 
-The fix is not a better observer. It is inverting who decides:
-
-```
-if (reduced motion)              return;  // never arms
-if (no IntersectionObserver)     return;  // never arms
-if (already on screen)           return;  // never arms  <- the important one
-el.setAttribute("data-reveal");           // only NOW is anything hidden
-setTimeout(reveal, 1600);                 // and it unhides regardless
-```
-
-Nothing is hidden unless JS has already demonstrated, in that same tick, that
-it can unhide it. A reveal that never fires now costs an animation, never
-content. `SAFETY_MS = 1600` is the fourth guard and it is unconditional — it
-does not check whether the observer fired, because the whole point is that we
-cannot know.
-
-`Reveal` is a client component whose `children` are server-rendered and passed
-through, so wrapping a section does **not** drag it across the client boundary.
-The markup is in the initial HTML either way. (A violation of exactly that rule
-cost 290KB once — see ADR-011 § Consequences.)
-
-`scripts/interaction-audit.mjs` asserts all of this, including a run with
-`IntersectionObserver` replaced by a no-op stub.
+The fix was not a better observer. It was inverting who decides: nothing is hidden
+unless JS has already demonstrated, in that same tick, that it can unhide it, with an
+unconditional safety timeout. A reveal that never fires costs an animation, never
+content.
 
 ### 2. The flagship specimen runs; the transport is real, not decorative
 
 "Five stages. One guarantee." was a static accordion describing a pipeline. It
 now plays through the five stages on arrival at 2800ms dwell, with a progress
-line under the active row.
+line under the active row (`components/case-studies/walkthrough.tsx`, now on
+`/work/dbwhisper#request-walkthrough`).
 
 Three constraints made it acceptable rather than annoying:
 
@@ -121,11 +110,12 @@ subtree from the accessibility tree, from focus order, and from pointer events
 in one attribute, and it is what turns a scrim from a dark rectangle into a
 modal boundary.
 
-`lib/use-inert-background.ts` applies it to the layout's own landmarks
-(`body > header|main|footer`) rather than "every body child", so the portalled
-dialog — a sibling appended to `<body>` — is never inerted by accident. Engines
-without `inert` fall back to `aria-hidden`, which covers the screen-reader half;
-those engines keep the focus trap both dialogs already implement.
+`lib/use-inert-background.ts` applies it to every direct child of `<body>` except
+elements marked `data-modal-root` (the portalled dialog and its scrim) and
+`script`/`style`/`link`, so page chrome such as the skip link and the availability
+bar is covered and the dialog is never inerted by accident. It also locks background
+scrolling. Engines without `inert` fall back to `aria-hidden`, which covers the
+screen-reader half; those engines keep the focus trap both dialogs already implement.
 
 **This has a sharp edge, and it bit immediately.** Both launchers live in the
 header, i.e. *inside the subtree the open dialog inerts*. `Assistant.close()`
@@ -158,11 +148,12 @@ saturation — our `#0d1214` surface computes `s=0.21` while being visually pure
 grey. It now tests **chroma** (`max − min` across RGB, floor 28), which is
 luminance-independent: 7 is neutral, 72 is a colour.
 
-**`npm run test:interaction`** (`scripts/interaction-audit.mjs`) — 26 contracts.
+**`npm run test:interaction`** (`scripts/interaction-audit.mjs`, now run together
+with the walkthrough input, boundary-inspector, and walkthrough disclosure audits).
 The a11y gate proves the DOM is accessible and the screens sweep proves nothing
-overflows; neither can tell you that a reveal actually revealed, that the
-specimen still advances, that reduced motion yields a *useful* static state
-rather than a blank one, or that a modal released its boundary on close.
+overflows; neither can tell you that the specimen still advances, that reduced
+motion yields a *useful* static state rather than a blank one, or that a modal
+released its boundary on close.
 
 One of these tests was itself wrong first: `textContent` returns collapsed
 `<details>` content too, so "expanding reveals more" passed trivially. It
@@ -170,28 +161,16 @@ measures `isVisible()` now.
 
 ## Consequences
 
-- **Measured cost: +3.8KB raw / +1.1KB gzipped client JS**, against a 30–40KB
-  budget. Measured by building `HEAD` in a throwaway worktree and comparing
-  gzipped totals across `.next/static/chunks` — 745.3KB → 749.1KB raw,
-  231.3KB → 232.4KB gzipped. Not estimated.
+- At the time, measured cost was +3.8KB raw / +1.1KB gzipped client JS against a
+  30–40KB budget, measured by building `HEAD` in a throwaway worktree and comparing
+  gzipped totals across `.next/static/chunks`.
 - Zero new dependencies. Everything here is CSS transitions, one
   `IntersectionObserver`, and one platform attribute.
 - **Reduced motion gets a designed still pose, not a disabled animation.** The
-  reveal never arms (so nothing is ever hidden), the specimen does not
-  self-advance but stays fully selectable, and the transport is not rendered at
-  all. Three contracts assert exactly this.
-- CLS stays **0.000** on all three sampled routes: the specimen's output panel
-  is fixed-height, so advancing a stage cannot reflow the page.
-- Gates at time of writing: a11y **0 violations** (18 routes × 2 themes × 3
-  viewports, plus both dialog states and the keyboard pass), hue clean in both
-  themes across 14 routes, **26/26** interaction contracts, 34/34 unit tests,
-  print gate, metadata gate, 144 screenshots with no horizontal overflow and no
-  console errors at six widths.
-- Local Lighthouse still reports performance 71–79 / LCP 5.3–7.0s. Those numbers
-  are **not** load-bearing and never have been — ADR-011 records the same
-  machine reporting 74/82/80 while CI measured 98/99/99 with LCP 2018–2373ms.
-  Accessibility, best-practices and SEO are 100/100/100 locally, TBT is 47–95ms,
-  and CLS is 0.000; those are the signals that transfer.
+  specimen does not self-advance but stays fully selectable, and the transport is
+  not rendered at all.
+- The specimen's output panel reserves a minimum height (21rem; 23rem from 768px),
+  so switching stages does not collapse the layout around it.
 - `--motion-section` (560ms) and `--ease-enter` are new tokens rather than
   inline values. `--ease-out` is tuned for 130–300ms interaction feedback and
   reads abrupt over half a second; an entrance wants a long decelerating tail.

@@ -1,0 +1,15 @@
+# Keeps the GitHub Actions in .github/workflows on supported releases, so CI does
+# not drift onto a deprecated runtime again (the Node 20 actions did). One grouped
+# pull request a month; npm dependencies are upgraded deliberately, not here.
+version: 2
+updates:
+  - package-ecosystem: github-actions
+    directory: /
+    schedule:
+      interval: monthly
+    groups:
+      github-actions:
+        patterns:
+          - "*"
+    commit-message:
+      prefix: ci

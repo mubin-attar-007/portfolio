@@ -1,10 +1,10 @@
 /* ============================================================================
-   Design tokens — the single source of truth (spec/DESIGN.md §1, ADR-011).
+   Design tokens — the single source of truth (design-system.md; palette ADR-013).
 
    Consumed by components ONLY through Tailwind utilities or var() inside a CSS
    module. No raw hex / px / ms anywhere else in the codebase.
 
-   IDENTITY (ADR-011 — "evidence paths"): a light, near-monochrome paper with ONE
+   IDENTITY (design-system.md §1–§2): a light, near-monochrome paper with ONE
    violet accent rationed to action, state and evidence. Dark is used two ways:
    as a *band* inside the light page (.tone-invert) and as an explicit, remembered
    full-page preference ([data-theme="dark"]). prefers-color-scheme is deliberately
@@ -153,9 +153,11 @@
   --chamfer-inset: clamp(1.75rem, 8vw, 7.25rem);
 
   /* ---- motion ------------------------------------------------------------
-     One curve, three durations. Micro 150ms · standard 260/320ms · reveal 500ms.
+     Six durations (120 · 130 · 200 · 300 · 450 · 560ms) and four curves:
+     --ease-out for interaction feedback, --ease-enter for entrances, and
+     --ease-emphasized / --ease-spring as measured references.
      Tailwind reads --default-transition-* so every bare `transition` in the
-     codebase lands on the same curve without per-element easing. */
+     codebase lands on --motion-base + --ease-out without per-element easing. */
   --motion-instant: 120ms;   /* state flip: focus ring, tab select */
   --motion-fast: 130ms;      /* micro-interaction: colour, icon nudge */
   --motion-base: 200ms;      /* standard transition */

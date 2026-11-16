@@ -9,7 +9,7 @@ export default function OG() {
     eyebrow: formatOgEyebrow("Notes"),
     title: "Notes",
     subtitle:
-      "A running notebook on retrieval, evals, agents, and the infrastructure behind four live products.",
+      "A running notebook on retrieval, evals, agents, and the infrastructure behind four shipped products.",
     footerRight: "/notes",
   });
 }

@@ -9,7 +9,7 @@ Applied AI Engineer based in Ahmedabad, India, with 3+ years in software enginee
 
 ## Public projects
 - DBWhisper — natural-language-to-SQL agent: LangGraph pipeline, schema-aware pgvector retrieval, multi-LLM fallback, read-only validation and database permissions. https://dbwhisper.vercel.app
-- LLM Studio — multi-user, ChatGPT-style AI SaaS: per-user tenancy, Argon2id auth, token streaming, multi-LLM routing, daily quotas. https://heisenbergblue-llm-studio.hf.space
+- LLM Studio — multi-user, ChatGPT-style AI SaaS: per-user tenancy, Argon2id auth, token streaming, multi-LLM routing, daily quotas. Hosted demo offline (free-tier Space limit); source: https://github.com/mubin-attar-007/llm_studio
 - TradePulse — event-driven backtesting platform + AI copilot: next-bar execution, commission + slippage modeled by default. https://tradepulse-live.vercel.app
 - CrownWager — sports-betting analytics: XGBoost model (65.2% ± 0.8% in 5-fold cross-validation on 15,115 NBA games), fair-odds edge, Kelly staking, graded model track-record. https://crownwager.vercel.app
 

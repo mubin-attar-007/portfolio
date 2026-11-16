@@ -95,7 +95,7 @@ export function ArticleFooter({
       <div className={hasNeighbours ? "mt-8" : ""}>
         {/* Quiet tone on purpose: this is the fallback move, not the invitation.
             Spending accent here would compete with the two cards above, and
-            DESIGN §9 caps accent at two elements per viewport. */}
+            design-system.md §11.2 caps accent at two elements per viewport. */}
         <TextLink href={base} tone="quiet">
           {labels.index}
         </TextLink>

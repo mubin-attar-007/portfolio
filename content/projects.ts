@@ -129,7 +129,10 @@ const RAW = [
       alt: "The LLM Studio chat interface with a conversation sidebar and a model selector.",
       caption: "LLM Studio · chat interface",
     },
-    links: { live: "https://heisenbergblue-llm-studio.hf.space", repo: "https://github.com/mubin-attar-007/llm_studio" },
+    // No live link while the hosted demo is offline: the free Hugging Face tier
+    // runs three Spaces at a time, and the other three demos hold those slots.
+    // Restoring `live` brings back the card link, "Open live" and the caption link.
+    links: { repo: "https://github.com/mubin-attar-007/llm_studio" },
     diagram: "llm-studio",
     changelog: [
       { date: "2026-07-02", summary: "End-to-end account flows (change/forgot password, delete account) and SEO/PWA metadata." },

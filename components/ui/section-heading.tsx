@@ -3,7 +3,7 @@ import { TextLink } from "./text-link";
 
 /**
  * SectionHeading — the full band header: mono kicker → heading → optional sub →
- * optional forward link (DESIGN §3).
+ * optional forward link.
  *
  * The `align` alternation is the point. Light prose bands are left-aligned and
  * dark bands are centred, so the page alternates axis as well as tone — that

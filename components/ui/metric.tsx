@@ -5,7 +5,7 @@ import { deltaArrow, deltaTone, type DeltaTone, type MetricDirection } from "@/l
 /**
  * Metric — a mono tabular value, an optional before→after delta (arrow + text +
  * positive/negative colour), and its measurement method. Never in a coloured
- * box (DESIGN §3). A11y: the delta pairs an arrow glyph with words, never colour
+ * box (design-system.md §11.4). A11y: the delta pairs an arrow glyph with words, never colour
  * alone; method text satisfies "every metric links to how it was measured".
  */
 const TONE: Record<DeltaTone, string> = {

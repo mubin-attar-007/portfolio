@@ -1,8 +1,10 @@
 # ADR-013 — The two-theme palette, adapted from openrouter.ai
 
-Status: **Accepted**. Amends ADR-011 (identity) and ADR-012 (Clerk fidelity);
-both stand — this changes the colour values and the dark-theme accent, not the
-layout system or the typographic scale.
+Status: **Accepted**; the current palette. It changed the colour values and the
+dark-theme accent of the light-first, single-accent identity then in place
+(ADR-011, removed 2026-11-13 and in git history at commit `8949fdf`) — not the
+layout system or the typographic scale (ADR-012). Facts checked against
+`styles/tokens.css` on 2026-11-13.
 
 ## Context
 
@@ -11,7 +13,8 @@ openrouter.ai, "carefully". As with the Clerk pass, the reference was
 **inspected live** rather than eyedropped from screenshots: headless Chromium
 against openrouter.ai in both `colorScheme` states, dumping every resolved
 CSS custom property plus real computed values off the body, headings, cards and
-the primary control (`.screenshots/openrouter/`, local-only).
+the primary control (captured to `.screenshots/openrouter/`, local-only and not in
+the repository).
 
 ## What the measurement showed
 
@@ -85,8 +88,9 @@ what we had:
    theme and fails on any computed colour outside that theme's accent family.
    Dark allows 55–100° only.
 5. **The ambient wash stays cool in dark.** A lime glow behind a lime button is
-   muddy, and the reference's dark page runs no coloured wash at all — the
-   glows fall back to the blue at half strength.
+   muddy, and the reference's dark page runs no coloured wash at all — in dark,
+   both `--glow-*` tokens use the ambient blue only. (No component currently
+   renders the glow tokens.)
 6. **A dark band in the full-dark theme steps UP, not down.** There is no room
    below `#03080a`; the plate reads as raised out of the page rather than sunk
    into it, which is the only direction this ground allows.
@@ -96,18 +100,21 @@ what we had:
 - Every pair was computed before shipping, not after. Light: ink 19.7:1,
   secondary 7.5:1, tertiary 5.3:1, accent 6.2:1, all statuses ≥4.9:1. Dark: ink
   19.7:1, secondary 7.8:1, tertiary 5.2:1, lime **17.0:1**, statuses ≥7.3:1.
-  Band violet 8.3:1. `scripts/a11y.mjs` passes with 0 violations across 18
-  routes × 2 themes × 3 viewports.
+  Band violet 8.3–8.5:1 on the band's grounds. `scripts/a11y.mjs` re-checks contrast
+  across 18 routes × 2 themes × 3 viewports.
 - One value was corrected by the measurement rather than by eye: the dark
   chip ground began at `#172109`, where tertiary ink fell to 4.33:1. Deepened
   to `#131b07` (4.58:1) so no component can place valid text on a valid surface
   and fail.
-- The shadow and scrim tints move with the ink (`rgb(23 23 28)` →
-  `rgb(3 8 10)`), because a shadow is the ink at low alpha — leaving the old
-  tint would have made depth read as a different light source.
+- The scrim and the site's own shadow tints (`--shadow-lg`, `--shadow-btn`,
+  `--shadow-surface`, `--shadow-stage`, `--shadow-float`) move with the ink
+  (`rgb(23 23 28)` → `rgb(3 8 10)`), because a shadow is the ink at low alpha —
+  leaving the old tint would have made depth read as a different light source.
+  `--shadow-sm` and `--shadow-md` keep the stacks measured off clerk.com (ADR-012).
 - `lib/og.tsx`'s six satori literals move too. Satori cannot read CSS
-  variables, so those are the one legitimate hardcode in the codebase, and
-  nothing tests their colour — a drift there ships the retired identity across
-  all 17 OG routes silently.
-- `viewport.themeColor` follows both grounds, so mobile browser chrome
-  continues the page instead of drawing a seam above it.
+  variables, and nothing tests their colour — a drift there ships the retired
+  identity across every OG image route silently. The other palette literals are
+  listed in design-system.md §11.1.
+- The browser `theme-color` follows both grounds: `app/layout.tsx` declares the
+  light ground and `components/features/theme-toggle.tsx` rewrites it for dark, so
+  mobile browser chrome continues the page instead of drawing a seam above it.

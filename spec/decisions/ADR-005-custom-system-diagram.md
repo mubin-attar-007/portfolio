@@ -16,10 +16,12 @@ viewports where its topology and labels remain legible.
 
 ## Alternatives considered
 - **React Flow** — 40–70 KB+ gz, physics/pan/zoom we don't want; generic look. Rejected.
-- **Mermaid** — fast to author, but limited visual control (violates DESIGN tokens),
-  poor interactivity/a11y story. Rejected for case studies (fine for internal docs).
+- **Mermaid** — fast to author, but limited visual control (cannot follow the design
+  tokens), poor interactivity/a11y story. Rejected for case studies (fine for internal docs).
 - **Static SVG exports (Excalidraw/Figma)** — no interactivity, unmaintainable text.
 
 ## Consequences
 More upfront work for one component; in exchange: tiny bundle, exact brand fit, full
-a11y control — and the component itself is portfolio evidence (write the guide post).
+a11y control — and the component itself is portfolio evidence. Implementation:
+`components/diagrams/system-diagram.tsx` with data in `components/diagrams/data/<slug>.ts`;
+geometry is computed from data, so nothing measures the DOM.

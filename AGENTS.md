@@ -1,11 +1,18 @@
 <!-- BEGIN:nextjs-agent-rules -->
-# This is NOT the Next.js you know
 
-This repo runs **Next.js 16 (modified)** with breaking changes vs. training data — APIs,
-conventions, and file structure may differ. **Read the relevant guide in
-`node_modules/next/dist/docs/` before writing any Next API code.** The middleware file is
-`proxy.ts`. `params` is async (`await params`). Heed deprecation notices.
+## This is NOT the Next.js you know
+
+This version has breaking changes — APIs, conventions, and file structure may all differ from your training data. Read the relevant guide in `node_modules/next/dist/docs/` (resolved from this file's directory; in monorepos the `next` package may not be visible from the repo root) before writing any code. Heed deprecation notices.
+
+This block is written and re-added by `next dev` — verify at `node_modules/next/dist/server/lib/generate-agent-files.js`. Removing it from a diff only re-creates the uncommitted change; committing it with your work keeps the tree clean.
+
 <!-- END:nextjs-agent-rules -->
 
-Design/engineering law lives in `spec/` and `CLAUDE.md`. The site is **calm, light,
-typography-first** — DESIGN §9 anti-patterns are non-negotiable. When unsure: simplify.
+The block above is managed by Next.js; keep project guidance below it. This repo runs
+Next.js 16 with the App Router: `params` is async (`await params`), and middleware
+lives in `proxy.ts` (this repo has none).
+
+Design law lives in `design-system.md` (§11; its §11.6 anti-patterns are
+non-negotiable), engineering law in `spec/ENGINEERING.md`, and working standards in
+`CLAUDE.md`. Commands and CI gates are in `README.md`. The site is **calm, light,
+typography-first**. When unsure: simplify.

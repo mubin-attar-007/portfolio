@@ -77,6 +77,7 @@ dev.err.log
 srv.out.log
 srv.err.log
 
-# Binary archive of the docs/ tree — the source files are committed alongside it.
+# Any local archive of the former docs/ tree (removed 2026-11-13) stays out of git.
 docs/*.rar
+# Output of scripts/release-diff.mjs (npm run test:release-diff).
 release-diff.json

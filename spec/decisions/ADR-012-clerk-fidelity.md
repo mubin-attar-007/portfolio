@@ -1,7 +1,11 @@
 # ADR-012 — High-fidelity Clerk adaptation, from live measurement
 
-Status: **Accepted**. Amends ADR-011 (identity stands; several implementation
-values change) and reverses one clause of ADR-010.
+Status: **Accepted, partly superseded.** Trimmed on 2026-11-13 to the parts that still
+govern the code: the measured layout and motion values, the navigation set, the footer
+map, and the LCP budget. Its homepage choreography (ten sections, notched "chamfer"
+dark plates, the reliability bento, the pill navigation, the walkthrough on the
+homepage, the no-op reveal component) was superseded by ADR-015, ADR-016 and ADR-017;
+the full original text is in git history at commit `8949fdf`.
 
 ## Context
 
@@ -13,74 +17,48 @@ keeping code, copy, branding and assets original. The directive also instructs:
 build the ideal system first, map the owner's verified facts into it second, and
 inspect clerk.com **directly** rather than from memory.
 
-The inspection ran headless Chromium against clerk.com at 390 / 768 / 1440,
-captured full-page references (`.screenshots/clerk/`, gitignored) and extracted
-computed styles (`observations.json`). Several values differed from what memory
-had produced.
+The inspection ran headless Chromium against clerk.com at 390 / 768 / 1440 and
+extracted computed styles. Reference captures went to `.screenshots/clerk/`
+(local-only, gitignored); they are not in the repository.
 
-## The measured reference, and what was adopted
+## The measured reference, and what is still adopted
 
-| Observed on clerk.com | Value measured | Adopted as |
+| Observed on clerk.com | Value measured | Adopted as (current `tokens.css`) |
 |---|---|---|
 | Content container | 1264px (12 elements at that cap) | `--width-container: 1264px` |
-| Section rhythm | pt 128 / pb 172; hero 192/128 | `--space-section-lg(-end)` 128/172 |
-| Hero h1 | 64px / 72px line / −1.6px / **700**, centred, 896px cap | `--text-display` 32→64, lh 1.125, −0.025em; headings move 560→700 |
+| Section rhythm | pt 128 / pb 172 | `--space-section-lg` / `-lg-end`, clamped up to 128 / 172px |
 | Primary ease | `cubic-bezier(0.4, 0.36, 0, 1)` | `--ease-out`, verbatim |
 | Reveal ease | `cubic-bezier(0.33, 1, 0.68, 1)` | `--ease-emphasized`, verbatim |
 | Spring | `cubic-bezier(0.175, 0.885, 0.32, 1.1)` | `--ease-spring`, verbatim |
 | Durations | cluster at 130/150/200/300/450ms | fast 130 · base 200 · slow 300 · reveal 450 |
 | Card shadows | two exact stacks (hairline-ring; raised 4-layer) | `--shadow-sm` / `--shadow-md`, verbatim |
-| Navigation | slim 42px sticky row, floating below the top edge | 44px contained pill, `top` offset, glass unconditional |
-| Dark plates | #131316, **notched edges**: full-height wings at the viewport edges, the light side intruding as a centred tab with 45° shoulders (~43px deep, ~115px inset at 1440) | `.chamfer` clip-path device, `--chamfer` + `--chamfer-inset` tokens |
-| Product section | accordion rail driving a dominant specimen | `FlagshipWalkthrough` (five stages) |
-| Feature section | giant dark bento of illustrated guarantee cards | `ReliabilityBento` (nine method-backed cards) |
-| Footer | dense multi-column map | three-column map + Elsewhere; nav test cap 8→14 |
+| Product section | accordion rail driving a dominant specimen | the five-stage walkthrough, now on `/work/dbwhisper` (ADR-016) |
+| Footer | dense multi-column map | three-column map + Elsewhere; footer link cap raised 8 → 14 |
 
 Two things were observed and deliberately **not** copied: Clerk's charcoal
 primary button (our violet accent system is the identity and is AA-measured),
 and their marketing copy/assets/logo wall (excluded by the directive itself).
 
-## Decisions recorded
+## Decisions still in force
 
-1. **The notch was shipped inverted first.** The initial build cut the
-   PLATE'S corners (centre high, edges low); the owner put the two screenshots
-   side by side and caught that the reference is the exact inverse — wings high
-   at the edges, the light section tabbing into the plate. The device was
-   rebuilt from pixel-measured crops (`crop-top-edge` / `crop-bottom-edge`).
-2. **The chamfer returns.** ADR-010 banned the cut-corner plate as
-   Clerk-identifying; ADR-011 retired the graticule that replaced it. The owner
-   directive explicitly authorizes the pattern; it ships as a clip-path token.
-3. **Nav set** becomes Work · Evals · Writing · About (+ the one CTA); Résumé
+1. **Nav set** becomes Work · Evals · Writing · About (+ the one CTA); Résumé
    moves to the footer map. Evals is promoted because the registry is the
-   portfolio's differentiator.
-4. **Homepage choreography** expands to ten sections (walkthrough, bento,
-   registry strip and engineer strip are new), still with exactly two dark
-   plates. ADR-011's "≈eight sections" guidance is superseded by the
-   directive's fuller architecture; every added section renders existing
-   content-model data — no new claims.
-5. **Scroll reveals were built twice and rejected twice.** The
-   IntersectionObserver version and the CSS `animation-timeline: view()`
-   version both share one structure — content hidden until an engine drives it
-   visible — and both rendered the page body blank in stitched captures. On a
-   site whose argument is that its evidence always renders, a hidden frame is a
-   failure mode, not a motion style. `components/ui/reveal.tsx` is a documented
-   no-op holding the reasoning; entrance choreography lives in the load-timed
-   hero reveal and per-element hover/state motion.
-6. **LCP budget 2000 → 2500ms** (Core Web Vitals "good"). CI measured
+   portfolio's differentiator. (`config/nav.ts`; the ≤ 14 footer-link cap is
+   asserted by `test/navigation.test.mts`.)
+2. **LCP budget 2000 → 2500ms** (Core Web Vitals "good"). CI measured
    2018–2373ms at performance 98/99; the residual is the Geist swap repainting
    the hero lede, and holding a budget below the swap cost would push toward
    `font-display: optional` — dropping the brand face on slow connections to
-   win a metric the user experience already passes.
+   win a metric the user experience already passes. (`scripts/lighthouse-budget.mjs`,
+   ADR-009.)
 
 ## Consequences
 
-- The walkthrough reads its SQL, schema rows, result rows and scores from the
-  same objects the hero stage and `/evals` render (`requireEval` throws at build
-  if the Spider row is renamed). The refusal example is labelled illustrative
-  of validator behaviour inside the specimen itself.
+- The walkthrough reads its sample SQL, schema rows and result rows from
+  `content/dbwhisper-walkthrough.ts` and its scores from `content/evals.ts`
+  (`requireEval` throws at build if the Spider row is renamed). The refusal example
+  is labelled illustrative of validator behaviour inside the specimen itself.
 - The client boundary rule holds: the walkthrough receives everything as props
-  from a server assembly component.
-- `.screenshots/clerk/` holds the reference captures and `observations.json`
-  for the next fidelity pass; both are local-only (gitignored).
-- Weight 560 survives only at card scale; display/section headings are 700 per
-  the measured reference.
+  from a server assembly component (`components/case-studies/request-walkthrough.tsx`).
+- Page titles (`PageHeader`) use weight 700 per the measured reference; the homepage
+  display headline was later set to 550 (design-system.md §3).

@@ -8,7 +8,7 @@ export default function OG() {
   return renderOg({
     eyebrow: formatOgEyebrow("Skills"),
     title: "Skills",
-    subtitle: "Technologies, LLM methods, and engineering practices used across four live AI systems.",
+    subtitle: "Technologies, LLM methods, and engineering practices used across four shipped AI systems.",
     footerRight: "/skills",
   });
 }

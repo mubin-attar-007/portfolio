@@ -3,7 +3,7 @@ import type { ReactNode } from "react";
 /**
  * Callout — bg-subtle with a 3px left border. Variants set only the border
  * colour (note = accent, caution = warning, plain = ink). No required icon
- * (DESIGN §3). A11y: `role="note"`; caution uses text, never colour alone.
+ * (design-system.md §11.4). A11y: `role="note"`; caution uses text, never colour alone.
  */
 type Variant = "note" | "caution" | "plain";
 

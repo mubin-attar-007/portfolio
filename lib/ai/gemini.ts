@@ -11,10 +11,15 @@
 // -----------------------------------------------------------------------------
 
 import type { ChatMessage } from "./guard";
+import { GEMINI_MODEL } from "@/lib/env";
 
-// gemini-2.5-flash is the current free-tier flash model. gemini-2.0-flash was
-// moved to a 0-quota free tier, so it 429s immediately — do not revert.
-const MODEL = "gemini-2.5-flash";
+// The model is GEMINI_MODEL (lib/env.ts), `gemini-3.5-flash-lite` by default.
+// Google retires gemini-2.5-flash on 2026-12-01 and routes its requests to 3.5
+// Flash-Lite from then on, so the site names that model instead of inheriting
+// the reroute. An override must accept the `MINIMAL` thinking level below:
+// Google documents it for gemini-3.5-flash-lite, 3.6-flash, 3.1-flash-lite and
+// 3-flash-preview, not for Gemini 4, 3.8-flash or any model before Gemini 3.
+// If the API refuses a request, the route serves its grounded fallback.
 const BASE = "https://generativelanguage.googleapis.com/v1beta/models";
 
 /** Thrown for any upstream failure. Message is safe to surface — no key. */
@@ -58,18 +63,24 @@ export async function* streamGemini(args: StreamArgs): AsyncGenerator<string> {
   // The key goes in `x-goog-api-key`, never in the query string. Google accepts
   // either, but a URL-borne key ends up in access logs, error traces, and proxy
   // records — a header does not.
-  const url = `${BASE}/${MODEL}:streamGenerateContent?alt=sse`;
+  const url = `${BASE}/${GEMINI_MODEL}:streamGenerateContent?alt=sse`;
 
   const body = {
     systemInstruction: { parts: [{ text: args.systemInstruction }] },
     contents: toContents(args.messages),
     generationConfig: {
-      temperature: 0.3,
       maxOutputTokens: 800,
-      topP: 0.9,
-      // 2.5-flash defaults to a thinking budget; grounded Q&A doesn't need it,
-      // and it would burn free-tier tokens + add latency. Disable it.
-      thinkingConfig: { thinkingBudget: 0 },
+      // Grounded Q&A over retrieved passages needs no reasoning pass; one would
+      // only add latency and spend free-tier tokens. Gemini 3 replaces the
+      // numeric thinking budget with a level, and MINIMAL ("little to no
+      // thinking") is the nearest to the old budget of 0. It is 3.5 Flash-Lite's
+      // default, stated so an override with a higher default keeps it too.
+      // No temperature or topP: from 3.5 Flash-Lite on, Google deprecates the
+      // sampling parameters (ignored now, an error in later models).
+      // includeThoughts is false by default; it is stated so a later default
+      // change cannot start returning reasoning parts (the parser below also
+      // drops any part marked `thought`).
+      thinkingConfig: { thinkingLevel: "MINIMAL", includeThoughts: false },
     },
     // Keep safety at defaults; content is professional Q&A about a portfolio.
   };
@@ -93,6 +104,10 @@ export async function* streamGemini(args: StreamArgs): AsyncGenerator<string> {
     // needs the status to decide between "retryable" and "fall back".
     let status = res.status;
     if (status === 0) status = 502;
+    // Without this line a rejected model id or setting would silently turn
+    // every answer into the FAQ fallback. It logs the model and the status
+    // only: never the key, the response body, or anything the visitor typed.
+    console.warn(`[assistant] Gemini ${GEMINI_MODEL} returned HTTP ${status}; serving the grounded fallback`);
     throw new GeminiError(`Upstream error (${status}).`, status || 502);
   }
 
@@ -117,14 +132,15 @@ export async function* streamGemini(args: StreamArgs): AsyncGenerator<string> {
         try {
           const json = JSON.parse(payload) as {
             candidates?: {
-              content?: { parts?: { text?: string }[] };
+              content?: { parts?: { text?: string; thought?: boolean }[] };
               finishReason?: string;
             }[];
           };
           const parts = json.candidates?.[0]?.content?.parts;
           if (parts) {
             for (const p of parts) {
-              if (p.text) yield p.text;
+              // A thought part is the model's reasoning, never answer text.
+              if (p.text && !p.thought) yield p.text;
             }
           }
         } catch {

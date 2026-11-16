@@ -5,7 +5,7 @@ import { SITE } from "@/config/site";
  * Shared Open Graph image renderer — the light brand as a shareable card.
  * Calm paper background, an inset hairline "document" frame, a single accent
  * tick, sentence-case title in ink, mono meta. No glow, no gradient, no dark —
- * matches DESIGN §1/§9 so a shared link looks like the site, not a stock banner.
+ * matches design-system.md §2/§11 so a shared link looks like the site, not a stock banner.
  */
 
 export const OG_SIZE = { width: 1200, height: 630 } as const;

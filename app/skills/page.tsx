@@ -19,7 +19,7 @@ export const metadata: Metadata = {
     siteName: SITE.name,
     title: "Skills — Mubin Attar",
     description:
-      "Technology stack, LLM practices, and engineering disciplines used across four live AI products.",
+      "Technology stack, LLM practices, and engineering disciplines used across four shipped AI products.",
     url: `${SITE.url}${SKILLS_PATH}`,
     type: "website",
   },

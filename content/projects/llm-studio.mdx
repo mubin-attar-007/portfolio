@@ -3,7 +3,6 @@ slug: llm-studio
 name: LLM Studio
 tagline: A multi-user, ChatGPT-style AI platform.
 stack: ["FastAPI", "SQLAlchemy 2.0", "PostgreSQL", "SQLite", "Argon2id", "Docker", "Vanilla JS", "GitHub Actions"]
-live: https://heisenbergblue-llm-studio.hf.space
 github: https://github.com/mubin-attar-007/llm_studio
 accent: "#10a37f"
 order: 2
@@ -11,7 +10,7 @@ order: 2
 
 ## Executive Summary
 
-LLM Studio is a production-shaped, multi-user AI chat SaaS — not a toy ChatGPT clone. It has real accounts (Argon2id + DB-backed sessions), strict per-user tenancy, token-by-token SSE streaming, OpenAI-compatible routing across many LLM providers, a shared-key daily quota model, and a hardened FastAPI backend — deployed live on a Hugging Face Docker Space + Neon Postgres. The frontend is dependency-free vanilla JS tuned to pixel-match ChatGPT. It's the full SaaS shape (auth, tenancy, quotas, security headers, CI/CD, a live deployment) proven out on a $0 stack, and it's where I caught a genuine production bug — a 32-bit integer overflow on millisecond-epoch columns — and fixed it properly.
+LLM Studio is a production-shaped, multi-user AI chat SaaS — not a toy ChatGPT clone. It has real accounts (Argon2id + DB-backed sessions), strict per-user tenancy, token-by-token SSE streaming, OpenAI-compatible routing across many LLM providers, a shared-key daily quota model, and a hardened FastAPI backend — deployed on a Hugging Face Docker Space + Neon Postgres (the hosted demo is currently offline: the free tier runs three Spaces at a time). The frontend is dependency-free vanilla JS tuned to pixel-match ChatGPT. It's the full SaaS shape (auth, tenancy, quotas, security headers, CI/CD, a real deployment) proven out on a $0 stack, and it's where I caught a genuine production bug — a 32-bit integer overflow on millisecond-epoch columns — and fixed it properly.
 
 ## Problem
 
@@ -62,7 +61,7 @@ FastAPI  ──► Argon2id auth + DB-backed sessions
 
 ## Metrics / Results
 
-- **Live, multi-user, on a $0 stack** — Hugging Face Docker Space + Neon Postgres, one-command deploy, **31 tests passing** with `pytest` + `ruff` gating CI (plus `pip-audit` + `gitleaks` + Dependabot).
+- **Multi-user, on a $0 stack** — built for a Hugging Face Docker Space + Neon Postgres, one-command deploy, **31 tests passing** with `pytest` + `ruff` gating CI (plus `pip-audit` + `gitleaks` + Dependabot).
 - **A real production bug, found and fixed.** Millisecond-epoch timestamp columns were overflowing 32-bit `INT4` in Postgres (~2.1e9) while SQLite silently tolerated it — the columns are now correctly `BigInteger`. This is exactly the class of bug that only surfaces in a real deployment against a real database, and it's documented in the repo.
 - **Dual-DB by design:** identical SQLAlchemy 2.0 code path over Postgres (prod, pooled) and SQLite (local + tests), so tests run with zero external services.
 - **Hardened by default:** in-memory sliding-window rate limits on auth/reset/upload routes, a strict CSP (`object-src 'none'`, `frame-ancestors 'none'`), HSTS, `X-Content-Type-Options`, DSN-gated Sentry, and structured per-request logging.

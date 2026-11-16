@@ -55,16 +55,22 @@ one deep case study, how I think, and how I write.
 ## Information architecture — the six pillars
 
 The site is organized around pillars, surfaced through plain navigation labels
-(cleverness in nav labels costs comprehension — see ADR-007 note):
+(cleverness in nav labels costs comprehension — see ADR-007). The primary
+navigation is Work, Evals, Writing, and About, plus one contact action to `/hire`
+(`config/nav.ts`).
 
 | Pillar     | What it holds                                          | Surfaced as        |
 |------------|--------------------------------------------------------|--------------------|
-| Build      | Flagship projects with deep case studies               | **Work** (nav)     |
-| Think      | Principles, ADRs, trade-off essays                     | **Writing** → Essays / inline in case studies |
-| Learn      | Notes on AI/ML, systems, papers                        | **Writing** → Notes |
-| Write      | Technical articles and implementation guides           | **Writing** → Guides |
-| Experiment | Small demos, benchmarks, prototypes                    | **Lab** (nav, ships P3) |
-| Connect    | About, resume, contact, GitHub, LinkedIn               | **About** + Contact CTA |
+| Build      | Flagship projects with deep case studies               | **Work** (nav) — `/work`, `/work/[slug]` |
+| Think      | Principles, trade-off essays, decisions inside case studies | **Writing** (nav) — essays; key decisions inline in case studies |
+| Learn      | Short notes on AI/ML, systems, papers                  | **Notes** — `/notes` (footer) |
+| Write      | Technical articles and implementation guides           | **Writing** (nav) — guides |
+| Experiment | Small demos, benchmarks, prototypes                    | Not built — there is no Lab route |
+| Connect    | About, résumé, contact, GitHub, LinkedIn               | **About** (nav), `/resume`, and the contact action to `/hire` |
+
+The evaluation registry (`/evals`, from `content/evals.ts`) sits outside the
+pillars but in the primary navigation, because the registry is the portfolio's
+differentiator (ADR-012).
 
 "About" is minimal by design: identity emerges from the work, not a biography.
 

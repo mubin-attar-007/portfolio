@@ -29,7 +29,7 @@ import { PageHeader } from "@/components/ui/page-header";
  * branded eyebrow (`kicker`, accent dot — for index and landing routes) from a
  * factual record about the document (`meta`). An article's category or status is
  * the latter, so it gets the quieter treatment and the accent stays unspent for
- * the content below (DESIGN §9 caps accent at two elements per viewport).
+ * the content below (design-system.md §11.2 caps accent at two elements per viewport).
  *
  * Props:
  * - `kicker` — what kind of document this is (category, project status).
