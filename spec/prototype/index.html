@@ -23,15 +23,17 @@
         </div>
         <div class="prompt-wrap">
           <div class="prompt-chip">
-            <div class="agents" aria-hidden="true"><span>✦</span><span>›_</span><span>◎</span></div>
-            <button class="copy-btn" type="button" data-copy-prompt>Copy prompt</button>
+            <span class="agents" aria-hidden="true"><span>✦</span><span>›_</span><span>◎</span></span>
+            <span class="prompt-text" aria-hidden="true">Read mubin-attar.vercel.app/llms.txt, then tell me whether Mubin fits my team</span>
+            <button class="copy-btn" type="button" data-copy-prompt aria-label="Copy prompt"><span class="lbl">Copy prompt</span><svg class="i-copy" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="8.5" y="8.5" width="11" height="11" rx="2.5"/><path d="M15.5 8.5v-2a2 2 0 0 0-2-2h-7a2 2 0 0 0-2 2v7a2 2 0 0 0 2 2h2"/></svg><svg class="i-check" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M5 12.5l4.5 4.5L19 7.5"/></svg></button>
           </div>
-          <small>Ask your own AI whether I fit your role</small>
+          <small id="prompt-status" aria-live="polite">Ask your own AI whether I fit your role</small>
         </div>
       </div>
 
       <div class="show">
         <div class="tabs" role="tablist" aria-label="Showcase">
+          <span class="tab-ind" aria-hidden="true"></span>
           <button class="tab" role="tab" id="t1" aria-selected="true" aria-controls="p1" tabindex="0">Records triage</button>
           <button class="tab" role="tab" id="t2" aria-selected="false" aria-controls="p2" tabindex="-1">NFC room rounds</button>
           <button class="tab" role="tab" id="t3" aria-selected="false" aria-controls="p3" tabindex="-1">DBWhisper</button>
@@ -125,7 +127,7 @@
           <div class="card-body"><h3>Records triage and review</h3><p>An offline Windows app that finds the records a case needs in years of mixed files, without the documents leaving the PC. Primary engineer and release owner; I also built and operate the cloud platform where a team reviews them with cited answers.</p><div class="chips"><span class="chip ok">Desktop app in use</span><span class="chip pilot">Cloud platform in pilot</span></div></div>
         </article>
         <article class="card">
-          <div class="art" aria-hidden="true"><div class="badge" style="flex-direction:column; padding:16px 22px; gap:6px"><span style="font-size:13px">Room 214</span><span class="ok">✓ Round recorded</span><span style="color:var(--plate-ink-2); font-size:11.5px">tap at the door, 10:42</span></div></div>
+          <div class="art" aria-hidden="true"><div class="badge halo" style="flex-direction:column; padding:16px 22px; gap:6px"><span style="font-size:13px">Room 214</span><span class="ok">✓ Round recorded</span><span style="color:var(--plate-ink-2); font-size:11.5px">tap at the door, 10:42</span></div></div>
           <div class="card-body"><h3>NFC room rounds</h3><p>Care staff record each round with a tap at the door; nurses watch live status and follow up on missed rounds. One of two engineers; I ran the iOS and Android releases.</p><div class="chips"><span class="chip ok">In use on care floors</span></div></div>
         </article>
         <article class="card">
@@ -145,7 +147,7 @@
           <div class="card-body"><h3>I direct AI coding agents</h3><p>I set the architecture, the quality gates and the invariants, review every change and own the releases.</p></div>
         </article>
         <article class="card">
-          <div class="art" aria-hidden="true"><span class="badge" style="padding:10px 16px"><i data-icon="lock"></i>Private repository</span></div>
+          <div class="art" aria-hidden="true"><span class="badge halo" style="padding:10px 16px"><i data-icon="lock"></i>Private repository</span></div>
           <div class="card-body"><h3>Walkthrough on request</h3><p>Names are withheld and the code stays private. I'll walk you through either system on a call.</p></div>
         </article>
       </div>
@@ -166,11 +168,11 @@
           <div class="card-body"><h3>DBWhisper</h3><p>Ask a database a question in plain English; a validator approves the SQL before it runs.</p><p class="metric">343 of 343 unsafe runs denied<small>An adversarial policy corpus: a deterministic test, not model accuracy</small></p><div class="cardlinks"><a class="caret" href="#">Case study</a><a class="caret" href="#">Source</a></div></div>
         </article>
         <article class="card">
-          <div class="art" aria-hidden="true"><svg viewBox="0 0 320 140" width="80%"><defs><linearGradient id="g" x1="0" x2="0" y1="0" y2="1"><stop offset="0" stop-color="#6b4bff" stop-opacity=".22"/><stop offset="1" stop-color="#6b4bff" stop-opacity="0"/></linearGradient></defs><path d="M0 110 L30 100 L60 104 L90 86 L120 90 L150 70 L180 76 L210 56 L240 62 L270 40 L300 46 L320 30 L320 140 L0 140Z" fill="url(#g)"/><path d="M0 110 L30 100 L60 104 L90 86 L120 90 L150 70 L180 76 L210 56 L240 62 L270 40 L300 46 L320 30" fill="none" stroke="#6b4bff" stroke-width="2"/><rect x="180" y="10" width="134" height="24" rx="12" fill="#fff" stroke="#e5e5ea"/><text x="192" y="26" font-family="Geist" font-size="11" fill="#16a34a">✓ closed bars only</text></svg></div>
+          <div class="art" aria-hidden="true"><svg viewBox="0 0 320 140" width="80%"><defs><linearGradient id="g" x1="0" x2="0" y1="0" y2="1"><stop offset="0" stop-color="#6b4bff" stop-opacity=".22"/><stop offset="1" stop-color="#6b4bff" stop-opacity="0"/></linearGradient></defs><path class="chart-area" d="M0 110 L30 100 L60 104 L90 86 L120 90 L150 70 L180 76 L210 56 L240 62 L270 40 L300 46 L320 30 L320 140 L0 140Z" fill="url(#g)"/><path class="chart-line" d="M0 110 L30 100 L60 104 L90 86 L120 90 L150 70 L180 76 L210 56 L240 62 L270 40 L300 46 L320 30" fill="none" stroke="#6b4bff" stroke-width="2"/><rect x="180" y="10" width="134" height="24" rx="12" fill="#fff" stroke="#e5e5ea"/><text x="192" y="26" font-family="Geist" font-size="11" fill="#16a34a">✓ closed bars only</text></svg></div>
           <div class="card-body"><h3>TradePulse</h3><p>Backtest trading strategies with next-bar fills, costs modelled, and an AI copilot.</p><p class="metric">Look-ahead can't be written<small>Strategies read closed bars only, and a canary test proves it</small></p><div class="cardlinks"><a class="caret" href="#">Case study</a><a class="caret" href="#">Source</a></div></div>
         </article>
         <article class="card">
-          <div class="art" aria-hidden="true"><div class="mini" style="text-align:center"><div class="q">Model pick, graded after the final score</div><div style="display:flex; justify-content:space-around; font-size:20px; font-weight:700; letter-spacing:-.02em"><span>62%<small style="display:block; font-size:11px; color:var(--ink-3); font-weight:500">home</small></span><span style="color:var(--ink-3)">38%<small style="display:block; font-size:11px; font-weight:500">away</small></span></div><span class="sample" style="margin-top:10px">Illustrative pick</span></div></div>
+          <div class="art" aria-hidden="true"><div class="mini" style="text-align:center"><div class="q">Model pick, graded after the final score</div><div style="display:flex; justify-content:space-around; font-size:20px; font-weight:700; letter-spacing:-.02em"><span>62%<small style="display:block; font-size:11px; color:var(--ink-3); font-weight:500">home</small></span><span style="color:var(--ink-3)">38%<small style="display:block; font-size:11px; font-weight:500">away</small></span></div><div class="prob"><i></i></div><span class="sample" style="margin-top:10px">Illustrative pick</span></div></div>
           <div class="card-body"><h3>CrownWager</h3><p>NBA predictions from an XGBoost model, graded publicly against final scores.</p><p class="metric">About 65% accuracy<small>5-fold stratified cross-validation, not a single split</small></p><div class="cardlinks"><a class="caret" href="#">Case study</a><a class="caret" href="#">Source</a></div></div>
         </article>
         <article class="card">
