@@ -217,6 +217,35 @@ async function auditReducedMotion(browser) {
   }
 }
 
+// Focus moves a frame or two after a dialog mounts or closes, by design. The
+// launchers sit inside the subtree a modal makes `inert`, and focusing one in
+// the same tick the boundary is released is a silent no-op (design-system.md
+// §8, ADR-014 § 4). Sampling document.activeElement at a single instant
+// therefore raced the restore: the same code passed on a pull request and
+// failed on main. Each check now waits up to FOCUS_SETTLE_MS for focus to land.
+// The contract is unchanged, and a failure says where focus actually is.
+const FOCUS_SETTLE_MS = 800;
+
+async function focusLandsOn(locator) {
+  const deadline = Date.now() + FOCUS_SETTLE_MS;
+  do {
+    if (await locator.evaluate((el) => el === document.activeElement).catch(() => false)) {
+      return true;
+    }
+    await new Promise((resolve) => setTimeout(resolve, 25));
+  } while (Date.now() < deadline);
+  return false;
+}
+
+async function describeFocus(page) {
+  return page.evaluate(() => {
+    const el = document.activeElement;
+    if (!el || el === document.body) return "<body>";
+    const name = (el.getAttribute("aria-label") || el.textContent || "").trim().slice(0, 40);
+    return `${el.tagName.toLowerCase()}${el.id ? `#${el.id}` : ""}${name ? ` "${name}"` : ""}`;
+  });
+}
+
 async function auditOverlayKeyboard(browser) {
   const desktopContext = await browser.newContext({ viewport: DESKTOP });
   await desktopContext.addInitScript(() => {
@@ -236,24 +265,24 @@ async function auditOverlayKeyboard(browser) {
     await dialog.waitFor();
 
     const textarea = dialog.getByRole("textbox", { name: "Your question" });
-    if (!(await textarea.evaluate((el) => el === document.activeElement))) {
-      throw new Error("Assistant did not focus its question field on open");
+    if (!(await focusLandsOn(textarea))) {
+      throw new Error(`Assistant did not focus its question field on open (focus: ${await describeFocus(desktopPage)})`);
     }
     await textarea.fill("What has Mubin shipped?");
     await desktopPage.keyboard.press("Tab");
     const ask = dialog.getByRole("button", { name: "Ask", exact: true });
-    if (!(await ask.evaluate((el) => el === document.activeElement))) {
-      throw new Error("Assistant focus trap skipped the newly enabled Ask button");
+    if (!(await focusLandsOn(ask))) {
+      throw new Error(`Assistant focus trap skipped the newly enabled Ask button (focus: ${await describeFocus(desktopPage)})`);
     }
     await desktopPage.keyboard.press("Tab");
     const close = dialog.getByRole("button", { name: "Close", exact: true });
-    if (!(await close.evaluate((el) => el === document.activeElement))) {
-      throw new Error("Assistant focus trap did not wrap to Close");
+    if (!(await focusLandsOn(close))) {
+      throw new Error(`Assistant focus trap did not wrap to Close (focus: ${await describeFocus(desktopPage)})`);
     }
     await desktopPage.keyboard.press("Escape");
     await dialog.waitFor({ state: "detached" });
-    if (!(await launcher.evaluate((el) => el === document.activeElement))) {
-      throw new Error("Assistant did not restore focus to its launcher");
+    if (!(await focusLandsOn(launcher))) {
+      throw new Error(`Assistant did not restore focus to its launcher (focus: ${await describeFocus(desktopPage)})`);
     }
   } finally {
     await desktopContext.close();
@@ -281,22 +310,22 @@ async function auditOverlayKeyboard(browser) {
     }
 
     const close = menu.getByRole("button", { name: /^Close$/ });
-    if (!(await close.evaluate((el) => el === document.activeElement))) {
-      throw new Error("Mobile menu did not focus its visible Close action");
+    if (!(await focusLandsOn(close))) {
+      throw new Error(`Mobile menu did not focus its visible Close action (focus: ${await describeFocus(mobilePage)})`);
     }
     await mobilePage.keyboard.press("Shift+Tab");
     const assistant = menu.getByRole("button", { name: /^Ask this site/ });
-    if (!(await assistant.evaluate((el) => el === document.activeElement))) {
-      throw new Error("Mobile menu focus trap did not wrap to its final action");
+    if (!(await focusLandsOn(assistant))) {
+      throw new Error(`Mobile menu focus trap did not wrap to its final action (focus: ${await describeFocus(mobilePage)})`);
     }
     await mobilePage.keyboard.press("Tab");
-    if (!(await close.evaluate((el) => el === document.activeElement))) {
-      throw new Error("Mobile menu focus trap did not wrap back to Close");
+    if (!(await focusLandsOn(close))) {
+      throw new Error(`Mobile menu focus trap did not wrap back to Close (focus: ${await describeFocus(mobilePage)})`);
     }
     await mobilePage.keyboard.press("Escape");
     await menu.waitFor({ state: "detached" });
-    if (!(await trigger.evaluate((el) => el === document.activeElement))) {
-      throw new Error("Mobile menu did not restore focus to its trigger");
+    if (!(await focusLandsOn(trigger))) {
+      throw new Error(`Mobile menu did not restore focus to its trigger (focus: ${await describeFocus(mobilePage)})`);
     }
 
     console.log(
