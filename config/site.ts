@@ -27,17 +27,19 @@ export const SITE = {
 export type Site = typeof SITE;
 
 /**
- * Third-party integrations — PUBLIC identifiers (a booking page + a newsletter
- * handle, not secrets), committed so they activate on deploy with zero env setup.
- * Each is overridable at build via its matching NEXT_PUBLIC_* var (consumed in
- * app/hire/page.tsx and components/features/newsletter-form.tsx). Empty string =
- * the feature stays hidden (the graceful no-config state).
+ * Third-party integrations — PUBLIC identifiers (a booking page, not a
+ * secret), committed so it activates on deploy with zero env setup and
+ * overridable at build with NEXT_PUBLIC_CAL_URL (consumed in app/hire/page.tsx).
+ * Empty string = the feature stays hidden (the graceful no-config state).
+ *
+ * The newsletter is deliberately not here. It has no committed default and
+ * renders only when NEXT_PUBLIC_BUTTONDOWN_USERNAME is set
+ * (components/features/newsletter-form.tsx), so it stays hidden until the
+ * Buttondown list is confirmed to deliver.
  */
 export const INTEGRATIONS = {
   /** Cal.com booking page (all event types). A specific event = ".../mubin-attar-007/30min". */
   calUrl: "https://cal.com/mubin-attar-007",
-  /** Buttondown newsletter handle — the embed form posts to this account. */
-  buttondownUsername: "mubin-attar-007",
 } as const;
 
 /**
