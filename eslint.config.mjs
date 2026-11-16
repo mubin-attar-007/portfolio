@@ -32,6 +32,9 @@ const eslintConfig = defineConfig([
     "out/**",
     "build/**",
     "next-env.d.ts",
+    // The static redesign prototype: plain browser HTML/JS kept as a visual
+    // reference, outside the app build (spec/prototype/README.md).
+    "spec/prototype/**",
   ]),
 ]);
 

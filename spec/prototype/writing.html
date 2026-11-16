@@ -1,0 +1,119 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Writing · Mubin Attar</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Geist:wght@400..800&family=Geist+Mono:wght@400..600&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="site.css">
+</head>
+<body data-page="writing">
+<div id="site-nav"></div>
+
+<main id="main">
+  <div class="wrap">
+    <div class="rss"><a href="#"><i data-icon="rss"></i>Subscribe to RSS</a></div>
+    <header class="page-head" style="padding-block-start:40px">
+      <p class="kicker">Writing</p>
+      <h1 class="display">Essays, guides and notes</h1>
+      <p class="page-lead">Essays and implementation guides on shipping AI safely, plus a running notebook on retrieval, evaluation, agents and the infrastructure behind my projects.</p>
+    </header>
+
+    <div class="filters" role="group" aria-label="Filter by type">
+      <button class="filter" type="button" data-filter="all" aria-pressed="true">All writing</button>
+      <button class="filter" type="button" data-filter="essay" aria-pressed="false">Essays</button>
+      <button class="filter" type="button" data-filter="guide" aria-pressed="false">Guides</button>
+      <button class="filter" type="button" data-filter="note" aria-pressed="false">Notes</button>
+    </div>
+    <p class="sr-only" id="filter-status" aria-live="polite" style="position:absolute; width:1px; height:1px; overflow:hidden; clip:rect(0 0 0 0)"></p>
+
+    <div class="posts">
+      <a class="post" href="#" data-kind="essay">
+        <div class="post-cover" aria-hidden="true">
+          <span class="cover-brand"><span class="mono-mark">MA</span>Mubin Attar</span>
+          <p class="cover-title">A validator is not a better prompt</p>
+          <div class="cover-art"><div class="cv-card">
+            <div class="cv-row"><span>DROP TABLE users;</span><span class="cv-deny">Denied</span></div>
+            <div class="cv-row"><span>SELECT … LIMIT 50</span><span class="cv-allow">Allowed</span></div>
+            <div class="cv-row"><span>SELECT 1; DELETE …</span><span class="cv-deny">Denied</span></div>
+          </div></div>
+        </div>
+        <div class="post-body">
+          <time datetime="2026-06-20">Jun 20, 2026</time>
+          <h2>A validator is not a better prompt</h2>
+          <p>Why DBWhisper gates every generated query with deterministic code instead of a stricter system prompt. "Less often" is not a safety property.</p>
+          <span class="caret">Read more</span>
+        </div>
+      </a>
+      <a class="post" href="#" data-kind="essay">
+        <div class="post-cover" aria-hidden="true">
+          <span class="cover-brand"><span class="mono-mark">MA</span>Mubin Attar</span>
+          <p class="cover-title">Trust is not a safety model</p>
+          <div class="cover-art">
+            <svg class="cv-shield" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.1" stroke-linecap="round" stroke-linejoin="round"><path d="M12 3l7 3v5.2c0 4.4-2.9 7.9-7 9.8-4.1-1.9-7-5.4-7-9.8V6z" fill="#efecff"/><path d="M9 12l2.2 2.2L15.5 10"/></svg>
+            <span class="cv-tag">Fails closed</span>
+          </div>
+        </div>
+        <div class="post-body">
+          <time datetime="2026-05-20">May 20, 2026</time>
+          <h2>Trust is not a safety model</h2>
+          <p>Why I gate an LLM's SQL behind a deterministic, fail-closed validator instead of trusting the model to behave.</p>
+          <span class="caret">Read more</span>
+        </div>
+      </a>
+      <a class="post" href="#" data-kind="essay">
+        <div class="post-cover" aria-hidden="true">
+          <span class="cover-brand"><span class="mono-mark">MA</span>Mubin Attar</span>
+          <p class="cover-title">Look&#8209;ahead&#8209;free by construction</p>
+          <div class="cover-art">
+            <svg viewBox="0 0 160 110" width="100%">
+              <g stroke="#131316" stroke-width="1.2">
+                <line x1="14" y1="30" x2="14" y2="80"/><rect x="10" y="44" width="8" height="24" fill="#16a34a" stroke="none"/>
+                <line x1="32" y1="36" x2="32" y2="86"/><rect x="28" y="50" width="8" height="22" fill="#dc2626" stroke="none"/>
+                <line x1="50" y1="26" x2="50" y2="70"/><rect x="46" y="34" width="8" height="26" fill="#16a34a" stroke="none"/>
+                <line x1="68" y1="20" x2="68" y2="62"/><rect x="64" y="28" width="8" height="22" fill="#16a34a" stroke="none"/>
+              </g>
+              <g stroke="#c9c9d2" stroke-width="1.2" stroke-dasharray="2 2">
+                <line x1="104" y1="14" x2="104" y2="58"/><rect x="100" y="22" width="8" height="24" fill="none"/>
+                <line x1="122" y1="24" x2="122" y2="70"/><rect x="118" y="32" width="8" height="26" fill="none"/>
+                <line x1="140" y1="10" x2="140" y2="50"/><rect x="136" y="18" width="8" height="22" fill="none"/>
+              </g>
+              <line x1="86" y1="6" x2="86" y2="98" stroke="#6b4bff" stroke-width="1.4" stroke-dasharray="4 3"/>
+              <text x="90" y="104" font-family="Geist" font-size="9" fill="#6b4bff">now</text>
+            </svg>
+            <span class="cv-tag">Closed bars only</span>
+          </div>
+        </div>
+        <div class="post-body">
+          <time datetime="2026-04-12">Apr 12, 2026</time>
+          <h2>Look-ahead-free by construction</h2>
+          <p>The most common way a backtest lies to you is look-ahead bias. Here's how I designed it out of TradePulse instead of hoping to catch it later.</p>
+          <span class="caret">Read more</span>
+        </div>
+      </a>
+    </div>
+
+    <ul class="plist" aria-label="All writing">
+      <li class="prow" data-kind="note"><a href="#"><span class="t">Grade every prediction against the real final score</span><span class="c">Note</span><time class="d" datetime="2026-07-05">Jul 5, 2026</time></a></li>
+      <li class="prow" data-kind="note"><a href="#"><span class="t">The validator is the belt; least-privilege is the braces</span><span class="c">Note</span><time class="d" datetime="2026-06-25">Jun 25, 2026</time></a></li>
+      <li class="prow" data-kind="essay"><a href="#"><span class="t">A validator is not a better prompt</span><span class="c">Essay</span><time class="d" datetime="2026-06-20">Jun 20, 2026</time></a></li>
+      <li class="prow" data-kind="note"><a href="#"><span class="t">For text-to-SQL, measure execution accuracy</span><span class="c">Note</span><time class="d" datetime="2026-06-18">Jun 18, 2026</time></a></li>
+      <li class="prow" data-kind="essay"><a href="#"><span class="t">Trust is not a safety model</span><span class="c">Essay</span><time class="d" datetime="2026-05-20">May 20, 2026</time></a></li>
+      <li class="prow" data-kind="note"><a href="#"><span class="t">Solo, but every deploy still has to pass the gate</span><span class="c">Note</span><time class="d" datetime="2026-05-16">May 16, 2026</time></a></li>
+      <li class="prow" data-kind="note"><a href="#"><span class="t">State the risk-free rate wherever Sharpe appears</span><span class="c">Note</span><time class="d" datetime="2026-05-09">May 9, 2026</time></a></li>
+      <li class="prow" data-kind="essay"><a href="#"><span class="t">Look-ahead-free by construction</span><span class="c">Essay</span><time class="d" datetime="2026-04-12">Apr 12, 2026</time></a></li>
+      <li class="prow" data-kind="note"><a href="#"><span class="t">One agent, three SQL dialects</span><span class="c">Note</span><time class="d" datetime="2026-04-02">Apr 2, 2026</time></a></li>
+      <li class="prow" data-kind="note"><a href="#"><span class="t">Six LLM providers behind one interface</span><span class="c">Note</span><time class="d" datetime="2026-03-14">Mar 14, 2026</time></a></li>
+      <li class="prow" data-kind="guide"><a href="#"><span class="t">Retrieval beats stuffing the schema</span><span class="c">Guide</span><time class="d" datetime="2026-03-08">Mar 8, 2026</time></a></li>
+      <li class="prow" data-kind="note"><a href="#"><span class="t">Enforce tenancy in the repository layer, not the route</span><span class="c">Note</span><time class="d" datetime="2026-02-21">Feb 21, 2026</time></a></li>
+    </ul>
+  </div>
+</main>
+
+<div id="site-footer"></div>
+<script src="chrome.js"></script>
+<script src="site.js"></script>
+</body>
+</html>
