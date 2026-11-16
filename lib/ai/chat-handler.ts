@@ -64,7 +64,7 @@ export type TurnLog = {
   /** Passages retrieved for the question. */
   hits: number;
   latencyMs: number;
-  /** Set when the model was called. */
+  /** The model the turn was routed to: set once a live answer is attempted. */
   model?: string;
   firstTokenMs?: number;
   finish?: FinishReason;
