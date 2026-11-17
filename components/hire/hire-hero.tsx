@@ -6,8 +6,15 @@ import { SITE } from "@/config/site";
 import { hirePage } from "@/content/pages/hire";
 import styles from "./hire.module.css";
 
-/** The handwritten accent: loaded by this page only, self-hosted by next/font. */
-const caveat = Caveat({ subsets: ["latin"], weight: "500", display: "swap" });
+/**
+ * The handwritten accent, self-hosted by next/font and fetched by this page
+ * only. Not preloaded: Next preloads a font on every route whose stylesheets
+ * hold its @font-face, and CSS chunking by route (next.config.ts) can merge
+ * this face into a small chunk the home page shares with /hire. A preload then
+ * put a 50 KB font, which home never draws, among its first requests. Without
+ * it the face is fetched only where text set in it is laid out: here.
+ */
+const caveat = Caveat({ subsets: ["latin"], weight: "500", display: "swap", preload: false });
 
 const MARK_SIZE = 196;
 const MARK_RADIUS = 52;

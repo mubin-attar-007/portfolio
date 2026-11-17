@@ -633,7 +633,28 @@ function evaluateRoute(route, reports) {
     })
     .join(" ");
   console.log(`${route.label}: ${categorySummary} ${auditSummary}${jsSummary}`);
+  console.log(`  ${observedSummary(reports)}`);
   return failures;
+}
+
+/**
+ * ADVISORY, per run: what the unthrottled trace that Lantern simulates from
+ * observed. Lantern charges LCP for every request that finished before the
+ * observed LCP, so when a budget fails this says whether the page grew or the
+ * paint came later than the scripts. Prints only; decides nothing.
+ */
+function observedSummary(reports) {
+  const runs = reports.map((report) => {
+    const metrics = report.audits?.metrics?.details?.items?.[0] ?? {};
+    const lcp = metrics.observedLargestContentfulPaint;
+    const requests = report.audits?.["network-requests"]?.details?.items ?? [];
+    const done = requests.filter((item) => Number.isFinite(item.networkEndTime) && item.networkEndTime <= lcp);
+    const scripts = requests.filter((item) => item.resourceType === "Script");
+    const doneScripts = done.filter((item) => item.resourceType === "Script");
+    const kb = (items) => (items.reduce((sum, item) => sum + (item.transferSize ?? 0), 0) / 1024).toFixed(0);
+    return `FCP/LCP ${Math.round(metrics.observedFirstContentfulPaint)}/${Math.round(lcp)}ms, ${done.length} requests ${kb(done)}KB done by LCP (scripts ${doneScripts.length}/${scripts.length}, ${kb(doneScripts)}KB)`;
+  });
+  return `observed: ${runs.join(" | ")}`;
 }
 
 async function main() {
