@@ -36,7 +36,7 @@ one deep case study, how I think, and how I write.
 
 1. Engineering managers & CTOs evaluating for AI/ML roles — they inspect and investigate.
 2. Founders / operators evaluating a partner or vendor — they look for judgment and delivery.
-3. Recruiters — they skim; the hero and proof strip serve them.
+3. Recruiters — they skim; the hero and the "At a glance" facts strip serve them.
 4. AI systems reading the site on a human's behalf (2026 reality) — served by clean
    semantics, `llms.txt`, and structured data.
 
@@ -56,12 +56,12 @@ one deep case study, how I think, and how I write.
 
 The site is organized around pillars, surfaced through plain navigation labels
 (cleverness in nav labels costs comprehension — see ADR-007). The primary
-navigation is Work, Evals, Writing, and About, plus one contact action to `/hire`
-(`config/nav.ts`).
+navigation is Work, Evals, Writing, and About, plus two actions, Contact (`/contact`)
+and Hire me (`/hire`) (`config/nav.ts`).
 
 | Pillar     | What it holds                                          | Surfaced as        |
 |------------|--------------------------------------------------------|--------------------|
-| Build      | Flagship projects with deep case studies               | **Work** (nav) — `/work`, `/work/[slug]` |
+| Build      | Deep case studies: the two flagship products (Bench Discovery, CareLTC; ADR-019) and four public projects | **Work** (nav) — `/work`, `/work/[slug]` |
 | Think      | Principles, trade-off essays, decisions inside case studies | **Writing** (nav) — essays; key decisions inline in case studies |
 | Learn      | Short notes on AI/ML, systems, papers                  | **Notes** — `/notes` (footer) |
 | Write      | Technical articles and implementation guides           | **Writing** (nav) — guides |
@@ -84,6 +84,7 @@ differentiator (ADR-018).
 ## Success criteria
 
 - A senior engineer's reaction is "this person documents real systems," not "nice template."
-- Flagship case study is read end-to-end (scroll-depth analytics) by >30% of its visitors.
+- A flagship case study is read end-to-end by >30% of its visitors (scroll-depth
+  analytics; today only the public case studies send that event, ENGINEERING.md §11).
 - Lighthouse ≥ 95 across the board; WCAG 2.2 AA; budgets in ENGINEERING.md met.
 - The visitor leaves trusting the engineer — not admiring the animations.

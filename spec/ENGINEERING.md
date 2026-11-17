@@ -41,11 +41,17 @@ are listed in design-system.md §5.
 - Automated gate: `npm run test:a11y` (Playwright + axe-core: the WCAG 2.0–2.2 A/AA
   rules, plus the best-practice rules Lighthouse scores, such as `heading-order`,
   `landmark-unique`, and `region`, which keeps all content inside landmarks) on every
-  route in its list — `/contact` and both `/work/field/*`
-  reports included — at 1280/768/360px, plus the open Work and About menus, the open
-  mobile menu, the open assistant panel, the reduced-motion contract, and keyboard
-  focus traps → **zero violations**. The site is light-only (ADR-018), so there is one
-  pass, not one per theme; the dark pages and plates are covered inside it.
+  route in its list — `/contact`, `/skills` and both flagship case studies included — at
+  1280/768/360px, and at 360px both flagships again with every phone disclosure
+  (`ShowMore`) open; plus the open Work and About menus, the open mobile menu (the modal
+  sheet), the assistant panel opened from the header and from a case study's "Ask AI
+  about …" and an essay's ask button (each on its page's starters), a mocked assistant
+  conversation (the cited page, Copy answer, next steps, follow-ups, "Jump to latest"),
+  the reduced-motion contract, and the keyboard contracts (the mobile menu's focus
+  containment and Escape, the assistant's focus trap) → **zero violations** (80 axe
+  audits on 2026-11-17). Each pass blocks `/api/chat` and fails if a page load or an
+  overlay sent anything. The site is light-only (ADR-018), so there is one pass, not
+  one per theme; the dark pages and plates are covered inside it.
   Manual check for UI changes: a keyboard-only pass and a screen-reader spot check.
 
 ## 5. Performance budgets
@@ -53,7 +59,8 @@ are listed in design-system.md §5.
 Measured by `npm run test:lighthouse` (`scripts/lighthouse-budget.mjs`): the Lighthouse
 CLI, mobile form factor with simulated throttling, the median of three runs per route
 (`LIGHTHOUSE_RUNS`), against a local standalone production server. Routes: `/`,
-`/work/dbwhisper`, and `/writing/a-validator-is-not-a-better-prompt`. See ADR-009.
+`/work/dbwhisper`, and `/writing/a-validator-is-not-a-better-prompt`. The flagship case
+studies, the longest pages, are not among them. See ADR-009.
 
 A budget is the standard the site is held to. The last column says what CI enforces
 today. Where the code misses a budget, the gap is a defect to fix, not a reason to move
@@ -65,18 +72,19 @@ the budget; changing a budget needs an ADR.
 | LCP | ≤ 2.5 s (raised from 2.0 s in 2026; the reason is recorded in ADR-018, "Carried forward") | fails the gate |
 | CLS | < 0.05 | fails the gate |
 | TBT (lab) | < 150 ms | fails the gate |
-| Route JS (gzip, first load) | ≤ 120 KB home · ≤ 90 KB content pages | printed, not failing; over budget. CI, 2026-11-16 (before the redesign): home 164 KB, case study 164 KB, writing 157 KB. The redesign, measured the same way on 2026-11-17: home 160 KB, case study (`/work/dbwhisper`, which now holds the boundary inspector) 174 KB, writing 159 KB |
-| Assistant panel chunk | lazy: fetched when a pointer or focus first reaches a launcher, or on open; ≤ 60 KB | 7 KB gzip of JS (2026-11-17); its styles are in the shared stylesheet |
+| Route JS (gzip, first load) | ≤ 120 KB home · ≤ 90 KB content pages | printed, not failing; over budget. CI, 2026-11-16 (before the redesign): home 164 KB, case study 164 KB, writing 157 KB. The redesign, measured the same way on 2026-11-17: home 160 KB, case study (`/work/dbwhisper`, which now holds the boundary inspector) 174 KB, writing 159 KB. With the flagship case studies, on a production build the same day: gzip bodies home 155.8 KB, every case study, flagships included, 166.0 KB, writing 149.6 KB; with headers, as CI's Lighthouse counts them, 164.8, 175.9 and 158.6 KB |
+| Assistant panel chunk | lazy: fetched when a pointer or focus first reaches a launcher, or on open; ≤ 60 KB | review. 10.8 KB gzip in two chunks on a production build (2026-11-17, after the assistant upgrade; 7 KB before it), fetched on the first pointer over a launcher, with no extra stylesheet. esbuild's upper bound over everything the panel imports is 12.6 KB of JS (AI_ASSISTANT.md §9) |
 | INP | < 200 ms | field metric; no lab gate and no field data yet |
-| Fonts | ≤ 130 KB woff2 in total, self-hosted by `next/font` | not yet measured |
+| Fonts | ≤ 130 KB woff2 in total, self-hosted by `next/font` | review: 78.4 KB in two preloaded files (2026-11-17) |
 | Images | AVIF/WebP through `next/image`, explicit dimensions, lazy below the fold | review |
 
 The route-JS gate prints rather than fails because framework chunks shared by every
 route make up most of the transfer, so a hard limit would fail on that floor rather than
-on a regression (see the comment in `scripts/lighthouse-budget.mjs`). On the home page
-the framework is about 132 KB of the 150 KB of gzip bodies; the site's own code is the
-shared chrome chunk (9.5 KB), the home islands (3.3 KB) and the error boundaries
-(4.5 KB). Whether the budget is reachable on this framework is open; meeting it or
+on a regression (see the comment in `scripts/lighthouse-budget.mjs`). On the home page,
+measured before the flagship work, the framework was about 132 KB of the 150 KB of gzip
+bodies, and the site's own code was the shared chrome chunk (9.5 KB), the home islands
+(3.3 KB) and the error boundaries (4.5 KB). Whether the budget is reachable on this
+framework is open; meeting it or
 changing it through an ADR are the two ways to close the gap.
 
 Measure route JS as a browser fetches it, which is what CI's Lighthouse number is: every
@@ -108,28 +116,41 @@ warning about the unused CSS. ESLint fails a `<Link>` without a `prefetch` prop
   runs `test/**/*.test.mts` with `test/alias-loader.mjs` resolving the `@/` alias and
   extensionless TS imports (a file before a same-named directory, as the bundler
   resolves them); Node 24 strips the types natively.
-  Current coverage (2026-11-17): 153 tests in 21 files covering content law (projects,
+  Current coverage (2026-11-17): 240 tests in 26 files covering content law (projects,
   metric methods, links, and recordings served only while a project lists them), feeds,
   formatting, navigation, reading time, env parsing
-  (`GEMINI_MODEL`), the content-slug guard (`lib/content-slug.ts`); the assistant
-  (corpus, retrieval, citations, the injection guard, answer formatting, the chat
-  contract and handler, the rate limiter); the published evidence: no retired or
+  (`GEMINI_MODEL`), the content-slug guard (`lib/content-slug.ts`); the flagship case
+  studies — the approved usage figures and credit word for word, no "daily" and no
+  superseded figure, every capture, poster, recording and caption track at its declared
+  size, and caption cues that match the scene lists (`flagship-content.test.mts`); the
+  "Used in" evidence on `/skills` and `/uses` (`stack-evidence.test.mts`); the assistant
+  (corpus, retrieval, citations, actions and follow-ups, the injection guard, answer
+  formatting, the chat contract and handler, the open requests and the slow cue, the
+  rate limiter, and the golden set offline); the published evidence: no retired or
   retyped evaluation figure, the superseded job title, and the role's sentence form
   (`evidence.test.mts`); `public/llms.txt` completeness, with the static pages read
-  from `app/` (`llms-txt.test.mts`); the résumé PDF's currency and links
-  (`resume-pdf.test.mts`); search metadata — `pageMetadata`, note descriptions, and the
-  title and description limits for every note, essay and case study (`seo.test.mts`);
-  and the icons — not the create-next-app favicon, drawn in the current palette, and
-  rendered from `app/icon.svg` (`icons.test.mts`). Gap against the requirement: some
+  from `app/`, the flagships' usage wording and the notice period
+  (`llms-txt.test.mts`); the résumé PDF's currency, one A4 page, its type floors,
+  metadata, links and approved facts, and the AWS line against the flagship stacks
+  (`resume-pdf.test.mts`); the phone number whole in the PDF only, never in a source,
+  script, test, doc or public text file (`resume-phone.test.mts`); search metadata —
+  `pageMetadata`, note descriptions, and the title and description limits for every
+  note, essay and case study (`seo.test.mts`); and the icons — not the create-next-app
+  favicon, drawn in the current palette, and rendered from `app/icon.svg`
+  (`icons.test.mts`). Gap against the requirement: some
   exported `lib/` functions have no direct test yet, notably the MDX collection loader
   beyond its slug guard and excerpt (`lib/mdx-collection.ts`), which compiles React and
   so cannot run under the plain test runner.
 - **Assistant grounding:** `test/retrieval.test.mts` checks the corpus and per-question
-  relevance against 16 detailed and 24 short questions (`test/fixtures/test-questions.ts`),
-  plus off-topic questions, follow-ups and every starter's fallback;
-  `test/guard.test.mts` checks the injection screen against attack and legitimate
-  question lists; `test/chat-handler.test.mts` drives the route's handler with real
-  requests and fake model streams — all without any LLM quota. See AI_ASSISTANT.md §7.
+  relevance against 19 detailed and 43 short questions (`test/fixtures/test-questions.ts`),
+  plus misspellings, aliases, off-topic questions, follow-ups, the page prior, and every
+  starter and follow-up; `test/assistant-golden.test.mts` is the offline gate, the
+  67-item golden set (`test/fixtures/assistant-golden.ts`) through the handler with a
+  fake model and again without a key; `test/guard.test.mts` checks the injection screen
+  against attack and legitimate question lists; `test/chat-handler.test.mts` drives the
+  route's handler with real requests, fake model streams and a fake router — all without
+  any LLM quota. The live evaluation, `npm run eval:assistant`, spends quota and never
+  runs in CI. See AI_ASSISTANT.md §7–§8.
 - **Browser gates (Playwright scripts in `scripts/`):** accessibility (`test:a11y`),
   interaction contracts (`test:interaction`), motion (`test:motion`), accent drift
   (`test:hue`), print (`test:print`), screenshots and overflow (`test:screens`), links
@@ -142,12 +163,34 @@ warning about the unused CSS. ESLint fails a `<Link>` without a `prefetch` prop
   `/work/dbwhisper`, where the inspector now lives, instead of `/`; `test:motion`
   checks the arrow-swap caret, the menus, the tab pill and panel crossfade, the
   marquee's hover pause, the copy chip, the hover moments on `/work`, a case study and
-  a field report, and each reduced-motion alternative, and fails on an animation name
-  that resolves to no keyframe (bare or through a `--kf-*` name) or on any loop but an
-  ambient one running at rest on any route; `test:a11y` adds axe's `region`; the link
-  and smoke gates include `/contact` and the field reports, which are `noindex` but
-  linked and must resolve; and the dialog and trigger names come from
-  `components/assistant/copy.ts` (AI_ASSISTANT.md §5).
+  a flagship's architecture sketch, and each reduced-motion alternative, and fails on
+  an animation name that resolves to no keyframe (bare or through a `--kf-*` name) or
+  on any loop but an ambient one running at rest on any route; `test:a11y` adds axe's
+  `region`; the link and smoke gates include `/contact`; and the dialog and trigger
+  names come from `components/assistant/copy.ts` (AI_ASSISTANT.md §5).
+  What the flagship case studies changed (ADR-019): every route list names
+  `/work/bench-discovery` and `/work/careltc` where it named the field reports; the
+  link gate requires both to be linked from a page and reached, and crawls the two
+  retired field-report URLs, which must land (the metadata gate checks their 308s); the
+  smoke gate expects each product's name; the motion gate's `/work` hover moment is a
+  `#flagship` card; the metadata gate
+  treats any case study `/work` links to that the sitemap omits as a draft that must
+  stay unindexed (none today); and the interaction gate holds the tour's ARIA tabs,
+  every recording (`preload="none"`, no autoplay, captions, a poster overlay, no media
+  bytes while the page loads and scrolls) and the "Real app · dummy data" label on
+  every capture, unclipped and the first thing painted at its centre. The boundary
+  audit's anchor must clear the work sub-nav. The modal mobile menu (ADR-018, amended)
+  is held by the a11y and interaction gates: one dialog named "Site menu", the page
+  behind inert and not scrolling (it joins the assistant in the inert-boundary loop),
+  focus kept inside, Escape and a tap on the scrim closing it with focus back on its
+  button. The assistant contracts mock `/api/chat` in the current wire shape (the
+  request `{ messages, page }`; citations, then actions and follow-ups), and a tampered
+  stream proves a foreign page, action or follow-up never renders; the openers on a case
+  study, an essay, `/` and `/contact` open the panel on their starters, send nothing
+  and get focus back on close; and the copy checks assert what was copied ("Copy code"
+  copies the excerpt verbatim, "Copy link" the full address), not only that the
+  clipboard changed. `test:links` also holds the arrow law (design-system.md §11.4) on
+  every server-rendered link.
   Every gate runs in Chromium only (CI installs no other engine); Firefox and
   Safari are not exercised by any automated check.
 - **Copy gate (`test:copy`, `scripts/copy-audit.mjs`):** reads the prerendered HTML in
@@ -188,6 +231,8 @@ exists in `content/` (placeholder copy is a spec violation, not a stopgap).
 [ ] Tests added/updated and passing
 [ ] Published figures re-checked against the project's README and claim audit at the
     cited commit; `npm run build:resume` run if résumé data or a figure changed
+[ ] Disclosure scan clean, with its positive control (ADR-019): the local denylist
+    over the changed sources, docs and media text, and over the build before a release
 [ ] No hardcoded copy/colors/spacing (tokens + content only)
 [ ] JSDoc + /dev/components entry (if component)
 [ ] Budgets respected (check bundle output for route)
@@ -207,10 +252,13 @@ grouped pull request a month); npm dependencies are upgraded deliberately, not b
 
 Privacy-first analytics: `@vercel/analytics`, rendered only on Vercel deployments
 (`VERCEL=1`); no cookies, no consent banner. Custom events, sent through
-`lib/analytics.ts`: `case_study_read_depth` (25/50/75/100, from the case-study reading
-outline) and `resume_downloaded`. Error tracking: none beyond the platform's logs. The
-assistant route logs one JSON line per answered turn — mode, note, passages retrieved,
-timings, the finish or failure reason and token counts; never the question, the answer,
-the key or the client address — warns with the model id and HTTP status when Gemini
-rejects a request, and warns when a content collection is unreadable. The rate limiter
-keeps salted address hashes, timestamps and daily counters in memory only.
+`lib/analytics.ts`: `case_study_read_depth` (25/50/75/100, from the reading outline of
+the four public case studies; the flagship case studies have no outline and send none)
+and `resume_downloaded`. Error tracking: none beyond the platform's logs. The assistant
+route logs one JSON line per answered turn — mode, note, how the passages were found and
+their content ids, the routing call's result and tokens, the actions offered, whether a
+page was sent, timings, the finish or failure reason, whether a hedged call ran and won,
+and token counts; never the question, the answer, the key or the client address
+(AI_ASSISTANT.md §6) — warns with the model id and HTTP status when Gemini rejects a
+request, and warns when a content collection is unreadable. The rate limiter keeps
+salted address hashes, timestamps and daily counters in memory only.

@@ -1,6 +1,7 @@
 # ADR-007 — /dev/components preview route instead of Storybook
 
-Status: Accepted. Navigation facts updated 2026-11-13; metadata facts 2026-11-16.
+Status: Accepted. Navigation facts updated 2026-11-13 and 2026-11-17; metadata facts
+2026-11-16.
 
 ## Context
 Component development needs a place to see all primitives, states, and themes together.
@@ -18,5 +19,6 @@ app context (real tokens, real RSC boundaries), is covered by the same CI, and c
 
 Related nav-label decision: the pillar names in the charter (Build/Think/Learn/Write/
 Experiment/Connect) remain the information architecture, but the navigation uses plain
-labels — Work, Evals, Writing, About, plus one contact action (`config/nav.ts`). Clever
-labels tax first-time comprehension, and the hero has 3 seconds to land.
+labels — Work, Evals, Writing, About, plus two actions, Contact and Hire me
+(`config/nav.ts`). Clever labels tax first-time comprehension, and the hero has 3
+seconds to land.

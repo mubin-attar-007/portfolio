@@ -17,15 +17,16 @@
 
 ## 1. Thesis — a product, built in the open
 
-This is Mubin Attar's personal platform as an **Applied AI Engineer** open to
-**Forward Deployed Engineer** roles. It is built to the craft of a developer-product
-site — the quality bar is clerk.com — with original code, copy and assets, and only
-his own real work and figures. The employment title at Sevina remains AI/ML Engineer.
+This is Mubin Attar's personal platform as an **Applied AI Engineer**. It is built to
+the craft of a developer-product site — the quality bar is clerk.com — with original
+code, copy and assets, and only his own real work and figures. The role is always
+`SITE.role` (`config/site.ts`), and the roles he is open to are listed once, in
+`content/pages/hire.ts`. The employment title at Sevina remains AI/ML Engineer.
 
 - **A light canvas, near-monochrome ink, one violet accent.** Hierarchy comes from
   type, space and hairlines. Colour is spent on action, state and evidence.
 - **Dark plates for emphasis.** A notched dark plate marks the section that matters
-  most on a page (the field work, a closing CTA); three pages are dark throughout
+  most on a page (the flagship work, a closing CTA); three pages are dark throughout
   (About, Evals, 404). There is no theme switch.
 - **Every page has the pattern its job needs** — product page, leaderboard,
   changelog, document, blog post (§7).
@@ -34,7 +35,7 @@ his own real work and figures. The employment title at Sevina remains AI/ML Engi
   observer (§6).
 - **Every figure carries its method.** No invented metric, customer, testimonial or
   logo wall; mock UI with numbers says "Illustrative sample · synthetic data" in the
-  frame (§7.2).
+  frame, and a capture of a real product says "Real app · dummy data" (§7.2).
 
 ---
 
@@ -141,7 +142,7 @@ x=120. The gutter is `--gutter` `clamp(1rem, 3vw, 1.5rem)` (16 → 24px), and
 **The nav and sticky things.** The nav sits `--nav-top` 8px from the top and is
 `--nav-h` 44px tall; `--nav-offset` is where it ends, and `--sticky-top` adds 24px for
 sticky sidebars. Anchors scroll clear of it (`scroll-padding-top`). The work sub-nav
-is `--subnav-h` 36px.
+is `--subnav-h` 36px; on a case study, anchors scroll clear of it too (§8).
 
 **Section rhythm** (`Section space=…`):
 
@@ -185,13 +186,21 @@ marked *client*.
   is a lit gradient with a 1px ring and a contact shadow (`--btn-*` tokens) and keeps
   its colours on dark plates. Press: `scale(var(--press-scale))` (0.97) springing back
   over `--motion-press`. `buttonClassName(variant, size)` styles another element as a
-  button. One violet button per viewport.
+  button. One violet button per viewport. A link to another site opens a new tab by
+  default, and a link that leaves the site (a new tab or a `mailto:`) carries the
+  out-arrow ↗ in place of the caret (§11.4).
 - `CaretLink({ href, tone: "ink" | "muted" | "accent", size: "sm" | "md", weight:
   "strong" | "regular", newTab? })` and `Caret()` (`components/ui/caret-link.tsx`) — the
   "continue" link with the arrow-swap caret (§6). Any interactive ancestor triggers the
-  caret, so a whole card can animate its "Read more".
+  caret, so a whole card can animate its "Read more". It too swaps the caret for the
+  out-arrow when the link leaves the site.
+- `ArrowOut({ inline? })` (`components/ui/caret-link.tsx`) — the out-arrow ↗ (§6) for a
+  plain link that leaves the site (the footer's social links and email, the résumé's
+  contacts, an outbound link in prose); `inline` spaces it after the last word of a
+  sentence. `Button` and `CaretLink` add it themselves.
 - `SmartLink({ href, newTab?, kind? })` — renders a route, a file, a mail link or
-  another site correctly from its `href` (`linkKind`).
+  another site correctly from its `href` (`linkKind`); `opensOutside(href, newTab)` and
+  `isWebLink(href)` decide the ↗ and the new-tab default.
 - The ghost pill (header Contact and Hire me): `--chrome-ghost-bg` (2% ink) plus a
   hairline inset ring `--chrome-ghost-ring` (12% ink).
 
@@ -208,6 +217,10 @@ marked *client*.
 
 - `Section({ space, tone: "page" | "subtle" | "invert" })` and `Container`
   (`components/layout/`).
+- `ScrollRegion({ label, className })` (*client*, `components/layout/`) — the sideways
+  scroller around a wide table. While its content overflows it is a region named
+  `label` with a tab stop and carries `data-overflows` (a pinned column draws its edge
+  from it); while the content fits it is a plain box (§8).
 - `Plate({ notch = true, grid = true, contained = true, as, id, labelledBy, label })` —
   the notched dark plate. Children turn dark automatically (§2).
 - `Bento({ columns: 2 | 3 })`, `Card({ as, span: 1 | 2, hover = true })`,
@@ -224,15 +237,25 @@ marked *client*.
 
 - The **floating pill nav**: Work and About dropdown menus, Evals and Writing links,
   and the Contact and Hire me ghost pills; data in `config/nav.ts`. The Work menu has
-  two rich columns (Field work, Public systems) and an "All work" footer; the About
-  menu is an icon list. A mobile menu below the desktop breakpoint.
-- `WorkSubnav({ current })` — the switcher bar under the nav on `/work/[slug]` and
-  `/work/field/[slug]`, rendered first; items from `WORK_ITEMS`.
+  two rich columns (Flagship, Public systems) and an "All work" footer; the About
+  menu is an icon list. While a menu is open the other items step back to secondary
+  ink, so the open one reads as the subject. Below the desktop breakpoint the mobile
+  menu is a **modal sheet** (ADR-018, amended 17 Nov 2026): the button and the panel
+  under the pill form one dialog ("Site menu"); the rest of the page is `inert` and
+  does not scroll, under a light scrim (`--scrim`) that also dims the launcher, and
+  the pill turns solid. Focus moves to the first link and Tab cycles within the
+  dialog; Escape or a tap on the scrim closes it, with focus back on the button.
+- `WorkSubnav({ current })` — the switcher bar under the nav on every `/work/[slug]`
+  case study, flagship and public, rendered first; items from `WORK_ITEMS`.
 - The **announcement bar** (home only) with the availability line (`STATUS.text`): an
   `<aside aria-label="Announcement">`, so its content sits in a landmark.
-- The **five-column footer** with the fading dotted texture (`--chrome-dots`).
+- The **five-column footer** with the fading dotted texture (`--chrome-dots`). Its
+  base bar ends `--launcher-clearance` above the bottom, so at the end of a page
+  nothing sits under the launcher.
 - The floating **"Ask AI" launcher** (*client*) — opens the assistant through
-  `openAssistant()` (spec/AI_ASSISTANT.md §5).
+  `openAssistant()` (spec/AI_ASSISTANT.md §5). Its footprint is `--launcher-h` and
+  `--launcher-inset`; `scroll-padding-bottom` keeps a control focused by Tab clear of
+  it (§8).
 
 ### Content structures
 
@@ -241,7 +264,8 @@ marked *client*.
   The active step and its frame pane carry `data-active`, the hook a media's hover
   moment keys on; the frame itself is inert.
 - `Toc({ items: { id, label, items? }[], title })` (*client*) — a sticky table of
-  contents with an active-section indicator.
+  contents with an active-section indicator. An entry chosen by a click or a deep link
+  stays current while its jump scrolls; only the reader's own scrolling moves it.
 - `Timeline({ label? })` and `TimelineEntry({ date, dateTime, title?, titleAs?, tags?,
   id? })` — the changelog's date rail with a dot per entry.
 - `StatusPill({ status: "verified" | "retired" | "draft" | "not-claimed" | "in-use" |
@@ -249,6 +273,66 @@ marked *client*.
 - `Chip({ variant: "outline" | "raised" | "soft", size, mono?, dot?, icon?, as? })`.
 - `StatsRow({ stats: { label, value, source? }[], align? })` — a figure with a
   `source` links to its method.
+- `ShowMore({ more, less, className })` (`components/ui/show-more.tsx`) — progressive
+  disclosure for phones: below 760px the rest of a long list waits behind a native
+  `<details>` with a full-width "Show 4 more incidents" control (it reads "Show fewer
+  incidents" when open); from 760px, and in print, the wrapper and its control
+  disappear (`display: contents` on the details and its `::details-content`), so the
+  items lay out in the parent's grid as if never wrapped. Put the first items before
+  it and the rest inside, in the same parent. The content always stays in the DOM, a
+  deep link into it opens it, and browsers without `::details-content` keep the
+  control at every width. Used by the flagship case studies' highlights, constraints,
+  incidents and decisions.
+- `PhoneFrame({ className, children })` (`components/ui/phone-frame.tsx`) — a phone
+  body around a mobile capture, every proportion a share of its width (container
+  units); `phoneFrameAspect(width, height)` gives the whole frame's aspect ratio for
+  fitting it into a box. Decorative chrome; the capture carries the alt text.
+
+### Case-study parts (`components/flagship/`, `components/work/`)
+
+The two flagship case studies share one template (`FlagshipPage`, fed by
+`content/flagship/`); these are its reusable parts, plus the pieces every case study
+uses.
+
+- `ShotFrame({ shot, product, sizes, priority?, label?, labelAt? })` — one capture of
+  the real app in the frame of its surface (`Frame`: a `BrowserFrame` for the web, the
+  desktop app's own window, a `PhoneFrame`, or a sheet of paper for a document the app
+  wrote), labelled "Real app · dummy data" inside the frame. `labelAt="top"` moves the
+  label up where a stage crops the frame's foot. Only the one above-the-fold capture
+  sets `priority`; every other is lazy. `frameFit(shot)` gives a layout the frame's
+  aspect ratio.
+- `MediaGallery({ label, listLabel, tabs, stage?, captions? })` (*client*) — the product
+  tour, the recordings and the code excerpts: a segmented control picks the surface
+  (Desktop | Web, Portal | Mobile), a list picks the item, and a viewer shows it. Each
+  control is a set of ARIA tabs with one tab stop (←/→ and Home/End between surfaces,
+  ↑/↓ or ←/→ between items); a control with nothing to choose is not rendered. With
+  `stage` (captures) every item fits one fixed stage, so a choice never moves the page.
+  The pill springs to the chosen surface and a new item rises out of a short blur; both
+  are instant under reduced motion. Hidden items are `hidden`, so their lazy images
+  load only when chosen.
+- **The reveal contract** (`components/work/reveal.ts`): before a control scrolls to an
+  element, it calls `reveal(element)`, which sends `REVEAL_EVENT` from it; a container
+  that can hide its content (a gallery's tab panels) shows the part that holds it at
+  once, so the scroll lands on something visible. "Watch the demo" uses it to reach a
+  recording on a surface the visitor had switched away from. Nobody listening is fine.
+- `DemoPlayer` and `WatchDemoButton` (*client*, `components/work/demo-player.tsx`) — a
+  recording in its frame: `preload="none"`, never autoplays, and its poster is a
+  `next/image` laid over the video (lazy unless `priority`) that a button plays, then
+  native controls and the WebVTT captions take over. "Watch the demo" reveals the
+  player, scrolls to it and plays it.
+- `ArchitectureSketch({ sketch, orientation?, focus?, caption?, notes? })` — an original
+  boundary diagram in HTML: zones framed by the boundary they state, their parts in
+  data-flow order, and labelled crossings, read as one ordered list. With
+  `orientation="row"` the zones sit side by side once the sketch itself is 1,000px wide
+  (a container query, so it holds in any column) and stack below that; `column` always
+  stacks them (the trace's sticky frame). `focus` lights the zone, part or crossing a
+  trace step touches. Its wires pulse only while the element that holds it is hovered or
+  holds focus.
+- `AskAiButton({ label, variant? })` and `AskAiQuestions({ title, questions, align? })`
+  (*client*, `components/work/ask-ai.tsx`) — "Ask AI about <product>" in a case study's
+  hero, which opens the assistant on the page's own starters and sends nothing, and the
+  same starters as chips in the closing band, each sending exactly the question it
+  shows (§8).
 
 ### Decoration and motion
 
@@ -264,7 +348,7 @@ marked *client*.
 
 ### Long-form
 
-`ArticleHeader`, `ArticleFooter`, `CodeBlock` (Shiki, server-highlighted, a filename
+`ArticleFooter`, `CodeBlock` (Shiki, server-highlighted, a filename
 bar and a copy button), `Callout` (a 3px left stripe, `--stripe-width`), `Figure`,
 `PullQuote`, and the MDX blocks `DecisionLog` and `FailureLog` (hairline rows, mono
 numbers, no zebra striping). The case-study `SystemDiagram` is one tab stop with arrow,
@@ -272,7 +356,7 @@ Home and End navigation and a narration list as its text alternative.
 
 **Legacy primitives** still imported by older components: `TextLink`, `Metric` (a mono
 tabular value that links its method) and `BoundaryMark`. `SectionHeading`,
-`EyebrowChip` and `Breadcrumb` have no importers and are due for deletion.
+`EyebrowChip`, `Breadcrumb` and `ArticleHeader` have been deleted.
 
 ---
 
@@ -305,6 +389,10 @@ surfaces `--motion-base` 200ms · card elevation and illustration states
      triangles in a clipped 10×8px box; on hover or focus of the nearest link or
      button, the first slides out right while the second slides in from the left, and
      the pair brightens.
+   - The **out-arrow** (`.arrow-out`, the caret's twin): two masked ↗ arrows in a
+     clipped 10×10px box; on hover or focus the first leaves up and to the right while
+     the second arrives from the lower left, and the pair brightens. Only on a link
+     that leaves the site (§11.4).
    - The button press (`scale(.97)`), the tab hover pill and the selected tab's dot,
      menus (opacity plus a spring), list rows and footer links shifting colour over
      150ms.
@@ -312,7 +400,7 @@ surfaces `--motion-base` 200ms · card elevation and illustration states
    cyan; halos spread; spinners spin; a timeline lights in sequence; checks pop; charts
    redraw (`stroke-dashoffset`); bars fill; replies rise. The reaction decorates
    information that is already on screen at rest. A hover moment never loops unhovered,
-   even when it is a loop while it plays: the pulse on a field sketch's wires runs while
+   even when it is a loop while it plays: the pulse on a flagship sketch's wires runs while
    the element that holds the sketch is hovered or holds focus, and a case study's flow
    wires while its steps are (StickySteps' frame is inert, so the moment keys on the
    steps' root and the pane marked `data-active`). At rest the pulse is hidden.
@@ -335,7 +423,7 @@ scroll-triggered reveal.
 …`. A CSS module renames every animation name it finds to a local one (`marquee`
 becomes `<hash>_marquee`), which matches no global keyframe, so a bare name is a dead
 animation in the production build; the transform leaves `var()` alone. A keyframe used
-by one module only may live in that module instead, under a bare name (the field
+by one module only may live in that module instead, under a bare name (the flagship
 sketch's `sketch-wire-*`, the assistant's `a-*`), since the transform renames the
 definition and its uses together. `npm run test:motion` fails on any animation name,
 bare or `--kf-*`, that resolves to no keyframe.
@@ -383,21 +471,21 @@ in `content/pages/<page>.ts` (spec/CONTENT_MODEL.md §5).
 
 | Route | Pattern | Sections |
 |---|---|---|
-| `/` | Product home | announcement bar · hero · tabbed showcase (sliding pill, blurred crossfade, sheen) · field-work plate with cards to the reports · public-systems bento with real metrics and method links · agent section with the copy-prompt chip (`public/llms.txt`) · writing · CTA |
-| `/work` | Product overview | hero · dark plate of field work (`#field`, two large cards) · public systems (`#public`, four cards with a real poster and one metric with its method) · stack band · CTA |
-| `/work/[slug]` | Product page | work sub-nav · hero with a status pill, CTAs and a `BrowserFrame` playing the captioned recording (click to play, `preload="none"`; DBWhisper shows its capture) · numbered "How it works" `StickySteps` · decision bento · results with methods (retired shown as Retired) · what broke · stack · prev/next. `/work/dbwhisper` holds the boundary inspector |
-| `/work/field/[slug]` | Product page, anonymous | the draft ribbon while unpublished · hero with status pills and the private-repository notice · problem and users · constraints as a numbered list · what I built · an architecture sketch (custom SVG) · the trace as sticky steps · the boundary ledger · deployment · what broke as a timeline · decisions · verification and "Not measured" · outcome ("Proves" / "Doesn't show") · walkthrough CTA |
-| `/about` (dark) | Company page | page header · principles · a quote band with a halftone portrait of `public/mubin.png` · experience · education |
+| `/` | Product home | announcement bar · hero (the h1; a sub line naming both flagship products with their usage figures; the copy-prompt chip) · tabbed showcase (Bench Discovery, CareLTC, DBWhisper, the assistant: sliding pill, blurred crossfade, sheen; the flagship tabs show real captures labelled "Real app · dummy data") · the "At a glance" facts strip · the "Flagship work" plate (`#flagship`: a bento whose two wide cards show each product's real captures, its approved usage figure and a link to its case study, between cards on the engineering behind them) · public-systems bento with real metrics and method links · agent section (drifting sample questions; ask on this site, copy the prompt that points an AI at `public/llms.txt`, privacy) · the "How I work" plate · writing · CTA |
+| `/work` | Product overview | hero with jumps to both groups · the "Flagship work" plate (`#flagship`: a card per product with its real captures, its approved usage figure and its case study) · public systems (`#public`: four cards, each with a real capture and one metric with its method) · "What these systems run on": one technology line per system, flagships first · CTA |
+| `/work/bench-discovery`, `/work/careltc` | Product page, flagship ([ADR-019](./spec/decisions/ADR-019-named-flagship-case-studies.md)) | work sub-nav · hero: the "Built at Sevina Technologies", "In use" and private-repository pills, the product statement, "Request a walkthrough", "Watch the demo" and "Ask AI about <product>", the "My role" and "How I build" lines, the figures row (the approved usage figure, then test counts linked to Verification), and the real app in its frames · product tour (`MediaGallery`: Desktop \| Web, or Portal \| Mobile) · the problem, its users and what I built · recordings, each beside its scene list · how it works (`StickySteps` over the `ArchitectureSketch`) · engineering highlights (a bento on the dark plate) · architecture (the sketches and the boundary table) · code excerpts (Shiki, each with its story) · constraints · what broke · decisions · verification and "Not measured" · deployment, with the stack and its AWS services · outcome ("Proves" / "Doesn't show") · the walkthrough card with the "Ask AI" question chips · prev/next. Below 760px `ShowMore` holds back the rest of the highlights, constraints, incidents and decisions. The old `/work/field/*` URLs answer 308 |
+| `/work/[slug]` (public) | Product page | work sub-nav · hero: a "Watch the recording" pill (DBWhisper: "Walk through a request"), the product statement, "Try the demo" while a demo is up, "View source" and "Ask AI about <product>", the "Deployed demo" pill only while a demo is linked, then a `BrowserFrame` playing the captioned recording (click to play, `preload="none"`; DBWhisper shows its capture) · numbered "How it works" `StickySteps` (DBWhisper: its request walkthrough, then the boundary inspector) · the decision bento on a dark plate · results with methods (retired shown as Retired) · the shipping log · the full write-up beside its reading outline · stack · prev/next and the CTA with the "Ask AI" question chips |
+| `/about` (dark) | Company page | hero with the obsidian mark · "Where I've worked": each role and the degree, the Sevina cell linking both flagship case studies · a quote band with a halftone portrait of `public/mubin.png` · the stack band · principles · the closing split |
 | `/hire` | Careers page | glass mark with pulse rings · the letter, signed with a round headshot · stats · "Working with me" grid · "Open to" roles |
 | `/contact` | Contact page | header · cards (hiring, freelance, the assistant, résumé, source) with dotted guides and an aurora glow |
-| `/writing`, `/notes` | Blog index | RSS link · filter chips (All / Essays / Guides / Notes; `?type=` preselects) · three featured covers · the full list. `/notes` is the same index with Notes selected |
-| `/writing/[slug]`, `/notes/[slug]` | Blog post | back link · date, reading time, category pill · title · lead · a typeset cover (essays) · a ~680px body · a sticky sidebar with the category, a "Jump to" `Toc` and "Ask AI about this" · share, prev/next, related project |
+| `/writing`, `/notes` | Blog index | RSS link · filter chips (All / Essays / Guides / Notes; `?type=` preselects) · three featured covers · the full list · the newsletter sign-up card, rendered only while the Buttondown list is connected (`NewsletterForm`). `/notes` is the same index with Notes selected |
+| `/writing/[slug]`, `/notes/[slug]` | Blog post | back link · date, reading time, category pill · title · lead · a typeset cover (essays) · a ~680px body · from `xl` a sticky sidebar with the category, a "Jump to" `Toc` and "Ask AI about this"; below `xl` the category and "Ask AI about this" close the header, where they sit in the Tab order · share, prev/next, related project |
 | `/evals` (dark) | Leaderboard | dark hero with circuit art · project and status filters · a table with tinted score tiles, sample, method link and date · retired rows visible with the reason |
-| `/resume` | Document | header with the PDF download · sticky section nav · summary · experience timeline · selected projects with metric and method · skills grid · education · a print stylesheet (§10) |
-| `/now` | Changelog | date rail with dots, dated entries with category pills, RSS link, faint circuit art |
-| `/trust` | Security page | light hero with circuit art · "Evidence at a glance" table (Verified / Retired / Not claimed, each with a source link, including what is *not* claimed) · practice cards · CTA |
+| `/resume` | Document | header with the PDF download · sticky section nav · summary · experience timeline · selected projects, each with how it is built, its metric and method · skills grid · education · a print stylesheet (§10) |
+| `/now` | Changelog | date rail with dots, dated entries with category pills (Building, Exploring, Reading), the availability card, faint circuit art |
+| `/trust` | Security page | light hero with circuit art · "Evidence at a glance" table (Verified / Retired / Not claimed, each with a source link, including what is *not* claimed) · principles · practice cards · CTA |
 | `/uses` | Glossary grid | category sections with a sticky category nav; a card per tool with a monogram tile, what it is for and where it is used |
-| `/skills` | Capability map | groups from `content/resume.ts`, each linked to where it is used; no self-rated bars |
+| `/skills` | Capability map | groups from `content/resume.ts`, each linked to where it is used; no self-rated bars · a matrix of the groups by case study (both flagships, then the public systems, under the Work menu's group labels), marked only from each case study's own stack, scrolling sideways in a `ScrollRegion` with the group column pinned |
 | `/privacy` | Legal page | header with faint circuit art · intro · "Last updated" · body column with a sticky nested `Toc` |
 | 404, errors (dark) | 404 page | a "404" made of dots inside a dotted frame · one line · "Go to homepage" · Work, Writing, Contact. Errors: "Something went wrong", a retry and the email |
 
@@ -414,8 +502,14 @@ in `content/pages/<page>.ts` (spec/CONTENT_MODEL.md §5).
   test is never presented as model accuracy.
 - **Retired, not deleted.** A published result that turns out not to hold keeps its
   registry row, muted, with the reason; its figures come down everywhere else.
-- **The field work is anonymous** (spec/CONTENT_MODEL.md §1.5): no employer, product,
-  client, facility or private repository is named beside it.
+- **The flagship case studies publish only what was approved** (spec/CONTENT_MODEL.md
+  §1.5): the names Sevina Technologies, Bench Discovery and CareLTC, the usage figures
+  word for word, and captures of the real apps on dummy data. Every capture carries
+  "Real app · dummy data" inside its frame — at the frame's top where a stage crops its
+  foot (`ShotFrame labelAt="top"`). No production URL, repository, client or facility
+  name, no attribution by git history, and no colleague named. Their status is "In
+  use", never a frequency such as "daily" that no record supports
+  ([ADR-019](./spec/decisions/ADR-019-named-flagship-case-studies.md)).
 - Experience is "3.5+ years"; the availability line is `STATUS.text` in
   `config/site.ts`, never retyped.
 
@@ -424,34 +518,63 @@ in `content/pages/<page>.ts` (spec/CONTENT_MODEL.md §5).
 ## 8. Accessibility
 
 Target **WCAG 2.2 AA**, gated by `scripts/a11y.mjs` (spec/ENGINEERING.md §4) at 1280,
-768 and 360px, plus the open menus, the open mobile menu, the open assistant panel, the
-reduced-motion contract and the keyboard focus-trap contract.
+768 and 360px, plus the flagships' phone disclosures opened, the open menus, the open
+mobile menu, the assistant panel (from the header and from a page's own "Ask AI"
+buttons) and a mocked conversation in it, the reduced-motion contract and the keyboard
+contracts.
 
 - **Focus is visible on everything**: a 2px violet ring at a 2px offset
   (`:focus-visible`, `styles/globals.css`), following each element's radius. Never
   removed, never replaced by a colour change alone. On dark scopes the ring is the
   lifted violet.
+- **Focus is never hidden under the chrome** (2.4.11): `scroll-padding-top` clears the
+  floating nav (on a case study, the nav and the work sub-nav: `--nav-offset` plus
+  `--subnav-h` plus 12px) and `scroll-padding-bottom` (`--launcher-clearance`) the "Ask
+  AI" launcher when Tab scrolls a control into view, and the footer's last row ends
+  above the launcher.
+- **Tab order follows what is seen.** Content that a layout moves (the blog post's
+  category and "Ask AI about this" below `xl`) is rendered where it appears, not moved
+  there by CSS from elsewhere in the DOM.
 - **Contrast.** Every text token is ≥ 4.5:1 on the grounds it is used on; the ratios
   are in `tokens.css` and §2.
 - **Nothing is carried by colour or motion alone.** A status pill has a word; a
   refused path is dashed *and* ends in a cross *and* says "Refuse"; an illustration's
   hover reaction repeats information already in text.
-- **Menus** are disclosure buttons with `aria-expanded`; Escape closes and returns focus
-  to the trigger. Tabs use arrow keys with one tab stop.
+- **Menus**: the desktop Work and About menus are disclosure buttons with
+  `aria-expanded`; the mobile menu is a modal dialog (focus moves in, Tab cycles inside
+  it). Either way, Escape closes and returns focus to the trigger. Tabs use arrow keys
+  with one tab stop.
 - **Every piece of content sits in a landmark** — the header, nav, main and footer, or a
   named `<aside>` or region (the home announcement bar is `<aside
   aria-label="Announcement">`), so landmark navigation reaches all of it. `test:a11y`
   runs axe's `region` rule.
 - **Scrollable regions** (the sub-nav, wide tables, the assistant transcript) have a tab
-  stop and a name.
+  stop and a name. A wide table scrolls in a `ScrollRegion`, which becomes a named
+  region with a tab stop only while the table is wider than its column (the /evals
+  leaderboard, the /skills matrix).
 - **No horizontal document overflow** at any tested viewport.
 - **Touch targets.** axe checks the 24×24px minimum; aim for 44px on anything people tap
   (use the `lg` button) and review by hand.
 - **A modal makes the rest of the page `inert`**, not just focus-trapped
-  (`lib/use-inert-background.ts`). The launchers live in the inerted subtree, so focus
-  is restored one frame after close, once the boundary is released (ADR-014 §4).
+  (`lib/use-inert-background.ts`): the assistant, and the open mobile menu (whose
+  header is marked `data-modal-root` so the pill stays live). The launchers live in
+  the inerted subtree, so the assistant restores focus one frame after close, once the
+  boundary is released (ADR-014 §4).
 - **Disclosure uses native `<details>`**: keyboard-operable, found by find-in-page, and
-  printed expanded.
+  printed expanded. On phones the flagship case studies hold the rest of their long
+  lists behind `ShowMore`; the section headings and anchors stay outside it, so a
+  citation or a deep link always lands on something visible.
+- **"Ask AI about this" opens without sending.** On every case study, "Ask AI about
+  <product>" in the hero (`components/work/ask-ai.tsx`), and on every essay and note,
+  "Ask this site's assistant" under "Ask AI about this"
+  (`components/writing/ask-assistant-button.tsx`), open the assistant on that page's
+  own starter questions and send nothing, so an exploratory click never spends an
+  answer. Only a chip that shows its question sends it: a case study's closing band
+  lists its starters as chips, and each sends exactly the question it shows. These
+  buttons and chips, like the header trigger, the floating launcher and the openers on
+  `/` (the announcement bar, the agent section) and `/contact`, are launchers
+  (`data-assistant-launcher`), so focus returns to the one that opened the panel when
+  it closes.
 - **Decoration is hidden**: circuit art, dot bands, marks, rings and the marquee's
   duplicate set are `aria-hidden`; the portrait's alt is "Mubin Attar".
 - **Reduced motion** is honoured globally (§6).
@@ -473,8 +596,15 @@ above the fold, and no large image is above the fold.
 - Server components by default; client components only on the allowlist in
   [ARCHITECTURE.md §5](spec/ARCHITECTURE.md#5-client-component-allowlist). Motion is CSS:
   no animation library and no runtime dependency.
-- Images through `next/image` with intrinsic dimensions; below-fold images lazy.
-  Recordings fetch no video until played (`preload="none"`, a poster, captions).
+- Images through `next/image` with intrinsic dimensions; below-fold images lazy. A page
+  marks at most its one above-the-fold capture `priority` (on `/`, the Bench Discovery
+  capture in the showcase's first tab; on a flagship case study, the hero's main
+  capture).
+- Recordings fetch no video until played (`preload="none"`, captions), and a poster is
+  a lazy `next/image` laid over the video (eager only in a public case study's hero), so
+  a recording below the fold or on a hidden tab costs nothing at load. Flagship media
+  budgets: WebP captures and posters ≤ 300 KB each, WebM recordings ≤ 7.5 MB
+  (ADR-019).
 - No remote image or font hosts in the page — CSP is `img-src 'self' blob: data:` and
   `font-src 'self' data:`.
 
@@ -514,13 +644,18 @@ them?* If not, simplify.
   - `app/icon.svg` — ground `--color-bg`, stroke `--color-accent`, checked by
     `test/icons.test.mts`; then run `npm run build:icons` to re-render `favicon.ico` and
     `apple-icon.png`.
-  - the print palette in `styles/globals.css`.
+  - `scripts/resume-document.mts` — the résumé PDF is printed from a standalone HTML
+    document that cannot read the site's CSS, so it declares ink `#131316`,
+    ink-secondary `#5e5f6e`, ink-tertiary `#6e6f7e`, border-strong `#dcdce1` and accent
+    `#6b4bff` (links only) as literals; then run `npm run build:resume`.
+  - the print palette in `styles/globals.css`, and the résumé page's own print rules in
+    `components/resume/resume.module.css`.
 - **Known deviations**, to be moved onto tokens: illustration colours written as hex in
-  the home bento art, hero and showcase modules, and the about, contact and misc
-  modules (the obsidian mark, gradients in drawn art). The /hire hero reads tokens
+  the home bento art, hero, showcase and sections modules, and the about, contact and
+  misc modules (the obsidian mark, gradients in drawn art). The /hire hero reads tokens
   (`--color-accent`, `--color-ambient`) except one stop: the handwritten accent's deep
   cyan `#1597bd`, which carries its contrast on the canvas and has no token that dark.
-  `app/icon.svg` still draws the pre-ADR-018 palette (`#fcfcfe`, `#7624f4`).
+  (`#000` in a `mask-image` gradient is an alpha mask, not a colour.)
 
 ### 11.2 Accent budget
 
@@ -542,7 +677,10 @@ two dark plates back to back.
   (`components/mdx/prose.ts`). The "continue" affordance is `CaretLink`.
 - **An arrow states where a link goes.** ↗ only on a link that opens a new tab or a mail
   client, and every such link carries it; a page of this site gets the caret or →, and
-  its motion moves forward, not diagonally.
+  its motion moves forward, not diagonally; a file download gets ↓. `Button` and
+  `CaretLink` apply this rule themselves; a plain link adds `<ArrowOut />`. A link to
+  another site opens a new tab, with `rel="noopener noreferrer"` (`SmartLink`).
+  `npm run test:links` holds the rule on every server-rendered link.
 - **Cards** may step up ground and shadow on hover and lean their art in; their text
   never moves, and nothing is revealed only on hover.
 - **Metrics** are mono and tabular, never in a coloured box, and link their method.

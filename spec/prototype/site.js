@@ -152,7 +152,7 @@
 
   // ---- Copy prompt: the chip shows a tick, and a live region says what happened.
   const PROMPT =
-    "Read https://mubin-attar.vercel.app/llms.txt and the pages it links to. Then tell me whether Mubin Attar fits a Forward Deployed Engineer role on my team, and cite the pages you used.";
+    "Read https://mubin-attar.vercel.app/llms.txt and the pages it links to. Then tell me whether Mubin Attar fits an Applied AI Engineer role on my team, and cite the pages you used.";
   const status = document.getElementById("prompt-status");
   const statusText = status?.textContent || "";
   document.querySelectorAll("[data-copy-prompt]").forEach((btn) => {

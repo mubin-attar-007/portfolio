@@ -26,7 +26,7 @@ Then open <http://localhost:4321/>. There are five pages: Home, About (dark), Wr
 - **Honesty:**
   - Showcase screens carry "Illustrative sample · synthetic data" inside the frame.
   - Every figure matches the site's content and its method page.
-  - The field work names no organisation, product or customer.
+  - The field work names no organisation, product or customer. The site has since named its two products, with the employer's approval, as the flagship case studies ([ADR-019](../decisions/ADR-019-named-flagship-case-studies.md)); the prototype was not changed to match.
 
 ## Checked
 

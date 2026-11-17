@@ -6,7 +6,9 @@ Status: **Accepted**, 17 November 2026. Supersedes ADR-012 (Clerk fidelity), ADR
 Supersedes the theme and homepage decisions of ADR-015 (decisions 1, 2, 4 and 5) and
 keeps its role, scoped-proof and canonical-data decisions. Keeps ADR-014 §2–§4.
 `design-system.md` is the specification of the system this record chooses; where the two
-disagree, `styles/tokens.css` wins, then `design-system.md`.
+disagree, `styles/tokens.css` wins, then `design-system.md`. Amended twice on 17 November
+2026 (both at the end): the mobile menu is a modal sheet, and the anonymous field reports
+became the named flagship case studies (ADR-019).
 
 ## Context
 
@@ -92,10 +94,15 @@ Three things in the old system blocked that bar:
    | `/privacy` | Legal page with a sticky nested table of contents |
    | 404, errors (dark) | A halftone "404" in a dotted frame, then useful links |
 
+   *Amended 17 November 2026 (below):* the field-work plate on `/` and `/work` is the
+   "Flagship work" plate, and the `/work/field/[slug]` row is replaced by the flagship
+   case studies, `/work/bench-discovery` and `/work/careltc`.
+
 7. **New routes.** `/contact` becomes a page (the contact funnel, `STATUS.href`) and
    no longer redirects to `/hire`, which stays the careers-style page.
    `/work/field/[slug]` publishes the two anonymous field reports, behind a
-   `published` flag (CONTENT_MODEL.md §1.5).
+   `published` flag (CONTENT_MODEL.md §1.5). *Superseded 17 November 2026 (below and
+   ADR-019): the reports are the named flagship case studies, and their URLs redirect.*
 
 ## Carried forward from the removed records
 
@@ -134,8 +141,8 @@ Three things in the old system blocked that bar:
 - Page copy moved into one module per page under `content/pages/`
   (CONTENT_MODEL.md §5).
 - Some legacy primitives (`TextLink`, `Metric`, `BoundaryMark`) remain where older
-  components use them; `SectionHeading`, `EyebrowChip` and `Breadcrumb` have no
-  importers left and should be deleted.
+  components use them; `SectionHeading`, `EyebrowChip` and `Breadcrumb` had no
+  importers left and have since been deleted, as has `ArticleHeader`.
 - Open Graph cards use one renderer with a light and a dark tone (ARCHITECTURE.md §8).
 
 ## Gates changed
@@ -149,14 +156,86 @@ Three things in the old system blocked that bar:
   `boundary-audit`) run on `/work/dbwhisper`.
 - `test:motion` checks the new contracts: the caret swap, the menus, the tab pill and
   panel crossfade, the marquee's hover pause, the copy chip, the hover moments on
-  `/work`, a case study and a field report, and each reduced-motion alternative. It
+  `/work`, a case study and a field report (a flagship case study since the second
+  amendment), and each reduced-motion alternative. It
   also fails on an animation name that resolves to no keyframe (bare or through a
   `--kf-*` name) and on any loop other than an ambient one running at rest on any
   route.
 - `test:a11y` also runs axe's `region` rule, so every piece of content sits in a
   landmark (the home announcement bar is `<aside aria-label="Announcement">`).
 - `test:links` and `test:smoke` cover `/contact` and the field reports (noindex, but
-  linked, so they must resolve). `test:print` checks the new résumé print styles.
+  linked, so they must resolve); since the second amendment, the flagship case studies
+  in their place. `test:print` checks the new résumé print styles.
 - `test/icons.test.mts` checks the browser-chrome colours against the light canvas and
   the plate-deep token rather than a `--dark-bg` theme ramp.
 - The Lighthouse budgets are unchanged (ADR-009).
+
+## Amendment — 17 November 2026: the mobile menu is a modal sheet
+
+**Context.** Below 1000px the site menu was a disclosure: a panel under the pill
+while the page stayed live and scrollable. An audit (track AU-1) found that the panel
+could stay open over the control that had focus once Tab left it (WCAG 2.4.11), and
+that controls half-covered by the panel stayed tappable beside it (axe `target-size`,
+WCAG 2.5.8). The reference's overlay menu covers the page.
+
+**Decision.** The open mobile menu is a modal sheet:
+
+- the menu button and the panel together are a `role="dialog"` with `aria-modal` and
+  a name ("Site menu"); the button keeps `aria-expanded`, `aria-controls` and its
+  "Open menu" / "Close menu" names, and the panel keeps its ids (`#site-mobile-nav`
+  closed, `#mobile-menu` open);
+- the rest of the page is `inert` and does not scroll (`lib/use-inert-background.ts`,
+  the header marked as the modal root), under a light scrim that also dims the
+  floating launcher;
+- focus moves to the first link on open and Tab cycles within the dialog; Escape and a
+  tap on the scrim close it and return focus to the button; choosing a link,
+  navigating, opening the assistant and widening past the breakpoint close it too;
+- reduced motion: it appears and goes at once (the global rule).
+
+The desktop Work and About menus stay disclosures.
+
+**Gates to update** (they encode the disclosure): `scripts/a11y.mjs`, the mobile-menu
+keyboard contract (focus now moves into the panel on open, rather than staying on the
+button, and Tab stays inside the dialog) and the `overlaysFor` note; and
+`scripts/interaction-audit.mjs`, "it is a disclosure, not a second modal" and "the page
+behind it keeps scrolling" (now: one dialog, `main` inert, scrolling locked), "a tap
+outside closes it" (its probe skips points inside `header`, and the scrim is the
+header's backdrop, so it finds none: tap a point below the panel directly), and the
+"modal inert boundary" loop's note (the mobile menu now belongs in it).
+`scripts/smoke.mjs` and `scripts/motion-audit.mjs` hold as written (Escape closes and
+returns focus; the panel's ids and its fade and spring are unchanged); only the
+comment in `smoke.mjs` names the old model.
+
+## Amendment — 17 November 2026: the field reports became the flagship case studies
+
+**Context.** The employer approved publishing the two products behind the anonymous
+field reports by name, with their usage figures, captures and recordings on dummy data,
+and curated code excerpts (ADR-019).
+
+**Decision.**
+
+- Decision 6: on `/` and `/work` the field-work plate is the "Flagship work" plate
+  (`#flagship`): each product's real captures, its approved usage figure and a link to
+  its case study. The `/work/field/[slug]` row is replaced by:
+
+  | Page | Pattern |
+  |---|---|
+  | `/work/bench-discovery`, `/work/careltc` | Product page, flagship: work sub-nav, a hero with the real app in its frames and the approved figure, a product tour, recordings, numbered steps beside the architecture sketch, a highlights bento on the dark plate, the record (architecture, code, constraints, what broke, decisions, verification, deployment, outcome), the walkthrough card |
+
+  design-system.md §7.1 holds the full row.
+- Decision 7: `/work/field/[slug]`, its `published` flag and its draft ribbon are
+  deleted. `/work/field/records-triage` and `/work/field/nfc-room-rounds` answer 308 to
+  `/work/bench-discovery` and `/work/careltc` (`next.config.ts`). The flagship pages are
+  published, indexed and in the sitemap.
+- The Work menu's two columns are "Flagship" and "Public systems", and the work sub-nav
+  lists the flagships first (`WORK_ITEMS`, `config/nav.ts`).
+
+**Gates.** The gates that named a field report name the flagship case studies instead:
+their route lists, the motion gate's hover moments (`#flagship` on `/work` and a
+flagship case study's architecture figure), the smoke gate's expected text, and the
+link gate's required routes. The metadata gate checks the two new redirects with the
+others, and treats any case study `/work` links to that the sitemap omits as a draft.
+New coverage came with the pages: the a11y gate audits both with every phone disclosure
+open and the assistant opened from a case study's "Ask AI about …"; the interaction gate
+holds the product tour's tabs, the recordings and the "Real app · dummy data" label on
+every capture (spec/ENGINEERING.md §6).
