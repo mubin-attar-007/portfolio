@@ -652,7 +652,15 @@ function observedSummary(reports) {
     const scripts = requests.filter((item) => item.resourceType === "Script");
     const doneScripts = done.filter((item) => item.resourceType === "Script");
     const kb = (items) => (items.reduce((sum, item) => sum + (item.transferSize ?? 0), 0) / 1024).toFixed(0);
-    return `FCP/LCP ${Math.round(metrics.observedFirstContentfulPaint)}/${Math.round(lcp)}ms, ${done.length} requests ${kb(done)}KB done by LCP (scripts ${doneScripts.length}/${scripts.length}, ${kb(doneScripts)}KB)`;
+    // Main-thread tasks of 10 ms or more around the paint. Lantern leaves a
+    // script out only when its long evaluation starts after the observed LCP,
+    // so this shows on which side of the paint the bootstrap fell.
+    const tasks = (report.audits?.["main-thread-tasks"]?.details?.items ?? [])
+      .filter((task) => task.duration >= 10 && task.startTime <= lcp + 150)
+      .map((task) => `${Math.round(task.startTime)}+${Math.round(task.duration)}`);
+    const ends = (type) => requests.filter((item) => item.resourceType === type).map((item) => Math.round(item.networkEndTime));
+    const span = (values) => (values.length ? `${Math.min(...values)}–${Math.max(...values)}` : "–");
+    return `FCP/LCP ${Math.round(metrics.observedFirstContentfulPaint)}/${Math.round(lcp)}ms, ${done.length} requests ${kb(done)}KB done by LCP (scripts ${doneScripts.length}/${scripts.length}, ${kb(doneScripts)}KB; CSS done ${span(ends("Stylesheet"))}ms, scripts ${span(ends("Script"))}ms), tasks≥10ms ${tasks.join(" ") || "none"}`;
   });
   return `observed: ${runs.join(" | ")}`;
 }
