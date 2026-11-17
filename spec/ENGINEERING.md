@@ -145,10 +145,15 @@ two CareLTC captures (near y = 3300 px, which Chrome's lazy-loading distance rea
 first layout) would not move LCP at all. The counted scripts are almost all framework:
 Next's router and Flight client (48 KB gzip) on top of the 72 KB react-dom chunk the
 race can leave out, against 20–28 KB of the site's own code (the layout's islands, then
-the page's). A third of that would have to go, which no design-neutral change does. Served the way Vercel serves the site,
-the same build passes with room to spare: brotli alone gives 2355 and 2277 ms, and
-HTTP/2 with brotli 1749 and 1884 ms (2051 and 2184 ms with react-dom charged too).
-Changing how the gate serves the build is an ADR-009 decision for the owner, not a fix.
+the page's). A third of that would have to go, which no design-neutral change does.
+Brotli instead of gzip, which is what Vercel sends, would bring the same build to 2355
+and 2277 ms in the gate's model. Measured on the real Vercel preview of this build
+(HTTP/2 and brotli as served, warm cache, Vercel's preview-only toolbar script left
+out), home comes to 2431 ms and the case study to about 2500 ms. So production sits at
+the line, not comfortably under it. Marking a local HTTP/1.1 trace as HTTP/2 is not a
+valid estimate: Lantern keeps its six connections, which no real server offers (it gave
+1749 and 1884 ms). Changing how the gate serves the build is an ADR-009 decision for
+the owner, not a fix.
 A local run on Windows cannot reproduce CI's race:
 there the first paint waits 200–400 ms for the software GPU to compile some 40 shader
 programs, so every script counts. To price a change on CI's terms, record a run
