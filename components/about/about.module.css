@@ -104,6 +104,11 @@
     font-size: 0.875rem;
     color: var(--color-plate-ink);
   }
+  .products {
+    display: grid;
+    gap: 2px;
+    margin-top: 10px;
+  }
   .xcell .when {
     margin-top: 18px;
     font-size: 0.8125rem;
@@ -296,7 +301,7 @@
   .split {
     display: grid;
     grid-template-columns: 1fr 1fr;
-    margin-bottom: 96px;
+    margin-bottom: 64px;
     border: 1px dashed var(--color-plate-border);
     border-top: 0;
   }

@@ -91,8 +91,8 @@ export const EVIDENCE: readonly EvidenceRow[] = [
     source: { label: "Privacy", href: "/privacy#assistant" },
   },
   {
-    area: "Field work",
-    claim: "No usage, accuracy or customer figure from private field work is published. The reports say what was not measured.",
+    area: "Flagship work",
+    claim: "No accuracy, outcome or customer result is claimed for the two private products. Their usage counts are the employer's figures, stated on each case study with what was not measured.",
     status: "not-claimed",
   },
   { area: "Compliance", claim: "No compliance certification is claimed.", status: "not-claimed" },

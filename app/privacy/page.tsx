@@ -3,10 +3,11 @@ import type { Metadata } from "next";
 
 import { Container } from "@/components/layout/container";
 import { Section } from "@/components/layout/section";
-import { CaretLink } from "@/components/ui/caret-link";
+import { ArrowOut, CaretLink } from "@/components/ui/caret-link";
 import { CircuitArt } from "@/components/ui/circuit-art";
 import { Toc, type TocItem } from "@/components/ui/toc";
 import { JumpBar } from "@/components/misc/jump-bar";
+import { NEWSLETTER_ENABLED } from "@/components/features/newsletter-form";
 import styles from "@/components/misc/misc.module.css";
 import { SITE } from "@/config/site";
 import { pageMetadata } from "@/lib/seo";
@@ -19,14 +20,20 @@ export const metadata: Metadata = {
     path: "/privacy",
     title: "Privacy policy",
     description:
-      "Privacy policy for this portfolio: local preferences, assistant interactions, third-party integrations, and contact handling.",
+      "How this site handles your data: no cookies or browser storage, how the assistant uses a question, the third-party services, and contact by email.",
     social: {
       description:
-        "Minimal collection, deterministic behavior, and explicit controls for this portfolio site.",
+        "No cookies, no browser storage and no stored assistant transcripts: how this portfolio site handles your data.",
     },
   }),
   robots: { index: true, follow: true },
 };
+
+/**
+ * The scheduling section names Buttondown only while the newsletter sign-up is
+ * on (NEXT_PUBLIC_BUTTONDOWN_USERNAME), so the policy is true in either state.
+ */
+const SCHEDULING_LABEL = NEWSLETTER_ENABLED ? "Cal.com and Buttondown" : "Cal.com";
 
 /** The policy's outline: the ids below and the nested table of contents. */
 const OUTLINE = [
@@ -37,7 +44,7 @@ const OUTLINE = [
     items: [
       { id: "analytics", label: "Vercel Analytics" },
       { id: "assistant", label: "Ask this site" },
-      { id: "opt-in", label: "Buttondown and Cal.com" },
+      { id: "scheduling", label: SCHEDULING_LABEL },
       { id: "social", label: "Social buttons" },
     ],
   },
@@ -51,8 +58,11 @@ const OUTLINE = [
  * title, the intro and "Last updated"; then a 720px prose column beside a sticky
  * nested table of contents (a horizontal jump bar on phones).
  *
- * The policy text is unchanged from the previous page; only its headings were
- * restructured (each former kicker is now the h2, each service an h3).
+ * Each former kicker is an h2 and each service an h3. Every statement here must
+ * stay true of the code: no cookies or browser storage (the theme toggle is
+ * gone), the assistant's one-answer handling (spec/AI_ASSISTANT.md), Cal.com
+ * as a plain outbound link, and Buttondown only while the newsletter sign-up
+ * on /writing is switched on.
  */
 export default function PrivacyPage() {
   return (
@@ -74,7 +84,7 @@ export default function PrivacyPage() {
             <CaretLink href="/trust" tone="muted">
               Open trust policy
             </CaretLink>
-            <CaretLink href="/hire" tone="accent">
+            <CaretLink href="/contact" tone="accent">
               Ask privacy questions
             </CaretLink>
           </div>
@@ -92,8 +102,9 @@ export default function PrivacyPage() {
                 support. No sign-in, no account profiles, and no shopping cart.
               </p>
               <p>
-                I do not run ad tracking or build a user database on this site. Interaction telemetry is
-                limited to what is required for rendering, delivery, and uptime.
+                I do not run ad tracking or build a user database on this site. Telemetry is limited to
+                anonymous page-level events (Vercel Analytics, below) and one log line per assistant answer,
+                which never holds what you typed.
               </p>
               <ul>
                 <li>Nothing is stored on your device: the site sets no cookies and uses no browser storage.</li>
@@ -115,14 +126,18 @@ export default function PrivacyPage() {
               <h3 id="assistant">Ask this site</h3>
               <p>
                 <strong>Ask this site</strong> sends your question and the recent conversation to
-                Google&apos;s Gemini API to write the answer. This site stores no transcript, and logs one
-                line per answer — how it was answered, timings and token counts — never the question, the
-                answer or your address.
+                Google&apos;s Gemini API to find the pages that answer it and to write the answer. This site
+                stores no transcript, and logs one line per answer — how it was answered, which of the
+                site&apos;s pages it used, whether a second request was needed, timings and token counts —
+                never the question, the answer or your address.
               </p>
-              <h3 id="opt-in">Buttondown and Cal.com</h3>
+              <h3 id="scheduling">{SCHEDULING_LABEL}</h3>
               <p>
-                Buttondown and Cal.com are only loaded when their public integration settings are enabled
-                for opt-in newsletter or scheduling actions.
+                The &ldquo;Book a call&rdquo; links open Cal.com in a new tab. Nothing from Cal.com loads on
+                this site; what you enter there is covered by Cal.com&apos;s own privacy policy.{" "}
+                {NEWSLETTER_ENABLED
+                  ? "The newsletter form at the foot of /writing and /notes sends the email address you enter to Buttondown, which emails you to confirm the subscription; nothing else about you is sent."
+                  : "This site has no newsletter sign-up."}
               </p>
               <h3 id="social">Social buttons</h3>
               <p>
@@ -144,14 +159,19 @@ export default function PrivacyPage() {
               <h2 id="rights">Your data rights</h2>
               <p>
                 If you have questions about data sent through form fields, assistant prompts, or any external
-                contact, email <a href={`mailto:${SITE.email}`}>{SITE.email}</a> and I will respond directly.
+                contact, email{" "}
+                <a href={`mailto:${SITE.email}`}>
+                  {SITE.email}
+                  <ArrowOut inline />
+                </a>{" "}
+                and I will respond directly.
               </p>
               <p>
-                Operational requests and abuse reports can also be raised in{" "}
-                <Link href="/hire" prefetch={false}>
-                  /hire
+                Operational requests and abuse reports can also be raised through the{" "}
+                <Link href="/contact" prefetch={false}>
+                  contact page
                 </Link>{" "}
-                or through direct email.
+                or by email.
               </p>
             </section>
 

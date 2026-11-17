@@ -36,12 +36,12 @@ export default function EvalsPage() {
     <DarkSurface>
       <section className="relative overflow-hidden" aria-labelledby="evals-title">
         <CircuitArt fade="sides" />
-        <Container className="relative flex flex-col items-center pt-[clamp(7rem,12vw,10rem)] pb-16 text-center">
+        <Container className="relative flex flex-col items-center pt-[clamp(4.5rem,7.5vw,6.5rem)] pb-16 text-center">
           <a href={evalsPage.pill.href} className={evalStyles.pill}>
             <span className={evalStyles.pillDot} aria-hidden="true" />
             {evalsPage.pill.label}
             <span className={evalStyles.pillCta}>
-              {evalsPage.pill.cta}
+              <span className={evalStyles.pillCtaText}>{evalsPage.pill.cta}</span>
               <Caret />
             </span>
           </a>

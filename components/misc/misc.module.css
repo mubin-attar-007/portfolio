@@ -1,5 +1,5 @@
-/* Track M surfaces: the /uses tool cards, the phone jump bar, the legal
-   prose, and the dotted 404. Tokens only. */
+/* Track M surfaces: the /uses tool cards, the phone jump bar, the /skills
+   matrix's pinned column, the legal prose, and the dotted 404. Tokens only. */
 @layer components {
   /* ---- Phone jump bar: a horizontal scroller of section links ---- */
   .jump {
@@ -66,6 +66,9 @@
       inset 0 0 0 1px var(--color-border-strong),
       var(--shadow-card);
   }
+  /* A neutral monogram tile, like the nav's and the leaderboard's: colour on
+     this page is left to state and evidence (design-system §2), so a category
+     is told by its heading, not by a tint. */
   .tile {
     display: grid;
     flex: none;
@@ -77,29 +80,18 @@
     font-size: 0.8125rem;
     font-weight: 600;
     letter-spacing: -0.02em;
-    color: var(--tile-ink);
-    background: var(--tile-bg);
-    box-shadow: inset 0 0 0 1px color-mix(in srgb, var(--tile-ink) 18%, transparent);
-    transition: transform var(--motion-slow) var(--spring);
+    color: var(--color-ink);
+    background: var(--color-bg-subtle);
+    box-shadow: inset 0 0 0 1px var(--color-border);
+    transition:
+      transform var(--motion-slow) var(--spring),
+      box-shadow var(--motion-base) var(--ease-out);
   }
   .tool:is(:hover, :focus-within) .tile {
     transform: translateY(-2px);
-  }
-  .tile[data-tone="0"] {
-    --tile-ink: var(--color-accent-hover);
-    --tile-bg: var(--color-accent-soft);
-  }
-  .tile[data-tone="1"] {
-    --tile-ink: #0e7490;
-    --tile-bg: #e6f7fb;
-  }
-  .tile[data-tone="2"] {
-    --tile-ink: var(--color-positive);
-    --tile-bg: #f0f9f3;
-  }
-  .tile[data-tone="3"] {
-    --tile-ink: var(--color-warning);
-    --tile-bg: #fdf3e6;
+    box-shadow:
+      inset 0 0 0 1px var(--color-border-strong),
+      var(--shadow-sm);
   }
   .toolName {
     font-size: 0.9375rem;
@@ -126,6 +118,20 @@
   }
   .used a:hover {
     color: var(--color-accent);
+  }
+
+  /* ---- /skills matrix ---- */
+  /* The skill-group column stays put while the table scrolls sideways inside
+     its ScrollRegion, on the card's own ground so no mark shows through. Its
+     edge is drawn only while the table actually scrolls. */
+  .pinned {
+    position: sticky;
+    left: 0;
+    z-index: 1;
+    background: var(--color-surface);
+  }
+  [data-overflows] .pinned {
+    box-shadow: inset -1px 0 0 var(--color-border);
   }
 
   /* ---- Legal prose (/privacy) ---- */
@@ -192,6 +198,8 @@
     isolation: isolate;
     overflow: clip;
   }
+  /* The light fades out before the stage ends, so it never meets the footer
+     in a hard seam. */
   .stage::before {
     content: "";
     position: absolute;
@@ -199,16 +207,32 @@
     z-index: -1;
     height: 120%;
     background:
-      radial-gradient(50% 45% at 30% 10%, rgb(157 140 255 / 0.10), transparent 70%),
-      radial-gradient(40% 40% at 70% 85%, rgb(99 210 239 / 0.06), transparent 70%);
+      radial-gradient(50% 45% at 30% 10%, color-mix(in srgb, var(--color-plate-violet) 10%, transparent), transparent 70%),
+      radial-gradient(40% 40% at 70% 70%, color-mix(in srgb, var(--color-plate-cyan) 6%, transparent), transparent 70%);
+    -webkit-mask-image: linear-gradient(180deg, #000 50%, transparent 86%);
+    mask-image: linear-gradient(180deg, #000 50%, transparent 86%);
     pointer-events: none;
   }
   .frame {
     position: relative;
-    border: 1px dotted var(--color-plate-border);
     border-radius: 2px;
     background-image: radial-gradient(rgb(255 255 255 / 0.05) 0.6px, transparent 0.8px);
     background-size: 6px 6px;
+  }
+  /* The dotted frame: a 1px dot every 4px on each edge, drawn above the
+     vignette so the corners stay crisp. */
+  .frame::before {
+    --frame-dot: color-mix(in srgb, var(--color-plate-ink) 20%, transparent);
+    content: "";
+    position: absolute;
+    z-index: 1;
+    inset: 0;
+    pointer-events: none;
+    background:
+      linear-gradient(90deg, var(--frame-dot) 1px, transparent 1px) 0 0 / 4px 1px repeat-x,
+      linear-gradient(90deg, var(--frame-dot) 1px, transparent 1px) 0 100% / 4px 1px repeat-x,
+      linear-gradient(var(--frame-dot) 1px, transparent 1px) 0 0 / 1px 4px repeat-y,
+      linear-gradient(var(--frame-dot) 1px, transparent 1px) 100% 0 / 1px 4px repeat-y;
   }
   .frame::after {
     content: "";

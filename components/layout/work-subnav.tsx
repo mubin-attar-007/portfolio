@@ -6,15 +6,15 @@ import { SubnavScroller } from "./subnav-scroller";
 import styles from "./work-subnav.module.css";
 
 /**
- * WorkSubnav — the work switcher under the nav on `/work/[slug]` and
- * `/work/field/[slug]` (the Clerk product sub-nav): a tray tucked under the
- * floating pill, sticky with it, listing the four public systems and the two
- * field reports (the Work menu's data, config/nav.ts) and "All work" at the
- * right. On phones the list scrolls sideways with faded edges, the current
- * item scrolled into view.
+ * WorkSubnav — the work switcher under the nav on every `/work/[slug]` case
+ * study (the Clerk product sub-nav): a tray tucked under the floating pill,
+ * sticky with it, listing the two flagship products, then the four public
+ * systems (`WORK_ITEMS`, config/nav.ts) and "All work" at the right. On phones
+ * the list scrolls sideways with faded edges, the current item scrolled into
+ * view.
  *
- * Props: `current` — the slug of the page shown (e.g. "dbwhisper",
- * "records-triage"); any other value marks nothing current.
+ * Props: `current` — the slug of the page shown (e.g. "careltc",
+ * "dbwhisper"); any other value marks nothing current.
  * Place it as the first child of the page, before the hero.
  * A11y: `<nav aria-label="Work">`; the current item is `aria-current="page"`
  * (darker, heavier, underlined — never colour alone).

@@ -1,6 +1,6 @@
 import { Code, FileText, Sparkles } from "lucide-react";
 import { Button } from "@/components/ui/button";
-import { CaretLink } from "@/components/ui/caret-link";
+import { ArrowOut, CaretLink } from "@/components/ui/caret-link";
 import { DottedGuides, DottedRule } from "@/components/ui/dotted-guides";
 import { Container } from "@/components/layout/container";
 import { SITE } from "@/config/site";
@@ -35,7 +35,12 @@ export function ContactCard() {
             <div>
               <h2>{freelance.title}</h2>
               <p>
-                {freelance.body[0]} <a href={`mailto:${SITE.email}`}>{SITE.email}</a> {freelance.body[1]}
+                {freelance.body[0]}{" "}
+                <a href={`mailto:${SITE.email}`}>
+                  {SITE.email}
+                  <ArrowOut inline />
+                </a>{" "}
+                {freelance.body[1]}
               </p>
               <Button variant="dark" caret href={freelance.action.href} newTab>
                 {freelance.action.label}

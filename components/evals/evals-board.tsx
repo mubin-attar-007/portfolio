@@ -1,6 +1,7 @@
 "use client";
 
 import { useId, useMemo, useState } from "react";
+import { ScrollRegion } from "@/components/layout/scroll-region";
 import { StatusPill } from "@/components/ui/status-pill";
 import { cx } from "@/components/ui/cx";
 import { evalsPage } from "@/content/pages/evals";
@@ -22,6 +23,9 @@ function matchesStatus(row: BoardRow, status: StatusFilter): boolean {
  * radio inputs drawn as a segmented control), so the keyboard and screen-reader
  * behaviour is the platform's; a polite live region announces the count.
  * Without JavaScript the server render shows the "Current" rows, the default.
+ * When the table is wider than the screen (phones, tablets) its scroller is a
+ * named region with a tab stop, so the keyboard can scroll it; when it fits,
+ * it is neither, and costs no extra Tab (`ScrollRegion`).
  */
 export function EvalsBoard({ rows, projects }: { rows: BoardRow[]; projects: ProjectOption[] }) {
   const [project, setProject] = useState<string>(ALL);
@@ -84,7 +88,7 @@ export function EvalsBoard({ rows, projects }: { rows: BoardRow[]; projects: Pro
         </p>
       </div>
 
-      <div className={styles.scroller}>
+      <ScrollRegion label={board.scroller} className={styles.scroller}>
         <table className={styles.table}>
           <caption className="sr-only">{board.caption}</caption>
           <thead>
@@ -108,7 +112,7 @@ export function EvalsBoard({ rows, projects }: { rows: BoardRow[]; projects: Pro
           </tbody>
         </table>
         {shown.length === 0 ? <p className={styles.empty}>{board.empty}</p> : null}
-      </div>
+      </ScrollRegion>
     </div>
   );
 }

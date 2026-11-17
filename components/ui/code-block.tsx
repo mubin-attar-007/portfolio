@@ -47,7 +47,10 @@ export async function CodeBlock({
             </span>
           ) : null}
         </div>
-        <CopyButton text={source} label="Copy code" />
+        {/* The filename truncates first: the button never shrinks into two lines. */}
+        <div className="shrink-0 whitespace-nowrap">
+          <CopyButton text={source} label="Copy code" />
+        </div>
       </div>
       {/* No tabIndex here on purpose: Shiki already emits `<pre tabindex="0">`
           inside, which is the tab stop that makes this scroller reachable (WCAG

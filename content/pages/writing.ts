@@ -45,6 +45,15 @@ export const writingPage = {
   /** Singular labels for a post's category pill and list row. */
   kind: { essay: "Essay", guide: "Guide", note: "Note" } satisfies Record<PostKind, string>,
   coverBrand: "Mubin Attar",
+  /** The sign-up at the foot of the index, shown only once the Buttondown list is connected. */
+  newsletter: {
+    title: "New writing, occasionally",
+    body: "The odd essay or note when I ship something worth reading. No schedule, no spam, and one click to unsubscribe.",
+    label: "Email address",
+    placeholder: "you@example.com",
+    submit: "Subscribe",
+    help: "Enter your email address, then select Subscribe. Buttondown opens in a new tab to confirm the subscription.",
+  },
 } as const;
 
 export const articlePage = {
@@ -53,8 +62,6 @@ export const articlePage = {
   jumpTo: "Jump to",
   askTitle: "Ask AI about this",
   askAssistant: "Ask this site's assistant",
-  /** The question the site's assistant receives. */
-  askQuestion: (title: string) => `Explain the key decisions and trade-offs in "${title}".`,
   /** The prompt the external assistants receive, with the article's absolute URL. */
   externalPrompt: (url: string) => `Read ${url} and explain its key decisions and trade-offs.`,
   external: [
@@ -67,7 +74,7 @@ export const articlePage = {
   related: "Related project",
   cta: {
     title: "Building something like this?",
-    body: "I take on Forward Deployed Engineer and Applied AI Engineer roles, and freelance projects.",
+    body: "I take on Applied AI Engineer roles and freelance AI projects.",
     label: "Get in touch",
     href: "/contact",
   },

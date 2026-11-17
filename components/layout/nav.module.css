@@ -71,6 +71,12 @@
   .item[data-section] {
     background: var(--chrome-hover);
   }
+  /* While a menu is open the other items step back, so the open one reads as
+     the subject (the reference nav does the same). Colour only; the hovered
+     item keeps its ink. */
+  .links:has(.item[aria-expanded="true"]) .item:not([aria-expanded="true"], :hover) {
+    color: var(--color-ink-secondary);
+  }
 
   .chevron {
     width: 10px;
@@ -239,6 +245,12 @@
   }
 
   /* ---- the mobile menu ----------------------------------------------------- */
+  /* The sheet's dialog: the button and its panel (mobile-menu.tsx). Not
+     positioned, so the panel still hangs from the pill. */
+  .menuRoot {
+    display: flex;
+    align-items: center;
+  }
   .menuButton {
     display: none;
     width: 34px;
@@ -273,6 +285,43 @@
 
   .mobile {
     display: none;
+  }
+
+  /* While the mobile menu is open a light scrim dims the page under it, so no
+     control is left half-covered and tappable beside the panel; a tap on it
+     closes the menu (mobile-menu.tsx). It belongs to the header band, which has
+     no filter or transform, so `fixed` is the viewport; z-index −1 keeps it
+     under the pill. */
+  .wrap::before {
+    content: "";
+    position: fixed;
+    inset: 0;
+    z-index: -1;
+    background: var(--scrim);
+    opacity: 0;
+    visibility: hidden;
+    transition:
+      opacity var(--motion-menu) var(--ease-out),
+      visibility 0s linear var(--motion-menu);
+  }
+  .wrap:has(.mobile.open)::before {
+    opacity: 1;
+    visibility: visible;
+    pointer-events: auto;
+    transition:
+      opacity var(--motion-menu) var(--ease-out),
+      visibility 0s;
+  }
+  /* The glass pill would show the scrim through it; with the panel open it is
+     solid, so the pill and the panel read as one surface above the dim page. */
+  .wrap:has(.mobile.open) .nav {
+    background: var(--color-surface);
+  }
+  /* The page, the launcher included, is inert while the sheet is open, so the
+     band rises above the launcher (40) and its scrim dims it too; the
+     assistant (50) still opens above everything. */
+  .wrap:has(.mobile.open) {
+    z-index: 45;
   }
 
   @media (max-width: 1000px) {

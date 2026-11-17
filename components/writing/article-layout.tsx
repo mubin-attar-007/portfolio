@@ -1,14 +1,15 @@
 import type { ReactNode } from "react";
-import { ArrowUpRight } from "lucide-react";
+import Link from "next/link";
 import { ARTICLE_META } from "@/content/article";
 import { Section } from "@/components/layout/section";
 import { PAGE_TOP } from "@/constants/page";
 import { articlePage } from "@/content/pages/writing";
 import type { Project } from "@/content/schema";
 import { ArticleFooter } from "@/components/ui/article-footer";
+import { ArrowOut } from "@/components/ui/caret-link";
 import type { TocItem } from "@/components/ui/toc";
 import { ArticleEnd } from "./article-end";
-import { ArticleSidebar } from "./article-sidebar";
+import { ArticleSidebar, ArticleTools } from "./article-sidebar";
 import { formatPostDate } from "./format";
 import { PostCover } from "./post-cover";
 
@@ -22,7 +23,9 @@ type Neighbour = { slug: string; title: string } | null;
  *
  * Grid: header across the main column; from `xl` the sidebar takes a 280px
  * right column starting level with the cover (or the body, for a note). Below
- * `xl` the sidebar collapses under the header.
+ * `xl` the category and "Ask AI about this" close the header instead
+ * (`ArticleTools`), so they sit in the DOM where they are seen and Tab reaches
+ * them after the lead, not after the whole article.
  *
  * A11y: one `<article>` holding the h1 and the body; the sidebar is a
  * complementary landmark beside it. Performance: server-rendered; the h1 is
@@ -70,13 +73,14 @@ export function ArticleLayout({
   const path = `/${collection}/${slug}`;
   return (
     <Section space="lg" className={PAGE_TOP}>
-      <a
+      <Link
         href={`/${collection}`}
+        prefetch={false}
         className="group inline-flex min-h-6 items-center gap-2 text-sm font-medium text-ink transition-colors duration-fast ease-[var(--ease-out)] hover:text-ink-secondary"
       >
         <span aria-hidden="true" className="caret-swap rotate-180" />
         {articlePage.back[collection]}
-      </a>
+      </Link>
 
       <div className="mt-12 grid gap-x-20 gap-y-10 xl:grid-cols-[minmax(0,1fr)_280px]">
         {/* The article spans both rows of the main column and passes them to
@@ -118,8 +122,8 @@ export function ArticleLayout({
                     className="inline-flex items-center gap-1 text-ink underline decoration-border-strong underline-offset-4 transition-colors duration-fast ease-[var(--ease-out)] hover:decoration-accent"
                   >
                     {ARTICLE_META.source}
-                    <ArrowUpRight size={12} strokeWidth={1.6} aria-hidden />
                     <span className="sr-only"> (opens in a new tab)</span>
+                    <ArrowOut />
                   </a>
                 </>
               ) : null}
@@ -132,6 +136,7 @@ export function ArticleLayout({
                 {lede}
               </p>
             ) : null}
+            <ArticleTools category={category} url={url} className="mt-10 xl:hidden" />
           </header>
 
           <div className="min-w-0">
@@ -155,10 +160,9 @@ export function ArticleLayout({
           </div>
         </article>
 
-        <div className="row-start-2 xl:col-start-2 xl:row-start-2">
+        <div className="hidden xl:col-start-2 xl:row-start-2 xl:block">
           <ArticleSidebar
             category={category}
-            title={title}
             url={url}
             headings={headings}
           />

@@ -1,11 +1,11 @@
 import { renderOg, ogAlt, OG_SIZE, OG_CONTENT_TYPE, type OgCard } from "@/lib/og";
 import { uses } from "@/content/site";
 
-/** The line is the opening of the page's own intro (`uses.intro`). */
+/** The line is the opening sentence of the page's own intro (`uses.intro`), read from it. */
 const CARD = {
   kicker: uses.kicker,
   title: uses.title,
-  description: "The tools behind the projects, from model integration to deployment.",
+  description: uses.intro.slice(0, uses.intro.indexOf(".") + 1),
 } satisfies OgCard;
 
 export const alt = ogAlt(CARD);

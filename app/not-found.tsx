@@ -22,7 +22,7 @@ export const metadata: Metadata = {
 
 export const viewport: Viewport = { themeColor: BROWSER_CHROME.dark };
 
-/** The quick routes back in, beside the case studies and field reports. */
+/** The quick routes back in, beside every case study. */
 const QUICK_LINKS = [
   { label: "Work", href: "/work" },
   { label: "Writing", href: "/writing" },

@@ -280,16 +280,28 @@
     font-weight: 500;
     color: var(--color-ink);
   }
+  /* The separator hangs in the column gap, so when a term wraps the line
+     starts with the term, not with a stray dot (clipped by overflow-x). */
   .terms {
+    --terms-gap: 18px;
     display: flex;
     flex-wrap: wrap;
+    column-gap: var(--terms-gap);
+    overflow-x: clip;
     margin-top: 6px;
     font-size: 0.9375rem;
     color: var(--color-ink-secondary);
   }
+  .terms li {
+    position: relative;
+  }
   .terms li + li::before {
     content: "•";
-    margin: 0 8px;
+    content: "•" / "";
+    position: absolute;
+    right: 100%;
+    width: var(--terms-gap);
+    text-align: center;
     color: var(--color-ink-tertiary);
   }
 

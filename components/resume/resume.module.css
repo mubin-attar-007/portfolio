@@ -188,6 +188,11 @@
   .skills {
     grid-template-columns: repeat(2, minmax(0, 1fr));
   }
+  /* An odd group out spans the row, so the grid never ends on an empty,
+     hairline-coloured cell. */
+  .skill:last-child:nth-child(odd) {
+    grid-column: 1 / -1;
+  }
 }
 .skill {
   padding: 18px 20px;

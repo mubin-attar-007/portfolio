@@ -27,17 +27,19 @@
   max-width: 920px;
 }
 
-/* MDX inside an entry: lists, emphasis and links in the site's body voice. */
+/* MDX inside an entry: lists, emphasis and links in the site's body voice.
+   The "Currently exploring" cards are a list too, but a grid of cards, never
+   a bulleted one. */
 .prose {
   max-width: 640px;
 }
-.prose ul {
+.prose ul:not(.cards) {
   display: grid;
   gap: 12px;
   padding-left: 18px;
   list-style: disc;
 }
-.prose li::marker {
+.prose ul:not(.cards) > li::marker {
   color: var(--color-ink-tertiary);
 }
 .prose li,
@@ -88,6 +90,7 @@
 }
 
 .openTo {
+  max-width: 640px;
   margin-top: 72px;
   padding: 28px;
   border-radius: var(--radius-lg);

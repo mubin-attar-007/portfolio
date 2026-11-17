@@ -6,7 +6,7 @@ import { useState, type ReactNode } from "react";
 
 /**
  * How `href` relates to the current path: the page itself, a page inside its
- * section, or neither. A link to an anchor (`/work#field`) is never current.
+ * section, or neither. A link to an anchor (`/work#public`) is never current.
  */
 export function currentness(pathname: string, href: string): "page" | "true" | undefined {
   if (href.includes("#")) return undefined;

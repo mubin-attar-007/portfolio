@@ -1,7 +1,7 @@
 import type { AnchorHTMLAttributes, ButtonHTMLAttributes, ReactNode } from "react";
-import { Caret } from "./caret-link";
+import { ArrowOut, Caret } from "./caret-link";
 import { cx } from "./cx";
-import { SmartLink } from "./smart-link";
+import { SmartLink, isWebLink, opensOutside } from "./smart-link";
 import styles from "./button.module.css";
 
 export type ButtonVariant = "violet" | "dark" | "grey" | "light" | "ghost";
@@ -30,7 +30,7 @@ type AsLink = Common &
   Omit<AnchorHTMLAttributes<HTMLAnchorElement>, "href" | "className" | "children"> & {
     /** Renders a link: a route (`next/link`, no prefetch), a file, or another site. */
     href: string;
-    /** Opens in a new tab (announced). */
+    /** Opens in a new tab (announced). Defaults to true for a web address on another site. */
     newTab?: boolean;
   };
 
@@ -48,30 +48,28 @@ export type ButtonProps = AsLink | AsButton;
  *
  * Variants: `violet` · `dark` · `grey` · `light` · `ghost`. Sizes: `sm` 28 ·
  * `md` 32 · `lg` 40px. `caret` appends the arrow-swap caret, which plays when
- * the button is hovered or focused.
+ * the button is hovered or focused. A link that leaves the site (another
+ * site's web address opens a new tab by default; a mail link) always carries
+ * the out-arrow ↗ instead (design-system §11.4).
  *
  * Motion: brightens on hover, squashes to 0.97 on press and springs back.
  * Reduced motion keeps the colour change and drops the travel.
  *
  * A11y: the native element's semantics; the global 2px violet focus ring; the
- * caret is decorative. A disabled `<button>` is dimmed and inert. White text
- * clears AA on every filled variant.
+ * caret and the out-arrow are decorative. A disabled `<button>` is dimmed and
+ * inert. White text clears AA on every filled variant.
  * Performance: server-safe, no client JS.
  */
 export function Button({ variant = "dark", size = "md", caret = false, className, children, ...element }: ButtonProps) {
   const classes = cx(buttonClassName(variant, size), className);
-  const body = (
-    <>
-      {children}
-      {caret ? <Caret /> : null}
-    </>
-  );
 
   if (isLink(element)) {
     const { href, newTab, ...anchor } = element;
+    const opensTab = newTab ?? isWebLink(href);
     return (
-      <SmartLink href={href} newTab={newTab} className={classes} {...anchor}>
-        {body}
+      <SmartLink href={href} newTab={opensTab} className={classes} {...anchor}>
+        {children}
+        {opensOutside(href, opensTab) ? <ArrowOut /> : caret ? <Caret /> : null}
       </SmartLink>
     );
   }
@@ -79,7 +77,8 @@ export function Button({ variant = "dark", size = "md", caret = false, className
   const { type = "button", ...button } = element;
   return (
     <button type={type} className={classes} {...button}>
-      {body}
+      {children}
+      {caret ? <Caret /> : null}
     </button>
   );
 }

@@ -22,6 +22,20 @@ export function linkKind(href: string): LinkKind {
   return FILE.test(path) ? "file" : "route";
 }
 
+/**
+ * True when following `href` leaves the site: it opens a new tab, or it hands
+ * off to a mail client. Such a link carries the out-arrow ↗ rather than the
+ * caret (design-system §11.4).
+ */
+export function opensOutside(href: string, newTab = false): boolean {
+  return newTab || href.startsWith("mailto:");
+}
+
+/** True for a web address on another site (the links that open a new tab by default). */
+export function isWebLink(href: string): boolean {
+  return linkKind(href) === "external" && /^https?:/.test(href);
+}
+
 export type SmartLinkProps = Omit<AnchorHTMLAttributes<HTMLAnchorElement>, "href"> & {
   href: string;
   /** Overrides the kind read from `href` (rarely needed). */

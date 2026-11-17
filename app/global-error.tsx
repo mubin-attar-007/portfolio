@@ -10,6 +10,7 @@
 
 import "@/styles/globals.css";
 import { buttonClassName } from "@/components/ui/button";
+import { ArrowOut } from "@/components/ui/caret-link";
 import { ErrorStage } from "@/components/misc/error-stage";
 import { SITE } from "@/config/site";
 
@@ -49,6 +50,7 @@ export default function GlobalError({ error, reset }: GlobalErrorProps) {
                 </a>
                 <a href={`mailto:${SITE.email}`} className={buttonClassName("ghost")}>
                   Email {SITE.email}
+                  <ArrowOut />
                 </a>
               </>
             }

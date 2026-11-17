@@ -1,24 +1,19 @@
 /**
- * Homepage + about copy. Structured content (hero, field notes, principles)
- * lives in a typed .ts module rather than parsed .md: it is shaped data, not
- * prose, so TypeScript checks it at build with no parser or schema in between.
- * Long-form prose stays in MDX under content/{projects,writing,notes}.
- * Every number carries its method (in the linked case study).
+ * Copy that more than one route reads (spec/CONTENT_MODEL.md §5). Structured
+ * content lives in a typed .ts module rather than parsed .md: it is shaped
+ * data, not prose, so TypeScript checks it at build with no parser or schema in
+ * between. Long-form prose stays in MDX under content/{projects,writing,notes}.
+ * Every number carries its method (in the linked case study). Identity (name,
+ * socials, email) is config/site.ts, never restated here.
  */
-// Social URLs are identity, not copy, so they have exactly one home in
-// config/site.ts. Read from there rather than restated here — a profile URL
-// written down twice is a profile URL that will eventually disagree with itself.
-import { SITE } from "@/config/site";
-import { projects } from "./projects";
 
 /**
  * Homepage + about copy that is NOT the homepage's own layout data.
  *
  * The homepage's own copy lives in `content/pages/home.ts`. What survives here
- * are the two blocks that other routes render:
- *
- * - `proof`     the employer-anchored credibility row on /about and /hire.
- * - `principles` the three rules, rendered by /about.
+ * is the one block other routes read: `principles`, the three rules /about
+ * renders and the assistant's corpus indexes. (The employer-anchored `proof`
+ * row went with the component that rendered it, which nothing used.)
  *
  * Everything else this object used to hold — a second hero headline, a second
  * stack list, a second set of capability cards, a homepage FAQ, field notes, a
@@ -28,20 +23,6 @@ import { projects } from "./projects";
  * source waiting to be re-rendered and disagree with the first.
  */
 export const home = {
-  // The honest "trusted by" replacement: the employer is the real third-party
-  // anchor, and every stat links to the page where a visitor can verify the
-  // count themselves. No logos or quotes that cannot be backed.
-  proof: {
-    lead: "AI/ML Engineer at",
-    employer: "Sevina Technologies",
-    employerNote: "healthcare-AI automation, by day",
-    stats: [
-      { value: String(projects.length), label: "public project case studies", href: "/work" },
-      { value: "3.5+ yrs", label: "shipping software", href: "/resume" },
-      { value: "$0", label: "free-tier infrastructure", href: "/uses" },
-    ],
-  },
-
   principles: [
     {
       title: "Evidence over demos",
@@ -113,53 +94,13 @@ export const pages = {
   },
 } as const;
 
+/**
+ * /about's social card (app/about/opengraph-image.tsx). The page's own copy is
+ * `aboutPage` in content/pages/about.ts.
+ */
 export const about = {
   kicker: "About",
   headline: "From healthcare workflows to AI products.",
-  body: [
-    `I'm an ${SITE.roleInSentence} with 3.5+ years in software engineering and a production-AI focus since 2024. I work across the system: data pipelines, APIs, retrieval, model integration, and the interface people use.`,
-    "At Sevina Technologies I build healthcare automation, including clinical-compliance and reimbursement workflows. I describe that work at the system level here to protect confidential information. My independent projects make the architecture, implementation, and evaluations available to explore.",
-    "The work I enjoy most is connecting a useful model to reliable software: defining what it can do, handling failures, and measuring whether the complete system solves the problem.",
-  ],
-  // The page's action pair. Previously typed straight into app/about/page.tsx,
-  // where a lone primary button sat beside four plain text links and read as
-  // unfinished; the page now uses the site's standard primary/secondary pair.
-  ctas: {
-    primary: "Work with me",
-    secondary: "Read the résumé",
-  },
-  // The supporting links under the CTA pair. `external` decides which affordance
-  // the shared TextLink renders (outward arrow vs forward chevron) — it is a fact
-  // about the destination, not a style choice, so it belongs with the content.
-  links: [
-    { label: "GitHub", href: SITE.socials.github, external: true },
-    { label: "LinkedIn", href: SITE.socials.linkedin, external: true },
-    { label: "Résumé", href: "/resume", external: false },
-  ],
-  // Framing for the /about "how I think" section, which renders home.principles.
-  thinking: {
-    kicker: "How I think",
-    title: "How I approach the work",
-  },
-} as const;
-
-/**
- * /hire — the "work with me" page. Availability is single-sourced from STATUS;
- * "How I work" links to real decision notes so the claim is backed, not asserted.
- */
-export const hire = {
-  kicker: "Contact",
-  title: "Let's talk about what you're building.",
-  lede:
-    "I work on LLM applications, AI platforms, and production software. Share the problem, the team, and what you need the system to do.",
-  howIWork: {
-    body: "I connect architecture decisions to working software: clear interfaces, validated model output, and tests that cover the deployed workflow. My case studies explain the decisions and the costs I accepted. These notes give a shorter view:",
-    notes: [
-      { label: "One agent, three SQL dialects", href: "/notes/one-agent-three-sql-dialects" },
-      { label: "Six LLM providers behind one interface", href: "/notes/six-providers-one-interface" },
-      { label: "Enforce tenancy in the repository layer, not the route", href: "/notes/tenancy-in-the-repository-layer" },
-    ],
-  },
 } as const;
 
 /**
@@ -180,26 +121,29 @@ export const nowPage = {
 } as const;
 
 /**
- * /uses — the real stack behind the four shipped products. Deliberately boring and
- * cheap; every tool here actually ships in one of the projects (no aspirational
- * padding). Grouped for scanability.
+ * /uses — the real stack behind the case studies. Deliberately boring; every
+ * tool here actually ships in one of the projects (no aspirational padding).
+ * Grouped for scanability.
  */
 export const uses = {
   kicker: "Uses",
   title: "The stack",
+  // The hosting split is the case studies' own: each flagship lists the AWS
+  // services it runs on (content/flagship), each public project its free-tier
+  // deploy (content/projects).
   intro:
-    "The tools behind the projects, from model integration to deployment. Free-tier infrastructure keeps the hosting setup small and makes quotas, storage limits, and cold starts explicit design constraints.",
+    "The tools behind the case studies, from model integration to deployment. The two flagship products are hosted on AWS; the four public projects run on free tiers, which makes quotas, storage limits and cold starts explicit design constraints.",
   /**
-   * How the "$0" claim is actually met. It is stated here because /about and
-   * /hire both show "$0 free-tier infrastructure" and link to this page to back
-   * it — a number whose backing page does not state the method is an assertion
-   * with a hyperlink attached.
+   * How the "$0" claim is actually met. The public case studies and the
+   * writing call that hosting a "$0 stack", so this page states the method —
+   * a number whose backing page does not state the method is an assertion with
+   * a hyperlink attached. It covers the public projects only.
    */
   costNote:
-    "The project hosting setup uses free tiers: Vercel Hobby for frontends, Hugging Face Spaces for containerised backends, Neon for Postgres, and GitHub Actions for CI. The $0 figure describes that hosting setup, not an unlimited workload budget. Provider quotas, cold starts, and model API usage remain operating constraints.",
-  // The page asserts "four shipped products"; this is the link that lets a reader
-  // check the claim rather than take it. Label only — it adds no new claim.
-  cta: { label: "See the four products", href: "/work" },
+    "The public projects' hosting uses free tiers: Vercel Hobby for frontends, Hugging Face Spaces for containerised backends, Neon for Postgres, and GitHub Actions for CI. The $0 figure describes that hosting setup, not an unlimited workload budget. Provider quotas, cold starts, and model API usage remain operating constraints.",
+  // The intro names the case studies; this link lets a reader check them rather
+  // than take them. Label only — it adds no new claim.
+  cta: { label: "See the case studies", href: "/work" },
   groups: [
     {
       title: "Languages & frameworks",
@@ -212,7 +156,7 @@ export const uses = {
         "Gemini",
         "Multi-provider LLM fallback",
         "pgvector",
-        "embedding retrieval",
+        "Embedding retrieval",
         "XGBoost",
         "scikit-learn",
       ],

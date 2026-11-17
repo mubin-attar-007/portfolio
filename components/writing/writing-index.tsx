@@ -1,6 +1,7 @@
 import Link from "next/link";
 import { Rss } from "lucide-react";
 import { Section } from "@/components/layout/section";
+import { NewsletterForm } from "@/components/features/newsletter-form";
 import { Caret } from "@/components/ui/caret-link";
 import { PageHeader } from "@/components/ui/page-header";
 import { writingPage, type PostFilter } from "@/content/pages/writing";
@@ -14,7 +15,8 @@ const TARGET_ID = "writing-posts";
 /**
  * WritingIndex — /writing and /notes (prototype `writing.html`, Clerk Blog):
  * an RSS link, the page header, type chips, three featured covers (the latest
- * essays and guides) and the full list, newest first.
+ * essays and guides), the full list, newest first, and — only once the
+ * Buttondown list is connected — the newsletter sign-up at its foot.
  *
  * Everything is server-rendered; `initial` preselects a type by rendering the
  * other posts `hidden`, so /notes is filtered before any JS runs. The chips
@@ -76,6 +78,8 @@ export function WritingIndex({
           ))}
         </ul>
       </div>
+
+      <NewsletterForm className="mt-16 sm:mt-20" />
     </Section>
   );
 }

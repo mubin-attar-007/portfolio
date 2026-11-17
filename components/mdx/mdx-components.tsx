@@ -6,6 +6,8 @@ import { Figure } from "@/components/ui/figure";
 import { DecisionLog } from "@/components/mdx/decision-log";
 import { FailureLog } from "@/components/mdx/failure-log";
 import { PROSE } from "@/components/mdx/prose";
+import { ArrowOut } from "@/components/ui/caret-link";
+import { SmartLink, isWebLink, opensOutside } from "@/components/ui/smart-link";
 
 /**
  * MDX component map — plain markdown elements bound to the shared reading scale
@@ -20,8 +22,10 @@ import { PROSE } from "@/components/mdx/prose";
  * A11y: headings get slugged ids so they can be deep-linked and so a future
  * table of contents has real targets; PROSE.h2/h3 carry the scroll margin that
  * keeps a jumped-to heading clear of the sticky header. Links are underlined at
- * rest, never distinguished by colour alone (WCAG 1.4.1). External links are
- * marked `rel="noopener noreferrer"`.
+ * rest, never distinguished by colour alone (WCAG 1.4.1). A link renders through
+ * `SmartLink`: a page of the site navigates client-side, another site opens a new
+ * tab (`rel="noopener noreferrer"`, announced), and a link that leaves the site
+ * carries the out-arrow ↗ (design-system §11.4).
  */
 export function slugify(text: string): string {
   return text
@@ -82,14 +86,15 @@ export const mdxComponents = {
   ul: (p: ComponentPropsWithoutRef<"ul">) => <ul className={PROSE.ul} {...p} />,
   ol: (p: ComponentPropsWithoutRef<"ol">) => <ol className={PROSE.ol} {...p} />,
   li: (p: ComponentPropsWithoutRef<"li">) => <li className={PROSE.li} {...p} />,
-  a: ({ href = "", ...p }: ComponentPropsWithoutRef<"a">) => (
-    <a
-      href={href}
-      className={PROSE.link}
-      {...(/^https?:\/\//.test(href) ? { target: "_blank", rel: "noopener noreferrer" } : {})}
-      {...p}
-    />
-  ),
+  a: ({ href = "", children, ...p }: ComponentPropsWithoutRef<"a">) => {
+    const newTab = isWebLink(href);
+    return (
+      <SmartLink href={href} newTab={newTab} className={PROSE.link} {...p}>
+        {children}
+        {opensOutside(href, newTab) ? <ArrowOut inline /> : null}
+      </SmartLink>
+    );
+  },
   strong: (p: ComponentPropsWithoutRef<"strong">) => <strong className={PROSE.strong} {...p} />,
   em: (p: ComponentPropsWithoutRef<"em">) => <em {...p} />,
   hr: () => <hr className={PROSE.hr} />,

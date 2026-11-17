@@ -36,8 +36,8 @@ export type Site = typeof SITE;
 
 /**
  * Third-party integrations — PUBLIC identifiers (a booking page, not a
- * secret), committed so it activates on deploy with zero env setup and
- * overridable at build with NEXT_PUBLIC_CAL_URL (consumed in app/hire/page.tsx).
+ * secret), committed so it activates on deploy with zero env setup. Every
+ * "Book a call" link reads it; no environment variable overrides it.
  * Empty string = the feature stays hidden (the graceful no-config state).
  *
  * The newsletter is deliberately not here. It has no committed default and
@@ -56,13 +56,18 @@ export const INTEGRATIONS = {
  * email address stays a mailto wherever it's shown verbatim (footer, /contact).
  */
 export const STATUS = {
-  text: "Open to Forward Deployed Engineer roles",
+  text: "Open to Applied AI Engineer roles",
   /**
    * The phone form of the same sentence. Not a different claim — the same one,
    * short enough to fit 360px without an ellipsis. A status line that truncates
    * mid-word reads as a layout bug rather than as availability.
    */
-  short: "Open to FDE roles",
+  short: "Open to Applied AI roles",
+  /**
+   * The notice period before a full-time role can start (owner, 17 Nov 2026).
+   * One value for /hire, /contact, the résumé PDF, llms.txt and the assistant.
+   */
+  noticePeriod: "1 month",
   cta: "Get in touch",
   href: "/contact",
 } as const;

@@ -1,6 +1,6 @@
 import type { ReactNode } from "react";
 import { cx } from "./cx";
-import { SmartLink, linkKind } from "./smart-link";
+import { SmartLink, isWebLink, opensOutside } from "./smart-link";
 import styles from "./caret-link.module.css";
 
 /**
@@ -13,6 +13,20 @@ import styles from "./caret-link.module.css";
  */
 export function Caret({ className }: { className?: string }) {
   return <span aria-hidden="true" className={cx("caret-swap", className)} />;
+}
+
+/**
+ * ArrowOut — the out-arrow ↗ of a link that leaves the site (a new tab or a
+ * mail client), and only of those (design-system §11.4). The caret's twin: the
+ * arrow leaves up and to the right while a second arrives from the lower left
+ * (`.arrow-out`, globals.css). `CaretLink` and `Button` add it themselves; use
+ * it directly after a plain link's text, with `inline` inside a sentence.
+ *
+ * Decorative (`aria-hidden`): the link's spoken "(opens in a new tab)" or its
+ * mailto address carries the meaning. Reduced motion: the swap is instant.
+ */
+export function ArrowOut({ inline = false, className }: { inline?: boolean; className?: string }) {
+  return <span aria-hidden="true" className={cx("arrow-out", inline && "arrow-out-inline", className)} />;
 }
 
 export type CaretLinkProps = {
@@ -36,6 +50,8 @@ export type CaretLinkProps = {
  *
  * Variants: `tone` (ink · muted · accent), `size` (sm · md), `weight`.
  * Every tone adapts to dark plates and pages through the colour tokens.
+ * A link that leaves the site (a new tab or a mail client) carries the
+ * out-arrow ↗ instead of the caret.
  *
  * A11y: a real link whose label is its name; the caret is decorative. Its
  * minimum height is 24px (WCAG 2.5.8). A new-tab link says so to screen readers.
@@ -50,7 +66,7 @@ export function CaretLink({
   newTab,
   className,
 }: CaretLinkProps) {
-  const opensTab = newTab ?? (linkKind(href) === "external" && /^https?:/.test(href));
+  const opensTab = newTab ?? isWebLink(href);
   return (
     <SmartLink
       href={href}
@@ -58,7 +74,7 @@ export function CaretLink({
       className={cx(styles.link, styles[tone], styles[size], weight === "regular" && styles.regular, className)}
     >
       <span>{children}</span>
-      <Caret />
+      {opensOutside(href, opensTab) ? <ArrowOut /> : <Caret />}
     </SmartLink>
   );
 }

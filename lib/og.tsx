@@ -180,8 +180,8 @@ async function fetchOrThrow(url: string): Promise<Response> {
  *
  * satori places each word at an offset summed from per-character advance
  * widths, which carry no kerning, then draws the word with the font's kerning
- * applied. A kerned word ("Forward") is therefore drawn narrower than the slot
- * it was given, and the space after it widens ("Forward  Deployed"). Geist
+ * applied. A kerned word ("Wave") is therefore drawn narrower than the slot
+ * it was given, and the space after it widens ("Wave  Form"). Geist
  * keeps its kerning in the GPOS table; renaming that table's tag in the table
  * directory hides it from the parser, so the drawn widths match the measured
  * ones. Ligatures (GSUB) are left alone: none changes the width of this text.

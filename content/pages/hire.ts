@@ -1,16 +1,25 @@
-import { INTEGRATIONS } from "@/config/site";
+import { INTEGRATIONS, STATUS } from "@/config/site";
+import { flagships } from "@/content/flagship";
+import { EMPLOYER } from "@/content/flagship/shared";
 import { projects } from "@/content/projects";
+
+/** "Bench Discovery and CareLTC", from the flagship registry. */
+const FLAGSHIP_NAMES = flagships.map((flagship) => flagship.name).join(" and ");
+
+/** The full-time roles' notice term, from the one availability source. */
+const NOTICE_TERM = `Notice period: ${STATUS.noticePeriod}`;
 
 /**
  * /hire copy (spec/prototype/hire.html, approved and fact-checked). Figures are
- * the approved facts (SPEC §2): 3.5+ years, two field systems, the public
- * project count read from content/projects.ts.
+ * the approved facts (SPEC §2): 3.5+ years; the flagship products' names and
+ * count from content/flagship (their usage figures live on their own pages);
+ * the public project count from content/projects.ts.
  */
 export const hirePage = {
   meta: {
     title: "Hire me",
     description:
-      "Open to Forward Deployed Engineer and Applied AI Engineer roles, and freelance AI projects. How I work, and the roles I'm open to.",
+      "Open to Applied AI Engineer roles and freelance AI projects. How I work, and the roles I'm open to.",
   },
   hero: {
     title: "I turn customer problems into running systems",
@@ -32,16 +41,16 @@ export const hirePage = {
     agents:
       "I direct AI coding agents for much of the implementation. I set the architecture, the quality gates and the invariants, review every change and own the releases.",
     close:
-      "I'm looking for a forward deployed or applied AI role where that is the job: sitting with customers, writing down their constraints, and shipping systems they rely on.",
+      "I'm looking for an Applied AI Engineer role where that is the job: sitting with customers, writing down their constraints, and shipping systems they rely on.",
     signoff: "Applied AI Engineer, Ahmedabad, India",
   },
   glance: {
     label: "At a glance",
     title: "Production work, in the field and in public",
-    body: "Two field systems run at a healthcare operation, with names withheld. Four public AI systems come with source, recordings and the method behind every result.",
+    body: `${FLAGSHIP_NAMES}, two products I built at ${EMPLOYER}, are in use. Four public AI systems come with source, recordings and the method behind every result.`,
     stats: [
       { label: "In software engineering", value: "3.5+ yrs", source: { label: "Résumé", href: "/resume" } },
-      { label: "Field systems in use", value: "2" },
+      { label: "Products in use", value: String(flagships.length), source: { label: "The products", href: "/work#flagship" } },
       { label: "Public AI systems", value: String(projects.length), source: { label: "The work", href: "/work" } },
       { label: "Time zone", value: "UTC+5:30" },
     ],
@@ -58,7 +67,7 @@ export const hirePage = {
       { icon: "bars", title: "Figures with methods", body: "Every number links to its method. A result that fails its own audit is retired in public." },
       { icon: "file", title: "Written handover", body: "Decision records, incident write-ups and guides your team can keep working from." },
     ],
-    caption: "The field systems' code and names stay private. I'll walk you through either one on a call.",
+    caption: "Both products' code stays private. I'll walk you through either one on a call.",
   },
   roles: {
     label: "Open to",
@@ -70,13 +79,13 @@ export const hirePage = {
     },
     items: [
       {
-        title: "Forward Deployed Engineer",
-        terms: ["Full-time", "Remote, hybrid or on-site in India", "Travel to customer sites"],
+        title: "Applied AI Engineer",
+        terms: ["Full-time", "Remote, hybrid or on-site in India", "Travel to customer sites", NOTICE_TERM],
         action: { label: "Get in touch", href: "/contact" },
       },
       {
-        title: "Applied AI Engineer",
-        terms: ["Full-time", "Remote, hybrid or on-site in India"],
+        title: "AI Engineer, LLM applications and agents",
+        terms: ["Full-time", "Remote, hybrid or on-site in India", NOTICE_TERM],
         action: { label: "Get in touch", href: "/contact" },
       },
       {

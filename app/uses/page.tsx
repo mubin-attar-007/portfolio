@@ -14,7 +14,8 @@ import { pageMetadata } from "@/lib/seo";
 export const metadata: Metadata = pageMetadata({
   path: "/uses",
   title: "Uses",
-  description: "The stack behind four shipped products — a deliberately boring, $0 free-tier stack.",
+  description:
+    "The tools I build with, from model APIs to deployment, and the case studies that list them: four public projects on free tiers, two flagship products on AWS.",
 });
 
 /** A stable anchor for a category title ("AI / ML" → "ai-ml"). */
@@ -42,8 +43,8 @@ export default function UsesPage() {
             {uses.cta.label}
           </CaretLink>
         </PageHeader>
-        {/* The "$0" figure is shown on /about and /hire and links here to be
-            checked, so this page states how it is actually met. */}
+        {/* The writing and the case studies call the hosting a "$0 stack";
+            this page states how that is actually met, and its limits. */}
         <p className="mt-10 max-w-[720px] border-l-2 border-border-strong pl-5 text-sm leading-relaxed text-ink-secondary">
           {uses.costNote}
         </p>
@@ -56,7 +57,7 @@ export default function UsesPage() {
             <Toc items={CATEGORIES} title="Categories" />
           </aside>
           <div className="flex flex-col gap-16">
-            {uses.groups.map((group, tone) => {
+            {uses.groups.map((group) => {
               const id = anchor(group.title);
               return (
                 <section key={group.title} aria-labelledby={id} className={styles.anchor}>
@@ -69,7 +70,7 @@ export default function UsesPage() {
                   <ul className="mt-6 grid grid-cols-[repeat(auto-fill,minmax(240px,1fr))] gap-2.5">
                     {group.items.map((item) => (
                       <li key={item}>
-                        <ToolCard name={item} note={TOOL_NOTES[item]} tone={tone} usedIn={evidenceFor(item)} />
+                        <ToolCard name={item} note={TOOL_NOTES[item]} usedIn={evidenceFor(item)} />
                       </li>
                     ))}
                   </ul>

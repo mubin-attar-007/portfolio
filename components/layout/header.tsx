@@ -20,7 +20,13 @@ import { NavLink } from "./nav-link";
 import { NavMenu, NavMenus } from "./nav-menu";
 import styles from "./nav.module.css";
 
-/** The Work menu: field work and public systems as rich rows, then "All work". */
+/**
+ * The open mobile menu is a modal sheet (ADR-018, amended 17 Nov 2026); this
+ * names its dialog. The button's own names are MENU_BUTTON (config/nav.ts).
+ */
+const MENU_LABELS = { ...MENU_BUTTON, dialog: "Site menu" } as const;
+
+/** The Work menu: the flagship and public case studies as rich rows, then "All work". */
 function WorkPanel() {
   return (
     <>
@@ -127,18 +133,19 @@ function MobilePanel() {
  * Header — the floating pill nav (prototype `.navwrap`): the brand, then Work ▾,
  * Evals, Writing, About ▾ and the assistant, and the Contact | Hire me ghost
  * pills on the right. Below 1000px: the brand, the pills and a menu button
- * with the grouped panel.
+ * that opens the grouped panel as a modal sheet (`MobileMenu`).
  *
  * Sticky with the pill 8px from the top (`--nav-top`), 1232px wide, blurred
  * glass with a hairline and a soft shadow. On a page with a `DarkSurface` it is
  * the dark pill (its `[data-chrome]` scope, tokens.css).
  *
  * The assistant (components/features/assistant.tsx) is mounted here as the
- * persistent first action (visible at every width, an icon on phones) so it persists across navigation and keeps its transcript; its
- * trigger is its own.
+ * persistent first action (visible at every width, an icon on phones), so it
+ * persists across navigation and keeps its transcript; its trigger is its own.
  *
  * A11y: a `<header>` landmark holding one `<nav aria-label="Primary">`; the
- * menus are disclosure buttons; every list is labelled by its group title.
+ * desktop menus are disclosure buttons and the mobile menu is a modal dialog;
+ * every list is labelled by its group title.
  * Performance: a server component — only the menus, links and the mobile
  * button hydrate.
  */
@@ -175,7 +182,7 @@ export function Header() {
             </span>
           ))}
         </div>
-        <MobileMenu labels={MENU_BUTTON}>
+        <MobileMenu labels={MENU_LABELS}>
           <MobilePanel />
         </MobileMenu>
       </nav>

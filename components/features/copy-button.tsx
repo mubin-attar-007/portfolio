@@ -4,15 +4,46 @@ import { useEffect, useRef, useState } from "react";
 import { Check, Copy, Link2 } from "lucide-react";
 import { cx } from "@/components/ui/cx";
 
-/** How long the "Copied" state holds before the button resets. */
+/** How long the "Copied" (or "Couldn't copy") state holds before the button resets. */
 const RESET_MS = 2000;
+
+/** The label when neither copy path reaches the clipboard. */
+const FAILED_LABEL = "Couldn't copy";
+
+/**
+ * Copy through the Clipboard API, or — where it is missing or refused (an
+ * insecure origin, a restrictive permissions policy) — through a selected,
+ * off-screen textarea. True when the text reached the clipboard.
+ */
+async function writeClipboard(value: string): Promise<boolean> {
+  try {
+    await navigator.clipboard.writeText(value);
+    return true;
+  } catch {
+    const area = document.createElement("textarea");
+    area.value = value;
+    area.setAttribute("readonly", "");
+    area.style.position = "fixed";
+    area.style.opacity = "0";
+    document.body.append(area);
+    area.select();
+    try {
+      return document.execCommand("copy");
+    } catch {
+      return false;
+    } finally {
+      area.remove();
+    }
+  }
+}
 
 /**
  * CopyButton — copies text to the clipboard with a transient "Copied" state.
  * The icon swaps copy → check with the spring (prototype `.copy-btn`).
  *
  * Props:
- * - `text` — what is copied.
+ * - `text` — what is copied, verbatim; with `icon="link"` a site path ("/x") is
+ *   copied as the full URL.
  * - `label` — the visible label and accessible name ("Copy code", "Copy link").
  * - `copiedLabel` — the label while copied (default "Copied").
  * - `icon` — `copy` (default) or `link`.
@@ -20,7 +51,9 @@ const RESET_MS = 2000;
  *   pill with the card hairline, for an article footer).
  *
  * A11y: a labelled button; the state change is announced in a polite live
- * region. Reduced motion: the global rules make the swap instant.
+ * region. If the browser refuses both copy paths the label says so ("Couldn't
+ * copy"), so the button is never a silent no-op. Reduced motion: the global
+ * rules make the swap instant.
  */
 export function CopyButton({
   text,
@@ -35,7 +68,8 @@ export function CopyButton({
   icon?: "copy" | "link";
   variant?: "bare" | "pill";
 }) {
-  const [copied, setCopied] = useState(false);
+  const [state, setState] = useState<"idle" | "copied" | "failed">("idle");
+  const copied = state === "copied";
   const timerRef = useRef<number | null>(null);
 
   useEffect(() => {
@@ -45,17 +79,16 @@ export function CopyButton({
   }, []);
 
   async function onCopy() {
-    try {
-      // A relative path is resolved against the page, so a caller can pass "/x".
-      const value = text.startsWith("/") ? new URL(text, window.location.origin).href : text;
-      await navigator.clipboard.writeText(value);
-      setCopied(true);
-      if (timerRef.current) window.clearTimeout(timerRef.current);
-      timerRef.current = window.setTimeout(() => setCopied(false), RESET_MS);
-    } catch {
-      /* clipboard unavailable — no-op */
-    }
+    // A link (`icon="link"`) may be a site path ("/x"): it is copied as a full
+    // URL. Anything else is copied exactly as given: code often starts with
+    // "/" (a `//` or `/**` comment) and must never be read as a path.
+    const value = icon === "link" && text.startsWith("/") ? new URL(text, window.location.origin).href : text;
+    setState((await writeClipboard(value)) ? "copied" : "failed");
+    if (timerRef.current) window.clearTimeout(timerRef.current);
+    timerRef.current = window.setTimeout(() => setState("idle"), RESET_MS);
   }
+
+  const shown = state === "copied" ? copiedLabel : state === "failed" ? FAILED_LABEL : label;
 
   const Idle = icon === "link" ? Link2 : Copy;
   const glyph = "col-start-1 row-start-1 transition-[opacity,transform] duration-[var(--motion-slow)] ease-[var(--spring)]";
@@ -76,10 +109,10 @@ export function CopyButton({
           <Idle size={13} strokeWidth={1.6} className={cx(glyph, copied && "scale-50 opacity-0")} />
           <Check size={13} strokeWidth={1.8} className={cx(glyph, !copied && "scale-50 opacity-0")} />
         </span>
-        <span>{copied ? copiedLabel : label}</span>
+        <span>{shown}</span>
       </button>
       <span className="sr-only" role="status" aria-live="polite" aria-atomic="true">
-        {copied ? copiedLabel : ""}
+        {state === "idle" ? "" : shown}
       </span>
     </>
   );

@@ -24,7 +24,7 @@ export const metadata: Metadata = pageMetadata({
 /**
  * /now — a hand-updated snapshot in the Clerk changelog pattern: a date rail
  * with dots, one entry per section of content/now.mdx (plus the structured
- * "Currently exploring" list from its front-matter, which the homepage shares),
+ * "Currently exploring" list from its front-matter),
  * and faint circuit art at the side. The snapshot has one date, the required
  * `updated` front-matter (never file mtime), so every entry carries it.
  *

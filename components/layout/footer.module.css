@@ -5,7 +5,7 @@
   .footer {
     position: relative;
     overflow: hidden;
-    padding-top: 88px;
+    padding-top: 72px;
     color: var(--color-ink);
   }
   .footer::after {
@@ -57,6 +57,7 @@
   .link:hover {
     color: var(--chrome-link-hover);
   }
+  /* Ends clear of the floating launcher, so the last row is never under it. */
   .base {
     position: relative;
     z-index: 1;
@@ -64,7 +65,7 @@
     justify-content: space-between;
     gap: 16px;
     margin-top: 56px;
-    padding: 24px 0 56px;
+    padding: 24px 0 var(--launcher-clearance);
     border-top: 1px solid var(--color-border);
     font-size: var(--text-sm);
     color: var(--color-ink-secondary);
@@ -74,6 +75,13 @@
   }
   .base a:hover {
     color: var(--color-ink);
+  }
+  /* With a pointer the columns tighten to the 28px link pitch of the
+     reference footer; touch keeps the roomier 36px rows. */
+  @media (min-width: 1001px) and (hover: hover) {
+    .list {
+      gap: 6px;
+    }
   }
   @media (max-width: 1000px) {
     .grid {

@@ -1,4 +1,7 @@
 import { Building2, Code, GraduationCap } from "lucide-react";
+import { CaretLink } from "@/components/ui/caret-link";
+import { flagshipHref, flagships } from "@/content/flagship";
+import { EMPLOYER } from "@/content/flagship/shared";
 import { resume } from "@/content/resume";
 import { aboutPage } from "@/content/pages/about";
 import styles from "./about.module.css";
@@ -7,11 +10,13 @@ const ICON_SIZE = 18;
 
 /**
  * "Where I've worked": a four-cell grid under a cyan hairline — the heading
- * cell, each role from content/resume.ts, then the degree.
- * A11y: an h2 labels the section; each cell is titled by an h3.
+ * cell, each role from content/resume.ts, then the degree. The employer's cell
+ * links the flagship case studies built there (content/flagship).
+ * A11y: an h2 labels the section; each cell is titled by an h3; the case-study
+ * links are a list named by the products label.
  */
 export function ExperienceGrid() {
-  const { title, body, summaries } = aboutPage.experience;
+  const { title, body, summaries, products } = aboutPage.experience;
   const { education } = resume;
   const [year, grade] = education.year.split(" · ");
   return (
@@ -30,6 +35,17 @@ export function ExperienceGrid() {
             <h3>{job.role}</h3>
             <p className={styles.org}>{job.org}</p>
             <p>{summaries[job.org] ?? job.points[0]}</p>
+            {job.org === EMPLOYER ? (
+              <ul className={styles.products} aria-label={products}>
+                {flagships.map((flagship) => (
+                  <li key={flagship.slug}>
+                    <CaretLink href={flagshipHref(flagship.slug)} weight="regular">
+                      {flagship.name}
+                    </CaretLink>
+                  </li>
+                ))}
+              </ul>
+            ) : null}
             <p className={styles.when}>
               {job.period} · {job.place}
             </p>

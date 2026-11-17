@@ -7,6 +7,8 @@ export const evalsPage = {
   pill: { label: "Every figure links to its method", cta: "How it's read", href: "#methods" },
   board: {
     caption: "Evaluation registry: each row's result, scope, method and date",
+    /** Names the table's sideways scroller on narrow screens (distinct from the section's name). */
+    scroller: "Results table, scrolls sideways",
     project: "Project",
     allProjects: "All projects",
     status: "Status",

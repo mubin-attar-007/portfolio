@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useId, useMemo, useRef, useState } from "react";
+import { useCallback, useEffect, useId, useMemo, useRef, useState } from "react";
 import { cx } from "./cx";
 import styles from "./toc.module.css";
 
@@ -15,6 +15,10 @@ export type TocItem = {
 /** The band at the top of the viewport (top 30%) where a heading becomes current. */
 const CURRENT_BAND = "0px 0px -70% 0px";
 const CURRENT_LINE = 0.3;
+/** After a jump, how long the page must be still before scrolling may move the indicator again. */
+const SETTLE_MS = 160;
+/** How long a chosen entry holds when its jump does not scroll at all (the heading was in place). */
+const HOLD_MS = 400;
 
 function flatten(items: readonly TocItem[]): string[] {
   return items.flatMap((item) => [item.id, ...flatten(item.items ?? [])]);
@@ -30,8 +34,11 @@ function flatten(items: readonly TocItem[]): string[] {
  * Behaviour: an IntersectionObserver watches the headings; the current one is
  * the last heading above the line 30% down the viewport (the last one, once the
  * page is scrolled to its end). A violet bar springs to it. Clicking an entry
- * makes it current at once; the page scrolls by the normal anchor jump (smooth,
- * or instant under reduced motion), clearing the nav (`scroll-padding-top`).
+ * makes it current at once and holds it while the page scrolls by the normal
+ * anchor jump (smooth, or instant under reduced motion; clearing the nav by
+ * `scroll-padding-top`), so a short section never hands the bar to the next
+ * heading; only the reader's own scrolling moves it after that. A deep link
+ * (`#id` on load) makes its entry current the same way.
  *
  * Layout: sticky at `--sticky-top`, scrolling inside itself when taller than
  * the viewport. Hide it on small screens from the page if it does not fit.
@@ -52,6 +59,25 @@ export function Toc({
   const [current, setCurrent] = useState<string | null>(null);
   const railRef = useRef<HTMLDivElement>(null);
   const indicatorRef = useRef<HTMLSpanElement>(null);
+  // An entry chosen by a click or a deep link, held until its jump settles.
+  const chosenRef = useRef<string | null>(null);
+  const settleRef = useRef<number | undefined>(undefined);
+
+  const release = useCallback((after: number) => {
+    window.clearTimeout(settleRef.current);
+    settleRef.current = window.setTimeout(() => {
+      chosenRef.current = null;
+    }, after);
+  }, []);
+
+  const choose = useCallback(
+    (id: string) => {
+      chosenRef.current = id;
+      setCurrent(id);
+      release(HOLD_MS);
+    },
+    [release],
+  );
 
   // Track the current heading.
   useEffect(() => {
@@ -61,6 +87,7 @@ export function Toc({
     if (headings.length === 0 || typeof IntersectionObserver === "undefined") return;
 
     const update = () => {
+      if (chosenRef.current) return;
       const root = document.documentElement;
       const atEnd = window.innerHeight + window.scrollY >= root.scrollHeight - 4;
       if (atEnd) {
@@ -81,16 +108,26 @@ export function Toc({
     // The observer misses the page's end when the last section is short.
     let frame = 0;
     const onScroll = () => {
+      // A chosen entry's jump is still scrolling: hold it until the page is still.
+      if (chosenRef.current) {
+        release(SETTLE_MS);
+        return;
+      }
       cancelAnimationFrame(frame);
       frame = requestAnimationFrame(update);
     };
     window.addEventListener("scroll", onScroll, { passive: true });
+    // A deep link lands on its section: that entry is current, not its neighbour.
+    const fromHash = decodeURIComponent(window.location.hash.slice(1));
+    const hashFrame = ids.includes(fromHash) ? requestAnimationFrame(() => choose(fromHash)) : 0;
     return () => {
       observer.disconnect();
       window.removeEventListener("scroll", onScroll);
       cancelAnimationFrame(frame);
+      cancelAnimationFrame(hashFrame);
+      window.clearTimeout(settleRef.current);
     };
-  }, [ids]);
+  }, [ids, choose, release]);
 
   // Move the indicator to the current entry, and keep it there through resizes.
   useEffect(() => {
@@ -120,7 +157,7 @@ export function Toc({
       </p>
       <div ref={railRef} className={styles.rail}>
         <span ref={indicatorRef} className={styles.indicator} aria-hidden="true" />
-        <TocList items={items} current={current} depth={0} onSelect={setCurrent} />
+        <TocList items={items} current={current} depth={0} onSelect={choose} />
       </div>
     </nav>
   );

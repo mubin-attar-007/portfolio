@@ -290,6 +290,14 @@
   --stripe-width: 3px;     /* the accent rule on callouts and pull quotes */
   /* One triangle of the arrow-swap caret (.caret-swap, globals.css). */
   --caret-tri: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 5 8'%3E%3Cpath d='M0 0l5 4-5 4z'/%3E%3C/svg%3E");
+  /* The out-arrow ↗ of a link that leaves the site (.arrow-out, globals.css). */
+  --arrow-out: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 10 10' fill='none' stroke='%23000' stroke-width='1.5' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='M2.5 7.5l5-5M3.5 2.5h4v4'/%3E%3C/svg%3E");
+
+  /* The floating "Ask AI" launcher's footprint (chrome.module.css). Focus
+     scrolling and the footer's last row keep clear of it (globals.css). */
+  --launcher-h: 44px;
+  --launcher-inset: 20px;
+  --launcher-clearance: calc(var(--launcher-h) + var(--launcher-inset) + 16px);
 }
 
 /* Where linear() is unsupported, a spring falls back to a near-equivalent

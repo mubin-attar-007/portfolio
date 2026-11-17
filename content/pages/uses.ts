@@ -15,7 +15,7 @@ export const TOOL_NOTES: Record<string, string> = {
   Gemini: "Google's model API.",
   "Multi-provider LLM fallback": "Routing a request to another provider when one fails.",
   pgvector: "Vector search inside Postgres.",
-  "embedding retrieval": "Finding relevant passages by meaning.",
+  "Embedding retrieval": "Finding relevant passages by meaning.",
   XGBoost: "Gradient-boosted trees for tabular prediction.",
   "scikit-learn": "Classical ML, preprocessing and evaluation.",
   PostgreSQL: "The relational database of record.",

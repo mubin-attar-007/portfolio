@@ -1,4 +1,4 @@
-import { FOOTER, INTEGRATIONS, SITE } from "@/config/site";
+import { FOOTER, INTEGRATIONS, SITE, STATUS } from "@/config/site";
 
 /**
  * /contact copy (spec/prototype/contact.html). Addresses and links come from
@@ -8,17 +8,17 @@ export const contactPage = {
   meta: {
     title: "Contact",
     description:
-      "Email me about a Forward Deployed or Applied AI role, or book a call about a fixed-scope AI project.",
+      "Email me about an Applied AI Engineer role, or book a call about a fixed-scope AI project.",
   },
   header: {
     kicker: "Contact",
     title: "Let's talk about what you're building",
-    lede: "Hiring for a forward deployed role, or need an AI system shipped inside a customer's rules? Share the problem, the team and what the system must do.",
+    lede: "Hiring for an Applied AI Engineer role, or need an AI system shipped inside a customer's rules? Share the problem, the team and what the system must do.",
   },
   label: "Ways to reach me",
   hiring: {
     title: "Hiring",
-    body: "Full-time Forward Deployed or Applied AI roles. Remote, or hybrid and on-site in India, with travel to customer sites.",
+    body: `Full-time Applied AI Engineer roles. Remote, or hybrid and on-site in India, with travel to customer sites. Notice period: ${STATUS.noticePeriod}.`,
     action: { label: "Email me", href: `mailto:${SITE.email}` },
   },
   freelance: {

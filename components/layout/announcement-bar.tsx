@@ -18,7 +18,8 @@ import styles from "./chrome.module.css";
  *
  * A11y: an `<aside>` named "Announcement", so its content sits in a landmark
  * like the rest of the page (axe `region`) and a screen reader can skip it.
- * The live dot is decorative; the words carry it.
+ * The live dot is decorative; the words carry it. The ask button is a
+ * launcher (`data-assistant-launcher`), so closing the panel returns focus to it.
  */
 export function AnnouncementBar({
   status,
@@ -37,7 +38,13 @@ export function AnnouncementBar({
           <span className={styles.short}>{status.short}</span>
         </Link>
         <span className={styles.sep} aria-hidden="true" />
-        <button type="button" className={styles.ask} onClick={() => openAssistant()}>
+        <button
+          type="button"
+          className={styles.ask}
+          data-assistant-launcher=""
+          aria-haspopup="dialog"
+          onClick={() => openAssistant()}
+        >
           {askLabel}
           <Caret />
         </button>

@@ -65,11 +65,11 @@
 
   .launcher {
     position: fixed;
-    right: max(20px, env(safe-area-inset-right));
-    bottom: max(20px, env(safe-area-inset-bottom));
+    right: max(var(--launcher-inset), env(safe-area-inset-right));
+    bottom: max(var(--launcher-inset), env(safe-area-inset-bottom));
     z-index: 40;
     display: inline-flex;
-    height: 44px;
+    height: var(--launcher-h);
     align-items: center;
     gap: 8px;
     padding: 0 16px 0 12px;
@@ -95,7 +95,7 @@
   }
   @media (max-width: 640px) {
     .launcher {
-      width: 44px;
+      width: var(--launcher-h);
       justify-content: center;
       padding: 0;
     }
