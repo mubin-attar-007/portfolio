@@ -59,7 +59,7 @@ export const dbwhisperWalkthrough = {
 
   /* Interactive DBWhisper architecture illustration. */
   walkthrough: {
-    eyebrow: "DBWhisper · the flagship",
+    eyebrow: "DBWhisper · request walkthrough",
     title: "Inside the request path.",
     body:
       "Explore how DBWhisper retrieves context, generates SQL, checks it, and returns results. This illustration uses sample data; published evaluations are linked separately.",

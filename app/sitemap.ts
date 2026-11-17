@@ -1,4 +1,5 @@
 import type { MetadataRoute } from "next";
+import { flagships } from "@/content/flagship";
 import { projects } from "@/content/projects";
 import { allWriting } from "@/lib/writing";
 import { allNotes } from "@/lib/notes";
@@ -46,12 +47,14 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
   const projectModified = projects.map((project) =>
     latestDate(project.changelog.map((change) => asDate(change.date))),
   );
+  // A flagship's date is the day its record was last checked against the product.
+  const flagshipModified = flagships.map((flagship) => asDate(flagship.updated));
   const writingModified = writing.map(
     (post) => asDate(post.updated) ?? asDate(post.date),
   );
   const noteModified = notes.map((note) => asDate(note.date));
 
-  const latestProject = latestDate(projectModified);
+  const latestProject = latestDate([...projectModified, ...flagshipModified]);
   const latestWriting = latestDate(writingModified);
   const latestNote = latestDate(noteModified);
   const latestPublishedContent = latestDate([
@@ -79,6 +82,9 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
 
   return [
     ...staticRoutes,
+    ...flagships.map((flagship, index) =>
+      entry(u(`/work/${flagship.slug}`), 0.85, "monthly", flagshipModified[index]),
+    ),
     ...projects.map((project, index) =>
       entry(
         u(`/work/${project.slug}`),

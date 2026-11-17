@@ -5,10 +5,19 @@ import { Caret } from "@/components/ui/caret-link";
 import { useCopyPrompt } from "./use-copy-prompt";
 import styles from "./sections.module.css";
 
-/** "Open the assistant": opens the site's assistant panel. */
+/**
+ * "Open the assistant": opens the site's assistant panel. A launcher
+ * (`data-assistant-launcher`), so closing the panel returns focus here.
+ */
 export function OpenAssistantAction({ label }: { label: string }) {
   return (
-    <button type="button" className={styles.action} onClick={() => openAssistant()}>
+    <button
+      type="button"
+      className={styles.action}
+      data-assistant-launcher=""
+      aria-haspopup="dialog"
+      onClick={() => openAssistant()}
+    >
       <span>{label}</span>
       <Caret />
     </button>

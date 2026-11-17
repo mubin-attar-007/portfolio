@@ -1,10 +1,12 @@
 import Image from "next/image";
 import Link from "next/link";
 import { Lock } from "lucide-react";
-import type { PillStatus } from "@/config/site";
 import type { WorkItem } from "@/config/nav";
+import type { Flagship } from "@/content/flagship";
+import { PRIVATE_NOTICE, USAGE } from "@/content/flagship/shared";
 import type { Project } from "@/content/schema";
 import { evalAnchor, publishedEvals } from "@/content/evals";
+import { ShotFrame } from "@/components/flagship/shot-frame";
 import { BrowserFrame } from "@/components/ui/browser-frame";
 import { CaretLink } from "@/components/ui/caret-link";
 import { StatusPill } from "@/components/ui/status-pill";
@@ -26,50 +28,75 @@ export function headlineMetric(project: Project): Headline | null {
   return claim ? { value: claim.value, label: claim.label, href: `/work/${project.slug}#results` } : null;
 }
 
-/** One anonymous field system on the dark plate: report link, live states, private note. */
-export function FieldCard({
+/**
+ * One flagship product on the dark plate: the real app in its frames (main
+ * capture, a second one layered over it), the employer, the approved usage
+ * figure, the technology and the private note. The title link covers the
+ * card; the capture rises into view and the icon's halo spreads while the card
+ * is hovered or holds focus.
+ */
+export function FlagshipCard({
+  flagship,
   item,
-  title,
-  body,
-  pills,
-  readReport,
-  privateNote,
+  labels,
 }: {
+  flagship: Flagship;
   item: WorkItem;
-  title: string;
-  body: string;
-  pills: readonly { status: PillStatus; label: string }[];
-  readReport: string;
-  privateNote: string;
+  labels: { readCaseStudy: string; employer: string };
 }) {
+  const usage = USAGE[flagship.slug];
+  const titleId = `flagship-${flagship.slug}`;
+  const { primary, secondary } = flagship.hero;
   return (
-    <article className={styles.field} aria-labelledby={`field-${item.slug}`} data-caret-trigger="">
-      <div className={styles.fieldTop}>
-        <span className={styles.fieldIcon} aria-hidden="true">
-          <NavIcon name={item.icon} size={18} />
-        </span>
-        <span className={styles.fieldPrivate}>
-          <Lock size={12} strokeWidth={1.8} aria-hidden="true" />
-          {privateNote}
+    <article className={styles.flagship} aria-labelledby={titleId} data-caret-trigger="">
+      <div className={styles.flagshipShot}>
+        {/* The stage crops the capture's foot on narrow cards, so the label sits at its top. */}
+        <ShotFrame
+          shot={primary}
+          product={flagship.name}
+          sizes="(min-width: 1000px) 520px, 86vw"
+          labelAt="top"
+          className={styles.flagshipMain}
+        />
+        <div className={styles.flagshipSide} data-kind={secondary.frame}>
+          <ShotFrame
+            shot={secondary}
+            product={flagship.name}
+            sizes={secondary.frame === "phone" ? "(min-width: 1000px) 130px, 26vw" : "(min-width: 1000px) 270px, 48vw"}
+            label={false}
+          />
+        </div>
+      </div>
+      <div className={styles.flagshipBody}>
+        <div className={styles.fieldTop}>
+          <span className={styles.fieldIcon} aria-hidden="true">
+            <NavIcon name={item.icon} size={18} />
+          </span>
+          <span className={styles.fieldPrivate}>
+            <Lock size={12} strokeWidth={1.8} aria-hidden="true" />
+            {PRIVATE_NOTICE}
+          </span>
+        </div>
+        <p className={styles.employer}>{labels.employer}</p>
+        <h3 id={titleId} className={styles.fieldTitle}>
+          <Link href={item.href} prefetch={false} className={styles.stretch}>
+            {flagship.name}
+          </Link>
+        </h3>
+        <p className={styles.fieldBody}>{flagship.card.body}</p>
+        <p className={styles.usage}>
+          <span className={styles.usageValue}>{usage.figure}</span>
+          <span className={styles.usageLabel}>{usage.label}</span>
+        </p>
+        <div className={styles.pills}>
+          <StatusPill status="in-use" />
+        </div>
+        <p className={styles.tech}>{flagship.card.tech}</p>
+        <span className={styles.fieldMore} aria-hidden="true">
+          {labels.readCaseStudy}
+          <span className="caret-swap" />
         </span>
       </div>
-      <h3 id={`field-${item.slug}`} className={styles.fieldTitle}>
-        <Link href={item.href} prefetch={false} className={styles.stretch}>
-          {title}
-        </Link>
-      </h3>
-      <p className={styles.fieldBody}>{body}</p>
-      <div className={styles.pills}>
-        {pills.map((pill) => (
-          <StatusPill key={pill.label} status={pill.status}>
-            {pill.label}
-          </StatusPill>
-        ))}
-      </div>
-      <span className={styles.fieldMore} aria-hidden="true">
-        {readReport}
-        <span className="caret-swap" />
-      </span>
     </article>
   );
 }
@@ -100,7 +127,8 @@ export function PublicCard({
       <div className={styles.publicBody}>
         <div className={styles.publicHead}>
           <p className={styles.category}>{project.card.category}</p>
-          <StatusPill status="deployed-demo" />
+          {/* "Deployed demo" only while there is a demo to open (design-system §7.2). */}
+          {project.links.live ? <StatusPill status="deployed-demo" /> : null}
         </div>
         <h3 id={`public-${project.slug}`} className={styles.publicTitle}>
           <Link href={href} prefetch={false}>

@@ -1,28 +1,30 @@
 import { SITE } from "@/config/site";
 import { CROWNWAGER_EVIDENCE, DBWHISPER_EVIDENCE, requireCompleteEval } from "@/content/evals";
+import { flagshipHref } from "@/content/flagship";
+import { EMPLOYER, REAL_APP, USAGE } from "@/content/flagship/shared";
 import { caseStudyPage } from "@/content/pages/work";
 
 /**
  * Home page copy (`/`). Every sentence the home sections show lives here, once.
- * Figures are never typed: they are read from the eval registry
- * (content/evals.ts), and each one carries the method line and the link to
- * the registry row it came from. Field-work copy is anonymous by rule (no
- * employer, client, product or facility names) and was fact-checked against
- * the field reports' published material.
+ * Figures are never typed: evaluation figures are read from the eval registry
+ * (content/evals.ts), each with its method line and the link to the registry
+ * row it came from, and the flagship usage figures from the wording the owner
+ * approved (content/flagship/shared.ts `USAGE`).
  */
 
 const host = SITE.url.replace(/^https?:\/\//, "");
 
 const TRADEPULSE = requireCompleteEval("TradePulse", "Look-ahead canary + parity suite");
 
-export const FIELD_REPORTS = {
-  records: "/work/field/records-triage",
-  nfc: "/work/field/nfc-room-rounds",
+/** The two flagship case studies (content/flagship). */
+export const FLAGSHIP_PAGES = {
+  benchDiscovery: flagshipHref("bench-discovery"),
+  careltc: flagshipHref("careltc"),
 } as const;
 
 /** The prompt a visitor pastes into their own AI: it points at llms.txt. */
 export const AGENT_PROMPT = {
-  full: `Read ${SITE.url}/llms.txt and the pages it links to. Then tell me whether ${SITE.name} fits a Forward Deployed Engineer role on my team, and cite the pages you used.`,
+  full: `Read ${SITE.url}/llms.txt and the pages it links to. Then tell me whether ${SITE.name} fits an Applied AI Engineer role on my team, and cite the pages you used.`,
   /** The short form the chip reveals on hover (an ellipsis cuts it on narrow screens). */
   preview: `Read ${host}/llms.txt, then tell me whether Mubin fits my team`,
   label: "Copy prompt",
@@ -33,18 +35,31 @@ export const AGENT_PROMPT = {
 
 export const HERO = {
   title: "I ship AI and software inside the customer's rules",
-  sub: "Applied AI Engineer. Two systems in use at a healthcare operation, and four public AI systems with source and methods.",
+  sub: `Applied AI Engineer. At ${EMPLOYER} I built Bench Discovery (${USAGE["bench-discovery"].sentence}) and lead CareLTC (${USAGE.careltc.short}).`,
 } as const;
 
 export const SHOWCASE = {
   label: "Showcase",
+  /** The assistant panel's illustrated exchange: a question it is built to answer, and the shape of its answer. */
+  assistant: {
+    question: `What has Mubin built at ${EMPLOYER}?`,
+    answer:
+      "Two products in use: Bench Discovery, document triage and verified redaction on the PC and the web, and CareLTC, NFC room rounds for long-term care.",
+    cites: ["Bench Discovery case study", "CareLTC case study"],
+  },
   sample: "Illustrative sample · synthetic data",
   noQuery: "Illustrative case · no query is sent",
+  realApp: REAL_APP,
   tabs: {
-    records: "Records triage",
-    nfc: "NFC room rounds",
+    benchDiscovery: "Bench Discovery",
+    careltc: "CareLTC",
     dbwhisper: "DBWhisper",
     assistant: "Ask my assistant",
+  },
+  /** What each flagship panel shows, for the panel's caption. */
+  captions: {
+    benchDiscovery: "The desktop app after a run, and the web platform's review queue",
+    careltc: "The admin portal's live floor status, and a floor phone",
   },
 } as const;
 
@@ -52,29 +67,32 @@ export const FACTS = {
   label: "At a glance",
   items: [
     { value: "3.5+ years", note: "in software engineering" },
-    { value: "2 field systems", note: "in use today" },
-    { value: "4 public systems", note: "with source and methods" },
+    { value: `${USAGE.careltc.figure} users`, note: `CareLTC, ${USAGE.careltc.label.replace(/^users /, "")}` },
+    { value: `${USAGE["bench-discovery"].figure} users`, note: `Bench Discovery, ${USAGE["bench-discovery"].label.replace(/^users /, "")}` },
     { value: "iOS and Android", note: "shipped through store review" },
-    { value: SITE.location, note: "remote, hybrid or on-site" },
+    { value: "4 public systems", note: "with source and methods" },
   ],
 } as const;
 
-export const FIELD = {
-  kicker: "Field work",
-  title: "Two systems people rely on every day",
-  lead: "The code and the organisation stay private. Each report covers the problem, the constraints, where it runs, what broke and what I changed.",
+export const FLAGSHIP = {
+  kicker: "Flagship work",
+  title: `Two products in use, built at ${EMPLOYER}`,
+  lead: "The real apps, shown on dummy data. Each case study covers the problem, the architecture on AWS, the code, what broke and what changed.",
   more: { label: "Request a walkthrough", href: "/contact" },
-  report: "Read the report",
+  caseStudy: "Read the case study",
+  inUse: "In use",
   cards: {
-    records: {
-      title: "Records triage and review",
-      body: "An offline Windows app that finds the records a case needs in years of mixed files, without the documents leaving the PC. Primary engineer and release owner; I also built and operate the cloud platform where a team reviews them with cited answers.",
-      chips: ["Desktop app in use", "Cloud platform in pilot"],
+    benchDiscovery: {
+      title: "Bench Discovery",
+      body: "Document triage and verified redaction on the PC, and team review with answers that cite the page on the web. I designed, built and maintain both.",
+      usage: USAGE["bench-discovery"].sentence,
+      badge: "Documents stay on this computer",
     },
-    nfc: {
-      title: "NFC room rounds",
-      body: "Care staff record each round with a tap at the door; nurses watch live status and follow up on missed rounds. One of two engineers; I ran the iOS and Android releases.",
-      chip: "In use on care floors",
+    careltc: {
+      title: "CareLTC",
+      body: "Care staff record each round with a tap at the door on iOS or Android; nurses follow every floor live. I lead it and did the main engineering work.",
+      usage: USAGE.careltc.sentence,
+      badge: "✓ Round recorded · tap at the door",
     },
     offline: {
       title: "Documents never leave the PC",
@@ -82,26 +100,21 @@ export const FIELD = {
     },
     stores: {
       title: "Shipped through store review",
-      body: "iOS and Android releases passed both stores' review in 2026, and older builds keep working while new ones wait.",
+      body: "CareLTC's iOS and Android releases passed both stores' review in 2026, and older builds keep working while new ones wait.",
     },
     broke: {
-      title: "What broke, and what I changed",
+      title: "What broke, and what changed",
       body: "iOS marks an app inactive while its NFC sheet is open, and the scanner restarted under itself. It now stops only in the background.",
       timeline: [
         "iPhone scans fail: duplicate session",
         "Cause: app inactive under the scan sheet",
-        "Fix: stop only in background, then retry",
+        "Change: stop only in background, then retry",
       ],
     },
     agents: {
       title: "I direct AI coding agents",
       body: "I set the architecture, the quality gates and the invariants, review every change and own the releases.",
       satellites: ["Architecture", "Quality gates", "Code review", "Releases"],
-    },
-    private: {
-      title: "Walkthrough on request",
-      body: "Names are withheld and the code stays private. I'll walk you through either system on a call.",
-      badge: "Private repository",
     },
   },
 } as const;
@@ -177,18 +190,18 @@ export const AGENT = {
     [
       "What has Mubin shipped for healthcare teams?",
       "How does DBWhisper keep SQL safe?",
-      "Does Mubin fit a Forward Deployed Engineer role?",
+      "Does Mubin fit an Applied AI Engineer role?",
       "Where can Mubin work from?",
     ],
     [
-      "What broke in the NFC rounds app?",
+      "What broke in CareLTC?",
       "Which result was retired, and why?",
       "How does Mubin use AI coding agents?",
       "Show me the evals",
     ],
     [
       "Is Mubin open to travel?",
-      "What does the records triage app do?",
+      "What does Bench Discovery do?",
       "Summarise Mubin's experience",
       "How do I get in touch?",
     ],
@@ -219,9 +232,9 @@ export const HOW = {
   title: "Most of a deployment happens away from the editor",
   lead: "How I take a system from a customer's problem to something their staff rely on.",
   steps: [
-    { title: "Start from the operator's day", body: "Who uses it, on what device, in which shift, and what a mistake costs.", link: { label: "The rounds app", href: FIELD_REPORTS.nfc } },
-    { title: "Write the constraints down", body: "Each one names what it forces and how it is checked.", link: { label: "The records suite", href: FIELD_REPORTS.records } },
-    { title: "Ship versions people install", body: "Releases go out through gates I own, and through store review.", link: { label: "Mobile releases", href: FIELD_REPORTS.nfc } },
+    { title: "Start from the operator's day", body: "Who uses it, on what device, in which shift, and what a mistake costs.", link: { label: "CareLTC", href: FLAGSHIP_PAGES.careltc } },
+    { title: "Write the constraints down", body: "Each one names what it forces and how it is checked.", link: { label: "Bench Discovery", href: `${FLAGSHIP_PAGES.benchDiscovery}#constraints` } },
+    { title: "Ship versions people install", body: "Releases go out through gates I own, and through store review.", link: { label: "CareLTC releases", href: `${FLAGSHIP_PAGES.careltc}#deployment` } },
     { title: "Measure, and retire what fails", body: "A score that failed its own audit is retired in public, with the reason.", link: { label: "Evaluations", href: "/evals" } },
     { title: "Hand over in writing", body: "Reports, decision logs and guides a team can work from.", link: { label: "Writing", href: "/writing" } },
   ],
@@ -244,5 +257,5 @@ export const CTA = {
   primary: { label: "Get in touch", href: "/contact" },
   secondary: { label: "View résumé", href: "/resume" },
   availability:
-    "Open to full-time FDE roles and freelance projects · remote, or hybrid and on-site in India · comfortable travelling to customer sites",
+    "Open to Applied AI Engineer roles and freelance AI projects · remote, or hybrid and on-site in India · comfortable travelling to customer sites",
 } as const;

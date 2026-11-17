@@ -1,44 +1,28 @@
 /**
  * /work and /work/[slug] copy. Facts stay in their single sources — the
- * project registry (content/projects.ts), the eval registry (content/evals.ts),
- * each case study's frontmatter (content/projects/*.mdx) and its diagram data
+ * flagship registry (content/flagship), the project registry
+ * (content/projects.ts), the eval registry (content/evals.ts), each case
+ * study's frontmatter (content/projects/*.mdx) and its diagram data
  * (components/diagrams/data/*.ts). This module holds only the pages' framing.
- *
- * Field work is anonymous: no employer, product, client or facility is named.
  */
 export const workIndexPage = {
   meta: {
     title: "Work",
     description:
-      "Two field systems in use at a healthcare operation, and four public AI systems with source, recordings and the method behind every result.",
+      "Bench Discovery and CareLTC, two products in use built at Sevina Technologies, and four public AI systems with source, recordings and methods.",
   },
   hero: {
     kicker: "Work",
     title: "Systems I've shipped",
-    lede: "Two systems in daily use at a healthcare operation, and four public AI systems you can inspect today: source, recordings and the method behind every result.",
+    lede: "Two products in use, built at Sevina Technologies, and four public AI systems you can inspect today: source, recordings and the method behind every result.",
   },
-  field: {
-    kicker: "Field work",
-    title: "Two systems people rely on every day",
-    lead: "The code and the organisation stay private. Each report covers the problem, the constraints, where it runs, what broke and what I changed.",
+  flagship: {
+    kicker: "Flagship work",
+    title: "Two products in use, built at Sevina Technologies",
+    lead: "The real apps, shown on dummy data. Each case study covers the problem, the architecture on AWS, the code, what broke and what changed. The repositories stay private.",
     cta: { label: "Request a walkthrough", href: "/contact" },
-    privateNote: "Private repository · walkthrough on request",
-    readReport: "Read the field report",
-    cards: {
-      "records-triage": {
-        title: "Records triage and review",
-        body: "An offline Windows app that finds the records a case needs in years of mixed files, without the documents leaving the PC. Primary engineer and release owner; I also built and operate the cloud platform where a team reviews them with cited answers.",
-        pills: [
-          { status: "in-use", label: "Desktop app in use" },
-          { status: "pilot", label: "Cloud platform in pilot" },
-        ],
-      },
-      "nfc-room-rounds": {
-        title: "NFC room rounds",
-        body: "Care staff record each round with a tap at the door; nurses watch live status and follow up on missed rounds. One of two engineers; I ran the iOS and Android releases.",
-        pills: [{ status: "in-use", label: "In use on care floors" }],
-      },
-    },
+    readCaseStudy: "Read the case study",
+    employer: "Built at Sevina Technologies",
   },
   public: {
     kicker: "Public work",
@@ -46,7 +30,8 @@ export const workIndexPage = {
     lead: "Each one has its source, a recording or capture, and the method behind every figure it publishes.",
     more: { label: "How each was measured", href: "/evals" },
     caseStudy: "Case study",
-    demo: "Live demo",
+    // Never "live": the demos run on free tiers that sleep (design-system §7.2).
+    demo: "Demo",
     source: "Source",
     method: "Method",
   },
@@ -56,20 +41,28 @@ export const workIndexPage = {
   },
   cta: {
     title: "Want the walkthrough?",
-    body: "I'll take you through any of these systems on a call, including the two whose code stays private.",
+    body: "I'll take you through any of these systems on a call, including Bench Discovery and CareLTC, whose code stays private.",
     primary: { label: "Get in touch", href: "/contact" },
     secondary: { label: "Read the résumé", href: "/resume" },
   },
 } as const;
 
+/**
+ * "Ask AI about <product>" on every case study, flagship and public: the hero's
+ * button, which opens the site's assistant on the page's own starter questions,
+ * and the title of those questions as chips in the closing band
+ * (`CASE_STUDY_STARTERS`, lib/ai/starters.ts).
+ */
+export const askAiLabel = (product: string): string => `Ask AI about ${product}`;
+
 export const caseStudyPage = {
   watchDemo: "Watch the recording",
   readWalkthrough: "Walk through a request",
-  tryDemo: "Try the live demo",
+  // Never "live": the demos run on free tiers that sleep (design-system §7.2).
+  tryDemo: "Try the demo",
   viewSource: "View source",
   recording: {
     play: "Play the recording",
-    poster: "Product capture",
   },
   howItWorks: {
     kicker: "How it works",

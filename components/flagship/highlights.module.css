@@ -1,0 +1,341 @@
+/* Highlight illustrations (highlights.tsx), on the dark plate. Every card
+   carries `.card`, so `.card:is(:hover, :focus-within)` is "this card is
+   hovered or focused" wherever it sits (a phone holds some cards inside a
+   ShowMore). `.scope` sits on the Bento and sizes the art band.
+   Each moment decorates text already on the card and plays only under the
+   pointer; at rest everything is still. Shared keyframes are named through
+   `--kf-*` (styles/globals.css). Colours are the plate's own tokens; cyan
+   marks data, violet the one part that matters. */
+
+/* The rest of the bento on a phone: its cards keep the bento's 10px gap. */
+.more {
+  --show-more-gap: 10px;
+}
+
+.box {
+  display: grid;
+  width: 100%;
+  height: 100%;
+  place-items: center;
+}
+
+/* On a phone the cards stack one per row, so the art band shrinks to what
+   these small illustrations need (the tallest, a question and its answer,
+   is about 110px): ten cards no longer stack into screens of empty plate. */
+@media (max-width: 759px) {
+  .scope {
+    --card-art-h: 150px;
+  }
+}
+
+/* ---- Terminal lines: the spinner turns, the check pops -------------------- */
+.stack {
+  display: grid;
+  gap: 10px;
+  justify-items: start;
+  max-width: 92%;
+}
+.term {
+  display: inline-flex;
+  max-width: 100%;
+  align-items: center;
+  gap: 10px;
+  padding: 9px 12px;
+  border-radius: var(--radius-md);
+  background: var(--color-surface-raised);
+  box-shadow: var(--shadow-tile);
+  font-family: var(--font-mono);
+  font-size: 0.75rem;
+  line-height: 1.4;
+  color: var(--color-ink-secondary);
+}
+.term + .term {
+  color: var(--color-ink);
+}
+.spin {
+  flex: none;
+  width: 11px;
+  height: 11px;
+  border: 1.5px solid var(--color-border-strong);
+  border-top-color: var(--color-ink);
+  border-radius: 50%;
+}
+.card:is(:hover, :focus-within) .spin {
+  animation: var(--kf-spin) 900ms linear infinite;
+}
+.ok {
+  display: inline-block;
+  flex: none;
+  font-weight: 700;
+  color: var(--color-positive);
+}
+.card:is(:hover, :focus-within) .pop {
+  animation: var(--kf-pop) 550ms var(--spring) 200ms both;
+}
+
+/* ---- Checks that pop in sequence ------------------------------------------ */
+.checks {
+  display: flex;
+  max-width: 88%;
+  flex-wrap: wrap;
+  justify-content: center;
+  gap: 8px;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+.checks li {
+  display: inline-flex;
+  align-items: center;
+  gap: 7px;
+  padding: 7px 11px;
+  border-radius: var(--radius-pill);
+  background: var(--color-surface-raised);
+  box-shadow: var(--shadow-tile);
+  font-size: 0.78125rem;
+  color: var(--color-ink);
+}
+.card:is(:hover, :focus-within) .checks .ok {
+  animation: var(--kf-pop) 550ms var(--spring) both;
+  animation-delay: calc(var(--i) * 110ms);
+}
+
+/* ---- A timeline that lights in sequence: broke → cause → change -------------- */
+.timeline {
+  display: grid;
+  width: min(84%, 360px);
+  gap: 10px;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+.timeline li {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  font-size: 0.78125rem;
+  color: var(--color-ink-secondary);
+  transition: color 400ms var(--ease-out);
+}
+.timeline i {
+  flex: none;
+  width: 9px;
+  height: 9px;
+  border-radius: 50%;
+  opacity: 0.5;
+  transform: scale(0.8);
+  transition:
+    opacity 400ms var(--ease-out),
+    transform 450ms var(--spring),
+    box-shadow 400ms var(--ease-out);
+}
+.timeline li:nth-child(1) i {
+  background: var(--color-negative);
+}
+.timeline li:nth-child(2) i {
+  background: var(--color-warning);
+}
+.timeline li:nth-child(3) i {
+  background: var(--color-positive);
+}
+.card:is(:hover, :focus-within) .timeline li {
+  color: var(--color-ink);
+}
+.card:is(:hover, :focus-within) .timeline i {
+  opacity: 1;
+  transform: none;
+  box-shadow: 0 0 0 4px color-mix(in srgb, var(--color-ink) 7%, transparent);
+}
+.card:is(:hover, :focus-within) .timeline li:nth-child(2),
+.card:is(:hover, :focus-within) .timeline li:nth-child(2) i {
+  transition-delay: 150ms;
+}
+.card:is(:hover, :focus-within) .timeline li:nth-child(3),
+.card:is(:hover, :focus-within) .timeline li:nth-child(3) i {
+  transition-delay: 300ms;
+}
+
+/* ---- Nodes on wires: the wires pulse, the part that matters lights ----------- */
+.flow {
+  display: flex;
+  align-items: center;
+  padding-inline: 16px;
+}
+.node {
+  padding: 9px 12px;
+  border-radius: var(--radius-md);
+  background: var(--color-surface-raised);
+  box-shadow: var(--shadow-tile);
+  font-size: 0.78125rem;
+  white-space: nowrap;
+  color: var(--color-ink);
+  transition:
+    box-shadow 450ms var(--ease-out),
+    background-color 450ms var(--ease-out);
+}
+.hot {
+  box-shadow:
+    inset 0 0 0 1px color-mix(in srgb, var(--color-accent) 55%, transparent),
+    0 0 0 4px color-mix(in srgb, var(--color-accent) 8%, transparent);
+}
+.card:is(:hover, :focus-within) .hot {
+  box-shadow:
+    inset 0 0 0 1px color-mix(in srgb, var(--color-accent) 90%, transparent),
+    0 0 0 6px color-mix(in srgb, var(--color-accent) 12%, transparent),
+    0 16px 36px -12px color-mix(in srgb, var(--color-accent) 55%, transparent);
+}
+.wire {
+  --wire-distance: 34px;
+  position: relative;
+  flex: none;
+  width: 36px;
+  height: 1px;
+  background: var(--color-border-strong);
+}
+.wire::after {
+  content: "";
+  position: absolute;
+  top: -3px;
+  right: -1px;
+  border-top: 3.5px solid transparent;
+  border-bottom: 3.5px solid transparent;
+  border-left: 6px solid var(--color-border-strong);
+}
+.wire::before {
+  content: "";
+  position: absolute;
+  top: -1px;
+  left: -6px;
+  width: 16px;
+  height: 3px;
+  border-radius: 3px;
+  background: linear-gradient(90deg, transparent, var(--color-accent), transparent);
+  opacity: 0;
+}
+.card:is(:hover, :focus-within) .wire::before {
+  animation: var(--kf-wire) 1.5s var(--ease-std) infinite;
+  animation-delay: calc(var(--i) * 750ms);
+}
+
+/* ---- Bars that refill (their length is a picture, not a measurement) ------- */
+.bars {
+  display: grid;
+  width: min(84%, 340px);
+  gap: 10px;
+}
+.bar {
+  display: grid;
+  grid-template-columns: 76px minmax(0, 1fr);
+  align-items: center;
+  gap: 12px;
+  font-size: 0.75rem;
+  color: var(--color-ink-secondary);
+}
+.track {
+  height: 6px;
+  overflow: hidden;
+  border-radius: var(--radius-pill);
+  background: var(--color-surface-raised);
+  box-shadow: var(--shadow-tile);
+}
+.track i {
+  display: block;
+  width: var(--value);
+  height: 100%;
+  border-radius: inherit;
+  background: var(--color-plate-cyan);
+  transform-origin: left;
+}
+.card:is(:hover, :focus-within) .track i {
+  animation: var(--kf-fill) 900ms var(--spring-soft) both;
+  animation-delay: calc(var(--i) * 120ms);
+}
+.note {
+  margin-top: 2px;
+  font-family: var(--font-mono);
+  font-size: 0.6875rem;
+  color: var(--color-ink-tertiary);
+}
+
+/* ---- A question and the reply that rises ----------------------------------- */
+.chat {
+  width: min(86%, 400px);
+  font-size: 0.78125rem;
+}
+.question {
+  width: fit-content;
+  max-width: 85%;
+  margin-left: auto;
+  padding: 8px 12px;
+  border-radius: 14px 14px 4px 14px;
+  background: var(--color-ink);
+  color: var(--color-bg);
+}
+.answer {
+  margin-top: 10px;
+  padding: 9px 12px;
+  border-radius: 14px 14px 14px 4px;
+  background: var(--color-surface-raised);
+  box-shadow: var(--shadow-tile);
+  line-height: 1.5;
+  color: var(--color-ink);
+}
+.cite {
+  display: block;
+  width: fit-content;
+  margin-top: 8px;
+  padding: 2px 8px;
+  border-radius: var(--radius-pill);
+  box-shadow: inset 0 0 0 1px var(--color-border-strong);
+  font-size: 0.6875rem;
+  color: var(--color-ink-secondary);
+}
+.card:is(:hover, :focus-within) .answer {
+  animation: var(--kf-rise) 550ms var(--spring-soft) 120ms both;
+}
+
+/* ---- A status badge whose halo spreads ---------------------------------------- */
+.badge {
+  position: relative;
+  display: grid;
+  gap: 6px;
+  justify-items: center;
+  padding: 16px 22px;
+  border-radius: var(--radius-lg);
+  background: var(--color-surface-raised);
+  box-shadow: var(--shadow-tile);
+  font-size: 0.78125rem;
+  text-align: center;
+  color: var(--color-ink-secondary);
+}
+.badge b {
+  font-size: 0.8125rem;
+  font-weight: 650;
+  color: var(--color-ink);
+}
+.badge span:first-of-type {
+  font-family: var(--font-mono);
+  color: var(--color-ink);
+}
+.halo::after {
+  content: "";
+  position: absolute;
+  inset: -1px;
+  border-radius: inherit;
+  box-shadow: 0 0 0 1px color-mix(in srgb, var(--color-accent) 60%, transparent);
+  opacity: 0;
+  pointer-events: none;
+}
+.card:is(:hover, :focus-within) .halo::after {
+  animation: var(--kf-halo) 1.8s var(--ease-out) infinite;
+}
+
+@media (max-width: 640px) {
+  .flow {
+    transform: scale(0.82);
+  }
+  .wire {
+    --wire-distance: 18px;
+    width: 20px;
+  }
+}

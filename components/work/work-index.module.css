@@ -11,22 +11,22 @@
   color: var(--color-dots);
 }
 
-/* ---- field work (on the dark plate) ------------------------------------- */
-.fieldGrid {
+/* ---- flagship work (on the dark plate) ---------------------------------- */
+.flagshipGrid {
   display: grid;
   gap: 10px;
   margin-top: 56px;
 }
 @media (min-width: 900px) {
-  .fieldGrid {
+  .flagshipGrid {
     grid-template-columns: repeat(2, minmax(0, 1fr));
   }
 }
-.field {
+.flagship {
   position: relative;
   display: flex;
   flex-direction: column;
-  padding: 28px;
+  overflow: hidden;
   border-radius: var(--radius-xl);
   background: var(--color-surface);
   box-shadow: var(--shadow-card);
@@ -34,9 +34,83 @@
     background-color var(--motion-slow) var(--ease-out),
     box-shadow var(--motion-slow) var(--ease-out);
 }
-.field:is(:hover, :focus-within) {
+.flagship:is(:hover, :focus-within) {
   background: var(--card-hover-bg);
   box-shadow: var(--shadow-card-hover);
+}
+/* The real app on a dotted stage: the main capture rises into view on hover,
+   the second one sits over its lower right. */
+.flagshipShot {
+  position: relative;
+  aspect-ratio: 16 / 10;
+  overflow: hidden;
+  padding: 28px 28px 0;
+  border-bottom: 1px solid var(--color-border);
+  background:
+    radial-gradient(circle, var(--color-dots) 1px, transparent 1.2px) 0 0 / 16px 16px,
+    var(--color-bg-subtle);
+}
+.flagshipMain {
+  width: 88%;
+  transform: translateY(10px);
+  transition: transform var(--motion-slow) var(--spring-soft);
+}
+.flagship:is(:hover, :focus-within) .flagshipMain {
+  transform: translateY(0);
+}
+.flagshipSide {
+  position: absolute;
+  right: 20px;
+  bottom: -18px;
+}
+.flagshipSide[data-kind="window"] {
+  width: 48%;
+}
+.flagshipSide[data-kind="phone"] {
+  bottom: -38%;
+  width: 24%;
+}
+.flagshipBody {
+  display: flex;
+  flex: 1;
+  flex-direction: column;
+  padding: 26px 28px 28px;
+}
+.employer {
+  margin-top: 22px;
+  font-size: 0.8125rem;
+  font-weight: 500;
+  color: var(--color-ink-tertiary);
+}
+.employer + .fieldTitle {
+  margin-top: 4px;
+}
+.usage {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: baseline;
+  gap: 4px 10px;
+  margin-top: 18px;
+  padding-top: 16px;
+  border-top: 1px dashed var(--color-dots);
+}
+.usageValue {
+  font-size: 1.625rem;
+  font-weight: 700;
+  letter-spacing: -0.03em;
+  font-variant-numeric: tabular-nums;
+  color: var(--color-ink);
+}
+.usageLabel {
+  font-size: 0.875rem;
+  color: var(--color-ink-secondary);
+}
+.tech {
+  margin-top: 14px;
+  font-family: var(--font-mono);
+  font-size: 0.75rem;
+  line-height: 1.6;
+  color: var(--color-ink-tertiary);
 }
 .fieldTop {
   display: flex;
@@ -64,7 +138,7 @@
   box-shadow: 0 0 0 1px var(--color-plate-cyan);
   opacity: 0;
 }
-.field:is(:hover, :focus-within) .fieldIcon::after {
+.flagship:is(:hover, :focus-within) .fieldIcon::after {
   animation: var(--kf-halo) 1.4s var(--ease-out) infinite;
 }
 .fieldPrivate {
@@ -82,7 +156,9 @@
   letter-spacing: -0.015em;
   color: var(--color-ink);
 }
-/* The title link covers the card, so the whole card is one target. */
+/* The title link covers the card, so the whole card is one target. Its focus
+   ring is drawn on the card itself: on the link's overlay it would be cut off
+   by the card's `overflow: hidden`. */
 .stretch::after {
   content: "";
   position: absolute;
@@ -92,7 +168,7 @@
 .stretch:focus-visible {
   outline: none;
 }
-.stretch:focus-visible::after {
+.flagship:has(.stretch:focus-visible) {
   outline: 2px solid var(--color-accent);
   outline-offset: 2px;
 }
@@ -241,7 +317,7 @@
   padding-top: 22px;
 }
 
-/* ---- stack band ---------------------------------------------------------- */
+/* ---- stack band: one line of technology per system ------------------------ */
 .stackBand {
   display: grid;
   gap: 28px;
@@ -253,10 +329,32 @@
     gap: 64px;
   }
 }
-.stack {
-  display: flex;
-  flex-wrap: wrap;
-  gap: 8px;
-  list-style: none;
-  padding: 0;
+.stackRows {
+  display: grid;
+  margin: 0;
+  border-top: 1px solid var(--color-border);
+}
+.stackRow {
+  display: grid;
+  gap: 4px 24px;
+  padding: 14px 0;
+  border-bottom: 1px solid var(--color-border);
+}
+@media (min-width: 640px) {
+  .stackRow {
+    grid-template-columns: 9.5rem minmax(0, 1fr);
+    align-items: baseline;
+  }
+}
+.stackName {
+  font-size: 0.9375rem;
+  font-weight: 600;
+  color: var(--color-ink);
+}
+.stackTech {
+  margin: 0;
+  font-family: var(--font-mono);
+  font-size: 0.8125rem;
+  line-height: 1.6;
+  color: var(--color-ink-secondary);
 }

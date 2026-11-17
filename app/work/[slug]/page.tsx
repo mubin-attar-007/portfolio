@@ -29,25 +29,71 @@ import { dbwhisperDiagram } from "@/components/diagrams/data/dbwhisper";
 import { llmStudioDiagram } from "@/components/diagrams/data/llm-studio";
 import { tradepulseDiagram } from "@/components/diagrams/data/tradepulse";
 import type { DiagramSpec } from "@/components/diagrams/types";
+import { FlagshipPage } from "@/components/flagship/flagship-page";
+import { AskAiButton, AskAiQuestions } from "@/components/work/ask-ai";
 import { DecisionBento } from "@/components/work/decision-bento";
 import { DEMO_FRAME_ID, DemoPlayer, WatchDemoButton } from "@/components/work/demo-player";
 import { FlowStep } from "@/components/work/flow-step";
-import { NeighbourCards } from "@/components/work/neighbour-cards";
+import { NeighbourCards, type Neighbour } from "@/components/work/neighbour-cards";
 import { projectFrontmatter } from "@/components/work/project-frontmatter";
 import { Results } from "@/components/work/results";
 import { WorkCta } from "@/components/work/work-cta";
 import styles from "@/components/work/case-study.module.css";
 import { boundaryCases } from "@/content/dbwhisper-boundary";
 import { evals } from "@/content/evals";
-import { CASE_STUDY_STEPS, caseStudyPage as copy } from "@/content/pages/work";
+import { flagshipBySlug, flagshipHref, flagshipNeighbours, flagships, type Flagship } from "@/content/flagship";
+import { CASE_STUDY_STEPS, askAiLabel, caseStudyPage as copy } from "@/content/pages/work";
 import { projects, projectBySlug, projectNeighbours } from "@/content/projects";
+import type { Project } from "@/content/schema";
+import { CASE_STUDY_STARTERS } from "@/lib/ai/starters";
 import { formatDate } from "@/lib/format";
 import { absoluteUrl, pageMetadata } from "@/lib/seo";
 
 export const dynamicParams = false;
 
+/** Every work page: the two flagship case studies and the public case studies. */
 export function generateStaticParams() {
-  return projects.map((p) => ({ slug: p.slug }));
+  return [...flagships.map((f) => ({ slug: f.slug })), ...projects.map((p) => ({ slug: p.slug }))];
+}
+
+/** A case study as a previous/next card. */
+const projectNeighbour = (p: Project): Neighbour => ({
+  href: `/work/${p.slug}`,
+  title: p.title,
+  definition: p.card.definition,
+  shot: p.card.shot,
+});
+const flagshipNeighbour = (f: Flagship): Neighbour => ({
+  href: flagshipHref(f.slug),
+  title: f.name,
+  definition: f.definition,
+  shot: f.hero.primary,
+});
+
+/**
+ * A flagship's neighbours in the site's order of work: the flagships, then the
+ * public case studies, so the last flagship leads on to the first public one.
+ */
+function flagshipNeighbourCards(flagship: Flagship): { previous: Neighbour | null; next: Neighbour | null } {
+  const { previous, next } = flagshipNeighbours(flagship.slug);
+  const firstPublic = [...projects].sort((a, b) => a.order - b.order)[0];
+  return {
+    previous: previous ? flagshipNeighbour(previous) : null,
+    next: next ? flagshipNeighbour(next) : firstPublic ? projectNeighbour(firstPublic) : null,
+  };
+}
+
+/**
+ * A public case study's neighbours in the same order: the first public one
+ * leads back to the last flagship, so the chain runs both ways.
+ */
+function projectNeighbourCards(slug: string): { previous: Neighbour | null; next: Neighbour | null } {
+  const { previous, next } = projectNeighbours(slug);
+  const lastFlagship = flagships.at(-1);
+  return {
+    previous: previous ? projectNeighbour(previous) : lastFlagship ? flagshipNeighbour(lastFlagship) : null,
+    next: next ? projectNeighbour(next) : null,
+  };
 }
 
 export async function generateMetadata({
@@ -56,6 +102,16 @@ export async function generateMetadata({
   params: Promise<{ slug: string }>;
 }): Promise<Metadata> {
   const { slug } = await params;
+  const flagship = flagshipBySlug(slug);
+  if (flagship) {
+    return pageMetadata({
+      path: `/work/${slug}`,
+      title: `${flagship.name} — case study`,
+      description: flagship.summary,
+      social: { title: `${flagship.name} · Flagship case study` },
+      article: { modifiedTime: flagship.updated },
+    });
+  }
   const p = projectBySlug(slug);
   if (!p) return {};
   const lastPublished = p.changelog[p.changelog.length - 1]?.date;
@@ -87,6 +143,9 @@ const TEMPLATES: Record<string, CaseStudyTemplate> = {
 /** The demo's hostname for the frame's URL pill, or the project name when there is no demo. */
 const frameUrl = (live: string | undefined, title: string): string => (live ? new URL(live).hostname : title);
 
+/** The hero frame's rendered widths (`.heroFrame` is 1040px at most). */
+const HERO_FRAME_SIZES = "(min-width: 1100px) 1040px, calc(100vw - 32px)";
+
 /**
  * The hero lead: the summary without the tagline it often opens with, since
  * the tagline is already the headline ("An honest quant backtesting platform —
@@ -114,6 +173,14 @@ function heroLead(summary: string, tagline: string): string {
  */
 export default async function CaseStudyPage({ params }: { params: Promise<{ slug: string }> }) {
   const { slug } = await params;
+  // The flagship case studies (Bench Discovery, CareLTC) have their own
+  // template: real captures, recordings, code excerpts and the record.
+  const flagship = flagshipBySlug(slug);
+  if (flagship) {
+    const { previous, next } = flagshipNeighbourCards(flagship);
+    return <FlagshipPage flagship={flagship} previous={previous} next={next} />;
+  }
+
   const p = projectBySlug(slug);
   if (!p) notFound();
   const template = TEMPLATES[slug];
@@ -121,9 +188,11 @@ export default async function CaseStudyPage({ params }: { params: Promise<{ slug
   const { tagline, stack } = projectFrontmatter(slug);
   const rows = evals.filter((e) => e.system === p.title);
   const steps = CASE_STUDY_STEPS[slug];
-  const { previous, next } = projectNeighbours(slug);
+  const { previous, next } = projectNeighbourCards(slug);
+  const questions = CASE_STUDY_STARTERS[slug] ?? [];
   const url = absoluteUrl(`/work/${slug}`);
-  const isFlagship = slug === "dbwhisper";
+  // DBWhisper leads with its request walkthrough and holds the boundary inspector.
+  const hasBoundary = slug === "dbwhisper";
 
   return (
     <>
@@ -150,8 +219,8 @@ export default async function CaseStudyPage({ params }: { params: Promise<{ slug
         <CircuitArt fade="center" className={styles.heroArt} />
         <div className={styles.heroInner}>
           {p.recording ? (
-            <WatchDemoButton label={copy.watchDemo} />
-          ) : isFlagship ? (
+            <WatchDemoButton label={copy.watchDemo} target={DEMO_FRAME_ID} />
+          ) : hasBoundary ? (
             <a href="#request-walkthrough" className={styles.watchPill}>
               {copy.readWalkthrough}
               <Caret />
@@ -173,14 +242,16 @@ export default async function CaseStudyPage({ params }: { params: Promise<{ slug
                 {copy.viewSource}
               </Button>
             ) : null}
-            {isFlagship ? (
+            {hasBoundary ? (
               <CaretLink href={`#${copy.boundary.id}`} tone="muted" size="md" className={styles.heroLink}>
                 {copy.boundary.cta}
               </CaretLink>
             ) : null}
+            <AskAiButton label={askAiLabel(p.title)} variant="ghost" />
           </div>
           <div className={styles.heroMeta}>
-            <StatusPill status="deployed-demo" />
+            {/* "Deployed demo" only while there is a demo to open (design-system §7.2). */}
+            {p.links.live ? <StatusPill status="deployed-demo" /> : null}
             {p.links.repo ? <Chip variant="outline">Open source</Chip> : null}
             <span className={styles.heroFacts}>
               {p.role} · {p.timeline}
@@ -192,11 +263,16 @@ export default async function CaseStudyPage({ params }: { params: Promise<{ slug
           <BrowserFrame url={frameUrl(p.links.live, p.title)}>
             {p.recording ? (
               <DemoPlayer
-                slug={slug}
+                id={DEMO_FRAME_ID}
+                src={`/demos/${slug}.webm`}
+                poster={`/demos/${slug}.webp`}
+                captions={`/demos/${slug}.vtt`}
                 alt={p.recording.alt}
                 width={p.recording.width}
                 height={p.recording.height}
                 playLabel={copy.recording.play}
+                sizes={HERO_FRAME_SIZES}
+                priority
               />
             ) : (
               <Image
@@ -204,8 +280,9 @@ export default async function CaseStudyPage({ params }: { params: Promise<{ slug
                 alt={p.card.alt}
                 width={1920}
                 height={1140}
-                sizes="(min-width: 1100px) 1040px, calc(100vw - 32px)"
-                priority
+                sizes={HERO_FRAME_SIZES}
+                loading="eager"
+                fetchPriority="high"
               />
             )}
           </BrowserFrame>
@@ -216,8 +293,8 @@ export default async function CaseStudyPage({ params }: { params: Promise<{ slug
       {/* ---- how it works ---- */}
       {/* The flagship's walkthrough is its own region, named by its title; naming
           this wrapper after the same heading made two regions of one name. */}
-      <Section space="md" id="how-it-works" ariaLabelledBy={isFlagship ? undefined : "how-title"}>
-        {isFlagship ? (
+      <Section space="md" id="how-it-works" ariaLabelledBy={hasBoundary ? undefined : "how-title"}>
+        {hasBoundary ? (
           <FlagshipWalkthroughSection />
         ) : template && steps ? (
           <>
@@ -253,7 +330,7 @@ export default async function CaseStudyPage({ params }: { params: Promise<{ slug
       </Section>
 
       {/* ---- DBWhisper: try the boundary ---- */}
-      {isFlagship ? (
+      {hasBoundary ? (
         <Section space="md" tone="subtle" id={copy.boundary.id} ariaLabelledBy="boundary-heading">
           <div className={styles.boundary}>
             <SectionHeader
@@ -342,7 +419,11 @@ export default async function CaseStudyPage({ params }: { params: Promise<{ slug
       <Section space="md" ariaLabelledBy="case-study-cta-title">
         <NeighbourCards previous={previous} next={next} labels={copy.neighbours} />
         <div className={styles.ctaGap}>
-          <WorkCta id="case-study-cta-title" {...copy.cta} />
+          <WorkCta id="case-study-cta-title" {...copy.cta}>
+            {questions.length > 0 ? (
+              <AskAiQuestions title={askAiLabel(p.title)} questions={questions} align="center" />
+            ) : null}
+          </WorkCta>
         </div>
       </Section>
     </>

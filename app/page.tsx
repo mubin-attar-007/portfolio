@@ -1,6 +1,6 @@
 import type { Metadata } from "next";
 import { AgentSection } from "@/components/home/agent-section";
-import { FieldWork } from "@/components/home/field-work";
+import { FlagshipWork } from "@/components/home/flagship-work";
 import { Hero } from "@/components/home/hero";
 import { FactsStrip, HomeCta, HowIWork, WritingBand, type WritingCard } from "@/components/home/home-bands";
 import { PublicWork } from "@/components/home/public-work";
@@ -27,7 +27,7 @@ export const metadata: Metadata = pageMetadata({
 const WRITING_CARDS = 3;
 const TOTAL_CARDS = 4;
 
-/** The home page: a short route through the work; depth lives on the case studies and field reports. */
+/** The home page: a short route through the work; depth lives on the flagship and public case studies. */
 export default async function Home() {
   const [writing, notes] = await Promise.all([allWriting(), allNotes()]);
 
@@ -46,7 +46,7 @@ export default async function Home() {
     <>
       <Hero />
       <FactsStrip />
-      <FieldWork />
+      <FlagshipWork />
       <PublicWork />
       <AgentSection />
       <HowIWork />

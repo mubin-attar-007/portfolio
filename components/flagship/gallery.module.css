@@ -1,0 +1,187 @@
+/* The product tour (media-gallery.tsx): a segmented control, a list of
+   screens and a fixed-size stage. Tokens only; the pill and an arriving
+   screen move with transform and opacity, instant under reduced motion. */
+
+/* ---- Segmented control: equal segments, so the pill needs no measuring ---- */
+.segment {
+  position: relative;
+  display: inline-grid;
+  grid-auto-columns: minmax(0, 1fr);
+  grid-auto-flow: column;
+  padding: 4px;
+  border-radius: var(--radius-pill);
+  background: var(--color-surface);
+  box-shadow: var(--shadow-sm);
+}
+.segmentPill {
+  position: absolute;
+  top: 4px;
+  bottom: 4px;
+  left: 4px;
+  width: calc((100% - 8px) / var(--count));
+  border-radius: var(--radius-pill);
+  background: var(--color-ink);
+  transform: translateX(calc(var(--index) * 100%));
+  transition: transform 500ms var(--spring-soft);
+}
+.segmentTab {
+  position: relative;
+  z-index: 1;
+  min-width: 112px;
+  min-height: 36px;
+  padding: 6px 18px;
+  border-radius: var(--radius-pill);
+  font-size: 0.875rem;
+  font-weight: 600;
+  color: var(--color-ink-secondary);
+  cursor: pointer;
+  transition: color var(--motion-fast) var(--ease-out);
+}
+.segmentTab:hover {
+  color: var(--color-ink);
+}
+.segmentTab[aria-selected="true"] {
+  color: var(--color-surface);
+}
+
+/* ---- The list beside the stage --------------------------------------------- */
+.layout {
+  display: grid;
+  /* One column that never grows to its content: the chip row scrolls inside it. */
+  grid-template-columns: minmax(0, 1fr);
+  gap: 20px;
+}
+.layout[data-tabs] {
+  margin-top: 28px;
+}
+.layout[hidden] {
+  display: none;
+}
+@media (min-width: 1000px) {
+  .layout {
+    grid-template-columns: minmax(0, 290px) minmax(0, 1fr);
+    gap: 40px;
+    align-items: start;
+  }
+  .layout[data-single] {
+    grid-template-columns: minmax(0, 1fr);
+  }
+}
+
+/* Phones: a row of chips that scrolls sideways. */
+.list {
+  display: flex;
+  gap: 6px;
+  margin-inline: calc(var(--gutter) * -1);
+  padding: 2px var(--gutter) 6px;
+  overflow-x: auto;
+  scrollbar-width: none;
+}
+.list::-webkit-scrollbar {
+  display: none;
+}
+@media (min-width: 1000px) {
+  .list {
+    flex-direction: column;
+    gap: 4px;
+    margin-inline: 0;
+    padding: 0;
+    overflow: visible;
+  }
+}
+
+.item {
+  display: flex;
+  flex: none;
+  align-items: baseline;
+  gap: 12px;
+  min-height: 40px;
+  padding: 9px 14px;
+  border-radius: var(--radius-lg);
+  font-size: 0.9375rem;
+  font-weight: 550;
+  line-height: 1.4;
+  text-align: left;
+  white-space: nowrap;
+  color: var(--color-ink-secondary);
+  cursor: pointer;
+  transition:
+    background-color var(--motion-base) var(--ease-out),
+    box-shadow var(--motion-base) var(--ease-out),
+    color var(--motion-fast) var(--ease-out);
+}
+.item:hover {
+  color: var(--color-ink);
+  background: color-mix(in srgb, var(--color-ink) 4%, transparent);
+}
+.item[aria-selected="true"] {
+  color: var(--color-ink);
+  background: var(--color-surface);
+  box-shadow: var(--shadow-sm);
+}
+@media (min-width: 1000px) {
+  .item {
+    white-space: normal;
+  }
+}
+.itemNumber {
+  flex: none;
+  font-family: var(--font-mono);
+  font-size: 0.75rem;
+  font-weight: 500;
+  color: var(--color-ink-tertiary);
+  transition: color var(--motion-fast) var(--ease-out);
+}
+.item[aria-selected="true"] .itemNumber {
+  color: var(--color-accent-hover);
+}
+
+/* ---- The stage: a fixed size, so choosing a screen never moves the page ---- */
+.view[hidden] {
+  display: none;
+}
+.view:focus-visible {
+  outline-offset: 4px;
+}
+.stage {
+  container-type: size;
+  display: grid;
+  aspect-ratio: 16 / 10.4;
+  padding: clamp(14px, 3vw, 32px);
+  place-items: center;
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-2xl);
+  background:
+    radial-gradient(circle, var(--color-dots) 1px, transparent 1.2px) 0 0 / 16px 16px,
+    var(--color-surface);
+}
+/* A tall capture on a phone gets a taller stage, so it is not a sliver. */
+@media (max-width: 759px) {
+  .stage[data-portrait] {
+    aspect-ratio: 4 / 5;
+  }
+}
+.media {
+  display: grid;
+  width: 100%;
+  height: 100%;
+  place-items: center;
+}
+
+.caption {
+  max-width: 68ch;
+  min-height: 3.2em;
+  margin-top: 16px;
+  font-size: 0.9375rem;
+  line-height: 1.6;
+  color: var(--color-ink-secondary);
+}
+.caption strong {
+  font-weight: 600;
+  color: var(--color-ink);
+}
+
+/* After the first choice, an arriving item rises out of a short blur. */
+.animate .view:not([hidden]) :is(.media, .plain) > * {
+  animation: var(--kf-rise) var(--motion-panel) var(--spring-soft) both;
+}

@@ -1,0 +1,43 @@
+/* PhoneFrame: a phone body around a mobile capture. Every length is a share
+   of the frame's width (cqw), so one frame serves a 120px card and a 320px
+   hero alike. The bezel (2.8%) and the status strip (8.5% of the screen's
+   width) match BEZEL and STATUS in phone-frame.tsx. */
+@layer components {
+  .phone {
+    container-type: inline-size;
+  }
+
+  .body {
+    padding: 2.8cqw;
+    border-radius: 14cqw;
+    background: var(--color-plate);
+    box-shadow:
+      inset 0 0 0 1px var(--color-plate-border-strong),
+      var(--shadow-panel);
+  }
+
+  .display {
+    overflow: hidden;
+    border-radius: 11.5cqw;
+    background: var(--color-surface);
+  }
+
+  .status {
+    display: grid;
+    height: calc(94.4cqw * 0.085);
+    place-items: center;
+  }
+
+  .island {
+    width: 26cqw;
+    height: 4.8cqw;
+    border-radius: var(--radius-pill);
+    background: var(--color-plate-deep);
+  }
+
+  .screen > :is(img, video) {
+    display: block;
+    width: 100%;
+    height: auto;
+  }
+}

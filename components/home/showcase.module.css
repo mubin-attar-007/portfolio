@@ -136,10 +136,6 @@
   right: 4%;
   top: 120px;
 }
-.ghostRightHigh {
-  right: 4%;
-  top: 70px;
-}
 
 /* The focus card */
 .focus {
@@ -187,24 +183,6 @@
   text-align: center;
   font-size: 0.8125rem;
   color: var(--color-ink-secondary);
-}
-.kv {
-  display: flex;
-  justify-content: space-between;
-  gap: 12px;
-  padding: 10px 0;
-  border-top: 1px solid var(--color-border);
-  font-size: 0.875rem;
-}
-.kv span:first-child {
-  color: var(--color-ink-secondary);
-}
-.kv b {
-  font-weight: 600;
-}
-.ok {
-  font-weight: 600;
-  color: var(--color-positive);
 }
 .mockButton {
   display: block;
@@ -259,32 +237,6 @@
   font-weight: 700;
   color: var(--color-positive);
 }
-.tag {
-  position: relative;
-  display: grid;
-  height: 120px;
-  margin: 4px 0 12px;
-  place-items: center;
-  border-radius: var(--radius-lg);
-  background: var(--color-accent-soft);
-  color: var(--color-accent);
-}
-.tag svg {
-  width: 44px;
-  height: 44px;
-}
-.ring {
-  position: absolute;
-  width: 74px;
-  height: 74px;
-  border-radius: 50%;
-  border: 1.5px solid rgba(107, 75, 255, 0.35);
-}
-.ring2 {
-  width: 104px;
-  height: 104px;
-  border-color: rgba(107, 75, 255, 0.18);
-}
 .chatQ {
   width: fit-content;
   max-width: 85%;
@@ -326,9 +278,85 @@
   color: var(--color-ink-tertiary);
 }
 
+/* ---- The flagship panels: real captures, layered and cut by the stage ---- */
+.realPanel {
+  position: absolute;
+  inset: 0;
+  margin: 0;
+}
+.stageShot {
+  position: absolute;
+}
+.bdWeb {
+  left: 37%;
+  top: 56px;
+  width: 58%;
+}
+.bdDesktop {
+  left: 5%;
+  top: 124px;
+  width: 52%;
+  border-radius: var(--radius-md);
+}
+.careltcPortal {
+  left: 6%;
+  top: 52px;
+  width: 68%;
+  border-radius: var(--radius-lg);
+}
+.careltcPhone {
+  left: 70%;
+  top: 92px;
+  width: 21%;
+}
+/* The sheen across the arriving panel's front frame: the band slides across
+   a fixed overlay (its background moves, not the overlay), so the frame keeps
+   its shadow instead of being clipped. */
+.shotFocus::after {
+  content: "";
+  position: absolute;
+  inset: 0;
+  z-index: 2;
+  border-radius: inherit;
+  pointer-events: none;
+  background: linear-gradient(
+      105deg,
+      transparent 32%,
+      color-mix(in srgb, var(--color-surface) 80%, transparent) 47%,
+      color-mix(in srgb, var(--color-surface) 80%, transparent) 53%,
+      transparent 68%
+    )
+    100% 0 / 300% 100% no-repeat;
+}
+.shotFocus.sheen::after {
+  animation: shot-sheen 1.3s var(--ease-out) 120ms both;
+}
+@keyframes shot-sheen {
+  from {
+    background-position: 100% 0;
+  }
+  to {
+    background-position: 0% 0;
+  }
+}
+
 @media (max-width: 1000px) {
   .ghost {
     display: none;
+  }
+  .bdWeb {
+    left: 30%;
+    width: 66%;
+  }
+  .bdDesktop {
+    width: 60%;
+  }
+  .careltcPortal {
+    width: 72%;
+  }
+  .careltcPhone {
+    left: 66%;
+    width: 28%;
   }
 }
 @media (max-width: 640px) {
@@ -341,6 +369,26 @@
   }
   .stage {
     height: 500px;
+  }
+  .bdWeb {
+    left: 16%;
+    top: 40px;
+    width: 82%;
+  }
+  .bdDesktop {
+    left: 4%;
+    top: 170px;
+    width: 76%;
+  }
+  .careltcPortal {
+    left: 4%;
+    top: 40px;
+    width: 88%;
+  }
+  .careltcPhone {
+    left: 56%;
+    top: 130px;
+    width: 40%;
   }
   .focus {
     top: 24px;

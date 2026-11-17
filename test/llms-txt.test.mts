@@ -14,6 +14,8 @@ import { join } from "node:path";
 import { fileURLToPath } from "node:url";
 
 import { evalAnchor, evals, formatRatio } from "../content/evals.ts";
+import { flagships } from "../content/flagship/index.ts";
+import { USAGE } from "../content/flagship/shared.ts";
 import { projects } from "../content/projects.ts";
 import { CONTENT_SLUG } from "../lib/content-slug.ts";
 import { SITE, STATUS } from "../config/site.ts";
@@ -66,9 +68,13 @@ function staticRoutes(): string[] {
   return routes.sort();
 }
 
-test("it names the role, the availability line, and the contact routes", () => {
+test("it names the role, the availability line, the notice period and the contact routes", () => {
   assert.ok(LLMS.startsWith(`# ${SITE.name} — ${SITE.role}\n`), "the H1 is the name and SITE.role");
   assert.ok(LLMS.includes(STATUS.text), "the availability line matches STATUS.text");
+  assert.ok(
+    LINES.includes(`- Notice period for full-time roles: ${STATUS.noticePeriod}.`),
+    "the notice period line matches STATUS.noticePeriod",
+  );
   assert.ok(LLMS.includes(SITE.email), "the contact email matches SITE.email");
   assert.ok(links(url(STATUS.href)), "the contact route is linked");
 });
@@ -79,6 +85,24 @@ test("it links every static page and feed the app serves", () => {
   const missing = routes.filter((path) => !links(url(path)));
   assert.deepEqual(missing, [], `public/llms.txt is missing: ${missing.join(", ")}`);
   assert.ok(links(url("/Mubin_Attar_Resume.pdf")), "the résumé PDF is linked");
+});
+
+test("it lists every flagship case study with its usage figure, in the approved wording only", () => {
+  for (const flagship of flagships) {
+    const line = LINES.find((l) => l.startsWith(`- [${flagship.name}](${url(`/work/${flagship.slug}`)})`));
+    assert.ok(line, `${flagship.name}: listed under its case study`);
+    assert.ok(line.includes(USAGE[flagship.slug].sentence), `${flagship.name}: "${USAGE[flagship.slug].sentence}"`);
+    // In use, never "in daily use": no fact supports "daily".
+    assert.doesNotMatch(line, /\bdaily\b/i, `${flagship.name}: no "daily"`);
+  }
+  // The figures the owner replaced on 17 Nov 2026.
+  for (const stale of ["5 clients", "10 desktop users", "200–300", "200-300", "5 admins"]) {
+    assert.ok(!LLMS.toLowerCase().includes(stale.toLowerCase()), `no "${stale}"`);
+  }
+});
+
+test("it frames the role as the site does (Applied AI Engineer), never under a retired title", () => {
+  assert.doesNotMatch(LLMS, /forward[- ]deployed|\bFDE\b/i);
 });
 
 test("it lists every project with its case study and source", () => {

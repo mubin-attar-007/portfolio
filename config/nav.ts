@@ -1,3 +1,4 @@
+import { flagshipHref, flagships, type FlagshipSlug } from "@/content/flagship";
 import { projects } from "@/content/projects";
 import { SITE } from "@/config/site";
 
@@ -5,9 +6,10 @@ import { SITE } from "@/config/site";
  * Navigation — every link map on the site, in one place: the header with its
  * Work and About menus, the mobile menu, the footer, and the work sub-nav.
  *
- * Server-side only. It reads the project registry (content/projects.ts), so a
- * client component must receive these items as props, never import this file —
- * that would ship the content schemas to the browser.
+ * Server-side only. It reads the flagship and project registries
+ * (content/flagship, content/projects.ts), so a client component must receive
+ * these items as props, never import this file — that would ship the content
+ * and its schemas to the browser.
  *
  * Icons are names, resolved by `NavIcon` (components/layout/nav-icon.tsx), so
  * this file stays data.
@@ -54,32 +56,31 @@ const PUBLIC_WORK_COPY = {
   "llm-studio": { description: "Multi-user chat, six model providers", icon: "messages" },
 } as const satisfies Record<string, { description: string; icon: NavIconName }>;
 
+/**
+ * The menu line for each flagship case study, keyed by its slug in
+ * content/flagship (its name and page come from the registry).
+ */
+const FLAGSHIP_COPY = {
+  "bench-discovery": { description: "Document triage and verified redaction, desktop and web", icon: "folder-search" },
+  careltc: { description: "NFC room rounds for long-term care, iOS and Android", icon: "nfc" },
+} as const satisfies Record<FlagshipSlug, { description: string; icon: NavIconName }>;
+
 export type PublicWorkSlug = keyof typeof PUBLIC_WORK_COPY;
-export type FieldWorkSlug = "records-triage" | "nfc-room-rounds";
-/** Every work page: the four public case studies and the two field reports. */
-export type WorkSlug = PublicWorkSlug | FieldWorkSlug;
+export type { FlagshipSlug };
+/** Every work page: the two flagship case studies and the four public ones. */
+export type WorkSlug = FlagshipSlug | PublicWorkSlug;
 
 export type WorkItem = NavLink & { slug: WorkSlug; icon: NavIconName; description: string };
 
 const isPublicWorkSlug = (slug: string): slug is PublicWorkSlug => slug in PUBLIC_WORK_COPY;
 
-/** The field reports (anonymous: no employer, product or client is named). */
-export const FIELD_WORK: readonly WorkItem[] = [
-  {
-    slug: "records-triage",
-    label: "Records triage",
-    href: "/work/field/records-triage",
-    description: "Finds the records a case needs, without documents leaving the PC",
-    icon: "folder-search",
-  },
-  {
-    slug: "nfc-room-rounds",
-    label: "NFC room rounds",
-    href: "/work/field/nfc-room-rounds",
-    description: "Care staff record each round with a tap at the door",
-    icon: "nfc",
-  },
-];
+/** The flagship case studies, built at Sevina Technologies, in the registry's order. */
+export const FLAGSHIP_WORK: readonly WorkItem[] = flagships.map((flagship) => ({
+  slug: flagship.slug,
+  label: flagship.name,
+  href: flagshipHref(flagship.slug),
+  ...FLAGSHIP_COPY[flagship.slug],
+}));
 
 /** The public systems, in the registry's order, titled by the registry. */
 export const PUBLIC_WORK: readonly WorkItem[] = [...projects]
@@ -90,16 +91,16 @@ export const PUBLIC_WORK: readonly WorkItem[] = [...projects]
       : [],
   );
 
-/** The work sub-nav's order: the public systems, then the field reports. */
-export const WORK_ITEMS: readonly WorkItem[] = [...PUBLIC_WORK, ...FIELD_WORK];
+/** The work sub-nav's order: the flagship case studies, then the public systems. */
+export const WORK_ITEMS: readonly WorkItem[] = [...FLAGSHIP_WORK, ...PUBLIC_WORK];
 
 export const ALL_WORK: NavLink = { label: "All work", href: "/work" };
 
-/** The header's Work menu: two rich columns and a footer link. */
+/** The header's Work menu: two rich columns (flagship first) and a footer link. */
 export const WORK_MENU = {
   label: "Work",
   groups: [
-    { label: "Field work", items: FIELD_WORK },
+    { label: "Flagship", items: FLAGSHIP_WORK },
     { label: "Public systems", items: PUBLIC_WORK },
   ],
   footer: ALL_WORK,
@@ -144,7 +145,7 @@ export const MOBILE_NAV = [
   {
     label: "Work",
     items: [
-      { label: "Field work", href: "/work#field", icon: "folder-search" },
+      ...FLAGSHIP_WORK.map(({ label, href, icon }) => ({ label, href, icon })),
       { label: "Public systems", href: "/work#public", icon: "database" },
       ...NAV_LINKS,
     ],
@@ -171,7 +172,7 @@ export const FOOTER_NAV = [
   {
     heading: "Work",
     links: [
-      { label: "Field work", href: "/work#field" },
+      { label: "Flagship work", href: "/work#flagship" },
       { label: "Public systems", href: "/work#public" },
       { label: "Evaluations", href: "/evals" },
       { label: "All work", href: "/work" },

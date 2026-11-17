@@ -2,6 +2,12 @@
    Tokens only; motion is transform/opacity (plus a stroke on small SVGs), and
    the global reduced-motion rule makes every state change instant. */
 
+/* The work sub-nav hangs under the floating nav on this page, so a jump to an
+   anchor, and the control Tab brings into view, stop below both (WCAG 2.4.11). */
+:global(html):has(.hero) {
+  scroll-padding-top: calc(var(--nav-offset) + var(--subnav-h) + 12px);
+}
+
 /* ---- hero ------------------------------------------------------------------ */
 .hero {
   position: relative;
@@ -82,7 +88,6 @@
 .heroFrame {
   max-width: 1040px;
   margin: clamp(40px, 6vw, 64px) auto 0;
-  scroll-margin-top: calc(var(--nav-offset) + 24px);
 }
 .heroCaption {
   max-width: 720px;
@@ -126,6 +131,20 @@ a.watchPill {
   color: var(--color-on-accent);
   background: var(--color-accent);
 }
+/* The button form (beside a violet primary): an ink play mark, so the view
+   keeps one violet control. */
+.watchButton {
+  gap: 9px;
+}
+.watchMark {
+  display: grid;
+  width: 18px;
+  height: 18px;
+  place-items: center;
+  border-radius: 50%;
+  color: var(--color-surface);
+  background: var(--color-ink);
+}
 
 /* ---- recording -------------------------------------------------------------- */
 .player {
@@ -144,6 +163,14 @@ a.watchPill {
   display: block;
   width: 100%;
   height: auto;
+}
+/* The poster, over the video until it plays (demo-player.tsx). */
+.poster {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
 }
 .playButton {
   position: absolute;
@@ -450,7 +477,6 @@ a.watchPill {
   border-radius: var(--radius-xl);
   background: var(--color-surface);
   box-shadow: var(--shadow-card);
-  scroll-margin-top: var(--sticky-top);
 }
 .result[data-retired] {
   background: var(--color-bg-subtle);

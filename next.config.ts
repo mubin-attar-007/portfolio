@@ -8,12 +8,13 @@ const DBWHISPER = "https://heisenbergblue-dbwhisper.hf.space";
 // Content-Security-Policy. No nonces — a nonce must be minted per request, which
 // would opt every route out of static rendering, so 'unsafe-inline' is the price
 // of keeping the whole site static:
-//   script-src: Next's inline bootstrap + the pre-paint theme script in
-//               app/layout.tsx (it must run before first paint to avoid a flash).
+//   script-src: Next's inline bootstrap scripts (the site is light-only, so
+//               there is no pre-paint theme script any more).
 //   style-src:  React `style={{…}}` attributes — hero animation delays and the
 //               computed SVG geometry in components/diagrams/system-diagram.tsx.
-// connect-src explicitly allows the dbwhisper backend the hero drives; 'self'
-// covers the site's own fetches (including /api/chat).
+// connect-src: 'self' covers the site's own fetches (including /api/chat). The
+// dbwhisper backend origin predates the redesign; no page calls it now, so it
+// can go the next time this policy changes.
 const csp = [
   "default-src 'self'",
   `script-src 'self' 'unsafe-inline'${isDev ? " 'unsafe-eval'" : ""}`,
@@ -72,12 +73,17 @@ const nextConfig: NextConfig = {
   //   /changelog→ /now     (the running record folded into the "now" surface)
   // The paths recruiters, autocomplete and agents guess first:
   //   /cv       → /resume
+  // The anonymous field-report drafts became the named flagship case studies:
+  //   /work/field/records-triage  → /work/bench-discovery
+  //   /work/field/nfc-room-rounds → /work/careltc
   async redirects() {
     return [
       { source: "/talks", destination: "/about", permanent: true },
       { source: "/timeline", destination: "/about", permanent: true },
       { source: "/changelog", destination: "/now", permanent: true },
       { source: "/cv", destination: "/resume", permanent: true },
+      { source: "/work/field/records-triage", destination: "/work/bench-discovery", permanent: true },
+      { source: "/work/field/nfc-room-rounds", destination: "/work/careltc", permanent: true },
     ];
   },
 };

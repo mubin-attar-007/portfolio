@@ -1,15 +1,93 @@
 import type { ReactNode } from "react";
-import { Nfc } from "lucide-react";
+import { ShotFrame } from "@/components/flagship/shot-frame";
+import { benchDiscovery } from "@/content/flagship/bench-discovery";
+import { careltc } from "@/content/flagship/careltc";
+import type { Screenshot } from "@/content/flagship/types";
 import { SHOWCASE } from "@/content/pages/home";
 import { cx } from "@/components/ui/cx";
 import { ShowcaseTabs } from "./showcase-tabs";
 import styles from "./showcase.module.css";
 
 /*
- * The showcase panels are illustrations of each system's main screen. Every
- * value inside them is synthetic, and each frame says so in its footer. They
- * render on the server; only the tab switching ships to the browser.
+ * The first two panels show the flagship products as they really are: real
+ * captures of the apps running on dummy data, each frame labelled so. The
+ * other two are illustrations of a system's main screen; every value in them
+ * is synthetic, and each frame says so in its footer. All render on the
+ * server; only the tab switching ships to the browser.
  */
+
+/**
+ * A capture placed on the stage. `focus` marks the frame the sheen sweeps when
+ * the panel arrives (a browser or window frame); `priority` the one capture
+ * that is above the fold at load (eager, high priority; the rest are lazy, and
+ * a hidden panel loads nothing); `labelAt` moves "Real app · dummy data" to
+ * the top of a frame whose foot the stage crops.
+ */
+function StageShot({
+  shot,
+  product,
+  sizes,
+  className,
+  focus = false,
+  priority = false,
+  label = true,
+  labelAt = "bottom",
+}: {
+  shot: Screenshot;
+  product: string;
+  sizes: string;
+  className?: string;
+  focus?: boolean;
+  priority?: boolean;
+  label?: boolean;
+  labelAt?: "bottom" | "top";
+}) {
+  return (
+    <div className={cx(styles.stageShot, focus && styles.shotFocus, className)} data-focus={focus ? "" : undefined}>
+      <ShotFrame shot={shot} product={product} sizes={sizes} priority={priority} label={label} labelAt={labelAt} />
+    </div>
+  );
+}
+
+const BenchDiscoveryPanel = (
+  <figure className={styles.realPanel} aria-label={SHOWCASE.captions.benchDiscovery}>
+    <StageShot
+      shot={benchDiscovery.hero.primary}
+      product={benchDiscovery.name}
+      sizes="(min-width: 1240px) 700px, 82vw"
+      className={styles.bdWeb}
+      priority
+      label={false}
+    />
+    <StageShot
+      shot={benchDiscovery.hero.secondary}
+      product={benchDiscovery.name}
+      sizes="(min-width: 1240px) 600px, 72vw"
+      className={styles.bdDesktop}
+      focus
+    />
+  </figure>
+);
+
+const CareLtcPanel = (
+  <figure className={styles.realPanel} aria-label={SHOWCASE.captions.careltc}>
+    <StageShot
+      shot={careltc.hero.primary}
+      product={careltc.name}
+      sizes="(min-width: 1240px) 800px, 88vw"
+      className={styles.careltcPortal}
+      focus
+      labelAt="top"
+    />
+    <StageShot
+      shot={careltc.hero.secondary}
+      product={careltc.name}
+      sizes="(min-width: 1240px) 250px, 38vw"
+      className={styles.careltcPhone}
+      label={false}
+    />
+  </figure>
+);
 
 type GhostRow = readonly [label: string, value: string];
 
@@ -46,15 +124,6 @@ function Focus({ title, hint, foot, wide, children }: { title: string; hint: str
   );
 }
 
-function Kv({ label, children, ok }: { label: string; children: ReactNode; ok?: boolean }) {
-  return (
-    <div className={styles.kv}>
-      <span>{label}</span>
-      {ok ? <span className={styles.ok}>{children}</span> : <b>{children}</b>}
-    </div>
-  );
-}
-
 /** A non-interactive picture of the panel's primary action. */
 function MockButton({ children }: { children: ReactNode }) {
   return (
@@ -63,40 +132,6 @@ function MockButton({ children }: { children: ReactNode }) {
     </span>
   );
 }
-
-const RecordsPanel = (
-  <>
-    <Ghost title="Indicator list" rows={[["Names and terms", "14"], ["Case numbers", "6"], ["Updated", "today"]]} className={styles.ghostLeft} />
-    <Ghost title="Audit trail" rows={[["Manifest", "written"], ["Originals", "unchanged"], ["Names in logs", "hashed"]]} className={styles.ghostRight} />
-    <Focus title="Triage run complete" hint="Scans, faxes and Office files, read on this PC" foot={SHOWCASE.sample}>
-      <Kv label="Needs review">312</Kv>
-      <Kv label="Other">12,141</Kv>
-      <Kv label="Error, re-run">27</Kv>
-      <Kv label="Leaves this PC" ok>
-        Licence check only
-      </Kv>
-      <MockButton>Open the needs-review copies</MockButton>
-    </Focus>
-  </>
-);
-
-const NfcPanel = (
-  <>
-    <Ghost title="Live status" rows={[["Rounds due", "48"], ["Missed", "2"], ["Excused", "1"]]} className={styles.ghostLeft} />
-    <Ghost title="Compliance report" rows={[["Period", "this week"], ["Export", "Excel, PDF"]]} className={styles.ghostRightHigh} />
-    <Focus title="Room 214" hint="Tap the tag at the door to record this round" foot={SHOWCASE.sample}>
-      <div className={styles.tag} aria-hidden="true">
-        <span className={styles.ring} />
-        <span className={cx(styles.ring, styles.ring2)} />
-        <Nfc strokeWidth={1.6} />
-      </div>
-      <Kv label="Round recorded" ok>
-        10:42
-      </Kv>
-      <Kv label="Next">Room 216</Kv>
-    </Focus>
-  </>
-);
 
 const DbWhisperPanel = (
   <>
@@ -118,13 +153,13 @@ const DbWhisperPanel = (
 
 const AssistantPanel = (
   <Focus title="Ask about my work" hint="Answers come from this site and cite the page they used" foot={SHOWCASE.sample} wide>
-    <p className={styles.chatQ}>What has Mubin shipped for healthcare teams?</p>
+    <p className={styles.chatQ}>{SHOWCASE.assistant.question}</p>
     <div className={styles.chatA}>
-      Two systems in use at a healthcare operation: records triage that keeps documents on the facility&apos;s own PCs,
-      and NFC room rounds for care staff.
+      {SHOWCASE.assistant.answer}
       <div className={styles.cite}>
-        <span>Field work · Records triage</span>
-        <span>Field work · NFC rounds</span>
+        {SHOWCASE.assistant.cites.map((cite) => (
+          <span key={cite}>{cite}</span>
+        ))}
       </div>
     </div>
     <p className={styles.askInput} aria-hidden="true">
@@ -133,14 +168,14 @@ const AssistantPanel = (
   </Focus>
 );
 
-/** The tabbed showcase under the hero: four systems, one illustrated screen each. */
+/** The tabbed showcase under the hero: the two flagship products as they really run, then two illustrated screens. */
 export function Showcase() {
   return (
     <ShowcaseTabs
       label={SHOWCASE.label}
       items={[
-        { id: "records", label: SHOWCASE.tabs.records, panel: RecordsPanel },
-        { id: "nfc", label: SHOWCASE.tabs.nfc, panel: NfcPanel },
+        { id: "bench-discovery", label: SHOWCASE.tabs.benchDiscovery, panel: BenchDiscoveryPanel },
+        { id: "careltc", label: SHOWCASE.tabs.careltc, panel: CareLtcPanel },
         { id: "dbwhisper", label: SHOWCASE.tabs.dbwhisper, panel: DbWhisperPanel },
         { id: "assistant", label: SHOWCASE.tabs.assistant, panel: AssistantPanel },
       ]}
