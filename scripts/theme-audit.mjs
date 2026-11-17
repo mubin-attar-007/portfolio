@@ -23,7 +23,7 @@ if (THEME !== "light") {
 
 const ROUTES = (
   process.env.ROUTES ??
-  "/,/work,/work/dbwhisper,/work/field/records-triage,/work/field/nfc-room-rounds,/writing,/writing/a-validator-is-not-a-better-prompt,/notes,/evals,/about,/hire,/contact,/resume,/now,/uses,/trust,/skills,/privacy"
+  "/,/work,/work/dbwhisper,/work/bench-discovery,/work/careltc,/writing,/writing/a-validator-is-not-a-better-prompt,/notes,/evals,/about,/hire,/contact,/resume,/now,/uses,/trust,/skills,/privacy"
 )
   .split(",")
   .filter(Boolean);

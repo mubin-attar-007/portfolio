@@ -22,7 +22,8 @@ const SERVER_TIMEOUT_MS = 120_000;
 const COMMAND_TIMEOUT_MS = 120_000;
 const ROUTES = [
   { label: "home", path: "/" },
-  { label: "flagship", path: "/work/dbwhisper" },
+  // A public case study: the one that also carries the boundary inspector.
+  { label: "case-study", path: "/work/dbwhisper" },
   { label: "writing", path: "/writing/a-validator-is-not-a-better-prompt" },
 ];
 const TITLE_ROUTES = [
@@ -32,7 +33,7 @@ const TITLE_ROUTES = [
 ];
 // Pages that must never be indexed or claim a canonical URL: the component
 // preview (ADR-007) and the 404, reached through a path that cannot exist.
-// Draft field reports join them at run time (draftFieldRoutes).
+// Draft case studies join them at run time (draftCaseStudyRoutes).
 const UNINDEXED_ROUTES = [
   { path: "/dev/components", status: 200 },
   { path: "/metadata-gate-missing-page", status: 404 },
@@ -77,7 +78,7 @@ const AUDIT_BUDGETS = {
 // is never a claim without a number.
 const SCRIPT_BYTE_BUDGETS = {
   home: 120 * 1024,
-  flagship: 90 * 1024,
+  "case-study": 90 * 1024,
   writing: 90 * 1024,
 };
 
@@ -399,21 +400,23 @@ async function pageProblems(loc, baseUrl, served) {
 }
 
 /**
- * Field reports that are linked from /work but not in the sitemap: drafts the
- * owner has not published (content/field). They must resolve, stay out of
- * search, and name no URL as theirs, like the routes above. Found from the live
- * links rather than listed here, so publishing a report (which adds it to the
- * sitemap) moves it to the sitemap checks with no change to this gate.
+ * Case studies that are linked from /work but not in the sitemap: drafts the
+ * owner has not published. They must resolve, stay out of search, and name no
+ * URL as theirs, like the routes above. Found from the live links rather than
+ * listed here, so publishing one (which adds it to the sitemap) moves it to the
+ * sitemap checks with no change to this gate. There are none today: the field
+ * reports that were drafts became the published flagship case studies
+ * (/work/bench-discovery, /work/careltc), and their old addresses redirect.
  */
-async function draftFieldRoutes(baseUrl, locs) {
+async function draftCaseStudyRoutes(baseUrl, locs) {
   const listed = new Set(locs.map((loc) => new URL(loc).pathname));
   const response = await fetch(new URL("/work", baseUrl), { headers: CRAWLER });
   const html = await response.text();
-  const linked = new Set([...html.matchAll(/href="(\/work\/field\/[a-z0-9-]+)"/g)].map((match) => match[1]));
+  const linked = new Set([...html.matchAll(/href="(\/work(?:\/[a-z0-9-]+)+)"/g)].map((match) => match[1]));
   return [...linked].filter((path) => !listed.has(path)).map((path) => ({ path, status: 200 }));
 }
 
-/** The preview route, the 404 and draft field reports are never indexed, and never name a URL as theirs. */
+/** The preview route, the 404 and draft case studies are never indexed, and never name a URL as theirs. */
 async function unindexedProblems(baseUrl, routes) {
   const problems = [];
   for (const route of routes) {
@@ -508,7 +511,7 @@ async function verifyMetadata(baseUrl) {
       problems.push(`${new URL(loc).pathname}: ${problem}`);
     }
   }
-  const unindexed = [...UNINDEXED_ROUTES, ...(await draftFieldRoutes(baseUrl, locs))];
+  const unindexed = [...UNINDEXED_ROUTES, ...(await draftCaseStudyRoutes(baseUrl, locs))];
   problems.push(...(await unindexedProblems(baseUrl, unindexed)));
   problems.push(...(await titleProblems(baseUrl)));
   problems.push(...(await redirectProblems(baseUrl, sitemapXml)));

@@ -55,8 +55,9 @@ const ROUTES = [
   { path: "/about", must: /About|engineer/i, name: "about" },
   { path: "/contact", must: /Let.s talk about what you.re building/i, name: "contact" },
   { path: "/writing", must: /Essays, guides and notes/i, name: "writing" },
-  // Field reports are noindex but linked from /work and the homepage.
-  { path: "/work/field/records-triage", must: /Records triage/i, name: "field report" },
+  // The flagship case studies, linked from the homepage, /work and the nav.
+  { path: "/work/bench-discovery", must: /Bench Discovery/, name: "Bench Discovery case study" },
+  { path: "/work/careltc", must: /CareLTC/, name: "CareLTC case study" },
   { path: "/resume", must: /Experience|Résumé|Resume/i, name: "resume" },
 ];
 
@@ -135,7 +136,9 @@ await withPage({ viewport: { width: 390, height: 844 } }, async (page) => {
   await page.goto(`${BASE}/`, { waitUntil: "networkidle" });
   await page.getByRole("button", { name: "Open menu" }).click();
   await page.waitForTimeout(500);
-  // A disclosure panel under the bar, not a modal (ADR-018).
+  // A modal sheet under the bar (ADR-018, amended 17 Nov 2026): the button and
+  // the panel are one dialog. Its contract in depth is test:a11y and
+  // test:interaction; this only asks whether the deployed menu works.
   const menu = page.locator("#mobile-menu");
   check("mobile nav: opens", await menu.isVisible());
 

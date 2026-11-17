@@ -203,14 +203,22 @@ try {
       check(`${prefix}: the site's one theme (light) is active`, await page.locator("html").getAttribute("data-theme") === "light");
       check(`${prefix}: the inspector sits in the case study's Try the boundary section`,
         await page.locator("#try-the-boundary #boundary-inspector").count() === 1);
+      // A case study's sticky chrome is the header and, under it, the work
+      // sub-nav (scroll-padding-top clears both): the heading lands below the lower.
       const landing = await page.evaluate(() => {
         const header = document.querySelector('nav[aria-label="Primary"]')?.closest("header")?.getBoundingClientRect();
+        const subnav = document.querySelector('nav[aria-label="Work"]')?.getBoundingClientRect();
         const heading = document.querySelector("#try-the-boundary h2")?.getBoundingClientRect();
-        return { headerBottom: header ? Math.round(header.bottom) : null, headingTop: heading ? Math.round(heading.top) : null };
+        return {
+          headerBottom: header ? Math.round(header.bottom) : null,
+          subnavBottom: subnav ? Math.round(subnav.bottom) : null,
+          headingTop: heading ? Math.round(heading.top) : null,
+        };
       });
-      check(`${prefix}: the section's anchor lands with its heading clear of the sticky header`,
-        landing.headerBottom !== null && landing.headingTop !== null
-        && landing.headingTop >= landing.headerBottom && landing.headingTop < viewport.height, JSON.stringify(landing));
+      check(`${prefix}: the section's anchor lands with its heading clear of the sticky header and the work sub-nav`,
+        landing.headerBottom !== null && landing.subnavBottom !== null && landing.headingTop !== null
+        && landing.headingTop >= Math.max(landing.headerBottom, landing.subnavBottom)
+        && landing.headingTop < viewport.height, JSON.stringify(landing));
       const root = inspector(page);
       check(`${prefix}: first render does not announce an unsolicited change`,
         (await root.getByRole("status").textContent() ?? "").trim() === "");

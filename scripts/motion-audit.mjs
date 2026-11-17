@@ -3,10 +3,11 @@
 // The contracts are the motion law of ADR-018 and design-system.md §6: the
 // arrow-swap caret and the press, the menus, the showcase's tab pill and panel
 // crossfade, the marquee and its pauses, the copy-prompt chip, cards and their
-// illustrations, the hover moments on /work, a case study and a field report,
-// the boundary inspector on /work/dbwhisper, that every animation resolves to
-// real keyframes and nothing but an ambient loop runs at rest on any route,
-// and each reduced-motion alternative. The site has one theme, so one pass.
+// illustrations, the hover moments on /work, a case study and a flagship's
+// architecture sketch, the boundary inspector on /work/dbwhisper, that every
+// animation resolves to real keyframes and nothing but an ambient loop runs at
+// rest on any route, and each reduced-motion alternative. The site has one
+// theme, so one pass.
 //
 //   BASE_URL=http://127.0.0.1:3200 node scripts/motion-audit.mjs
 import { chromium } from "playwright";
@@ -27,7 +28,8 @@ const KEYFRAME_ROUTES = [
   "/work",
   "/work/dbwhisper",
   "/work/tradepulse",
-  "/work/field/records-triage",
+  "/work/bench-discovery",
+  "/work/careltc",
   "/hire",
   "/about",
   "/contact",
@@ -388,7 +390,8 @@ async function showcaseContracts(page, label, width) {
     && samples.every((sample) => !sample.arriving.hidden) && samples.every((sample) => Math.abs(sample.stage - stageBefore) < 0.5),
     JSON.stringify({ stageBefore, samples }));
   if (width === 1440) {
-    const sheen = await page.locator("#showcase-panel-nfc [data-focus]").evaluate((card) => ({
+    // Tab 1 is CareLTC; its panel's front frame carries the sheen ([data-focus]).
+    const sheen = await page.locator("#showcase-panel-careltc [data-focus]").evaluate((card) => ({
       declared: getComputedStyle(card, "::after").animationName,
       running: card.getAnimations({ subtree: true }).filter((x) => x.playState === "running" && x.effect?.pseudoElement === "::after").length,
     }));
@@ -812,9 +815,9 @@ async function cardFeedback(page, reduced) {
     reduced ? motion.length === 0 : motion.some((animation) => animation.name === "transform"), JSON.stringify(motion));
 }
 
-/** The field plate's first card: its wires pulse while the card is hovered or focused. */
+/** The flagship plate's first card (Bench Discovery): its badge's halo breathes while the card is hovered or focused. */
 async function illustrationFeedback(page) {
-  const target = card(page, "Records triage and review");
+  const target = card(page, "Bench Discovery");
   const link = target.getByRole("link").first();
   const title = target.locator("h3");
   await neutral(page, link);
@@ -833,7 +836,7 @@ async function illustrationFeedback(page) {
   await page.waitForTimeout(200);
   const focused = (await running(target, true)).filter((x) => x.iterations === Infinity);
   const textAfter = await appearance(title);
-  check("field plate: an illustration plays its loop while its card is hovered or focused, and is still at rest",
+  check("flagship plate: an illustration plays its loop while its card is hovered or focused, and is still at rest",
     atRest.length === 0 && hovered.length > 0 && focused.length === hovered.length && samePlace(textBefore, textAfter),
     JSON.stringify({ atRest, hovered, focused, declaredOnHover: hoverDeclared }));
 }
@@ -968,14 +971,18 @@ async function idleLoops(page) {
  * plays.
  */
 const HOVER_MOMENTS = [
-  { name: "the field-card halo on /work", route: "/work", target: (page) => page.locator("#field article").first() },
+  { name: "the flagship-card halo on /work", route: "/work", target: (page) => page.locator("#flagship article").first() },
   {
     name: "the flow wire in a case study's steps",
     route: "/work/tradepulse",
     target: (page) => page.locator("#how-it-works ol").first(),
     area: (page) => page.locator("#how-it-works"),
   },
-  { name: "the pulse on a field report's sketch", route: "/work/field/records-triage", target: (page) => page.locator("main figure").first() },
+  {
+    name: "the pulse on a flagship's architecture sketch",
+    route: "/work/bench-discovery",
+    target: (page) => page.locator("#architecture figure").first(),
+  },
 ];
 
 async function hoverMoments(page, reduced) {
@@ -998,8 +1005,8 @@ async function hoverMoments(page, reduced) {
   }
   const still = (result) => result.rest.length === 0 && result.left.length === 0;
   check(reduced
-    ? "reduced: no hover moment loops, on /work, a case study or a field report"
-    : "hover moments loop only under the pointer: the /work field-card halo, a case study's flow wire, a field sketch's pulse",
+    ? "reduced: no hover moment loops, on /work, a case study or a flagship"
+    : "hover moments loop only under the pointer: the /work flagship-card halo, a case study's flow wire, a flagship sketch's pulse",
   results.every((result) => still(result) && (reduced ? result.hovered.length === 0 : result.hovered.length > 0)),
   JSON.stringify(results));
 }
@@ -1171,9 +1178,9 @@ try {
         }
         return false;
       }).map((element) => `${item.querySelector("h3")?.textContent.trim()}: ${element.tagName.toLowerCase()} "${(element.textContent ?? "").trim().slice(0, 30)}"`)));
-    const cards = { field: await page.locator("#field article").count(), public: await page.locator("#public article").count() };
+    const cards = { flagship: await page.locator("#flagship article").count(), public: await page.locator("#public article").count() };
     check("touch: every card's title, copy and destinations are visible before any interaction",
-      cards.field > 0 && cards.public > 0 && hiddenUntilHover.length === 0, JSON.stringify({ cards, hiddenUntilHover }));
+      cards.flagship > 0 && cards.public > 0 && hiddenUntilHover.length === 0, JSON.stringify({ cards, hiddenUntilHover }));
   });
   check("motion interactions make no API requests and raise no browser errors", apiRequests.length === 0 && errors.length === 0,
     JSON.stringify({ apiRequests, errors }));

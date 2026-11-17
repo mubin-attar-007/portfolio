@@ -47,6 +47,8 @@ const BEST_PRACTICE_RULES = [
 const DESKTOP = { width: 1280, height: 900 };
 const TABLET = { width: 768, height: 900 };
 const MOBILE = { width: 360, height: 740 };
+/** Below this width a flagship holds its long sections behind disclosures (components/ui/show-more.tsx). */
+const PHONE_DISCLOSURE_MAX = 760;
 
 const ROUTES = [
   "/",
@@ -66,9 +68,10 @@ const ROUTES = [
   "/skills",
   "/privacy",
   "/trust",
-  // Field reports are noindex but linked from /work, so a visitor reaches them.
-  "/work/field/records-triage",
-  "/work/field/nfc-room-rounds",
+  // The flagship case studies: the longest pages, with the media galleries,
+  // the recordings and, below 760px, the phone disclosures (ShowMore).
+  "/work/bench-discovery",
+  "/work/careltc",
   "/route-that-does-not-exist",
   "/dev/components",
 ];
@@ -84,34 +87,55 @@ const PASSES = [
 ];
 const THEME = "light";
 
+/** The assistant panel, found by its name (components/assistant/copy.ts). */
+const assistantDialog = (page) => page.getByRole("dialog", { name: /^Ask about/ });
+
 /**
  * Overlay states worth auditing on top of the static routes: focus order and
- * labelling bugs hide in open overlays, which no route load can reach. The
- * assistant is a modal dialog at every width. Above 1000px the Work and About
- * menus are disclosure panels under their triggers; below it the site menu is
- * one disclosure panel (`#mobile-menu`). None of the menus is a dialog, so each
- * is found through its trigger's state or its id.
+ * labelling bugs hide in open overlays, which no route load can reach. Above
+ * 1000px the Work and About menus are disclosure panels under their triggers,
+ * found through the trigger's state. Below it the site menu is a modal sheet
+ * (ADR-018, amended 17 Nov 2026): the button and its panel are one dialog,
+ * named "Site menu", over an inert page. The assistant is a modal dialog at
+ * every width; it is also opened the ways a page offers it, which show that
+ * page's own starters and send nothing: "Ask AI about <product>" on a case
+ * study and "Ask this site's assistant" on an essay.
  */
 function overlaysFor(device) {
   const assistant = {
     label: "assistant panel",
     trigger: (page) => page.getByRole("button", { name: /^Ask this site/ }).first(),
-    open: (page) => page.getByRole("dialog", { name: /^Ask about/ }),
+    open: assistantDialog,
   };
+  const pageAssistants = [
+    {
+      label: "assistant panel from a case study's Ask AI (its starters)",
+      route: "/work/careltc",
+      trigger: (page) => page.getByRole("button", { name: "Ask AI about CareLTC", exact: true }),
+      open: assistantDialog,
+    },
+    {
+      label: "assistant panel from an essay's ask button (its starters)",
+      route: "/writing/trust-is-not-a-safety-model",
+      trigger: (page) => page.getByRole("button", { name: "Ask this site's assistant", exact: true }),
+      open: assistantDialog,
+    },
+  ];
   const navMenu = (id, label) => ({
     label: `${label} menu`,
     trigger: (page) => page.locator(`button[aria-controls="${id}"]`),
     open: (page) => page.locator(`button[aria-controls="${id}"][aria-expanded="true"]`),
   });
   return device === "desktop"
-    ? [navMenu("nav-work", "Work"), navMenu("nav-about", "About"), assistant]
+    ? [navMenu("nav-work", "Work"), navMenu("nav-about", "About"), assistant, ...pageAssistants]
     : [
         {
           label: "mobile menu",
           trigger: (page) => page.getByRole("button", { name: "Open menu", exact: true }),
-          open: (page) => page.locator("#mobile-menu"),
+          open: (page) => page.getByRole("dialog", { name: "Site menu", exact: true }),
         },
         assistant,
+        ...pageAssistants,
       ];
 }
 
@@ -302,6 +326,17 @@ async function focusLandsOn(locator) {
   return false;
 }
 
+/** What Tab can reach inside a dialog (the menu and the panel trap the same set). */
+const TABBABLE = 'a[href], button:not([disabled]), textarea:not([disabled]), [tabindex]:not([tabindex="-1"])';
+
+/** A dialog's visible Tab stops, and the index of the one holding focus (-1 when focus is outside it). */
+function tabStops(dialog) {
+  return dialog.evaluate((root, selector) => {
+    const items = Array.from(root.querySelectorAll(selector)).filter((el) => el.getClientRects().length > 0);
+    return { count: items.length, focused: items.indexOf(document.activeElement) };
+  }, TABBABLE);
+}
+
 async function describeFocus(page) {
   return page.evaluate(() => {
     const el = document.activeElement;
@@ -351,18 +386,26 @@ async function auditOverlayKeyboard(browser) {
 
   try {
     await open(mobilePage, "/", "light");
-    // The menu is a disclosure (ADR-018): focus stays on its button, Tab moves
-    // into the panel's links, Escape closes it and returns focus to the button.
+    // The menu is a modal sheet (ADR-018, amended 17 Nov 2026): the button and
+    // its panel are one dialog, focus moves to the panel's first link on open,
+    // Tab and Shift+Tab cycle inside the dialog and never reach the inert page,
+    // and Escape closes it with focus back on the button.
     const trigger = mobilePage.getByRole("button", { name: "Open menu", exact: true });
     await trigger.click();
+    const dialog = mobilePage.getByRole("dialog", { name: "Site menu", exact: true });
+    await dialog.waitFor();
     const menu = mobilePage.locator("#mobile-menu");
     await menu.waitFor();
     const toggle = mobilePage.getByRole("button", { name: "Close menu", exact: true });
     if ((await toggle.getAttribute("aria-expanded")) !== "true") {
       throw new Error("Mobile menu button does not report aria-expanded=\"true\" when open");
     }
-    if (!(await focusLandsOn(toggle))) {
-      throw new Error(`Mobile menu moved focus off its button on open (focus: ${await describeFocus(mobilePage)})`);
+    if ((await dialog.getAttribute("aria-modal")) !== "true") {
+      throw new Error("The open mobile menu is not a modal dialog (aria-modal)");
+    }
+    const firstLink = menu.getByRole("link").first();
+    if (!(await focusLandsOn(firstLink))) {
+      throw new Error(`Mobile menu did not move focus to its first link on open (focus: ${await describeFocus(mobilePage)})`);
     }
     // On the narrowest phone the open panel ends inside the viewport, and when
     // its groups are taller than that space it scrolls itself, so every link
@@ -377,10 +420,29 @@ async function auditOverlayKeyboard(browser) {
     if (fit.bottom > fit.viewport + 1 || (fit.overflows && !fit.scrolls)) {
       throw new Error(`Mobile menu does not fit a ${MOBILE.width}×${MOBILE.height} viewport: ${JSON.stringify(fit)}`);
     }
+    // Every stop Tab makes, a full lap and one more, stays inside the dialog,
+    // and the lap wraps: Tab from its last control lands on its first, and
+    // Shift+Tab from the first lands back on the last.
+    const { count } = await tabStops(dialog);
+    for (let i = 0; i <= count; i++) {
+      await mobilePage.keyboard.press("Tab");
+      if ((await tabStops(dialog)).focused === -1) {
+        throw new Error(`Tab left the open mobile menu after ${i + 1} press(es) (focus: ${await describeFocus(mobilePage)})`);
+      }
+    }
+    await dialog.evaluate((root, selector) => {
+      const items = Array.from(root.querySelectorAll(selector)).filter((el) => el.getClientRects().length > 0);
+      items.at(-1)?.focus();
+    }, TABBABLE);
     await mobilePage.keyboard.press("Tab");
-    const firstLink = menu.getByRole("link").first();
-    if (!(await focusLandsOn(firstLink))) {
-      throw new Error(`Tab from the menu button did not enter the panel (focus: ${await describeFocus(mobilePage)})`);
+    const forward = (await tabStops(dialog)).focused;
+    await mobilePage.keyboard.press("Shift+Tab");
+    const back = (await tabStops(dialog)).focused;
+    if (forward !== 0 || back !== count - 1) {
+      throw new Error(
+        `The mobile menu's Tab cycle does not wrap: Tab from its last control reached stop ${forward}, ` +
+          `Shift+Tab from the first reached stop ${back} (expected 0 and ${count - 1} of ${count})`,
+      );
     }
     await mobilePage.keyboard.press("Escape");
     await mobilePage.locator("#mobile-menu").waitFor({ state: "detached" });
@@ -398,7 +460,7 @@ async function auditOverlayKeyboard(browser) {
     }
 
     console.log(
-      "✓ [keyboard] / — mobile menu disclosure and the assistant focus trap",
+      "✓ [keyboard] / — the mobile menu's modal sheet (focus in, Tab cycles, Escape returns) and the assistant focus trap",
     );
   } finally {
     await mobileContext.close();
@@ -406,28 +468,65 @@ async function auditOverlayKeyboard(browser) {
 }
 
 /**
- * The assistant's conversation contracts. Sending — by a starter or by Ask —
- * never drops focus out of the dialog (WCAG 2.4.3): the control the visitor
- * used may unmount, so focus lands on the question field. The field's
- * description stays a short hint however long the conversation grows; it used
- * to be the whole transcript, read out on every focus (WCAG 1.3.1). Closing
- * keeps the conversation, and Clear empties it with focus left in the field.
- * /api/chat is mocked: no model, no quota, the same answer every run.
+ * One answer as /api/chat streams it (lib/ai/chat-contract.ts): meta, the
+ * text, the cited pages, then the next steps and follow-ups when there are
+ * any, then done.
+ */
+function answerStream({ text, citations, actions = [], followups = [] }) {
+  const frame = (event, data) => `event: ${event}\ndata: ${JSON.stringify(data)}\n\n`;
+  return [
+    frame("meta", { mode: "live", note: null }),
+    frame("token", { text }),
+    frame("sources", { citations }),
+    ...(actions.length > 0 ? [frame("actions", { actions })] : []),
+    ...(followups.length > 0 ? [frame("followups", { questions: followups })] : []),
+    frame("done", {}),
+  ].join("");
+}
+
+/** A full answer: a cited page, a next step and curated follow-ups (lib/ai/follow-ups.ts). */
+const MOCK_ANSWER = {
+  text: "A mocked answer from the site search: DBWhisper checks every statement before it runs.",
+  citations: [{ label: "DBWhisper", href: "/work/dbwhisper" }],
+  actions: [{ kind: "case-study", label: "Open the case study", href: "/work/dbwhisper" }],
+  followups: ["How was DBWhisper deployed?", "What is DBWhisper's Spider score?"],
+};
+
+/** A question whose mocked answer is long enough to scroll the transcript. */
+const LONG_QUESTION = "What does the validator reject?";
+const LONG_TEXT = Array.from(
+  { length: 14 },
+  (_, i) => `Paragraph ${i + 1} of a long mocked answer: the validator refuses a write, a second statement, and a schema it was not given.`,
+).join("\n\n");
+
+/**
+ * The assistant's conversation contracts. Sending — by a starter, a follow-up
+ * or Ask — never drops focus out of the dialog (WCAG 2.4.3): the control the
+ * visitor used may unmount, so focus lands on the question field. An answer's
+ * affordances (its cited page, Copy answer, the next steps, the follow-ups and
+ * the AI disclosure) and "Jump to latest" are audited as they render. The
+ * field's description stays a short hint however long the conversation grows;
+ * it used to be the whole transcript, read out on every focus (WCAG 1.3.1).
+ * Closing keeps the conversation, and Clear empties it with focus left in the
+ * field. /api/chat is mocked: no model, no quota, the same answers every run.
  */
 async function auditAssistantConversation(browser) {
   const context = await browser.newContext({ viewport: DESKTOP });
   const page = await context.newPage();
-  const answer = [
-    'event: meta\ndata: {"mode":"fallback"}\n\n',
-    'event: token\ndata: {"text":"A mocked answer from the site search."}\n\n',
-    'event: sources\ndata: {"citations":[{"source":"DBWhisper case study — Architecture"}]}\n\n',
-    "event: done\ndata: {}\n\n",
-  ].join("");
-  await page.route("**/api/chat", (route) =>
-    route.fulfill({ status: 200, contentType: "text/event-stream", body: answer }),
-  );
+  await page.route("**/api/chat", (route) => {
+    const question = route.request().postDataJSON()?.messages?.at(-1)?.content;
+    const answer = question === LONG_QUESTION ? { ...MOCK_ANSWER, text: LONG_TEXT } : MOCK_ANSWER;
+    return route.fulfill({ status: 200, contentType: "text/event-stream", body: answerStream(answer) });
+  });
 
   const isFocused = (locator) => locator.evaluate((el) => el === document.activeElement);
+  let violations = 0;
+  const audit = async (label) => {
+    await settleAnimations(page);
+    const v = await runAxe(page);
+    violations += v.length;
+    report(`[desktop] / — assistant ${label}`, v);
+  };
 
   try {
     await open(page, "/", "light");
@@ -439,9 +538,12 @@ async function auditAssistantConversation(browser) {
     const log = dialog.getByRole("log");
     const answered = () => dialog.locator('[role="log"][aria-busy="false"]').waitFor();
 
-    // A starter, reached and pressed by keyboard alone.
-    const firstStarter = dialog.getByRole("list").getByRole("button").first();
-    const starter = ((await firstStarter.textContent()) ?? "").trim();
+    // A starter, reached and pressed by keyboard alone. Buttons are found by
+    // their exact words: once an answer lands, its follow-ups are buttons in a
+    // list too, and a question already asked never comes back as a chip.
+    const starters = dialog.getByRole("list", { name: "Try a question" }).getByRole("button");
+    const starter = ((await starters.first().textContent()) ?? "").trim();
+    const firstStarter = dialog.getByRole("button", { name: starter, exact: true });
     for (let i = 0; i < 8 && !(await isFocused(firstStarter)); i++) {
       await page.keyboard.press("Tab");
     }
@@ -456,8 +558,35 @@ async function auditAssistantConversation(browser) {
     await log.getByText(starter, { exact: true }).waitFor();
     await answered();
 
-    // A typed question, sent from the Ask button.
-    const typed = "What does the validator reject?";
+    // The answer's affordances all render before they are audited, so the
+    // audit cannot pass on a panel that dropped one.
+    const followUps = dialog.getByRole("list", { name: "Ask next" }).getByRole("button");
+    const rendered = {
+      sources: await dialog.getByRole("list", { name: "Sources" }).getByRole("link").count(),
+      copy: await dialog.getByRole("button", { name: "Copy answer", exact: true }).count(),
+      nextSteps: await dialog.getByRole("group", { name: "Next steps" }).getByRole("link").count(),
+      followUps: await followUps.count(),
+      disclosure: await dialog.getByText(/^AI-generated from this site's pages/).count(),
+    };
+    if (Object.values(rendered).some((count) => count === 0)) {
+      throw new Error(`Assistant: an answer's affordance did not render: ${JSON.stringify(rendered)}`);
+    }
+    await audit("answer open (cited page, Copy answer, next steps, follow-ups, AI disclosure)");
+
+    // A follow-up, pressed by keyboard: it sends its own words, and focus stays in the field.
+    const followUpText = ((await followUps.first().textContent()) ?? "").trim();
+    const followUp = dialog.getByRole("button", { name: followUpText, exact: true });
+    await followUp.focus();
+    await page.keyboard.press("Enter");
+    await followUp.waitFor({ state: "detached" });
+    if (!(await isFocused(field))) {
+      throw new Error("Assistant: sending a follow-up dropped focus out of the question field");
+    }
+    await log.getByText(followUpText, { exact: true }).waitFor();
+    await answered();
+
+    // A typed question, sent from the Ask button; its answer is long.
+    const typed = LONG_QUESTION;
     await field.fill(typed);
     await page.keyboard.press("Tab");
     if (!(await isFocused(dialog.getByRole("button", { name: "Ask", exact: true })))) {
@@ -480,8 +609,46 @@ async function auditAssistantConversation(browser) {
     );
     if (description.length === 0 || description.length >= 200) {
       throw new Error(
-        `Assistant: after two answers the question field's description is ${description.length} ` +
+        `Assistant: after three answers the question field's description is ${description.length} ` +
           "characters; it must be a short hint (1–199), never the transcript",
+      );
+    }
+
+    // Reading back up pauses the follow and offers "Jump to latest"; it is
+    // audited, then pressed: the transcript is back at the end and focus,
+    // with the button gone, is in the field.
+    await log.evaluate((el) => {
+      el.scrollTop = 0;
+      el.dispatchEvent(new Event("scroll"));
+    });
+    const jump = dialog.getByRole("button", { name: "Jump to latest", exact: true });
+    await jump.waitFor();
+    await audit("with Jump to latest");
+    await jump.focus();
+    await page.keyboard.press("Enter");
+    // Every frame of the glide back down: the button must not come back on
+    // the way (the reader asked to follow again), and the glide must end.
+    const glide = await log.evaluate((el) => new Promise((resolve) => {
+      const panel = el.closest('[role="dialog"]');
+      const deadline = performance.now() + 2500;
+      let reappeared = 0;
+      let still = 0;
+      let last = -1;
+      const tick = () => {
+        const shown = Array.from(panel.querySelectorAll("button")).some((b) => b.textContent.trim() === "Jump to latest");
+        if (shown) reappeared += 1;
+        still = el.scrollTop === last ? still + 1 : 0;
+        last = el.scrollTop;
+        const end = el.scrollHeight - el.scrollTop - el.clientHeight < 2;
+        if ((end && still >= 3) || performance.now() > deadline) resolve({ end, reappeared });
+        else requestAnimationFrame(tick);
+      };
+      requestAnimationFrame(tick);
+    }));
+    if (!glide.end || glide.reappeared > 0 || !(await isFocused(field))) {
+      throw new Error(
+        `Assistant: Jump to latest ${glide.end ? "reached" : "fell short of"} the end, the button came back ` +
+          `in ${glide.reappeared} frame(s) of the glide, and focus is on ${await describeFocus(page)}`,
       );
     }
 
@@ -497,7 +664,7 @@ async function auditAssistantConversation(browser) {
     // Clear empties it, and focus stays in the dialog, on the field.
     await dialog.getByRole("button", { name: "Clear conversation" }).focus();
     await page.keyboard.press("Enter");
-    await dialog.getByRole("list").getByRole("button").first().waitFor();
+    await starters.first().waitFor();
     if ((await log.getByText(typed, { exact: true }).count()) !== 0) {
       throw new Error("Assistant: Clear left the conversation in place");
     }
@@ -506,11 +673,12 @@ async function auditAssistantConversation(browser) {
     }
 
     console.log(
-      "✓ [keyboard] / — assistant keeps focus on send, a short field description, and its conversation",
+      "✓ [keyboard] / — assistant keeps focus on send (starter, follow-up, Ask, Jump to latest), a short field description, and its conversation",
     );
   } finally {
     await context.close();
   }
+  return violations;
 }
 
 let total = 0;
@@ -518,6 +686,13 @@ const browser = await chromium.launch();
 try {
   for (const pass of PASSES) {
     const context = await browser.newContext({ viewport: pass.viewport });
+    // Nothing in a route load or an opened overlay may ask the assistant
+    // anything: opening it sends no question. Any request is held and failed.
+    const sent = [];
+    await context.route("**/api/chat", (route) => {
+      sent.push(route.request().url());
+      return route.abort();
+    });
     const page = await context.newPage();
     const prefix = `[${pass.device}]`;
 
@@ -529,22 +704,50 @@ try {
     }
 
     for (const d of overlaysFor(pass.device)) {
-      await open(page, "/", THEME);
+      const route = d.route ?? "/";
+      await open(page, route, THEME);
       await d.trigger(page).click();
       await d.open(page).waitFor({ timeout: 10000 });
       // The overlay exists before its entrance finishes; audit the settled state.
       await settleAnimations(page);
       const v = await runAxe(page);
       total += v.length;
-      report(`${prefix} / — ${d.label} open`, v);
+      report(`${prefix} ${route} — ${d.label} open`, v);
       await page.keyboard.press("Escape");
     }
 
+    // Below 760px a flagship's long sections wait behind native disclosures
+    // (ShowMore), and axe skips whatever a closed <details> hides, so the
+    // route pass above never saw them on a phone. Open every one, by its
+    // summary as a visitor would, and audit the page again.
+    if (pass.viewport.width < PHONE_DISCLOSURE_MAX) {
+      for (const route of ["/work/bench-discovery", "/work/careltc"]) {
+        await open(page, route, THEME);
+        const opened = await page.evaluate(() => {
+          const closed = Array.from(document.querySelectorAll("main details:not([open]) > summary"));
+          for (const summary of closed) summary.click();
+          return closed.length;
+        });
+        if (opened === 0) {
+          throw new Error(`${route}: no closed phone disclosure at ${pass.viewport.width}px, so this audit would see nothing new`);
+        }
+        await settleAnimations(page);
+        const width = await page.evaluate(() => document.documentElement.scrollWidth - document.documentElement.clientWidth);
+        if (width > 1) throw new Error(`${route}: ${width}px of horizontal overflow with the phone disclosures open`);
+        const v = await runAxe(page);
+        total += v.length;
+        report(`${prefix} ${route} — all ${opened} phone disclosures open`, v);
+      }
+    }
+
+    if (sent.length > 0) {
+      throw new Error(`${prefix}: opening a page or an overlay sent ${sent.length} request(s) to /api/chat; opening sends nothing`);
+    }
     await context.close();
   }
   await auditReducedMotion(browser);
   await auditOverlayKeyboard(browser);
-  await auditAssistantConversation(browser);
+  total += await auditAssistantConversation(browser);
 } finally {
   await browser.close();
 }
