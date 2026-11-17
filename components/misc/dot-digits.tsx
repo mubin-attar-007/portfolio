@@ -1,5 +1,3 @@
-import styles from "./misc.module.css";
-
 /** Dot pitch and radius in SVG units (the drawing is 1000 wide). */
 const PITCH = 7;
 const DOT = 1.55;
@@ -14,8 +12,8 @@ export function DotDigits({ text, id }: { text: string; id: string }) {
   const light = `${id}-light`;
   const mask = `${id}-mask`;
   return (
-    <div className={styles.frame} aria-hidden="true">
-      <svg className={styles.digits} viewBox="0 0 1000 440" focusable="false">
+    <div className="error-stage-frame" aria-hidden="true">
+      <svg className="error-stage-digits" viewBox="0 0 1000 440" focusable="false">
         <defs>
           <pattern id={dots} width={PITCH} height={PITCH} patternUnits="userSpaceOnUse">
             <circle cx={PITCH / 2} cy={PITCH / 2} r={DOT} style={{ fill: "var(--color-plate-ink)" }} />

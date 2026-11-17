@@ -2,7 +2,6 @@ import type { ReactNode } from "react";
 import { Container } from "@/components/layout/container";
 import { DarkSurface } from "@/components/layout/dark-surface";
 import { DotDigits } from "./dot-digits";
-import styles from "./misc.module.css";
 
 /**
  * ErrorStage — the dark "something is missing" family (404, error, global
@@ -26,7 +25,7 @@ export function ErrorStage({
   children?: ReactNode;
 }) {
   return (
-    <DarkSurface className={`${styles.stage} flex-1`}>
+    <DarkSurface className="error-stage flex-1">
       <Container className="flex flex-col items-center pt-[clamp(2rem,5vw,4rem)] pb-[var(--space-section-md-end)] text-center">
         <div className="w-full max-w-[1030px]">
           <DotDigits text={digits} id={`stage-${digits}`} />

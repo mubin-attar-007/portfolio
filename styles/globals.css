@@ -1,5 +1,6 @@
 @import "tailwindcss";
 @import "./tokens.css";
+@import "./error-stage.css";
 
 /* ============================================================================
    Base, the accessibility contract, and the few devices shared site-wide.
@@ -8,7 +9,9 @@
    defaults, (b) focus, selection, the skip link and reduced motion, (c) the
    devices used on more than one route (the arrow-swap caret, fading rules, the
    link underline), and (d) the shared keyframes. A section's own composition
-   lives in its CSS module.
+   lives in its CSS module. The one exception is the error stage
+   (error-stage.css): Next preloads the error boundary's styles on every page,
+   so they belong to the sheet every page already loads.
    ============================================================================ */
 
 @layer base {
