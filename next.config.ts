@@ -59,6 +59,17 @@ const nextConfig: NextConfig = {
   // its own CSS.
   experimental: {
     cssChunking: "graph",
+    // Fewer, larger JavaScript chunks per page. Every page loads all of its
+    // chunks before it can hydrate, and the Lighthouse budget's model fetches
+    // them over six HTTP/1.1 connections a round trip apiece, so a request
+    // costs about as much as the bytes in it. At the default (50 KB of source)
+    // a case study split its own components into two chunks and the layout's a
+    // 300-byte third; at 200 KB they merge (case study 11 -> 9 scripts, writing
+    // and home 10 -> 9) with the same bytes. Most visits are a single page, so
+    // the chunk reuse this gives up between routes is worth little here.
+    turbopackChunking: {
+      minChunkSize: 200_000,
+    },
   },
   // The assistant's corpus (lib/ai/corpus.ts) reads these MDX folders with fs
   // when /api/chat loads. The tracer follows the literal reads too; this list
