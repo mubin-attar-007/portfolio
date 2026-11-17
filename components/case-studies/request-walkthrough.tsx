@@ -26,7 +26,7 @@ export function FlagshipWalkthroughSection() {
   const sql = s.sql.map((tok) => (tok.t === "br" ? "\n" : tok.v)).join("");
 
   return (
-    <section id="request-walkthrough" aria-labelledby="walkthrough-title" className="my-14 scroll-mt-28 rounded-[var(--radius-lg)] border border-border bg-bg-subtle p-5 sm:p-8">
+    <section id="request-walkthrough" aria-labelledby="walkthrough-title" className="scroll-mt-28">
       <FlagshipWalkthrough
         eyebrow={w.eyebrow}
         title={w.title}

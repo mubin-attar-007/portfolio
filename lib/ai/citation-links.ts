@@ -21,7 +21,7 @@ const PROJECTS = [
  * tampered response can only ever name a page of this site.
  */
 const SITE_PATH =
-  /^\/(?:(?:work|writing|notes)\/[a-z0-9-]+|work|writing|notes|evals|hire|resume|about|skills)(?:#[a-z0-9-]+)?$/;
+  /^\/(?:(?:work|writing|notes)\/[a-z0-9-]+|work|writing|notes|evals|hire|contact|resume|about|skills)(?:#[a-z0-9-]+)?$/;
 
 /** Longest link label the panel renders; anything longer is not one of ours. */
 const MAX_LABEL_CHARS = 120;
@@ -62,7 +62,7 @@ export function citationLinks(source: string): CitationLink[] {
     links.push({ label: "Skills", href: "/skills" });
   }
   if (/^contact\b/i.test(source)) {
-    links.push({ label: "Contact", href: "/hire" });
+    links.push({ label: "Contact", href: "/contact" });
   }
   if (/^evaluations?\b/i.test(source)) {
     links.push({ label: "Evals", href: "/evals" });

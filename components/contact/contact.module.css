@@ -1,0 +1,145 @@
+/* /contact (spec/prototype/contact.html, Clerk Contact): a white card with a
+   violet/cyan aurora under it, dotted blueprint guides passing behind it and a
+   dotted rule across the viewport at its top edge. */
+@layer components {
+  .stage {
+    position: relative;
+    padding-bottom: 96px;
+    overflow-x: clip;
+  }
+  .grid {
+    position: relative;
+  }
+  .card {
+    position: relative;
+    z-index: 1;
+    padding: 88px 80px 80px;
+    border-radius: 14px;
+    background: var(--color-surface);
+    box-shadow:
+      0 0 0 1px rgb(19 19 22 / 0.06),
+      0 2px 6px rgb(19 19 22 / 0.04),
+      -36px 20px 80px -40px rgb(124 92 255 / 0.55),
+      36px 20px 80px -40px rgb(56 189 248 / 0.5);
+  }
+  .cols {
+    position: relative;
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 64px;
+    text-align: center;
+  }
+  .cols h2 {
+    font-size: 1.5rem;
+    line-height: 2rem;
+    font-weight: 600;
+    letter-spacing: -0.015em;
+    color: var(--color-ink);
+  }
+  .cols p {
+    max-width: 420px;
+    margin: 10px auto 24px;
+    font-size: 0.96875rem;
+    line-height: 1.55;
+    color: var(--color-ink-secondary);
+  }
+  .cols p a {
+    font-weight: 500;
+    color: var(--color-ink);
+    text-decoration: underline;
+    text-decoration-color: var(--color-border-strong);
+    text-underline-offset: 3px;
+    transition: text-decoration-color 150ms var(--ease-std);
+  }
+  .cols p a:hover {
+    text-decoration-color: currentColor;
+  }
+  .subcards {
+    position: relative;
+    display: grid;
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+    gap: 24px;
+    margin-top: 80px;
+  }
+  .subcard {
+    display: flex;
+    flex-direction: column;
+    align-items: flex-start;
+    padding: 24px;
+    border-radius: 12px;
+    background: #fafafb;
+    box-shadow: 0 0 0 1px rgb(19 19 22 / 0.04);
+    transition: box-shadow 250ms var(--ease-out), background-color 250ms var(--ease-out);
+  }
+  .subcard:hover,
+  .subcard:focus-within {
+    background: var(--color-surface);
+    box-shadow: 0 0 0 1px rgb(19 19 22 / 0.08), 0 6px 18px -8px rgb(19 19 22 / 0.14);
+  }
+  .subcard h3 {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    font-size: 0.875rem;
+    font-weight: 500;
+    color: var(--color-ink);
+  }
+  .subcard h3 svg {
+    color: var(--color-accent);
+  }
+  .subcard p {
+    flex: 1;
+    margin: 12px 0 22px;
+    font-size: 0.875rem;
+    line-height: 1.55;
+    color: var(--color-ink-secondary);
+  }
+  .foot {
+    margin-top: 28px;
+    text-align: center;
+    font-size: 0.875rem;
+    color: var(--color-ink-secondary);
+  }
+
+  /* The assistant opener is a <button> styled as the caret link. */
+  .opener {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    min-height: 24px;
+    font-size: 0.875rem;
+    font-weight: 600;
+    color: var(--color-ink);
+    cursor: pointer;
+  }
+
+  @media (max-width: 1000px) {
+    .card {
+      padding: 56px 28px 32px;
+    }
+    .cols {
+      grid-template-columns: 1fr;
+      gap: 56px;
+    }
+    .subcards {
+      grid-template-columns: 1fr;
+      gap: 12px;
+      margin-top: 56px;
+    }
+  }
+
+  @media (max-width: 640px) {
+    .card {
+      padding: 48px 20px 20px;
+    }
+    .stage {
+      padding-bottom: 72px;
+    }
+  }
+
+  @media (prefers-reduced-motion: reduce) {
+    .subcard {
+      transition: none;
+    }
+  }
+}

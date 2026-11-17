@@ -1,0 +1,179 @@
+/* /trust: the hero, the evidence table, the principles and the practice cards. */
+@layer components {
+  .hero {
+    position: relative;
+    overflow: hidden;
+  }
+  .heroInner {
+    position: relative;
+  }
+
+  .tableWrap {
+    border: 1px solid var(--color-border);
+    border-radius: var(--radius-lg);
+    background: var(--color-surface);
+    box-shadow: var(--shadow-card);
+    overflow: hidden;
+  }
+  .table {
+    width: 100%;
+    border-collapse: collapse;
+    font-size: 0.9375rem;
+    line-height: 1.5;
+  }
+  .table th,
+  .table td {
+    padding: 16px 20px;
+    text-align: left;
+    vertical-align: top;
+  }
+  .table thead th {
+    font-family: var(--font-mono);
+    font-size: 0.6875rem;
+    font-weight: 500;
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+    color: var(--color-ink-tertiary);
+    background: var(--color-bg-subtle);
+    border-bottom: 1px solid var(--color-border);
+  }
+  .table tbody tr {
+    transition: background-color var(--motion-fast) var(--ease-out);
+  }
+  .table tbody tr:hover {
+    background: var(--color-bg-subtle);
+  }
+  .table tbody tr + tr > * {
+    border-top: 1px solid var(--color-border);
+  }
+  .table tbody th {
+    width: 18%;
+    font-weight: 600;
+    color: var(--color-ink);
+  }
+  .table td {
+    color: var(--color-ink-secondary);
+  }
+  .statusCell,
+  .sourceCell {
+    width: 1%;
+    white-space: nowrap;
+  }
+  .none {
+    color: var(--color-ink-tertiary);
+  }
+
+  @media (max-width: 759px) {
+    .table thead {
+      position: absolute;
+      width: 1px;
+      height: 1px;
+      overflow: hidden;
+      clip: rect(0 0 0 0);
+    }
+    .table tr {
+      display: grid;
+      grid-template-columns: minmax(0, 1fr) auto;
+      gap: 6px 12px;
+      padding: 16px 18px;
+    }
+    .table th,
+    .table td {
+      display: block;
+      width: auto;
+      padding: 0;
+    }
+    .table tbody th {
+      width: auto;
+    }
+    .table td.claimCell {
+      grid-column: 1 / -1;
+      grid-row: 2;
+    }
+    .table td.statusCell {
+      grid-column: 2;
+      grid-row: 1;
+    }
+    .table td.sourceCell {
+      grid-column: 1 / -1;
+      white-space: normal;
+    }
+    .table tbody tr + tr > * {
+      border-top: 0;
+    }
+    .table tbody tr + tr {
+      border-top: 1px solid var(--color-border);
+    }
+  }
+
+  .principles {
+    display: grid;
+    gap: 28px;
+    margin: 0;
+    padding: 0;
+    list-style: none;
+  }
+  @media (min-width: 900px) {
+    .principles {
+      grid-template-columns: repeat(3, minmax(0, 1fr));
+      gap: 40px;
+    }
+  }
+  .principle {
+    padding-top: 18px;
+    border-top: 1px solid var(--color-border-strong);
+  }
+  .principle h3 {
+    font-size: var(--text-title-sm);
+    font-weight: 650;
+    color: var(--color-ink);
+  }
+  .principle p {
+    margin-top: 8px;
+    font-size: 0.9375rem;
+    line-height: 1.6;
+    color: var(--color-ink-secondary);
+  }
+
+  .icon {
+    display: grid;
+    width: 36px;
+    height: 36px;
+    place-items: center;
+    border-radius: var(--radius-md);
+    color: var(--color-accent-hover);
+    background: var(--color-accent-soft);
+    transition: transform var(--motion-slow) var(--spring);
+  }
+  .practice:is(:hover, :focus-within) .icon {
+    transform: rotate(-6deg) scale(1.08);
+  }
+  .list {
+    display: grid;
+    gap: 8px;
+    margin: 16px 0 20px;
+    padding: 0;
+    list-style: none;
+    font-size: 0.9375rem;
+    line-height: 1.5;
+    color: var(--color-ink-secondary);
+  }
+  .list li {
+    display: grid;
+    grid-template-columns: 16px minmax(0, 1fr);
+    gap: 8px;
+  }
+  .list svg {
+    margin-top: 3px;
+    color: var(--color-positive);
+  }
+  .practiceLink {
+    margin-top: auto;
+  }
+
+  @media (prefers-reduced-motion: reduce) {
+    .practice:is(:hover, :focus-within) .icon {
+      transform: none;
+    }
+  }
+}

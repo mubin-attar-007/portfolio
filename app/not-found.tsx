@@ -1,10 +1,9 @@
-import type { Metadata } from "next";
-import { Section } from "@/components/layout/section";
-import { PageHeader } from "@/components/ui/page-header";
-import { TextLink } from "@/components/ui/text-link";
-import { NAV } from "@/config/nav";
-import { LABEL, PAGE_BODY_BAND, PAGE_HEADER_BAND } from "@/constants/page";
-import { projects } from "@/content/projects";
+import type { Metadata, Viewport } from "next";
+import { Button } from "@/components/ui/button";
+import { ErrorStage } from "@/components/misc/error-stage";
+import { SmartLink } from "@/components/ui/smart-link";
+import { NAV_ACTIONS, WORK_ITEMS } from "@/config/nav";
+import { BROWSER_CHROME } from "@/constants/theme";
 import { pages } from "@/content/site";
 
 /**
@@ -21,41 +20,63 @@ export const metadata: Metadata = {
   openGraph: null,
 };
 
+export const viewport: Viewport = { themeColor: BROWSER_CHROME.dark };
+
+/** The quick routes back in, beside the case studies and field reports. */
+const QUICK_LINKS = [
+  { label: "Work", href: "/work" },
+  { label: "Writing", href: "/writing" },
+  ...NAV_ACTIONS.filter((item) => item.href === "/contact"),
+];
+
 /**
- * 404 — the shared page header, then the routes back in: home, the primary
- * navigation, and every case study (from content/projects.ts, so a new project
- * is listed here without an edit). Never a dead end.
+ * 404 (dark, after the Clerk 404) — halftone digits in a dotted frame, the
+ * message, the way home, and every work page (config/nav.ts WORK_ITEMS, so a new
+ * case study is listed without an edit): a dead link is never a dead end.
  *
- * A11y: the page's one h1 comes from PageHeader; the case-study group is an h2.
- * Every link is a TextLink — a real link with its label as its name and a
- * 44px target.
+ * A11y: one h1 (the message); each link group is a named navigation.
  */
 export default function NotFound() {
   const copy = pages.notFound;
   return (
-    <>
-      <Section space="lg" className={PAGE_HEADER_BAND}>
-        <PageHeader kicker={copy.kicker} title={copy.title} lede={copy.lede}>
-          <TextLink href="/">{copy.home}</TextLink>
-          {NAV.map((item) => (
-            <TextLink key={item.href} href={item.href}>
-              {item.label}
-            </TextLink>
-          ))}
-        </PageHeader>
-      </Section>
-      <Section space="md" className={PAGE_BODY_BAND}>
-        <h2 className={LABEL}>{copy.caseStudies}</h2>
-        <ul className="mt-2 flex flex-wrap gap-x-6">
-          {projects.map((project) => (
-            <li key={project.slug}>
-              <TextLink href={`/work/${project.slug}`} tone="quiet">
-                {project.title}
-              </TextLink>
+    <ErrorStage
+      digits="404"
+      title={copy.title}
+      lede={<p>{copy.lede}</p>}
+      actions={
+        <Button href="/" variant="grey" caret>
+          Go to homepage
+        </Button>
+      }
+    >
+      <nav aria-label="Quick links" className="mt-10">
+        <ul className="flex flex-wrap justify-center gap-2">
+          {QUICK_LINKS.map((item) => (
+            <li key={item.href}>
+              <Button href={item.href} variant="ghost" size="sm">
+                {item.label}
+              </Button>
             </li>
           ))}
         </ul>
-      </Section>
-    </>
+      </nav>
+      <nav aria-labelledby="nf-work" className="mt-8 w-full max-w-[760px] border-t border-border pt-6">
+        <h2 id="nf-work" className="text-sm font-medium text-ink-tertiary">
+          {copy.caseStudies}
+        </h2>
+        <ul className="mt-3 flex flex-wrap justify-center gap-x-6 gap-y-1">
+          {WORK_ITEMS.map((item) => (
+            <li key={item.slug}>
+              <SmartLink
+                href={item.href}
+                className="inline-flex min-h-11 items-center text-sm text-ink-secondary transition-colors duration-[var(--motion-fast)] hover:text-ink"
+              >
+                {item.label}
+              </SmartLink>
+            </li>
+          ))}
+        </ul>
+      </nav>
+    </ErrorStage>
   );
 }

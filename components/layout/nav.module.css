@@ -341,10 +341,18 @@
     }
   }
 
-  /* The narrowest phones keep "Hire me" and move "Contact" into the menu. */
-  @media (max-width: 380px) {
+  /* Phones keep "Hire me" and move "Contact" into the menu, so the row fits
+     from 360px with the assistant as an icon. */
+  @media (max-width: 430px) {
     .contact {
       display: none;
+    }
+    .ghost {
+      padding: 0 10px;
+    }
+    .brand {
+      margin-right: 4px;
+      padding-right: 10px;
     }
   }
 }

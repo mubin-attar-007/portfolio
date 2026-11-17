@@ -1,13 +1,19 @@
-import type { Metadata } from "next";
-import Link from "next/link";
-import { ArrowUpRight, Check, ChevronDown } from "lucide-react";
+import type { Metadata, Viewport } from "next";
+import { Container } from "@/components/layout/container";
+import { DarkSurface } from "@/components/layout/dark-surface";
 import { Section } from "@/components/layout/section";
-import { PageHeader } from "@/components/ui/page-header";
-import { PAGE_BODY_BAND, PAGE_HEADER_BAND } from "@/constants/page";
-import { formatDate } from "@/lib/format";
+import { EvalsBoard } from "@/components/evals/evals-board";
+import { MethodNotes } from "@/components/evals/method-notes";
+import { evalsPage } from "@/components/evals/copy";
+import { boardRows, projectOptions } from "@/components/evals/rows";
+import evalStyles from "@/components/evals/evals.module.css";
+import { Button } from "@/components/ui/button";
+import { Caret } from "@/components/ui/caret-link";
+import { CircuitArt } from "@/components/ui/circuit-art";
+import { SectionHeader } from "@/components/ui/section-header";
+import { BROWSER_CHROME } from "@/constants/theme";
+import { evalsIntro } from "@/content/evals";
 import { pageMetadata } from "@/lib/seo";
-import { evalAnchor, evals, evalsIntro } from "@/content/evals";
-import type { EvalRow } from "@/content/schema";
 
 export const metadata: Metadata = pageMetadata({
   path: "/evals",
@@ -16,206 +22,77 @@ export const metadata: Metadata = pageMetadata({
     "The eval registry — how each system is measured, the method, and the honest current state.",
 });
 
-/** Status pill — muted for in-progress, planned and retired (never fake-green). */
-function Status({
-  status,
-  result,
-}: {
-  status: EvalRow["status"];
-  result: string;
-}) {
-  if (status === "complete") {
-    return (
-      <span className="font-mono text-xs tabular-nums text-positive">
-        {result}
-      </span>
-    );
-  }
-  const dashed = status === "planned";
-  return (
-    <span
-      className={`inline-flex items-center gap-1.5 rounded-[var(--radius-xs)] border px-2.5 py-0.5 font-mono text-xs tabular-nums text-ink-tertiary ${
-        dashed ? "border-dashed border-border-strong" : "border-border-strong"
-      }`}
-    >
-      <span className="h-1.5 w-1.5 rounded-full bg-ink-tertiary" aria-hidden />
-      {result}
-    </span>
-  );
-}
-
-function ResultLink({
-  href,
-  children,
-}: {
-  href: string;
-  children: React.ReactNode;
-}) {
-  const external = /^https?:\/\//.test(href);
-  const cls =
-    "inline-flex items-center gap-1 font-mono text-xs text-ink-tertiary underline decoration-border-strong underline-offset-4 hover:text-accent hover:decoration-accent";
-  return external ? (
-    <a href={href} target="_blank" rel="noopener noreferrer" className={cls}>
-      {children} <ArrowUpRight size={12} strokeWidth={1.6} aria-hidden />
-    </a>
-  ) : (
-    <Link href={href} prefetch={false} className={cls}>
-      {children}
-    </Link>
-  );
-}
-
-
+export const viewport: Viewport = { themeColor: BROWSER_CHROME.dark };
 
 /**
- * A single eval as a registry row: the measured RESULT is the focal point, the
- * system/benchmark/metric label it, and the honest note is the method footnote.
- *
- * The result is set in INK, not in the positive colour. Rendering every complete
- * row green turned an honest registry into a wall of approval — a colour-only
- * signal saying "all good" about numbers whose entire point is that some of them
- * are not, and that one of them replaced a flattering figure with a lower true
- * one. Completion is carried by a status chip that says the word instead.
- *
- * A retired row is muted (a subtle ground, no elevation, secondary ink) and
- * carries no figure. Its reason and the audit that withdrew it stay visible
- * rather than collapsed: the retraction is the evidence this row now offers.
- * The word "Retired" is in the chip and in the text, so the state never rests
- * on the muted colour alone.
- */
-function EvalCard({ e }: { e: EvalRow }) {
-  const { retired } = e;
-  return (
-    <li
-      id={evalAnchor(e)}
-      className={`scroll-mt-28 rounded-[var(--radius-md)] border border-border p-6 ${
-        retired ? "bg-bg-subtle" : "bg-surface shadow-[var(--shadow-surface)]"
-      }`}
-    >
-      <div className="grid gap-x-8 gap-y-5 md:grid-cols-[1fr_auto]">
-        <div className="min-w-0">
-          <p className="font-mono text-xs uppercase tracking-[0.06em] text-ink-tertiary">
-            {e.system} · {e.benchmark}
-          </p>
-          <p className={`mt-2 text-base font-medium ${retired ? "text-ink-secondary" : "text-ink"}`}>
-            {e.metric}
-          </p>
-          {retired ? (
-            <div className="mt-3 max-w-[var(--width-prose)] border-l-[length:var(--stripe-width)] border-l-border-strong pl-4">
-              <p className="text-sm leading-relaxed text-ink-secondary">
-                <span className="font-medium text-ink">
-                  {evalsIntro.retired.on} <time dateTime={retired.date}>{formatDate(retired.date)}</time>.
-                </span>{" "}
-                {retired.reason}
-              </p>
-              <span className="mt-3 block">
-                <ResultLink href={retired.link}>{evalsIntro.retired.audit}</ResultLink>
-              </span>
-            </div>
-          ) : null}
-          {/* The method is the point of this registry, so it is never hidden —
-              it is COLLAPSED, in a native <details>. That distinction matters:
-              a native disclosure is keyboard-operable, announced correctly,
-              open-able by find-in-page, and prints expanded, all without a
-              line of JavaScript. The summary carries the first sentence so a
-              closed row still says what was measured. */}
-          {e.note ? (
-            <details className="group/method mt-3 max-w-[var(--width-prose)]">
-              <summary className="cursor-pointer list-none text-sm leading-relaxed text-ink-secondary marker:content-none">
-                {e.note.split(". ")[0]}.
-                <span className="ml-1.5 inline-flex items-center gap-1 whitespace-nowrap text-accent">
-                  <span className="group-open/method:hidden">Full method</span>
-                  <span className="hidden group-open/method:inline">Hide method</span>
-                  <ChevronDown
-                    size={12}
-                    strokeWidth={2.25}
-                    aria-hidden
-                    className="transition-transform duration-fast ease-[var(--ease-out)] group-open/method:rotate-180"
-                  />
-                </span>
-              </summary>
-              <p className="mt-3 border-l-[length:var(--stripe-width)] border-l-border-strong pl-4 text-sm leading-relaxed text-ink-secondary">
-                {e.note}
-              </p>
-            </details>
-          ) : null}
-          {e.link ? (
-            <span className="mt-3 block">
-              <ResultLink href={e.link}>evidence</ResultLink>
-            </span>
-          ) : null}
-        </div>
-        <div className="flex flex-col gap-2 border-border md:min-w-[13rem] md:max-w-[17rem] md:items-end md:border-l md:pl-8 md:text-right">
-          {e.status === "complete" ? (
-            <>
-              <span className="font-mono text-[1.375rem] leading-tight tabular-nums tracking-[-0.02em] text-ink">
-                {e.result}
-              </span>
-              <span className="inline-flex items-center gap-1.5 rounded-[var(--radius-pill)] border border-border bg-bg-subtle px-2 py-0.5 font-mono text-xs text-ink-secondary">
-                <Check size={11} strokeWidth={2.5} aria-hidden className="text-positive" />
-                measured
-              </span>
-            </>
-          ) : (
-            <Status status={e.status} result={e.result} />
-          )}
-          <time className="font-mono text-xs text-ink-tertiary">
-            {e.date ? formatDate(e.date) : "—"}
-          </time>
-        </div>
-      </div>
-    </li>
-  );
-}
-
-/**
- * /evals — the eval registry as a scannable scoreboard of cards. The header
- * lede + the fine print (`evalsIntro.body`) establish what counts as a
- * measurement BEFORE the readings, then each system's real result is the focal
- * point of its card. No fake-green: an unfinished run shows a muted pill, never
- * a borrowed number, and a retired result stays listed with the reason it was
- * withdrawn instead of disappearing.
+ * /evals — the eval registry as a leaderboard (Clerk LLM Leaderboard pattern)
+ * on a dark page: a hero over circuit art, filters, the ranked table, then the
+ * full method behind every row and a closing CTA. Source: content/evals.ts only.
+ * A retired result stays listed, greyed, with its reason; nothing is tinted as a
+ * score unless it is one.
  */
 export default function EvalsPage() {
   return (
-    <>
-      <Section space="lg" className={PAGE_HEADER_BAND}>
-        <PageHeader
-          kicker={evalsIntro.kicker}
-          title={evalsIntro.title}
-          lede={evalsIntro.lede}
-        />
+    <DarkSurface>
+      <section className="relative overflow-hidden" aria-labelledby="evals-title">
+        <CircuitArt fade="sides" />
+        <Container className="relative flex flex-col items-center pt-[clamp(7rem,12vw,10rem)] pb-16 text-center">
+          <a href={evalsPage.pill.href} className={evalStyles.pill}>
+            <span className={evalStyles.pillDot} aria-hidden="true" />
+            {evalsPage.pill.label}
+            <span className={evalStyles.pillCta}>
+              {evalsPage.pill.cta}
+              <Caret />
+            </span>
+          </a>
+          <h1 id="evals-title" className="mt-8 text-display text-ink text-balance">
+            {evalsPage.title}
+          </h1>
+          <p className="mt-6 max-w-[600px] text-page-lead text-ink-secondary">{evalsIntro.lede}</p>
+        </Container>
+      </section>
+
+      <Section space="xs" ariaLabel={evalsPage.board.caption} className="!bg-transparent">
+        <EvalsBoard rows={boardRows} projects={projectOptions} />
       </Section>
-      <Section space="md" className={PAGE_BODY_BAND}>
-        {/* What counts as a measurement here — the standard, stated once, before
-            the readings so the numbers are read the right way. */}
-        <div className="max-w-[var(--width-prose)] border-l-[length:var(--stripe-width)] border-l-border-strong pl-5">
+
+      <Section space="sm" id="methods" className="!bg-transparent">
+        <SectionHeader kicker={evalsPage.methods.kicker} title={evalsPage.methods.title} lead={evalsPage.methods.lead} />
+        <div className="mt-10 grid gap-6 lg:grid-cols-2">
           {evalsIntro.body.map((p) => (
-            <p key={p} className="text-sm leading-relaxed text-ink-secondary [&+p]:mt-3">
+            <p key={p} className="text-[0.9375rem] leading-relaxed text-ink-secondary">
               {p}
             </p>
           ))}
         </div>
-
-        {/* How to read a row — the definitions, before the readings. Without
-            these, a policy test reads like model accuracy and a retired row
-            reads like a missing one; the difference is the argument this page
-            is making. */}
-        <dl className="mt-10 grid gap-x-10 gap-y-4 border-y border-border py-6 sm:grid-cols-2 lg:grid-cols-3">
+        <h3 className="mt-12 mb-2 text-sm font-medium text-ink-tertiary">{evalsPage.methods.terms}</h3>
+        <dl className={evalStyles.terms}>
           {evalsIntro.terms.map((d) => (
             <div key={d.term}>
-              <dt className="font-mono text-xs uppercase tracking-[0.06em] text-ink">{d.term}</dt>
-              <dd className="mt-1.5 text-sm leading-relaxed text-ink-secondary">{d.def}</dd>
+              <dt>{d.term}</dt>
+              <dd>{d.def}</dd>
             </div>
           ))}
         </dl>
-
-        <ul aria-label="Evaluation registry" className="mt-8 flex flex-col gap-4">
-          {evals.map((e) => (
-            <EvalCard key={`${e.system}-${e.benchmark}`} e={e} />
-          ))}
-        </ul>
+        <div className="mt-10">
+          <MethodNotes />
+        </div>
       </Section>
-    </>
+
+      <Section space="lg" className="!bg-transparent">
+        <div className="flex flex-col items-center text-center">
+          <h2 className="text-section text-ink text-balance">{evalsPage.cta.title}</h2>
+          <p className="mt-4 max-w-[520px] text-ink-secondary">{evalsPage.cta.body}</p>
+          <div className="mt-8 flex flex-wrap justify-center gap-3">
+            <Button href={evalsPage.cta.primary.href} variant="violet" size="lg" caret>
+              {evalsPage.cta.primary.label}
+            </Button>
+            <Button href={evalsPage.cta.secondary.href} variant="grey" size="lg">
+              {evalsPage.cta.secondary.label}
+            </Button>
+          </div>
+        </div>
+      </Section>
+    </DarkSurface>
   );
 }

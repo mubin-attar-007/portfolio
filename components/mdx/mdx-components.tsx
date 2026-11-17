@@ -23,7 +23,7 @@ import { PROSE } from "@/components/mdx/prose";
  * rest, never distinguished by colour alone (WCAG 1.4.1). External links are
  * marked `rel="noopener noreferrer"`.
  */
-function slugify(text: string): string {
+export function slugify(text: string): string {
   return text
     .toLowerCase()
     .replace(/[^a-z0-9]+/g, "-")
@@ -38,16 +38,38 @@ function toText(node: ReactNode): string {
   return "";
 }
 
-function H2({ children, ...props }: ComponentPropsWithoutRef<"h2">) {
+/**
+ * The hover "#" beside a heading: a real link to the section, so a reader can
+ * copy a deep link. It sits in the left margin from `md` up and is hidden
+ * from assistive tech (the heading itself is the target; the TOC links to it).
+ */
+function HeadingAnchor({ id }: { id: string }) {
   return (
-    <h2 id={slugify(toText(children))} className={PROSE.h2} {...props}>
+    <a
+      href={`#${id}`}
+      aria-hidden="true"
+      tabIndex={-1}
+      className="absolute top-0 -left-6 hidden pr-2 font-normal text-ink-tertiary opacity-0 transition-opacity duration-fast ease-[var(--ease-out)] group-hover/heading:opacity-100 hover:text-accent md:block"
+    >
+      #
+    </a>
+  );
+}
+
+function H2({ children, ...props }: ComponentPropsWithoutRef<"h2">) {
+  const id = slugify(toText(children));
+  return (
+    <h2 id={id} className={PROSE.h2} {...props}>
+      <HeadingAnchor id={id} />
       {children}
     </h2>
   );
 }
 function H3({ children, ...props }: ComponentPropsWithoutRef<"h3">) {
+  const id = slugify(toText(children));
   return (
-    <h3 id={slugify(toText(children))} className={PROSE.h3} {...props}>
+    <h3 id={id} className={PROSE.h3} {...props}>
+      <HeadingAnchor id={id} />
       {children}
     </h3>
   );

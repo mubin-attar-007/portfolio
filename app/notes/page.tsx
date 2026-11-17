@@ -1,66 +1,20 @@
 import type { Metadata } from "next";
-import { Rss } from "lucide-react";
-import { Section } from "@/components/layout/section";
-import { PageHeader } from "@/components/ui/page-header";
-import { TextLink } from "@/components/ui/text-link";
-import { PAGE_BODY_BAND, PAGE_HEADER_BAND } from "@/constants/page";
-import { pages } from "@/content/site";
-import { allNotes } from "@/lib/notes";
+import { writingPage } from "@/content/pages/writing";
 import { pageMetadata } from "@/lib/seo";
-import { NoteList } from "@/components/features/note-list";
-import {
-  NewsletterForm,
-  NEWSLETTER_ENABLED,
-} from "@/components/features/newsletter-form";
+import { allPosts } from "@/components/writing/posts";
+import { WritingIndex } from "@/components/writing/writing-index";
 
 export const metadata: Metadata = pageMetadata({
   path: "/notes",
-  title: "Notes",
-  description:
-    "A running notebook — short notes on retrieval, evals, agents, and infrastructure.",
+  title: writingPage.notesMeta.title,
+  description: writingPage.notesMeta.description,
 });
 
 /**
- * /notes — the digital garden index. Compact, tag-filterable rows grouped by
- * month (NoteList). Newsletter capture sits at the foot of the list, not the
- * hero.
- *
- * Shares its exact shell with /writing — the same `PageHeader`, actions, and
- * `PAGE_BODY_BAND` content band underneath. The two pages are siblings, so
- * the only thing that should differ between them is what they say.
+ * /notes — the writing index with Notes preselected, filtered on the server.
+ * The same page as /writing rather than a redirect, so /notes keeps its own
+ * title, description and social card, and its URL and /notes/[slug] stay put.
  */
-export default async function NotesIndex() {
-  const notes = await allNotes();
-  const items = notes.map((n) => ({
-    slug: n.slug,
-    title: n.title,
-    date: n.date,
-    tags: n.tags,
-  }));
-  const copy = pages.notes;
-
-  return (
-    <>
-      <Section space="lg" className={PAGE_HEADER_BAND}>
-        <PageHeader kicker={copy.kicker} title={copy.title} lede={copy.lede}>
-          <TextLink href={copy.crossHref}>{copy.crossCta}</TextLink>
-          <a
-            href={copy.feedHref}
-            className="inline-flex items-center gap-1.5 font-mono text-xs text-ink-tertiary transition-colors duration-fast ease-[var(--ease-out)] hover:text-accent"
-          >
-            <Rss size={13} strokeWidth={1.6} aria-hidden />
-            {copy.feedCta}
-          </a>
-        </PageHeader>
-      </Section>
-      <Section space="md" className={PAGE_BODY_BAND}>
-        <NoteList notes={items} />
-        {NEWSLETTER_ENABLED && (
-          <div className="mt-20 max-w-[var(--width-prose)]">
-            <NewsletterForm />
-          </div>
-        )}
-      </Section>
-    </>
-  );
+export default async function NotesPage() {
+  return <WritingIndex posts={await allPosts()} initial="note" />;
 }

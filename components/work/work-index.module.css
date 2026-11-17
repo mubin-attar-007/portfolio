@@ -1,0 +1,262 @@
+/* /work — the product overview. Tokens only; the hover states move shadows,
+   transforms and colour, and reduced motion makes them instant. */
+
+/* ---- header ------------------------------------------------------------- */
+.head {
+  isolation: isolate;
+  overflow-x: clip;
+}
+.headArt {
+  z-index: -1;
+  color: var(--color-dots);
+}
+
+/* ---- field work (on the dark plate) ------------------------------------- */
+.fieldGrid {
+  display: grid;
+  gap: 10px;
+  margin-top: 56px;
+}
+@media (min-width: 900px) {
+  .fieldGrid {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+}
+.field {
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  padding: 28px;
+  border-radius: var(--radius-xl);
+  background: var(--color-surface);
+  box-shadow: var(--shadow-card);
+  transition:
+    background-color var(--motion-slow) var(--ease-out),
+    box-shadow var(--motion-slow) var(--ease-out);
+}
+.field:is(:hover, :focus-within) {
+  background: var(--card-hover-bg);
+  box-shadow: var(--shadow-card-hover);
+}
+.fieldTop {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+}
+.fieldIcon {
+  position: relative;
+  display: grid;
+  width: 40px;
+  height: 40px;
+  place-items: center;
+  border-radius: var(--radius-md);
+  color: var(--color-plate-cyan);
+  background: var(--color-plate-raised);
+  box-shadow: inset 0 0 0 1px var(--color-plate-border-strong);
+}
+/* The halo: one ring that breathes out while the card is hovered or focused. */
+.fieldIcon::after {
+  content: "";
+  position: absolute;
+  inset: -1px;
+  border-radius: inherit;
+  box-shadow: 0 0 0 1px var(--color-plate-cyan);
+  opacity: 0;
+}
+.field:is(:hover, :focus-within) .fieldIcon::after {
+  animation: halo 1.4s var(--ease-out) infinite;
+}
+.fieldPrivate {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  font-size: 0.78125rem;
+  color: var(--color-ink-tertiary);
+}
+.fieldTitle {
+  margin-top: 28px;
+  font-size: var(--text-title);
+  font-weight: 700;
+  line-height: 1.35;
+  letter-spacing: -0.015em;
+  color: var(--color-ink);
+}
+/* The title link covers the card, so the whole card is one target. */
+.stretch::after {
+  content: "";
+  position: absolute;
+  inset: 0;
+  border-radius: inherit;
+}
+.stretch:focus-visible {
+  outline: none;
+}
+.stretch:focus-visible::after {
+  outline: 2px solid var(--color-accent);
+  outline-offset: 2px;
+}
+.fieldBody {
+  margin-top: 10px;
+  font-size: 0.9375rem;
+  line-height: 1.6;
+  color: var(--color-ink-secondary);
+}
+.pills {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  margin-top: 18px;
+}
+.fieldMore {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  margin-top: auto;
+  padding-top: 24px;
+  font-size: 0.875rem;
+  font-weight: 600;
+  color: var(--color-ink);
+}
+
+/* ---- public systems ------------------------------------------------------ */
+.publicGrid {
+  display: grid;
+  gap: 12px;
+  margin-top: 56px;
+}
+@media (min-width: 900px) {
+  .publicGrid {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+}
+.public {
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+  border-radius: var(--radius-xl);
+  background: var(--color-surface);
+  box-shadow: var(--shadow-card);
+  transition: box-shadow var(--motion-slow) var(--ease-out);
+}
+.public:is(:hover, :focus-within) {
+  box-shadow: var(--shadow-card-hover);
+}
+/* The capture sits on a sunken, dotted stage and rises into view on hover. */
+.shot {
+  display: block;
+  padding: 28px 28px 0;
+  overflow: hidden;
+  background:
+    radial-gradient(circle, var(--color-dots) 1px, transparent 1.2px) 0 0 / 16px 16px,
+    var(--color-bg-subtle);
+  border-bottom: 1px solid var(--color-border);
+}
+.shot > * {
+  border-bottom-left-radius: 0;
+  border-bottom-right-radius: 0;
+  transform: translateY(10px);
+  transition: transform var(--motion-slow) var(--spring-soft);
+}
+.public:is(:hover, :focus-within) .shot > * {
+  transform: translateY(0);
+}
+.shot img {
+  display: block;
+  width: 100%;
+  height: auto;
+  aspect-ratio: 16 / 9;
+  object-fit: cover;
+  object-position: top;
+}
+.publicBody {
+  display: flex;
+  flex: 1;
+  flex-direction: column;
+  padding: 24px 26px 26px;
+}
+.publicHead {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px 12px;
+}
+.category {
+  font-size: 0.8125rem;
+  color: var(--color-ink-tertiary);
+}
+.publicTitle {
+  margin-top: 12px;
+  font-size: 1.375rem;
+  font-weight: 700;
+  letter-spacing: -0.02em;
+  color: var(--color-ink);
+}
+.publicTitle a {
+  transition: color var(--motion-fast) var(--ease-out);
+}
+.publicTitle a:hover {
+  color: var(--color-accent);
+}
+.publicDef {
+  margin-top: 6px;
+  font-size: 0.9375rem;
+  line-height: 1.55;
+  color: var(--color-ink-secondary);
+}
+.metric {
+  display: grid;
+  gap: 4px;
+  margin-top: 20px;
+  padding-top: 16px;
+  border-top: 1px dashed var(--color-dots);
+}
+.metricValue {
+  font-size: 1.125rem;
+  font-weight: 700;
+  letter-spacing: -0.015em;
+  font-variant-numeric: tabular-nums;
+  color: var(--color-ink);
+}
+.metricLabel {
+  font-size: 0.8125rem;
+  line-height: 1.5;
+  color: var(--color-ink-tertiary);
+}
+.methodLink {
+  color: var(--color-accent);
+  text-decoration: underline;
+  text-decoration-color: color-mix(in srgb, var(--color-accent) 35%, transparent);
+  text-underline-offset: 3px;
+}
+.methodLink:hover {
+  text-decoration-color: currentColor;
+}
+.links {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px 22px;
+  margin-top: auto;
+  padding-top: 22px;
+}
+
+/* ---- stack band ---------------------------------------------------------- */
+.stackBand {
+  display: grid;
+  gap: 28px;
+  align-items: start;
+}
+@media (min-width: 1000px) {
+  .stackBand {
+    grid-template-columns: minmax(0, 0.7fr) minmax(0, 1.3fr);
+    gap: 64px;
+  }
+}
+.stack {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  list-style: none;
+  padding: 0;
+}

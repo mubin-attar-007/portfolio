@@ -1,113 +1,76 @@
 import type { Metadata } from "next";
-import Link from "next/link";
-
 import { Section } from "@/components/layout/section";
+import { Button } from "@/components/ui/button";
+import { CircuitArt } from "@/components/ui/circuit-art";
 import { PageHeader } from "@/components/ui/page-header";
-import { SectionHeading } from "@/components/ui/section-heading";
-import { TextLink } from "@/components/ui/text-link";
-import { LABEL, PAGE_BODY_BAND, PAGE_HEADER_BAND, PANEL, stagger } from "@/constants/page";
-import { trust } from "@/content/site";
+import { SectionHeader } from "@/components/ui/section-header";
+import { EvidenceTable } from "@/components/trust/evidence-table";
+import { Practices } from "@/components/trust/practices";
+import { EVIDENCE, TRUST_PAGE } from "@/components/trust/trust-copy";
+import styles from "@/components/trust/trust.module.css";
 import { SITE } from "@/config/site";
 import { pageMetadata } from "@/lib/seo";
 
 export const metadata: Metadata = pageMetadata({
   path: "/trust",
   title: "Trust",
-  description: `Evidence-first trust page for ${SITE.name}: safety controls, engineering discipline, and quality standards.`,
+  description: `Evidence-first trust page for ${SITE.name}: every claim with its status and a source you can check, including what is not claimed.`,
 });
 
+/** /trust — the Clerk Security pattern: a light hero, the evidence table, principles, practices, a CTA. */
 export default function TrustPage() {
+  const { glance, principles, practices, cta, actions } = TRUST_PAGE;
   return (
     <>
-      <Section space="md" className={PAGE_HEADER_BAND}>
-        <PageHeader
-          kicker={trust.kicker}
-          title={trust.title}
-          lede={trust.body}
-        >
-          <TextLink href="/now" tone="quiet">
-            What&rsquo;s shipping now
-          </TextLink>
-          <TextLink href="/hire">Talk about trust in production</TextLink>
-        </PageHeader>
+      <Section space="head" className={styles.hero}>
+        <CircuitArt fade="top" />
+        <div className={styles.heroInner}>
+          <PageHeader kicker={TRUST_PAGE.kicker} title={TRUST_PAGE.title} lede={TRUST_PAGE.lead}>
+            <Button variant="violet" size="lg" caret href={actions.primary.href}>
+              {actions.primary.label}
+            </Button>
+            <Button variant="light" size="lg" caret href={actions.secondary.href}>
+              {actions.secondary.label}
+            </Button>
+          </PageHeader>
+        </div>
       </Section>
-      <Section space="md" className={PAGE_BODY_BAND}>
-        <dl className="divide-y divide-border border-y border-border">
-          {trust.signals.map((metric, i) => (
-            <div
-              key={metric.value}
-              className="grid gap-2 py-5 sm:grid-cols-[8rem_1fr] sm:items-baseline sm:gap-8"
-              style={stagger(i + 1)}
-            >
-              <dt className={LABEL}>{metric.label}</dt>
-              <dd className="text-sm leading-6 text-ink-secondary">
-                {metric.value}{" "}
-                <Link href={metric.href} prefetch={false} className="link-underline text-ink">
-                  Check it
-                </Link>
-              </dd>
-            </div>
+
+      <Section space="sm" ariaLabelledBy="glance-title">
+        <SectionHeader id="glance-title" kicker={glance.kicker} title={glance.title} size="sm" />
+        <div className="mt-8">
+          <EvidenceTable rows={EVIDENCE} />
+        </div>
+      </Section>
+
+      <Section space="md" tone="subtle" ariaLabelledBy="principles-title">
+        <SectionHeader id="principles-title" kicker={principles.kicker} title={principles.title} />
+        <ul className={`mt-10 ${styles.principles}`}>
+          {principles.items.map((item) => (
+            <li key={item.title} className={styles.principle}>
+              <h3>{item.title}</h3>
+              <p>{item.body}</p>
+            </li>
           ))}
-        </dl>
+        </ul>
+      </Section>
 
-        <div className="mt-16">
-          <SectionHeading kicker="Operating principles" size="compact">
-            Evidence before statements
-          </SectionHeading>
-
-          <div className="mt-8 reveal-stagger grid gap-4 md:grid-cols-3">
-            {trust.principles.map((principle, i) => (
-              <article
-                key={principle.title}
-                className={`${PANEL} bg-bg-subtle reveal transition-colors duration-fast ease-[var(--ease-out)] hover:border-border-strong`}
-                style={stagger(i + 1)}
-              >
-                <h3 className="text-base font-semibold text-ink">{principle.title}</h3>
-                <p className="mt-2.5 text-sm leading-6 text-ink-secondary">
-                  {principle.body}
-                </p>
-              </article>
-            ))}
-          </div>
+      <Section space="md" ariaLabelledBy="practices-title">
+        <SectionHeader id="practices-title" kicker={practices.kicker} title={practices.title} />
+        <div className="mt-10">
+          <Practices />
         </div>
+      </Section>
 
-        <div className="mt-16">
-          <SectionHeading kicker="Systems and controls" size="compact">
-            How quality is protected
-          </SectionHeading>
-
-          <div className="mt-8 reveal-stagger space-y-4">
-            {trust.controls.map((group, i) => (
-              <article
-                key={group.title}
-                className="rounded-[var(--radius-md)] border-l-[length:var(--stripe-width)] border-l-ink py-1 transition-colors duration-fast hover:border-l-accent"
-                style={stagger(i + 1)}
-              >
-                <div className="border border-border/80 bg-surface p-6">
-                  <p className={LABEL}>{group.title}</p>
-                  <ul className="mt-4 space-y-2 text-sm leading-6 text-ink-secondary">
-                    {group.items.map((item) => (
-                      <li key={item} className="flex items-start gap-2">
-                        <span aria-hidden="true">•</span>
-                        <span>{item}</span>
-                      </li>
-                    ))}
-                  </ul>
-                </div>
-              </article>
-            ))}
-          </div>
-        </div>
-
-        <div className="reveal mt-16 border-t border-border pt-8">
-          <div className="flex flex-wrap items-start justify-between gap-6 sm:items-center">
-            <p className="max-w-[45ch] text-sm text-ink-secondary">
-              Want to see what&rsquo;s shipping right now — the changes,
-              experiments, and reliability work in flight?
-            </p>
-            <TextLink href="/now">See what I&rsquo;m doing now</TextLink>
-          </div>
-        </div>
+      <Section space="lg" tone="subtle" ariaLabelledBy="trust-cta-title">
+        <SectionHeader id="trust-cta-title" title={cta.title} lead={cta.body} align="center">
+          <Button variant="dark" size="lg" caret href={cta.primary.href}>
+            {cta.primary.label}
+          </Button>
+          <Button variant="light" size="lg" caret href={cta.secondary.href}>
+            {cta.secondary.label}
+          </Button>
+        </SectionHeader>
       </Section>
     </>
   );

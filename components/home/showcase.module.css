@@ -1,0 +1,351 @@
+/* Home: tabbed showcase (prototype `.show`, `.tabs`, `.stage`, `.focus`). */
+.show {
+  margin-top: 56px;
+  overflow: hidden;
+  border-radius: 18px;
+  background: var(--color-surface);
+  box-shadow: var(--shadow-panel);
+}
+
+/* Tabs: one pill springs from tab to tab. Until it is measured, the selected
+   tab carries the fill itself (server render, no layout shift). */
+.tabs {
+  position: relative;
+  display: grid;
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  gap: 4px;
+  padding: 4px;
+  border-bottom: 1px solid var(--color-border);
+}
+.indicator {
+  position: absolute;
+  z-index: 0;
+  left: 0;
+  top: 0;
+  width: 0;
+  height: 0;
+  border-radius: var(--radius-lg);
+  background: #f1f1f3;
+  box-shadow: inset 0 0 0 1px rgba(19, 19, 22, 0.03);
+  pointer-events: none;
+  transition:
+    transform 500ms var(--spring-soft),
+    width 500ms var(--spring-soft),
+    height 500ms var(--spring-soft);
+}
+.noAnim {
+  transition: none;
+}
+.tab {
+  position: relative;
+  z-index: 1;
+  display: inline-flex;
+  min-width: 0;
+  align-items: center;
+  justify-content: center;
+  gap: 10px;
+  padding: 11px 12px;
+  border-radius: var(--radius-lg);
+  font-size: 0.9375rem;
+  font-weight: 500;
+  color: var(--color-ink);
+  cursor: pointer;
+  transition: background-color var(--motion-base) var(--ease-out);
+}
+.tab:hover:not([aria-selected="true"]) {
+  background: rgba(19, 19, 22, 0.03);
+}
+.tab::before {
+  content: "";
+  flex: none;
+  width: 7px;
+  height: 7px;
+  border-radius: 50%;
+  border: 1.5px solid var(--color-border-strong);
+  transition:
+    border-color var(--motion-base) var(--ease-out),
+    background-color var(--motion-base) var(--ease-out),
+    transform var(--motion-slow) var(--spring);
+}
+.tab:hover::before {
+  border-color: #9a9bab;
+}
+.tab[aria-selected="true"] {
+  font-weight: 600;
+}
+.tabs:not(.hasInd) .tab[aria-selected="true"] {
+  background: #f1f1f3;
+}
+.tab[aria-selected="true"]::before {
+  border-color: var(--color-accent);
+  background: var(--color-accent);
+  transform: scale(1.15);
+}
+
+/* Stage: a fixed height, so switching panels never moves the page. */
+.stage {
+  position: relative;
+  height: 520px;
+  overflow: hidden;
+  background:
+    radial-gradient(60% 70% at 50% 60%, rgba(107, 75, 255, 0.06), transparent 70%),
+    var(--color-surface);
+}
+.panel {
+  position: absolute;
+  inset: 0;
+}
+.panel[hidden] {
+  display: none;
+}
+.panel:focus-visible {
+  outline-offset: -4px;
+}
+
+/* Side cards: faded context behind the focus card (hidden on phones). */
+.ghost {
+  position: absolute;
+  width: 300px;
+  padding: 18px 20px;
+  border-radius: 14px;
+  background: var(--color-surface);
+  box-shadow: var(--shadow-card);
+  opacity: 0.42;
+  filter: blur(0.4px);
+  font-size: 0.8125rem;
+  color: var(--color-ink-secondary);
+}
+.ghost b {
+  display: block;
+  margin-bottom: 8px;
+  font-size: 0.875rem;
+  color: var(--color-ink);
+}
+.ghostRow {
+  display: flex;
+  justify-content: space-between;
+  gap: 18px;
+  padding: 6px 0;
+  border-top: 1px solid var(--color-border);
+}
+.ghostLeft {
+  left: 4%;
+  top: 80px;
+}
+.ghostRight {
+  right: 4%;
+  top: 120px;
+}
+.ghostRightHigh {
+  right: 4%;
+  top: 70px;
+}
+
+/* The focus card */
+.focus {
+  position: absolute;
+  left: 50%;
+  top: 46px;
+  width: min(380px, calc(100% - 32px));
+  overflow: hidden;
+  transform: translateX(-50%);
+  border-radius: var(--radius-xl);
+  background: var(--color-surface);
+  box-shadow:
+    0 0 0 1px rgba(19, 19, 22, 0.07),
+    0 2px 4px rgba(19, 19, 22, 0.05),
+    0 24px 56px -16px rgba(19, 19, 22, 0.22);
+}
+.wide {
+  width: min(440px, calc(100% - 32px));
+}
+/* The sheen that sweeps the card when its panel arrives. */
+.focus::after {
+  content: "";
+  position: absolute;
+  inset: 0;
+  z-index: 2;
+  pointer-events: none;
+  background: linear-gradient(105deg, transparent 32%, rgba(255, 255, 255, 0.85) 47%, rgba(255, 255, 255, 0.85) 53%, transparent 68%);
+  transform: translateX(-120%);
+}
+.sheen::after {
+  animation: sheen 1.3s var(--ease-out) 120ms both;
+}
+.focusBody {
+  padding: 26px 26px 22px;
+}
+.focusBody h3 {
+  text-align: center;
+  font-size: 1.0625rem;
+  font-weight: 700;
+  letter-spacing: -0.01em;
+  color: var(--color-ink);
+}
+.hint {
+  margin: 4px 0 18px;
+  text-align: center;
+  font-size: 0.8125rem;
+  color: var(--color-ink-secondary);
+}
+.kv {
+  display: flex;
+  justify-content: space-between;
+  gap: 12px;
+  padding: 10px 0;
+  border-top: 1px solid var(--color-border);
+  font-size: 0.875rem;
+}
+.kv span:first-child {
+  color: var(--color-ink-secondary);
+}
+.kv b {
+  font-weight: 600;
+}
+.ok {
+  font-weight: 600;
+  color: var(--color-positive);
+}
+.mockButton {
+  display: block;
+  margin-top: 16px;
+  padding: 10px;
+  border-radius: 9px;
+  text-align: center;
+  font-size: 0.875rem;
+  font-weight: 600;
+  color: #fff;
+  background: linear-gradient(#3a3a42, #232328);
+  box-shadow:
+    inset 0 1px 0 rgba(255, 255, 255, 0.12),
+    0 1px 2px rgba(0, 0, 0, 0.2);
+}
+.focusFoot {
+  padding: 12px;
+  border-top: 1px solid var(--color-border);
+  background: var(--color-bg);
+  text-align: center;
+}
+.sample {
+  display: inline-block;
+  padding: 2px 9px;
+  border-radius: var(--radius-pill);
+  background: #f1f1f3;
+  font-size: 0.71875rem;
+  color: var(--color-ink-secondary);
+}
+.sql {
+  margin-bottom: 6px;
+  padding: 10px 12px;
+  overflow: hidden;
+  border: 1px solid var(--color-border);
+  border-radius: 9px;
+  background: var(--color-bg);
+  white-space: pre-wrap;
+  font-family: var(--font-mono);
+  font-size: 0.78125rem;
+  line-height: 1.6;
+  color: var(--color-ink);
+}
+.checks li {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 6px 0;
+  font-size: 0.84375rem;
+}
+.checks li::before {
+  content: "✓";
+  font-weight: 700;
+  color: var(--color-positive);
+}
+.tag {
+  position: relative;
+  display: grid;
+  height: 120px;
+  margin: 4px 0 12px;
+  place-items: center;
+  border-radius: var(--radius-lg);
+  background: var(--color-accent-soft);
+  color: var(--color-accent);
+}
+.tag svg {
+  width: 44px;
+  height: 44px;
+}
+.ring {
+  position: absolute;
+  width: 74px;
+  height: 74px;
+  border-radius: 50%;
+  border: 1.5px solid rgba(107, 75, 255, 0.35);
+}
+.ring2 {
+  width: 104px;
+  height: 104px;
+  border-color: rgba(107, 75, 255, 0.18);
+}
+.chatQ {
+  width: fit-content;
+  max-width: 85%;
+  margin-left: auto;
+  padding: 9px 13px;
+  border-radius: 14px 14px 4px 14px;
+  background: var(--color-ink);
+  font-size: 0.84375rem;
+  color: #fff;
+}
+.chatA {
+  margin-top: 10px;
+  padding: 10px 13px;
+  border-radius: 14px 14px 14px 4px;
+  background: #f4f4f6;
+  font-size: 0.84375rem;
+  line-height: 1.5;
+  color: var(--color-ink);
+}
+.cite {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+  margin-top: 8px;
+}
+.cite span {
+  padding: 2px 8px;
+  border: 1px solid var(--color-border-strong);
+  border-radius: var(--radius-pill);
+  background: #fff;
+  font-size: 0.71875rem;
+}
+.askInput {
+  margin-top: 12px;
+  padding: 10px 12px;
+  border: 1px solid var(--color-border-strong);
+  border-radius: 10px;
+  font-size: 0.84375rem;
+  color: var(--color-ink-tertiary);
+}
+
+@media (max-width: 1000px) {
+  .ghost {
+    display: none;
+  }
+}
+@media (max-width: 640px) {
+  .tabs {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+  .tab {
+    justify-content: flex-start;
+    font-size: 0.875rem;
+  }
+  .stage {
+    height: 500px;
+  }
+  .focus {
+    top: 24px;
+  }
+  .focusBody {
+    padding: 22px 20px 18px;
+  }
+}

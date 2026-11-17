@@ -1,182 +1,106 @@
 import type { Metadata } from "next";
-import Image from "next/image";
-import Link from "next/link";
-import { ArrowRight, ArrowUpRight } from "lucide-react";
 import { Section } from "@/components/layout/section";
+import { Button } from "@/components/ui/button";
+import { CaretLink } from "@/components/ui/caret-link";
+import { Chip } from "@/components/ui/chip";
+import { CircuitArt } from "@/components/ui/circuit-art";
 import { PageHeader } from "@/components/ui/page-header";
-import { TextLink } from "@/components/ui/text-link";
-import { ProjectCard } from "@/components/work/project-card";
-import { buttonVariants } from "@/components/ui/button";
-import { FIGURE, PAGE_BODY_BAND, PAGE_HEADER_BAND } from "@/constants/page";
-import { EyebrowChip } from "@/components/ui/eyebrow-chip";
-import { pages } from "@/content/site";
-import { flagshipHome } from "@/content/home-visual";
-import { featuredProject, secondaryProjects } from "@/content/projects";
+import { Plate } from "@/components/ui/plate";
+import { SectionHeader } from "@/components/ui/section-header";
+import { projectFrontmatter } from "@/components/work/project-frontmatter";
+import { FieldCard, PublicCard } from "@/components/work/work-cards";
+import { WorkCta } from "@/components/work/work-cta";
+import styles from "@/components/work/work-index.module.css";
+import { FIELD_WORK } from "@/config/nav";
+import { workIndexPage as copy } from "@/content/pages/work";
+import { projects } from "@/content/projects";
 import { pageMetadata } from "@/lib/seo";
-import cardStyles from "@/components/work/project-card.module.css";
 
 export const metadata: Metadata = pageMetadata({
   path: "/work",
-  title: "Work",
-  description:
-    "Four applied AI projects, with architecture, engineering decisions, source code, and measured results.",
+  title: copy.meta.title,
+  description: copy.meta.description,
 });
 
 /**
- * /work — four projects, with the flagship given a shape the other three do not
- * get.
- *
- * The index used to present DBWhisper as a text block beside a list of its own
- * subsystem names, and the other three as small icon cards. That made the
- * flagship look like a paragraph and the rest look like documentation links —
- * and, more importantly, it looked nothing like the gallery the visitor had just
- * clicked away from on the homepage.
- *
- * Now the flagship gets a full-width editorial band with the real product
- * screenshot and its three measured metrics, and the other three use the SAME
- * `ProjectCard` the homepage bento uses. One card treatment, two placements.
- *
- * There are no filters. With four projects a filter row is furniture that
- * removes items from a list a visitor can already see in one glance.
+ * /work — the product overview: the two anonymous field systems on a dark
+ * plate (each linking to its field report), the four public systems with
+ * their real captures and one method-linked figure each, the combined stack,
+ * and the walkthrough CTA. Section ids `field` and `public` are link targets
+ * (the footer and the nav point at them).
  */
 export default function WorkIndex() {
-  const flagship = featuredProject;
-  const labels = {
-    caseStudy: flagshipHome.work.caseStudy,
-    demo: flagshipHome.work.demo,
-    source: flagshipHome.work.source,
-  };
+  const ordered = [...projects].sort((a, b) => a.order - b.order);
+  const stack = [...new Set(ordered.flatMap((p) => projectFrontmatter(p.slug).stack))];
 
   return (
     <>
-      <Section space="lg" className={`relative overflow-hidden ${PAGE_HEADER_BAND}`}>
-        {/* The same light source the homepage hero has — /work was the only
-            route presenting the flagship on a completely grey surface. */}
-        <div
-          aria-hidden
-          className="pointer-events-none absolute inset-x-0 top-0 h-[24rem] bg-[radial-gradient(58%_80%_at_50%_-12%,color-mix(in_srgb,var(--color-accent)_11%,transparent),transparent_75%)]"
-        />
-        <PageHeader kicker={pages.work.kicker} title={pages.work.title} lede={pages.work.lede} />
+      <Section space="head" className={styles.head}>
+        <CircuitArt fade="top" className={styles.headArt} />
+        <PageHeader kicker={copy.hero.kicker} title={copy.hero.title} lede={copy.hero.lede} align="center">
+          <Button href="#field" variant="dark" size="lg" caret>
+            {copy.field.kicker}
+          </Button>
+          <Button href="#public" variant="light" size="lg" caret>
+            {copy.public.kicker}
+          </Button>
+        </PageHeader>
       </Section>
 
-      {/* ---- the flagship ---- */}
-      <Section space="md" tone="subtle" className={`reveal ${PAGE_BODY_BAND}`}>
-        <div className="grid gap-10 lg:grid-cols-[minmax(0,0.85fr)_minmax(0,1.15fr)] lg:items-center lg:gap-14">
-          <div>
-            <EyebrowChip>{pages.work.flagshipKicker}</EyebrowChip>
-            <h2 className="mt-4 text-section font-bold text-ink">{flagship.title}</h2>
-            <p className="mt-4 max-w-[46ch] text-pretty text-lg text-ink-secondary">
-              {flagship.summary}
-            </p>
-
-            <dl className="mt-8 grid grid-cols-1 gap-x-8 gap-y-5 border-t border-border pt-7 sm:grid-cols-3">
-              {flagship.metrics.slice(0, 3).map((m) => (
-                <div key={m.label}>
-                  <dd className="text-3xl font-bold tabular-nums tracking-[-0.03em] text-ink">
-                    {m.value}
-                  </dd>
-                  <dt className="mt-1.5 text-sm leading-snug text-ink-secondary">{m.label}</dt>
-                </div>
-              ))}
-            </dl>
-
-            <div className="mt-8 flex flex-wrap items-center gap-x-6 gap-y-3">
-              <Link
-                href={`/work/${flagship.slug}`}
-                prefetch={false}
-                className={buttonVariants("primary", "md")}
-              >
-                {pages.work.flagshipCta}
-                <ArrowRight size={15} strokeWidth={2.25} aria-hidden />
-              </Link>
-              {flagship.links.live ? (
-                <a
-                  href={flagship.links.live}
-                  target="_blank"
-                  rel="noopener noreferrer"
-                  className="group/demo inline-flex items-center gap-1.5 text-sm font-medium text-ink-secondary transition-colors duration-fast ease-[var(--ease-out)] hover:text-ink"
-                >
-                  {labels.demo}
-                  <ArrowUpRight
-                    size={14}
-                    strokeWidth={2.25}
-                    aria-hidden
-                    className="transition-transform duration-fast ease-[var(--ease-out)] group-hover/demo:-translate-y-0.5 group-hover/demo:translate-x-0.5"
-                  />
-                </a>
-              ) : null}
-              {flagship.links.repo ? (
-                <a
-                  href={flagship.links.repo}
-                  target="_blank"
-                  rel="noopener noreferrer"
-                  className="group/repo inline-flex items-center gap-1.5 text-sm font-medium text-ink-secondary transition-colors duration-fast ease-[var(--ease-out)] hover:text-ink"
-                >
-                  {labels.source}
-                  <ArrowUpRight
-                    size={14}
-                    strokeWidth={2.25}
-                    aria-hidden
-                    className="transition-transform duration-fast ease-[var(--ease-out)] group-hover/repo:-translate-y-0.5 group-hover/repo:translate-x-0.5"
-                  />
-                </a>
-              ) : null}
-            </div>
-          </div>
-
-          {/* The real product, at the top of the page that is about it. The
-              intrinsic width/height come from the content model, so the frame
-              reserves its box before the image decodes. */}
-          <figure className={FIGURE}>
-            {/* The same window chrome every other capture wears — this was the
-                one bare screenshot left on the site. */}
-            <div
-              aria-hidden
-              className="flex h-8 items-center gap-2.5 border-b border-border bg-bg-subtle px-3"
-            >
-              <span className="flex gap-[0.3125rem]">
-                <span className="h-[0.4375rem] w-[0.4375rem] rounded-[var(--radius-pill)] bg-border-strong" />
-                <span className="h-[0.4375rem] w-[0.4375rem] rounded-[var(--radius-pill)] bg-border-strong" />
-                <span className="h-[0.4375rem] w-[0.4375rem] rounded-[var(--radius-pill)] bg-border-strong" />
-              </span>
-              <span className="font-mono text-[0.6875rem] text-ink-tertiary">
-                DBWhisper · product website
-              </span>
-            </div>
-            {/* The full-resolution capture (1920px), not the 768px card webp:
-                a 56vw slot on retina wants ~1600px, and the smaller asset went
-                soft exactly where the page claims "not screenshots". The bottom
-                fade makes the crop read deliberate. */}
-            <Image
-              src="/demos/dbwhisper.png"
-              alt={flagship.card.alt}
-              width={1920}
-              height={1140}
-              className="h-auto w-full"
-              sizes="(min-width: 79rem) 40rem, (min-width: 64rem) 52vw, 100vw"
-              loading="eager"
-            />
-          </figure>
+      <Plate id="field" labelledBy="field-title">
+        <SectionHeader id="field-title" kicker={copy.field.kicker} kickerTone="cyan" title={copy.field.title} lead={copy.field.lead} align="center">
+          <CaretLink href={copy.field.cta.href} size="md">
+            {copy.field.cta.label}
+          </CaretLink>
+        </SectionHeader>
+        <div className={styles.fieldGrid}>
+          {FIELD_WORK.map((item) => {
+            const card = copy.field.cards[item.slug as keyof typeof copy.field.cards];
+            return (
+              <FieldCard
+                key={item.slug}
+                item={item}
+                title={card.title}
+                body={card.body}
+                pills={card.pills}
+                readReport={copy.field.readReport}
+                privateNote={copy.field.privateNote}
+              />
+            );
+          })}
         </div>
-      </Section>
+      </Plate>
 
-      {/* ---- the rest ---- */}
-      <Section space="md" className="reveal">
-        <div className="flex flex-col gap-4 sm:flex-row sm:items-end sm:justify-between">
-          <div>
-            <EyebrowChip>{pages.work.othersKicker}</EyebrowChip>
-            <h2 className="mt-4 text-section font-bold text-ink">{pages.work.othersTitle}</h2>
-          </div>
-          <TextLink href="/evals" className="sm:pb-2">
-            How each was measured
-          </TextLink>
-        </div>
-
-        <div className={cardStyles.grid}>
-          {secondaryProjects.map((project) => (
-            <ProjectCard key={project.slug} project={project} labels={labels} />
+      <Section space="lg" id="public" ariaLabelledBy="public-title">
+        <SectionHeader id="public-title" kicker={copy.public.kicker} title={copy.public.title} lead={copy.public.lead}>
+          <CaretLink href={copy.public.more.href} size="md">
+            {copy.public.more.label}
+          </CaretLink>
+        </SectionHeader>
+        <div className={styles.publicGrid}>
+          {ordered.map((project) => (
+            <PublicCard key={project.slug} project={project} labels={copy.public} />
           ))}
         </div>
+      </Section>
+
+      <Section space="md" tone="subtle" ariaLabelledBy="stack-title">
+        <div className={styles.stackBand}>
+          <SectionHeader id="stack-title" kicker={copy.stack.kicker} title={copy.stack.title} size="sm" />
+          <ul className={styles.stack} aria-label={copy.stack.title}>
+            {stack.map((tool) => (
+              <li key={tool}>
+                <Chip variant="raised" size="md">
+                  {tool}
+                </Chip>
+              </li>
+            ))}
+          </ul>
+        </div>
+      </Section>
+
+      <Section space="lg" ariaLabelledBy="work-cta-title">
+        <WorkCta id="work-cta-title" {...copy.cta} />
       </Section>
     </>
   );

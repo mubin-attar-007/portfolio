@@ -1,13 +1,14 @@
 import type { Metadata } from "next";
+import { AgentSection } from "@/components/home/agent-section";
+import { FieldWork } from "@/components/home/field-work";
 import { Hero } from "@/components/home/hero";
-import { SelectedWork } from "@/components/home/selected-work";
-import { EngineerStrip } from "@/components/home/engineer-strip";
-import { WritingAndNow } from "@/components/home/writing-and-now";
-import { FinalContactCTA } from "@/components/home/final-cta";
+import { FactsStrip, HomeCta, HowIWork, WritingBand, type WritingCard } from "@/components/home/home-bands";
+import { PublicWork } from "@/components/home/public-work";
 import { SITE } from "@/config/site";
+import { WRITING } from "@/content/pages/home";
 import { pageMetadata } from "@/lib/seo";
+import { allNotes, noteDescription } from "@/lib/notes";
 import { allWriting } from "@/lib/writing";
-import { loadNow } from "@/lib/now";
 
 export const metadata: Metadata = pageMetadata({
   path: "/",
@@ -22,25 +23,35 @@ export const metadata: Metadata = pageMetadata({
   },
 });
 
-/** A short route through the work; technical depth lives on the case-study pages. */
-export default async function Home() {
-  const [writing, now] = await Promise.all([allWriting(), loadNow()]);
+/** Essays and guides shown beside the quote; the rest of the four cards are notes. */
+const WRITING_CARDS = 3;
+const TOTAL_CARDS = 4;
 
-  const posts = writing.slice(0, 3).map(({ slug, title, summary, date, category }) => ({
-    slug,
-    title,
-    summary,
-    date,
-    category,
-  }));
+/** The home page: a short route through the work; depth lives on the case studies and field reports. */
+export default async function Home() {
+  const [writing, notes] = await Promise.all([allWriting(), allNotes()]);
+
+  const quoted = writing.find((w) => w.slug === WRITING.quoteSlug);
+  if (!quoted) throw new Error(`home: the quoted essay "${WRITING.quoteSlug}" is not published`);
+
+  const essays: WritingCard[] = writing
+    .filter((w) => w.slug !== quoted.slug)
+    .slice(0, WRITING_CARDS)
+    .map((w) => ({ href: `/writing/${w.slug}`, title: w.title, summary: w.summary, category: w.category }));
+  const latestNotes: WritingCard[] = notes
+    .slice(0, TOTAL_CARDS - essays.length)
+    .map((n) => ({ href: `/notes/${n.slug}`, title: n.title, summary: noteDescription(n), category: "note" }));
 
   return (
     <>
       <Hero />
-      <SelectedWork />
-      <EngineerStrip />
-      <WritingAndNow writing={posts} exploring={now.meta.exploring.slice(0, 3)} />
-      <FinalContactCTA />
+      <FactsStrip />
+      <FieldWork />
+      <PublicWork />
+      <AgentSection />
+      <HowIWork />
+      <WritingBand quoteEssay={{ href: `/writing/${quoted.slug}`, title: quoted.title }} cards={[...essays, ...latestNotes]} />
+      <HomeCta />
     </>
   );
 }

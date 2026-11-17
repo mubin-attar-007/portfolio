@@ -48,40 +48,39 @@ export const PROSE = {
    * line-height and -0.015em tracking, so neither is restated — a hand-typed
    * tracking value here is exactly how the two paths drifted apart before.
    */
-  h2: `mt-14 mb-4 ${SCROLL_MARGIN} ${MEASURE} text-2xl text-ink`,
+  h2: `group/heading relative mt-14 mb-4 ${SCROLL_MARGIN} ${MEASURE} text-2xl font-semibold text-balance text-ink`,
 
   /** Sub-heading inside a section. */
-  h3: `mt-10 mb-3 ${SCROLL_MARGIN} ${MEASURE} text-xl text-ink`,
+  h3: `group/heading relative mt-10 mb-3 ${SCROLL_MARGIN} ${MEASURE} text-xl font-semibold text-balance text-ink`,
 
   /** Body paragraph — the baseline everything else is tuned against. */
-  p: `mt-4 ${MEASURE} leading-[1.75] text-ink-secondary`,
+  p: `mt-5 ${MEASURE} text-[1.0625rem] leading-[1.75] text-ink-secondary`,
 
   /** Lists share the paragraph's leading so a list doesn't read tighter than the text around it. */
   ul: `mt-4 ${MEASURE} list-disc space-y-2 pl-5 marker:text-ink-tertiary`,
   ol: `mt-4 ${MEASURE} list-decimal space-y-2 pl-5 marker:text-ink-tertiary`,
-  li: "pl-1 leading-[1.75] text-ink-secondary",
+  li: "pl-1 text-[1.0625rem] leading-[1.75] text-ink-secondary",
 
   /**
    * A plain markdown `>` quote. Shares the evidence rhythm (my-6) and the
    * --stripe-width left rule used by Callout, so it reads as part of the same
-   * system; the dramatic serif treatment is reserved for the `<PullQuote>`
+   * system; the larger display treatment is reserved for the `<PullQuote>`
    * device, which an author opts into explicitly.
    */
-  blockquote: `my-6 ${MEASURE} border-l-[length:var(--stripe-width)] border-border-strong pl-5 italic text-ink-secondary`,
+  blockquote: `my-6 ${MEASURE} border-l-[length:var(--stripe-width)] border-border-strong pl-5 text-ink`,
 
   /**
    * In-prose link. Underlined at rest in a quiet hairline colour that warms to
    * the accent on hover, so the link is discoverable without colour AND the
    * underline still reads as deliberate rather than as a browser default.
    */
-  link: "text-ink underline decoration-border-strong underline-offset-4 transition-colors duration-fast ease-[var(--ease-out)] hover:decoration-accent",
+  link: "text-ink underline decoration-border-strong underline-offset-4 transition-colors duration-fast ease-[var(--ease-out)] hover:decoration-accent hover:text-accent",
 
   /**
-   * Inline code — a quiet filled chip, no border. Mid-sentence, a hairline
-   * around every span reads as noise in code-heavy prose, so this stays
-   * fill-only; the framed treatment is for block code (CodeBlock), not inline.
+   * Inline code — a small white chip on an inset hairline (the Clerk post
+   * treatment), so a token reads as a token on the canvas without a heavy fill.
    */
-  code: "rounded-[var(--radius-sm)] bg-bg-subtle px-1.5 py-0.5 font-mono text-[0.85em] text-ink",
+  code: "rounded-[var(--radius-xs)] bg-surface px-1.5 py-0.5 font-mono text-[0.85em] text-ink shadow-[inset_0_0_0_1px_var(--color-border)]",
 
   /** Emphasis that carries meaning — never colour alone. */
   strong: "font-medium text-ink",
@@ -106,4 +105,4 @@ export const EVIDENCE_SPACING = "my-6";
 
 /** The shared evidence-block frame: hairline, large radius, flat surface. */
 export const EVIDENCE_FRAME =
-  "overflow-hidden rounded-[var(--radius-lg)] border border-border bg-surface";
+  "overflow-hidden rounded-[var(--radius-lg)] bg-surface shadow-[var(--shadow-card)]";

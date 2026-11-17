@@ -71,14 +71,12 @@ const nextConfig: NextConfig = {
   //   /timeline → /about  (the career narrative now lives inside /about)
   //   /changelog→ /now     (the running record folded into the "now" surface)
   // The paths recruiters, autocomplete and agents guess first:
-  //   /contact  → /hire    (moving /hire itself is a separate decision, ADR-015 §6)
   //   /cv       → /resume
   async redirects() {
     return [
       { source: "/talks", destination: "/about", permanent: true },
       { source: "/timeline", destination: "/about", permanent: true },
       { source: "/changelog", destination: "/now", permanent: true },
-      { source: "/contact", destination: "/hire", permanent: true },
       { source: "/cv", destination: "/resume", permanent: true },
     ];
   },

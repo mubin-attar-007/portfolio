@@ -8,14 +8,12 @@ import { MetricsTable } from "@/components/ui/metric";
 import Link from "next/link";
 import { dbwhisperDiagram } from "@/components/diagrams/data/dbwhisper";
 import { evalAnchor, evals } from "@/content/evals";
-import { FlagshipWalkthroughSection } from "./request-walkthrough";
 
 export const DBWHISPER_SECTIONS: readonly CaseStudySection[] = [
   { id: "context", title: "Context" },
   { id: "constraints", title: "Constraints" },
   { id: "architecture", title: "System architecture" },
   { id: "data-flow", title: "Data flow" },
-  { id: "request-walkthrough", title: "Request walkthrough" },
   { id: "key-decisions", title: "Key decisions" },
   { id: "what-failed", title: "What failed" },
   { id: "performance-cost", title: "Performance & cost" },
@@ -92,8 +90,6 @@ export function DBWhisperBody() {
           context.
         </p>
       </CS>
-
-      <FlagshipWalkthroughSection />
 
       <CS id="key-decisions" title="Key decisions">
         <p>The decisions that make it trustworthy — each with the alternative it beat and the cost it accepted.</p>

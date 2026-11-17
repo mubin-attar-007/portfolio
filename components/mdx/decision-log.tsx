@@ -1,14 +1,13 @@
-import { EVIDENCE_SPACING } from "@/components/mdx/prose";
+import { EVIDENCE_FRAME, EVIDENCE_SPACING } from "@/components/mdx/prose";
 
 /**
- * DecisionLog — the case-study primitive that carries "decisions over stacks":
- * each row names the choice, the rejected alternatives, the reason, and the
- * cost accepted (CONTENT_MODEL §1/§6). Table-like, hairline rows, generous
- * padding, no zebra, no coloured headers. A11y: a description list per decision.
+ * DecisionLog — "decisions over stacks": each entry names the choice, the
+ * rejected alternatives, the reason, and the cost accepted (CONTENT_MODEL §1/§6).
+ * One white card, hairline-divided rows, a mono label per field.
  *
- * Shares the one evidence rhythm (EVIDENCE_SPACING) with figures, code blocks,
- * callouts and pull quotes, so a reader scanning a case study meets a single
- * vertical cadence instead of each block breathing to its own value.
+ * Shares the evidence rhythm and frame (EVIDENCE_*) with figures and code
+ * blocks, so the blocks in one article read as one device.
+ * A11y: an ordered list of decisions; each is a description list.
  */
 export type Decision = {
   choice: string;
@@ -17,24 +16,29 @@ export type Decision = {
   tradeoff: string;
 };
 
+const FIELD = "font-mono text-label uppercase text-ink-tertiary";
+
 export function DecisionLog({ decisions }: { decisions: Decision[] }) {
   return (
-    <div className={`${EVIDENCE_SPACING} divide-y divide-border border-y border-border`}>
-      {decisions.map((d, i) => (
-        <div key={i} className="grid gap-3 py-5 md:grid-cols-[1fr_1.5fr] md:gap-8">
+    <ol className={`${EVIDENCE_SPACING} ${EVIDENCE_FRAME} divide-y divide-border`}>
+      {decisions.map((d) => (
+        <li key={d.choice} className="grid gap-3 p-5 md:grid-cols-[minmax(0,1fr)_minmax(0,1.5fr)] md:gap-8">
           <div>
-            <p className="font-medium text-ink">{d.choice}</p>
-            <p className="mt-1 text-sm text-ink-tertiary">Instead of: {d.alternatives.join(", ")}</p>
+            <p className="text-title-sm text-ink">{d.choice}</p>
+            <p className="mt-1.5 text-sm text-ink-tertiary">Instead of: {d.alternatives.join(", ")}</p>
           </div>
-          <div className="text-sm text-ink-secondary">
-            <p>{d.reason}</p>
-            <p className="mt-2">
-              <span className="font-mono text-xs uppercase text-ink-tertiary">Trade-off accepted</span>{" "}
-              — {d.tradeoff}
-            </p>
-          </div>
-        </div>
+          <dl className="grid gap-3 text-sm leading-relaxed text-ink-secondary">
+            <div>
+              <dt className={FIELD}>Why</dt>
+              <dd className="mt-0.5">{d.reason}</dd>
+            </div>
+            <div>
+              <dt className={FIELD}>Trade-off accepted</dt>
+              <dd className="mt-0.5">{d.tradeoff}</dd>
+            </div>
+          </dl>
+        </li>
       ))}
-    </div>
+    </ol>
   );
 }
