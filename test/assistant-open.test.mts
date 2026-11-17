@@ -1,17 +1,46 @@
-// Unit tests for the assistant's open request and turn labels
-// (components/assistant/open-assistant.ts, components/assistant/turn-status.ts).
+// Unit tests for the assistant's open request, turn labels, phone sheet and
+// pending state (components/assistant/open-assistant.ts, turn-status.ts,
+// viewport.ts, pending.ts).
 
 import test from "node:test";
 import assert from "node:assert/strict";
 
-import { ASSISTANT_OPEN_EVENT, requestedQuestion } from "../components/assistant/open-assistant.ts";
+import { ASSISTANT_COPY } from "../components/assistant/copy.ts";
+import { ASSISTANT_OPEN_EVENT, openAssistant, requestedQuestion } from "../components/assistant/open-assistant.ts";
+import { pendingLine, SLOW_AFTER_MS, slowAnswerCue } from "../components/assistant/pending.ts";
 import { isFailedTurn, labelTone, turnLabel } from "../components/assistant/turn-status.ts";
+import { keyboardInset } from "../components/assistant/viewport.ts";
 import { MAX_MESSAGE_CHARS, type ChatTurn } from "../lib/ai/chat-contract.ts";
+import { CASE_STUDY_STARTERS, startersFor } from "../lib/ai/starters.ts";
 
 const open = (detail: unknown) => new CustomEvent(ASSISTANT_OPEN_EVENT, { detail });
 
+/** Run `openAssistant` against a stand-in window and return the event it dispatched. */
+function dispatched(question?: string): CustomEvent {
+  const target = new EventTarget();
+  let event: CustomEvent | null = null;
+  target.addEventListener(ASSISTANT_OPEN_EVENT, (e) => (event = e as CustomEvent));
+  const saved = (globalThis as { window?: unknown }).window;
+  (globalThis as { window?: unknown }).window = target;
+  try {
+    openAssistant(question);
+  } finally {
+    (globalThis as { window?: unknown }).window = saved;
+  }
+  assert.ok(event, "an open request was dispatched");
+  return event;
+}
+
 test("an open request carries its question, trimmed", () => {
   assert.equal(requestedQuestion(open({ question: "  What is DBWhisper?  " })), "What is DBWhisper?");
+  assert.equal(requestedQuestion(dispatched("What is CareLTC?")), "What is CareLTC?");
+});
+
+test("openAssistant() with no question asks nothing: the panel opens on the page's starters", () => {
+  // An exploratory "Ask AI about this" click sends no question; the panel
+  // shows the page's own starters (startersFor) and waits.
+  assert.equal(requestedQuestion(dispatched()), null);
+  assert.deepEqual(startersFor("/work/careltc"), CASE_STUDY_STARTERS.careltc);
 });
 
 test("a question longer than the field's limit is capped", () => {
@@ -37,10 +66,7 @@ test("non-live turns are labelled honestly", () => {
   assert.equal(turnLabel(turn({ note: "rate-limited" })), "rate limited");
   assert.equal(turnLabel(turn({ mode: "refusal" })), "declined — out of scope");
   assert.equal(turnLabel(turn({ mode: "live", incomplete: true })), "cut short");
-  assert.equal(
-    turnLabel(turn({ mode: "fallback", sources: [{ source: "Evaluations", links: [{ label: "Evals", href: "/evals" }] }] })),
-    "from site search",
-  );
+  assert.equal(turnLabel(turn({ mode: "fallback", sources: [{ label: "Evals", href: "/evals" }] })), "from site search");
   assert.equal(turnLabel(turn({ mode: "fallback", sources: [] })), null);
   assert.equal(turnLabel(turn({ note: "not-covered" })), null, "a note whose text speaks for itself");
 });
@@ -53,4 +79,52 @@ test("failed turns are the panel's own failure, not an answer", () => {
   assert.equal(isFailedTurn(turn({ role: "user", note: "unavailable" })), false);
   assert.equal(labelTone(turn({ note: "unavailable" })), "caution");
   assert.equal(labelTone(turn({ mode: "live", incomplete: true })), "caution");
+});
+
+test("the phone sheet rises by exactly what the on-screen keyboard covers", () => {
+  // iPhone 14 (390×844): the keyboard leaves 508px visible.
+  assert.equal(keyboardInset(844, 508, 0), 336);
+  // iOS scrolls the visual viewport when the field is focused: the offset is not keyboard.
+  assert.equal(keyboardInset(844, 508, 120), 216);
+  // No keyboard, sub-pixel noise, or a browser that reports nothing.
+  assert.equal(keyboardInset(800, 800, 0), 0);
+  assert.equal(keyboardInset(800, 799.4, 0), 0);
+  assert.equal(keyboardInset(Number.NaN, 500, 0), 0);
+});
+
+// ---- A slow answer -------------------------------------------------------------
+
+test("a pending answer turns slow once, after SLOW_AFTER_MS without text", (t) => {
+  t.mock.timers.enable({ apis: ["setTimeout"] });
+  let slow = 0;
+  slowAnswerCue(() => slow++);
+  t.mock.timers.tick(SLOW_AFTER_MS - 1);
+  assert.equal(slow, 0, "not before");
+  t.mock.timers.tick(1);
+  assert.equal(slow, 1, "at SLOW_AFTER_MS");
+  t.mock.timers.tick(60_000);
+  assert.equal(slow, 1, "once");
+});
+
+test("text in time, or the end of the request, keeps an answer from turning slow", (t) => {
+  t.mock.timers.enable({ apis: ["setTimeout"] });
+  let slow = 0;
+  const answered = slowAnswerCue(() => slow++);
+  t.mock.timers.tick(SLOW_AFTER_MS - 1);
+  answered.arrived();
+  const ended = slowAnswerCue(() => slow++);
+  ended.cancel();
+  t.mock.timers.tick(60_000);
+  assert.equal(slow, 0);
+});
+
+test("the pending line says the answer is slow, and the first text replaces it", () => {
+  const pending = { streaming: true, content: "" };
+  assert.equal(pendingLine(pending, false), `${ASSISTANT_COPY.searching}…`);
+  assert.equal(pendingLine(pending, true), "Taking longer than usual…");
+  // The first token: the line is gone, slow or not.
+  assert.equal(pendingLine({ streaming: true, content: "His" }, true), null);
+  assert.equal(pendingLine({ streaming: false, content: "" }, true), null);
+  // The status line has one slow sentence, distinct from the busy one, so it is read once.
+  assert.notEqual(ASSISTANT_COPY.statusSlow, ASSISTANT_COPY.statusSearching);
 });

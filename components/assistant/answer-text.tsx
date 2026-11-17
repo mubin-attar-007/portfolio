@@ -1,5 +1,5 @@
 import { Fragment, useMemo, type ReactNode } from "react";
-import { parseAnswer, type Inline } from "@/lib/ai/answer-format";
+import { parseAnswer, withoutDanglingMarkers, type Inline } from "@/lib/ai/answer-format";
 import styles from "./assistant.module.css";
 
 /** Text with its single line breaks kept. */
@@ -49,9 +49,11 @@ function InlineText({ inlines }: { inlines: Inline[] }) {
  * sits inside the dialog's outline and must not add levels to it.
  *
  * @param text The answer so far; re-parsed only when it changes.
+ * @param streaming More text is coming: a bold or code opener whose closer has
+ *   not arrived yet is held back rather than shown as a literal marker.
  */
-export function AnswerText({ text }: { text: string }) {
-  const blocks = useMemo(() => parseAnswer(text), [text]);
+export function AnswerText({ text, streaming = false }: { text: string; streaming?: boolean }) {
+  const blocks = useMemo(() => parseAnswer(streaming ? withoutDanglingMarkers(text) : text), [text, streaming]);
   return blocks.map((block, i) => {
     switch (block.kind) {
       case "paragraph":

@@ -1,11 +1,6 @@
 {
   "faq": [
     {
-      "question": "What has Mubin actually shipped in production?",
-      "answer": "Four public AI projects, each with a case study and public source code, plus production healthcare-AI systems at his day job. The four public products are: DBWhisper (a natural-language-to-SQL agent), LLM Studio (a multi-user ChatGPT-style chat SaaS), TradePulse (an honest quant backtesting platform), and CrownWager (an ML-driven sports-analytics platform). At Sevina Technologies he builds and ships production AI and automation systems for healthcare — data-extraction pipelines, a clinical decision-support platform, and GenAI document-analysis assistants. The public projects are deployed demos on free-tier hosting: they can sleep, be paused, or hit provider quotas, and a demo that is offline shows its source, and its recorded product tour where it has one, instead of a link.",
-      "source": "profile · projects (all four) · Sevina Technologies role"
-    },
-    {
       "question": "Explain the DBWhisper RAG / agent architecture.",
       "answer": "DBWhisper is a LangGraph agent that turns plain English into safe, read-only SQL. When a database is enrolled, its schema is introspected, AI-documented into structured sections (summary, columns, relationships, stats), and embedded into pgvector. At query time the agent runs a tightly-scoped tool loop: semantic-search the schema to find candidate tables, fetch only the sections it needs (keeping the prompt small), look for a human-approved verified question-to-SQL example to adapt, generate dialect-correct SQL, and then pass it through a fail-closed read-only validator before executing. It's RAG over a schema rather than stuffing the whole schema into the prompt, which keeps each prompt to the few tables a question needs. Retrieval has not been benchmarked at scale yet: the largest schema enrolled in the repository has 16 tables. Conversation memory is persisted to Postgres via a LangGraph checkpoint so follow-ups have context.",
       "source": "DBWhisper — app/agent/chain.py, app/agent/tools.py"
@@ -27,13 +22,13 @@
     },
     {
       "question": "What's his healthcare-AI experience?",
-      "answer": "It's his current full-time work at Sevina Technologies (2024–present). He builds and ships production AI and automation systems for healthcare: end-to-end pipelines in Python with Playwright and Selenium that extract, validate, and sync clinical, resident, and demographic data into SQL Server, with logging, reconciliation, and error recovery. He developed an AI clinical decision-support platform that turns CMS MDS assessments into dashboards, compliance findings, and reimbursement insights (HIPPS/PDPM) via automated PDF extraction and guideline-aligned rules. He also built GenAI document-analysis assistants with multi-provider routing, RAG, and validated structured output, plus a FastAPI eligibility-verification service with async batching, Docker, and CI/CD.",
-      "source": "Sevina Technologies — AI/ML Engineer role"
+      "answer": "It's his current full-time work at Sevina Technologies (2024–present), where his flagship products include CareLTC, NFC room rounds for long-term care, which he leads; the CareLTC case study has the details. He builds and ships production AI and automation systems for healthcare: end-to-end pipelines in Python with Playwright and Selenium that extract, validate, and sync clinical, resident, and demographic data into SQL Server, with logging, reconciliation, and error recovery. He developed an AI clinical decision-support platform that turns CMS MDS assessments into dashboards, compliance findings, and reimbursement insights (HIPPS/PDPM) via automated PDF extraction and guideline-aligned rules. He also built GenAI document-analysis assistants with multi-provider routing, RAG, and validated structured output, plus a FastAPI eligibility-verification service with async batching, Docker, and CI/CD.",
+      "source": "Sevina Technologies — AI/ML Engineer role · CareLTC"
     },
     {
       "question": "Can he really do end-to-end, or just the AI/model layer?",
-      "answer": "End-to-end, and the portfolio is the proof. Across the four products he owns the whole loop: LLM agents and RAG retrieval strategies; ML training and validation (XGBoost, cross-validation); FastAPI and Django/DRF backends with async, auth, and tenancy; Next.js and vanilla-JS frontends; Postgres/pgvector/Redis data layers; and the deployment itself — Docker images, HTTPS, CI pipelines, and security hardening. As he puts it, he likes the whole loop from an agent's retrieval strategy down to the Docker image and the auth cookie. His earlier role at Linescripts (2022–2024) was full-stack web delivery (Django/DRF, REST APIs, frontends), so the end-to-end habit predates the AI work.",
-      "source": "projects (all four) · Sevina + Linescripts roles · skills"
+      "answer": "End-to-end, and the work is the proof. Bench Discovery spans a Windows desktop app and a web platform on AWS that he designed, built and maintains; CareLTC spans iOS and Android apps, an API with a scheduler and an admin portal, and he leads it and did the main engineering work. Across the four public projects he owns the whole loop too: LLM agents and RAG retrieval strategies; ML training and validation (XGBoost, cross-validation); FastAPI and Django/DRF backends with async, auth, and tenancy; Next.js and vanilla-JS frontends; Postgres/pgvector/Redis data layers; and the deployment itself — Docker images, HTTPS, CI pipelines, and security hardening. His earlier role at Linescripts (2022–2024) was full-stack web delivery (Django/DRF, REST APIs, frontends), so the end-to-end habit predates the AI work.",
+      "source": "Bench Discovery · CareLTC · projects (all four) · Sevina + Linescripts roles · skills"
     },
     {
       "question": "What's his experience with LLM agents and multi-provider routing?",
@@ -47,8 +42,8 @@
     },
     {
       "question": "Why hire him — what's the strongest evidence of his engineering judgment (senior-level thinking)?",
-      "answer": "The trade-offs he makes deliberately, and the limits he documents. DBWhisper fails closed when generated SQL violates its validator rules. TradePulse uses a non-Turing-complete strategy spec that reads closed bars and fills orders on the next bar, with a future-bar canary test for look-ahead leakage. Paper trading reuses the backtest engine and has a parity test. CrownWager reports cross-validated accuracy, keeps a shallow model to resist overfitting, and voids unmappable picks. LLM Studio enforces ownership checks in its repository layer and fixed a 32-bit epoch-overflow bug found in production. The case studies explain each trade-off and the evidence behind it.",
-      "source": "DBWhisper validator · TradePulse spec + tests · CrownWager grading · LLM Studio tenancy"
+      "answer": "The trade-offs he makes deliberately, and the limits he documents. In Bench Discovery, “documents stay on this computer” is proved by tests over the compiled binaries rather than promised; every redacted copy is checked the way an attacker would check it, and a failed check places no file; and the evidence score ships uncalibrated, with that said plainly. In CareLTC, the server decides whether a tap completes a round, rounds nobody could do are excused rather than deleted, and a resident sync that would discharge too many residents at once changes nothing. In the public projects, DBWhisper fails closed when generated SQL violates its validator rules, TradePulse fills orders on the next bar with a canary test for look-ahead leakage, CrownWager reports cross-validated accuracy, and LLM Studio enforces ownership checks in its repository layer. The case studies explain each trade-off and the evidence behind it.",
+      "source": "Bench Discovery · CareLTC · DBWhisper validator · TradePulse spec + tests · CrownWager grading · LLM Studio tenancy"
     },
     {
       "question": "Has he found and fixed real production bugs?",
@@ -67,13 +62,23 @@
     },
     {
       "question": "What's his background and education?",
-      "answer": "He holds a Master of Computer Applications (MCA) from Savitribai Phule University of Pune (2021, CGPA 8.0). He started as a Junior Python Developer at Linescripts Software (2022–2024), delivering end-to-end web applications — including a Hospital Management System and e-commerce platforms — with Python, Django/DRF, and responsive frontends, building REST APIs and integrating third-party services. Since 2024 he's been an AI/ML Engineer at Sevina Technologies focused on production healthcare-AI and GenAI systems. He's based in Ahmedabad, India, with 3.5+ years of shipping experience.",
+      "answer": "He holds a Master of Computer Applications (MCA) from Savitribai Phule Pune University (2021, CGPA 8.0). He started as a Junior Python Developer at Linescripts Software (2022–2024), delivering end-to-end web applications — including a Hospital Management System and e-commerce platforms — with Python, Django/DRF, and responsive frontends, building REST APIs and integrating third-party services. Since 2024 he's been an AI/ML Engineer at Sevina Technologies focused on production healthcare-AI and GenAI systems. He's based in Ahmedabad, India, with 3.5+ years of shipping experience.",
       "source": "education · Linescripts + Sevina roles · profile"
     },
     {
       "question": "How does TradePulse avoid look-ahead bias?",
       "answer": "By construction rather than by convention. The engine decides on a closed bar and fills market orders on the next bar's open, so a strategy can never act on a price it only knew after the bar closed. Strategies are written in a declarative, non-Turing-complete spec whose operands can only read indicators and price fields on closed bars, so look-ahead cannot even be expressed. Indicators warm up with honest null gaps instead of producing values from bar 0. A canary test perturbs every future bar 3× and checks that equity up to the cut bar is byte-identical, so a leak fails the build. The cost is a bar of latency between signal and fill, accepted because the alternative is measuring a strategy you can't actually trade.",
       "source": "TradePulse — backtesting/engine.py, StrategySpec, test_lookahead_canary"
+    },
+    {
+      "question": "Does this assistant store my question? What happens to what I type?",
+      "answer": "Your question is used to write one answer, and this site doesn't store it: there is no transcript, and the one log line kept per answer records how it was answered, its timings and token counts — never the question, the answer or your address. To write a live answer, the question and the recent conversation are sent to Google's Gemini API. The conversation lives only in the open tab and is gone when it closes or reloads.",
+      "source": "privacy · assistant"
+    },
+    {
+      "question": "How does this assistant work, and where do its answers come from?",
+      "answer": "It searches this site's own pages — the case studies, writing, evaluations, the résumé, and the hiring and contact pages — and answers only from the passages it finds, linking the pages they come from. When no page covers a question, it says so instead of guessing. When live answers are available, Google's Gemini model writes the answer from those passages; otherwise it shows the best passage as written. Answers can be imperfect, so check the page each one cites.",
+      "source": "privacy · assistant"
     }
   ]
 }

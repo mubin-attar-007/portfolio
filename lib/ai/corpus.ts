@@ -2,10 +2,11 @@
 // The assistant's corpus: the published content of this site, as passages.
 //
 // Built once, at module load, from the same sources the pages render — the
-// project registry, the résumé, the evaluation registry, the site config, the
-// essays and notes — so a fact changed on a page changes in the assistant's
-// index with it. Only two sources are written for the assistant: the FAQ
-// (content/faq.json) and the case-study write-ups (content/projects/*.mdx).
+// flagship case studies, the project registry, the résumé, the evaluation
+// registry, the page copy modules, the site config, /now, the essays and notes
+// — so a fact changed on a page changes in the assistant's index with it. Only
+// two sources are written for the assistant: the FAQ (content/faq.json) and the
+// public case-study write-ups (content/projects/*.mdx).
 //
 // Every passage carries the site pages a reader can open to check it. Those
 // links are built here, from content, and never from anything a model writes.
@@ -20,13 +21,21 @@ import { readFileSync, readdirSync } from "node:fs";
 import path from "node:path";
 
 import faqData from "@/content/faq.json";
-import profileData from "@/content/profile.json";
 import { resume } from "@/content/resume";
 import { projects } from "@/content/projects";
 import { evals, evalAnchor, evalsIntro } from "@/content/evals";
 import { PROJECT_LINKS, PROJECT_STATUS_LABEL } from "@/content/article";
-import { NoteSchema, WritingSchema, type EvalRow } from "@/content/schema";
-import { FOOTER, SITE, STATUS } from "@/config/site";
+import { flagships, type Flagship } from "@/content/flagship";
+import { FLAGSHIP_LABELS, FLAGSHIP_SECTION_IDS } from "@/content/flagship/labels";
+import { AGENT_DIRECTION, EMPLOYER, PRIVATE_NOTICE, REAL_APP, USAGE, WALKTHROUGH } from "@/content/flagship/shared";
+import { aboutPage } from "@/content/pages/about";
+import { contactPage } from "@/content/pages/contact";
+import { hirePage } from "@/content/pages/hire";
+import { EVIDENCE, TRUST_PAGE } from "@/content/pages/trust";
+import { TOOL_NOTES } from "@/content/pages/uses";
+import { home, trust, uses } from "@/content/site";
+import { NoteSchema, NowSchema, WritingSchema, type EvalRow } from "@/content/schema";
+import { FOOTER, INTEGRATIONS, SITE, STATUS } from "@/config/site";
 import { CONTENT_SLUG } from "@/lib/content-slug";
 import { byDateDesc } from "@/lib/feed";
 import { formatDate } from "@/lib/format";
@@ -40,17 +49,20 @@ export type PassageKind =
   | "case-study"
   | "profile"
   | "contact"
+  | "hire"
   | "resume"
   | "skills"
+  | "page"
   | "evaluation"
   | "evaluation-guide"
+  | "work-index"
   | "writing"
   | "writing-index"
   | "note";
 
 /** A single retrievable unit of real site content. */
 export type Passage = {
-  /** Stable id, e.g. "faq-2" or "cs-dbwhisper-architecture". */
+  /** Stable id, e.g. "faq-2" or "cs-careltc-what-broke-ios-session". */
   id: string;
   /**
    * The retrievable text. Its first line is a title (e.g. "DBWhisper —
@@ -60,13 +72,13 @@ export type Passage = {
   /**
    * What the index matches, when it is not `text`. A listing is found by what
    * it is ("what he has written"), not by the titles it lists — otherwise it
-   * would outrank every essay it names.
+   * would outrank every entry it names.
    */
   searchText?: string;
-  /** Human-readable origin, e.g. "DBWhisper case study — Architecture". */
+  /** Human-readable origin, e.g. "CareLTC case study — What broke". Shown to the model, never as a link. */
   source: string;
   kind: PassageKind;
-  /** Site pages a reader can open to check this passage. */
+  /** Site pages a reader can open to check this passage, each with a readable label. */
   links: readonly CitationLink[];
   /**
    * Slugs of the projects this passage is about. For the site's own record of
@@ -89,14 +101,18 @@ export const COMMENTARY_KINDS: ReadonlySet<PassageKind> = new Set(["writing", "n
 /** A project as a question can name it. */
 export type ProjectName = { slug: string; title: string };
 
-/** Every project, by the title a visitor would type. */
-export const PROJECT_NAMES: readonly ProjectName[] = projects.map(({ slug, title }) => ({ slug, title }));
+/** Every product and project, by the name a visitor would type: the flagships first. */
+export const PROJECT_NAMES: readonly ProjectName[] = [
+  ...flagships.map(({ slug, name }) => ({ slug, title: name })),
+  ...projects.map(({ slug, title }) => ({ slug, title })),
+];
 
 // Literal paths, one per collection, and each read written out at its call site
 // as `readFileSync(path.join(<DIR>, …))`: Next's output-file tracer follows a
 // path it can read statically, which is what puts these files into the
 // /api/chat bundle on Vercel. A read through a helper taking the path as a
 // parameter is invisible to it.
+const CONTENT_DIR = path.join(process.cwd(), "content");
 const PROJECTS_DIR = path.join(process.cwd(), "content", "projects");
 const WRITING_DIR = path.join(process.cwd(), "content", "writing");
 const NOTES_DIR = path.join(process.cwd(), "content", "notes");
@@ -132,9 +148,10 @@ function frontmatterScalar(raw: string): unknown {
  * compiles the body to React; this index is built synchronously at module load
  * and must run under a plain `node --test`, so it reads the frontmatter itself.
  * It understands the forms this repo writes — `key: "string"`, `key: true`,
- * `key: ["a", "b"]`, and block lists — and throws on anything else, so an
- * unusual file fails the test suite instead of silently leaving the index. The
- * result is then validated with the same Zod schema the pages use.
+ * `key: ["a", "b"]`, block lists of scalars, and block lists of flat records
+ * (`- title: "…"` with its `body: "…"` indented below) — and throws on anything
+ * else, so an unusual file fails the test suite instead of silently leaving the
+ * index. The result is then validated with the same Zod schema the pages use.
  */
 export function splitFrontmatter(source: string, file: string): { data: Record<string, unknown>; body: string } {
   const match = /^---\n([\s\S]*?)\n---[ \t]*(?:\n|$)/.exec(source);
@@ -143,9 +160,22 @@ export function splitFrontmatter(source: string, file: string): { data: Record<s
   let list: unknown[] | null = null;
   for (const line of match[1]!.split("\n")) {
     if (!line.trim() || line.trimStart().startsWith("#")) continue;
+    // A list item that opens a record: `  - title: "…"`.
+    const record = /^\s+-\s+([A-Za-z_][\w-]*):\s*(.*)$/.exec(line);
+    if (record && list) {
+      list.push({ [record[1]!]: frontmatterScalar(record[2]!) });
+      continue;
+    }
     const item = /^\s+-\s+(.*)$/.exec(line);
     if (item && list) {
       list.push(frontmatterScalar(item[1]!));
+      continue;
+    }
+    // A further field of the record above: `    body: "…"`.
+    const field = /^\s+([A-Za-z_][\w-]*):\s*(.*)$/.exec(line);
+    const open = list?.at(-1);
+    if (field && typeof open === "object" && open !== null) {
+      (open as Record<string, unknown>)[field[1]!] = frontmatterScalar(field[2]!);
       continue;
     }
     const pair = /^([A-Za-z_][\w-]*):\s*(.*)$/.exec(line);
@@ -232,6 +262,15 @@ const slugify = (value: string): string =>
 const lines = (...parts: (string | null | false | undefined)[]): string =>
   parts.filter((part): part is string => typeof part === "string" && part.length > 0).join("\n");
 
+/** A sentence's closing stop, once: "on the PC." stays, "on the PC" gains one. */
+const sentence = (text: string): string => (/[.!?…]$/.test(text.trim()) ? text.trim() : `${text.trim()}.`);
+
+/** A sentence without its closing stop, to run it into another. */
+const clause = (text: string): string => text.trim().replace(/[.!?]+$/, "");
+
+/** The first sentence of a paragraph. */
+const firstSentence = (text: string): string => /^.*?[.!?](?=\s|$)/.exec(text.trim())?.[0] ?? text.trim();
+
 /** How one collection is read: its directory listing and one file's source. */
 type CollectionReader = { label: "writing" | "notes"; list: () => string[]; read: (file: string) => string };
 
@@ -264,22 +303,49 @@ function readCollection<T extends { slug: string; draft: boolean }>(
     .filter((entry) => !entry.meta.draft);
 }
 
-/** Projects named in a piece of text, by title ("LLM Studio", "TradePulse"). */
+/** Projects named in a piece of text, by title ("LLM Studio", "CareLTC"). */
 function projectsNamedIn(text: string): string[] {
   const lower = text.toLowerCase();
   return PROJECT_NAMES.filter((p) => lower.includes(p.title.toLowerCase())).map((p) => p.slug);
 }
 
 // ---------------------------------------------------------------------------
+// Pages, as a citation names them
+// ---------------------------------------------------------------------------
+
+/** The site pages passages cite, each with the label its chip shows. */
+const PAGE = {
+  work: { label: "Work", href: "/work" },
+  hire: { label: "Hiring", href: "/hire" },
+  contact: { label: "Contact", href: "/contact" },
+  resume: { label: "Résumé", href: "/resume" },
+  about: { label: "About Mubin", href: "/about" },
+  skills: { label: "Skills", href: "/skills" },
+  uses: { label: "Uses", href: "/uses" },
+  now: { label: "Now", href: "/now" },
+  trust: { label: "Trust", href: "/trust" },
+  evals: { label: "Evals", href: "/evals" },
+  writing: { label: "Writing", href: "/writing" },
+  notes: { label: "Notes", href: "/notes" },
+} as const satisfies Record<string, CitationLink>;
+
+/** A project or flagship's case study, optionally at one of its sections. */
+const caseStudyLink = (slug: string, title: string, section?: string): CitationLink => ({
+  label: title,
+  href: section ? `/work/${slug}#${section}` : `/work/${slug}`,
+});
+
+// ---------------------------------------------------------------------------
 // Passages, one builder per source
 // ---------------------------------------------------------------------------
 
-/** The FAQ — the highest-signal source. One passage per question. */
+/** The FAQ — written for the assistant. One passage per question. */
 function faqPassages(): Passage[] {
   return faqData.faq.map((item, i) => ({
     id: `faq-${i}`,
     text: `${item.question}\n${item.answer}`,
-    // The FAQ already carries a precise, human-readable source string.
+    // The FAQ's source string is for the model and the maintainers; visitors
+    // see only the pages it resolves to.
     source: `FAQ — ${item.source}`,
     kind: "faq" as const,
     links: citationLinks(item.source),
@@ -287,12 +353,204 @@ function faqPassages(): Passage[] {
   }));
 }
 
-/** The project page's own link. */
-const projectLink = (slug: string, title: string): CitationLink => ({ label: title, href: `/work/${slug}` });
+/** A flagship's usage, in the exact approved wording. */
+const usageOf = (flagship: Flagship): string => USAGE[flagship.slug].sentence;
+
+/** A flagship's credit, verbatim and in his words: the approved wording is first person. */
+const creditOf = (flagship: Flagship): string => `His role, in his words: “${flagship.credit.role}”`;
+
+/** The flagship overview: what it is, who uses it, his role, its stack and where it runs. */
+function flagshipOverview(flagship: Flagship): Passage {
+  const tested = flagship.figures.filter((f) => f.source === "verification").map((f) => `${f.value} (${f.label})`);
+  return {
+    id: `project-${flagship.slug}`,
+    text: lines(
+      `${flagship.name} — flagship case study: what it is, who uses it, his role, what it is built with and where it runs`,
+      `${flagship.name}: ${flagship.definition}`,
+      flagship.summary,
+      `${FLAGSHIP_LABELS.pills.employer}. Who it is for: ${sentence(flagship.domain)}`,
+      `Usage: ${usageOf(flagship)}. ${FLAGSHIP_LABELS.figures.approved}`,
+      creditOf(flagship),
+      `What it does: ${flagship.card.body}`,
+      tested.length > 0 ? `Test figures on the page: ${tested.join("; ")}.` : null,
+      `Built with: ${flagship.stack.groups.map((g) => `${g.label}: ${g.items.join(", ")}`).join("; ")}.`,
+      flagship.stack.aws.length > 0 ? `Hosted on AWS: ${flagship.stack.aws.join(", ")}.` : null,
+      `Source code: ${PRIVATE_NOTICE.toLowerCase()}. The case study shows screenshots and recordings of the real app (${REAL_APP.toLowerCase()}).`,
+    ),
+    source: `${flagship.name} — flagship case study overview`,
+    kind: "project",
+    links: [caseStudyLink(flagship.slug, flagship.name)],
+    projects: [flagship.slug],
+  };
+}
+
+/** One section of a flagship case study, cited at its anchor on the page. */
+function flagshipSection(flagship: Flagship, key: string, heading: string, anchor: string, body: string): Passage {
+  return {
+    id: `cs-${flagship.slug}-${key}`,
+    text: `${flagship.name} — ${heading}\n${body}`,
+    source: `${flagship.name} case study — ${heading}`,
+    kind: "case-study",
+    links: [caseStudyLink(flagship.slug, flagship.name, anchor)],
+    projects: [flagship.slug],
+  };
+}
+
+/** A sketch in words: each zone with its parts, and what crosses between them. */
+function sketchInWords(sketch: Flagship["sketch"]): string {
+  const zones = sketch.zones.map((zone) => `${zone.label} (${zone.nodes.join(" → ")})`);
+  const crossings = sketch.crossings.map((c) => `${FLAGSHIP_LABELS.crossingPrefix} ${c.label}.`);
+  return lines(`${sketch.title}: ${zones.join("; ")}.`, ...crossings, ...(sketch.notes ?? []));
+}
+
+/** Every section of a flagship case study, as the page lays it out. */
+function flagshipPassages(flagship: Flagship): Passage[] {
+  const L = FLAGSHIP_LABELS.sections;
+  const ids = FLAGSHIP_SECTION_IDS;
+  const section = (key: string, heading: string, anchor: string, body: string) =>
+    flagshipSection(flagship, key, heading, anchor, body);
+
+  return [
+    flagshipOverview(flagship),
+    section(
+      "problem",
+      `${L.problem.kicker}: who it is for, and what it has to do`,
+      ids.problem,
+      lines(...flagship.problem.body, `${L.problem.users}: ${flagship.problem.users.join("; ")}.`),
+    ),
+    section(
+      "constraints",
+      `${L.constraints.kicker}: what the system is not allowed to do`,
+      ids.constraints,
+      lines(
+        ...flagship.constraints.map(
+          (c) => `${sentence(c.constraint)} ${L.constraints.columns.forced}: ${sentence(c.forced)} ${L.constraints.columns.checked}: ${sentence(c.checked)}`,
+        ),
+        flagship.constraintsNote,
+      ),
+    ),
+    // What he built, one passage per surface (the desktop app, the web
+    // platform, the API…): each is a short list a question can find on its
+    // own. His role on the whole product is in the overview.
+    ...flagship.built.map((group) =>
+      section(
+        `built-${slugify(group.title)}`,
+        `What he built: the ${group.title.toLowerCase()}, the parts he owns`,
+        ids.problem,
+        `${group.items.map(sentence).join(" ")}`,
+      ),
+    ),
+    section(
+      "architecture",
+      `${L.architecture.kicker}: what runs where, and what crosses which boundary`,
+      ids.architecture,
+      lines(
+        ...[flagship.sketch, ...flagship.moreSketches].map(sketchInWords),
+        ...flagship.boundary.map(
+          (row) => `${row.data}: ${L.architecture.direction[row.direction].toLowerCase()}, ${row.path}. ${sentence(row.rule)}`,
+        ),
+      ),
+    ),
+    section(
+      "how-it-works",
+      `${L.how.kicker}: one run, step by step`,
+      ids.how,
+      flagship.trace.map((step, i) => `${i + 1}. ${sentence(step.title)} ${step.body}`).join("\n"),
+    ),
+    section(
+      "deployment",
+      `${L.deployment.kicker}: where it runs, how it ships, and the AWS services it is hosted on`,
+      ids.deployment,
+      lines(
+        ...flagship.deployment.map((card) => `${card.title}: ${card.body}`),
+        flagship.stack.aws.length > 0 ? `${L.architecture.aws}: ${flagship.stack.aws.join(", ")}.` : null,
+      ),
+    ),
+    ...flagship.incidents.map((incident) =>
+      section(
+        `what-broke-${incident.id}`,
+        `${L.broke.kicker}: ${incident.title}`,
+        ids.broke,
+        lines(
+          `${L.broke.fields.broke}: ${incident.broke}`,
+          `${L.broke.fields.cause}: ${incident.cause}`,
+          `${L.broke.fields.change}: ${incident.change}`,
+          `${L.broke.fields.guard}: ${incident.guard}`,
+        ),
+      ),
+    ),
+    section(
+      "decisions",
+      `${L.decisions.kicker}: the key decisions and what they cost`,
+      ids.decisions,
+      flagship.decisions
+        .map(
+          (d) =>
+            `${sentence(d.choice)} ${L.decisions.fields.instead}: ${sentence(d.instead)} ${L.decisions.fields.reason}: ${sentence(d.reason)} ${L.decisions.fields.tradeoff}: ${sentence(d.tradeoff)}`,
+        )
+        .join("\n"),
+    ),
+    section(
+      "verification",
+      `${L.verification.kicker}: how it is tested and checked, and what is not measured`,
+      ids.verification,
+      lines(
+        ...flagship.verification.suites.map((s) => `${s.value} ${s.label}. ${s.method}`),
+        `${L.verification.checks}: ${flagship.verification.checks.map(clause).join("; ")}.`,
+        `${L.verification.notMeasured}: ${flagship.verification.notMeasured.join("; ")}. ${L.verification.notMeasuredLead}`,
+      ),
+    ),
+    section(
+      "outcome",
+      `${L.outcome.kicker}: what the record shows, and what it doesn't`,
+      ids.outcome,
+      lines(
+        `${L.outcome.proves}: ${flagship.outcome.proves.map(clause).join("; ")}.`,
+        `${L.outcome.notShown}: ${flagship.outcome.notShown.join("; ")}.`,
+      ),
+    ),
+    section(
+      "tour",
+      `${L.tour.kicker} and ${L.recordings.kicker.toLowerCase()}: the real app on dummy data`,
+      ids.tour,
+      lines(
+        // Screens and recordings by what they show. Their captions are left
+        // out: they describe one run on dummy data, not the product's figures.
+        ...flagship.gallery.map((tab) => `${tab.label} screens: ${tab.shots.map((shot) => shot.title).join("; ")}.`),
+        ...flagship.recordings.map((recording) => `Recording, ${recording.title}: ${recording.summary}`),
+        `“${FLAGSHIP_LABELS.cta.watch}” on the case study plays a recording.`,
+        `Every capture is labelled “${REAL_APP}”.`,
+      ),
+    ),
+    section(
+      "walkthrough",
+      `${L.walkthrough.kicker}: ${L.walkthrough.title.toLowerCase()}`,
+      ids.walkthrough,
+      lines(
+        `${L.walkthrough.lead} ${PRIVATE_NOTICE}.`,
+        `${L.walkthrough.covers}: ${WALKTHROUGH.covers.join("; ")}.`,
+        `${L.walkthrough.staysPrivate}: ${WALKTHROUGH.staysPrivate.join("; ")}.`,
+      ),
+    ),
+    ...flagship.highlights.map((h) =>
+      // The title is the point ("Answers that cite the page"), so the body
+      // opens with it: a verbatim fallback drops the title line.
+      section(`highlight-${h.id}`, `${L.highlights.kicker}: ${h.title}`, ids.highlights, `${sentence(h.title)} ${h.body}`),
+    ),
+    ...flagship.excerpts.map((excerpt) =>
+      section(
+        `code-${excerpt.id}`,
+        `${L.code.kicker}: ${excerpt.title}`,
+        ids.code,
+        lines(`${sentence(excerpt.title)} ${excerpt.story}`),
+      ),
+    ),
+  ];
+}
 
 /**
- * One overview per project, from the registry that renders /work and the
- * résumé entry for the same project. Figures stay with the evaluation
+ * One overview per public project, from the registry that renders /work and
+ * the résumé entry for the same project. Figures stay with the evaluation
  * registry: the résumé's metric line is deliberately not copied here, so a
  * number has one source in the index as it has on the site.
  */
@@ -325,13 +583,13 @@ function projectPassages(): Passage[] {
       ),
       source: `${project.title} — project overview`,
       kind: "project" as const,
-      links: [projectLink(project.slug, project.title)],
+      links: [caseStudyLink(project.slug, project.title)],
       projects: [project.slug],
     };
   });
 }
 
-/** Case-study write-ups (content/projects/<slug>.mdx), one passage per `##` section. */
+/** Public case-study write-ups (content/projects/<slug>.mdx), one passage per `##` section. */
 function caseStudyPassages(): Passage[] {
   const passages: Passage[] = [];
   for (const project of projects) {
@@ -352,7 +610,7 @@ function caseStudyPassages(): Passage[] {
         text: `${project.title} — ${section.heading}\n${clean}`,
         source: `${project.title} case study — ${section.heading}`,
         kind: "case-study",
-        links: [projectLink(project.slug, project.title)],
+        links: [caseStudyLink(project.slug, project.title)],
         projects: [project.slug],
       });
     }
@@ -360,61 +618,169 @@ function caseStudyPassages(): Passage[] {
   return passages;
 }
 
+/**
+ * Everything he has shipped, in one place — the passage that answers "What
+ * has he shipped?", which no single case study can. The flagships lead, with
+ * their usage in the approved wording; then the public projects.
+ */
+function workIndexPassage(): Passage {
+  const title = "Work — what he has shipped in production: his flagship products and his public AI projects";
+  return {
+    id: "work-index",
+    text: lines(
+      title,
+      `Flagship products, built at ${EMPLOYER}, where he works:`,
+      ...flagships.map((f) => `- ${f.name}: ${clause(f.definition)}. In use: ${usageOf(f)}.`),
+      "Public AI projects, each with a case study and public source code:",
+      ...projects.map((p) => `- ${p.title}: ${p.card.definition}`),
+      `The public projects run as deployed demos on ${PROJECT_LINKS.captionWake}; a demo that is offline shows its source, and its recording where it has one, instead of a link.`,
+    ),
+    searchText: `${title}: everything he has built, shipped and delivered in production.`,
+    source: "Work — flagship products and public projects",
+    kind: "work-index",
+    links: mergeLinks(
+      flagships.map((f) => caseStudyLink(f.slug, f.name)),
+      [PAGE.work],
+    ),
+    projects: [],
+  };
+}
+
 /** The job the résumé lists as current, if any. */
 const currentRole = resume.experience.find((exp) => /present/i.test(exp.period));
 
-/** Who Mubin is: role, focus, summary, location, roles and education. */
+/** The roles the hiring page lists, by title: "Applied AI Engineer; …". */
+const OPEN_ROLES = hirePage.roles.items.map((role) => role.title);
+
+/** Where he works from, in the hiring page's words. */
+const LOGISTICS = hirePage.perks.items.find((item) => item.icon === "route")?.body ?? null;
+
+/** The hiring page's notice term for its full-time roles, from the one availability source (STATUS). */
+const NOTICE_TERM = `Notice period: ${STATUS.noticePeriod}`;
+
+/** The notice period, stated once, in the words /llms.txt uses. */
+const NOTICE_LINE = `Notice period for full-time roles: ${STATUS.noticePeriod}`;
+
+/**
+ * What the site says about the work he is open to, in its own words: what an
+ * answer to a hiring question the site does not cover can still say. Its
+ * source is the hiring passage (HIRING_PASSAGE), which cites the same pages.
+ */
+export const HIRING_FACTS = lines(`He is open to: ${OPEN_ROLES.join("; ")}.`, LOGISTICS).replace(/\n/g, " ");
+
+/** The id of the passage HIRING_FACTS is read from: the roles he is open to. */
+export const HIRING_PASSAGE = "hire-roles";
+
+/**
+ * Who Mubin is, compactly: role, experience, the flagship work with its usage,
+ * the public projects, what he is open to, where he is and how to reach him.
+ *
+ * It is also the background of every live answer (see `PROFILE`), so a
+ * generic question never dead-ends: everything here is read from the content
+ * modules, and nothing is written for the assistant alone.
+ */
 function profilePassage(): Passage {
-  const roles = resume.experience.map((exp) => `${exp.role} at ${exp.org} (${exp.period})`);
+  const before = resume.experience.filter((exp) => exp !== currentRole);
   return {
     id: "profile-summary",
     text: lines(
-      `About ${SITE.name} — who he is, what he does, where he works and where he is based`,
+      `About ${SITE.name} — who he is, what he does, where he works, what he has shipped and how to reach him`,
       // The brand role and the employment title are different facts (ADR-015):
       // the first names his discipline, the second is his job title.
-      `${SITE.name} — ${SITE.role}.`,
+      `${SITE.name} — ${firstSentence(resume.summary)}`,
       currentRole
         ? `He works as ${currentRole.role} at ${currentRole.org} (${currentRole.period}); that is his job title.`
         : null,
-      `Focus: ${profileData.focus}.`,
-      profileData.tagline,
-      profileData.ethos,
-      resume.summary,
-      `Experience: ${roles.join("; ")}.`,
+      before.length > 0 ? `Before that: ${before.map((exp) => `${exp.role} at ${exp.org} (${exp.period})`).join("; ")}.` : null,
+      `Flagship work at ${EMPLOYER}: ${flagships.map((f) => `${f.name} — ${clause(f.definition)} (${usageOf(f)})`).join("; ")}.`,
+      ...flagships.map((f) => `His role on ${f.name}, in his words: “${firstSentence(f.credit.role)}”`),
+      `How he builds, in his words: “${AGENT_DIRECTION}”`,
+      flagships.every((f) => f.stack.aws.length > 0) ? "Both flagship products are hosted on AWS." : null,
+      `Public AI projects, each with a case study and public source: ${projects.map((p) => p.title).join(", ")}.`,
+      `Open to: ${OPEN_ROLES.join("; ")}. ${NOTICE_LINE}.`,
+      LOGISTICS,
+      `Based in ${SITE.location} (IST, UTC+5:30). Email: ${SITE.email}.`,
       `Education: ${resume.education.degree}, ${resume.education.school} (${resume.education.year}).`,
-      `Based in ${SITE.location}.`,
     ),
-    source: "Profile — summary & ethos",
+    source: "About — profile: who he is, his work and how to reach him",
     kind: "profile",
-    links: [{ label: "About Mubin", href: "/about" }],
+    links: [PAGE.about],
     projects: [],
   };
 }
 
-/** How to reach him and what he is open to — the facts every page's chrome shows. */
+/** The roles he is open to, and on what terms — the hiring page's "Open to" list. */
+function hireRolesPassage(): Passage {
+  return {
+    id: HIRING_PASSAGE,
+    text: lines(
+      "Hiring — the roles he is open to, whether he is available, his notice period and when he can join, and where he can work",
+      `Availability: ${STATUS.text}.`,
+      `${NOTICE_LINE}.`,
+      // The full-time roles' terms repeat the notice period; the line above states it once.
+      `Roles he is open to: ${hirePage.roles.items.map((role) => `${role.title} (${role.terms.filter((term) => term !== NOTICE_TERM).join(", ")})`).join("; ")}.`,
+      LOGISTICS ? `Where he works: ${LOGISTICS}` : null,
+      `In his words: “${hirePage.letter.close}”`,
+      `${hirePage.roles.note.strong} ${hirePage.roles.note.body}`,
+    ),
+    source: "Hiring — roles he is open to",
+    kind: "hire",
+    links: [PAGE.hire, PAGE.contact],
+    projects: [],
+  };
+}
+
+/** How he works — the hiring page's letter and its "Working with me" grid. */
+function hireWorkingPassage(): Passage {
+  const stats = hirePage.glance.stats.map((s) => `${s.label}: ${s.value}`);
+  return {
+    id: "hire-working",
+    text: lines(
+      "Hiring — how he works, and what working with him looks like",
+      `From his note to hiring teams, in his words: “${[
+        hirePage.letter.intro,
+        ...hirePage.letter.qa.map((pair) => `${pair.q} ${pair.a}`),
+        hirePage.letter.strong,
+        hirePage.letter.agents,
+      ].join(" ")}”`,
+      `${hirePage.perks.label}: ${hirePage.perks.items.map((item) => `${item.title} — ${clause(item.body)}`).join("; ")}.`,
+      `${hirePage.glance.label}: ${stats.join("; ")}.`,
+    ),
+    source: "Hiring — how he works",
+    kind: "hire",
+    links: [PAGE.hire],
+    projects: [],
+  };
+}
+
+/** How to reach him and on what terms — the contact page, with the links every page's chrome shows. */
 function contactPassage(): Passage {
+  const [beforeEmail, afterEmail] = contactPage.freelance.body;
   return {
     id: "contact",
     text: lines(
-      `Contact and availability — how to reach ${SITE.name}: his email, his GitHub, LinkedIn and Hugging Face profiles, hiring him, and whether he is open to work`,
+      `Contact — how to reach ${SITE.name}: his email, booking a call, and his GitHub, LinkedIn and Hugging Face profiles`,
       `Availability: ${STATUS.text}.`,
-      `Email: ${SITE.email}. In his words: "${FOOTER.invite}"`,
-      "The Contact page has his email address and the ways to start a conversation.",
-      `Location: ${SITE.location}.`,
+      `Email: ${SITE.email}. In his words: “${FOOTER.invite}”`,
+      // The contact page's hiring line ends with the notice period, from STATUS.
+      // The title leaves it to the hiring passage, which states it on its
+      // second line: a notice question then leads with that passage (and its
+      // fallback) and still cites this page second.
+      `${contactPage.hiring.title}: ${contactPage.hiring.body}`,
+      INTEGRATIONS.calUrl
+        ? `${contactPage.freelance.title}: ${beforeEmail} ${SITE.email} ${afterEmail} Book a call: ${INTEGRATIONS.calUrl}.`
+        : null,
+      `Location: ${SITE.location}, on IST (UTC+5:30).`,
       `Profiles: GitHub ${SITE.socials.github} · LinkedIn ${SITE.socials.linkedin} · Hugging Face ${SITE.socials.huggingface}.`,
-      "His résumé is on the site, with a PDF download.",
     ),
-    source: "Contact — availability and email",
+    source: "Contact — availability, email and booking",
     kind: "contact",
-    links: [
-      { label: "Contact", href: STATUS.href },
-      { label: "Résumé", href: "/resume" },
-    ],
+    links: [PAGE.contact],
     projects: [],
   };
 }
 
-/** The résumé: one passage per role, plus education. */
+/** The résumé: one passage per role, plus education and the PDF. */
 function resumePassages(): Passage[] {
   const roles = resume.experience.map((exp) => ({
     id: `resume-${slugify(exp.org)}`,
@@ -425,8 +791,8 @@ function resumePassages(): Passage[] {
     ),
     source: `Résumé — ${exp.org} (${exp.role})`,
     kind: "resume" as const,
-    links: [{ label: "Résumé", href: "/resume" }],
-    projects: [],
+    links: [PAGE.resume],
+    projects: projectsNamedIn(exp.points.join(" ")),
   }));
   const { degree, school, year } = resume.education;
   return [
@@ -436,7 +802,19 @@ function resumePassages(): Passage[] {
       text: `Education — where he studied: degree, university and year\n${degree}, ${school} (${year}). Education and academic background.`,
       source: "Résumé — Education",
       kind: "resume",
-      links: [{ label: "Résumé", href: "/resume" }],
+      links: [PAGE.resume],
+      projects: [],
+    },
+    {
+      id: "resume-document",
+      text: lines(
+        "Résumé — his CV: the résumé on the site and its PDF download",
+        `${SITE.name}'s résumé is on the site (${PAGE.resume.href}), with a PDF download (${resume.pdf}).`,
+        resume.summary,
+      ),
+      source: "Résumé — the page and the PDF",
+      kind: "resume",
+      links: [PAGE.resume],
       projects: [],
     },
   ];
@@ -449,9 +827,31 @@ function skillPassages(): Passage[] {
     text: `Skills — ${group.group}\n${group.group} skills and tools: ${group.items}.`,
     source: `Skills — ${group.group}`,
     kind: "skills" as const,
-    links: [{ label: "Skills", href: "/skills" }],
+    links: [PAGE.skills],
     projects: [],
   }));
+}
+
+/**
+ * The AWS services his products run on — the evidence behind "AWS" on the
+ * skills list, read from each flagship's stack.
+ */
+function awsPassage(): Passage {
+  const hosted = flagships.filter((f) => f.stack.aws.length > 0);
+  return {
+    id: "skills-aws",
+    text: lines(
+      "Skills — AWS: his AWS cloud experience, and the AWS services his products are hosted on",
+      ...hosted.map((f) => `${f.name} is hosted on AWS: ${f.stack.aws.join(", ")}.`),
+    ),
+    source: "Skills — AWS, from the flagship case studies",
+    kind: "skills",
+    links: mergeLinks(
+      hosted.map((f) => caseStudyLink(f.slug, f.name, FLAGSHIP_SECTION_IDS.deployment)),
+      [PAGE.skills],
+    ),
+    projects: [],
+  };
 }
 
 /** The project slug an evaluation row's `system` names, if it is one of ours. */
@@ -469,8 +869,11 @@ function evaluationPassage(row: EvalRow): Passage {
   const anchor = evalAnchor(row);
   const slug = projectSlugFor(row.system);
   const title = `Evaluation — ${row.system}: ${row.metric} on ${row.benchmark}`;
+  // The registry row first; then the page it links, and the project's case
+  // study, which shows the same result under "Results, with methods".
   const onSite = row.link?.startsWith("/") ? [{ label: row.system, href: row.link }] : [];
-  const links = mergeLinks([{ label: "Evals", href: `/evals#${anchor}` }], onSite);
+  const caseStudy = slug ? [caseStudyLink(slug, row.system)] : [];
+  const links = mergeLinks([{ label: PAGE.evals.label, href: `/evals#${anchor}` }], onSite, caseStudy);
   const reference = row.link && /^https?:\/\//.test(row.link) ? `Method and evidence: ${row.link}` : null;
 
   if (row.retired) {
@@ -534,7 +937,115 @@ function evaluationGuidePassage(): Passage {
     ),
     source: `Evaluations — ${evalsIntro.title}`,
     kind: "evaluation-guide",
-    links: [{ label: "Evals", href: "/evals" }],
+    links: [PAGE.evals],
+    projects: [],
+  };
+}
+
+/** /about: where he has worked, the line he works by, his tools, and his three rules. */
+function aboutPassages(): Passage[] {
+  const summaries = resume.experience
+    .map((exp) => (aboutPage.experience.summaries[exp.org] ? `${exp.org}: ${clause(aboutPage.experience.summaries[exp.org]!)}` : null))
+    .filter((line): line is string => line !== null);
+  return [
+    {
+      id: "about-page",
+      text: lines(
+        "About — his background: from healthcare workflows to AI products, where he has worked and the tools he ships with",
+        `${aboutPage.hero.title}. In his words: “${aboutPage.hero.lead.map((part) => part.text).join("")}”`,
+        summaries.length > 0 ? `${aboutPage.experience.title}: ${summaries.join("; ")}.` : null,
+        `A line he works by, from his essay “${aboutPage.quote.essay.label}”: “${aboutPage.quote.text}”`,
+        `${aboutPage.stack.label}: ${aboutPage.stack.items.join(", ")}.`,
+      ),
+      source: "About — background, experience and tools",
+      kind: "profile",
+      links: [PAGE.about],
+      projects: [],
+    },
+    {
+      id: "about-principles",
+      text: lines(
+        "About — how he approaches the work: the principles and rules he holds every project to",
+        aboutPage.principles.body,
+        ...home.principles.map((p) => `${p.title}: ${p.body}`),
+      ),
+      source: "About — how he approaches the work",
+      kind: "profile",
+      links: [PAGE.about],
+      projects: [],
+    },
+  ];
+}
+
+/** What /now says he is building, exploring and reading, with the date it was last updated. */
+function nowPassage(): Passage {
+  const { data, body } = splitFrontmatter(lf(readFileSync(path.join(CONTENT_DIR, "now.mdx"), "utf8")), "content/now.mdx");
+  const meta = NowSchema.parse(data);
+  const sections = sectionsOf(body).map((s) => (s.heading ? `${s.heading}: ${stripMarkdown(s.body)}` : stripMarkdown(s.body)));
+  return {
+    id: "now",
+    text: lines(
+      `Now — what he is working on now: building, exploring and reading (updated ${meta.updated})`,
+      `From his /now page, in his words: ${meta.lede}`,
+      ...sections,
+      meta.exploring.length > 0
+        ? `Currently exploring: ${meta.exploring.map((item) => `${item.title} — ${clause(item.body)}`).join("; ")}.`
+        : null,
+    ),
+    source: `Now — updated ${formatDate(meta.updated)}`,
+    kind: "page",
+    links: [PAGE.now],
+    projects: [],
+  };
+}
+
+/** /uses: the tools behind the public projects, and how their hosting stays free. */
+function usesPassages(): Passage[] {
+  return [
+    ...uses.groups.map((group) => ({
+      id: `uses-${slugify(group.title)}`,
+      text: lines(
+        `Uses — the tools he uses: ${group.title}`,
+        ...group.items.map((tool) => (TOOL_NOTES[tool] ? `${tool}: ${TOOL_NOTES[tool]}` : `${tool}.`)),
+      ),
+      source: `Uses — ${group.title}`,
+      kind: "page" as const,
+      links: [PAGE.uses],
+      projects: [],
+    })),
+    {
+      id: "uses-hosting",
+      text: lines("Uses — how his public projects are hosted, and what it costs", uses.intro, uses.costNote),
+      source: "Uses — hosting and cost",
+      kind: "page",
+      links: [PAGE.uses],
+      projects: [],
+    },
+  ];
+}
+
+/**
+ * /trust: what is claimed and where to check it, including what is not
+ * claimed. The evaluation rows are left out here: each is its own passage,
+ * built from the registry the trust page reads them from.
+ */
+function trustPassage(): Passage {
+  const evaluationRows = new Set(evals.map((row) => row.system));
+  const claims = EVIDENCE.filter((row) => !evaluationRows.has(row.area)).map(
+    (row) => `${row.area}: ${clause(row.claim)} (${row.status === "not-claimed" ? "not claimed" : row.status}).`,
+  );
+  return {
+    id: "trust",
+    text: lines(
+      "Trust — the claims you can check, what is not claimed, and how quality is protected",
+      TRUST_PAGE.lead,
+      ...claims,
+      ...trust.principles.map((p) => `${p.title}: ${p.body}`),
+      ...trust.controls.map((c) => `${c.title}: ${c.items.join("; ")}.`),
+    ),
+    source: "Trust — claims and practices",
+    kind: "page",
+    links: [PAGE.trust],
     projects: [],
   };
 }
@@ -580,10 +1091,7 @@ function writingIndexPassage(): Passage {
     searchText: `${title}: his writing, blog posts and articles.`,
     source: "Writing — essays, guides and notes",
     kind: "writing-index",
-    links: [
-      { label: "Writing", href: "/writing" },
-      { label: "Notes", href: "/notes" },
-    ],
+    links: [PAGE.writing, PAGE.notes],
     projects: [],
   };
 }
@@ -597,7 +1105,7 @@ function writingIndexPassage(): Passage {
 const writingTitle = (kind: string, meta: { date: string; updated?: string }): string =>
   `${kind} (writing, published ${meta.date}${meta.updated ? `, updated ${meta.updated}` : ""})`;
 
-/** "Essay — Trust is not a safety model (May 2026)": the citation a reader sees, dated. */
+/** "Essay — Trust is not a safety model (May 2026)": the source the model sees, dated. */
 const writingSource = (kind: string, meta: { title: string; date: string }): string =>
   `${kind} — ${meta.title} (${formatDate(meta.date)})`;
 
@@ -658,12 +1166,21 @@ function notePassages(): Passage[] {
 export function buildCorpus(): Passage[] {
   return [
     ...faqPassages(),
+    workIndexPassage(),
+    ...flagships.flatMap(flagshipPassages),
     ...projectPassages(),
     ...caseStudyPassages(),
     profilePassage(),
+    hireRolesPassage(),
+    hireWorkingPassage(),
     contactPassage(),
     ...resumePassages(),
     ...skillPassages(),
+    awsPassage(),
+    ...aboutPassages(),
+    nowPassage(),
+    ...usesPassages(),
+    trustPassage(),
     evaluationGuidePassage(),
     ...evals.map(evaluationPassage),
     writingIndexPassage(),

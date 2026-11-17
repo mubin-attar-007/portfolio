@@ -1,4 +1,5 @@
-/* The assistant panel: a bottom sheet on phones, an inset drawer from `sm`.
+/* The assistant panel: a bottom sheet on phones, kept above the on-screen
+   keyboard, and an inset drawer from `sm`.
 
    Every colour, shadow, radius, duration and curve is a token from
    styles/tokens.css; the few values below are this panel's own geometry.
@@ -6,10 +7,12 @@
    same light surface on the light and the dark pages.
 
    Motion law: the panel and scrim arrive once (spring travel and a fade),
-   messages rise once as they are added, controls answer hover and press, and
-   the only loops — the "searching" shimmer and the send spinner — exist only
-   while an answer is pending. Under reduced motion nothing travels or loops,
-   and the global rule in styles/globals.css makes every change instant. */
+   messages rise once as they are added, controls answer hover and press (the
+   send button's arrow, spinner and check, the copy button's tick, the carets
+   on page chips and actions), and the only loops — the "searching" shimmer and
+   the send spinner — exist only while an answer is pending. Under reduced
+   motion nothing travels or loops, and the global rule in styles/globals.css
+   makes every change instant. */
 
 /* ---- geometry ------------------------------------------------------------- */
 .scrim,
@@ -17,6 +20,7 @@
   --a-width: 27.5rem; /* 440px drawer */
   --a-inset: 0.5rem; /* the drawer floats 8px from every edge */
   --a-sheet-height: 88dvh; /* the phone sheet leaves the top of the page in view */
+  --a-sheet-gap: 0.75rem; /* what it leaves above itself when the keyboard is open */
   --a-travel: 1.5rem; /* how far the drawer slides in */
   --a-gutter: 1rem;
   /* The chips' chevron, drawn as a mask so it is never part of a button's text. */
@@ -40,13 +44,16 @@
 }
 
 /* ---- dialog --------------------------------------------------------------- */
+/* On phones the sheet sits on the on-screen keyboard rather than under it:
+   --a-keyboard and --a-viewport come from the visual viewport
+   (components/assistant/viewport.ts) and are absent until it reports. */
 .dialog {
   position: fixed;
   z-index: 50;
-  inset: auto 0 0;
+  inset: auto 0 var(--a-keyboard, 0px);
   display: flex;
   flex-direction: column;
-  height: var(--a-sheet-height);
+  height: min(var(--a-sheet-height), calc(var(--a-viewport, 100dvh) - var(--a-sheet-gap)));
   overflow: hidden;
   border-radius: var(--radius-xl) var(--radius-xl) 0 0;
   background: var(--color-surface);
@@ -71,7 +78,7 @@
 .header {
   flex: none;
   display: flex;
-  align-items: flex-start;
+  align-items: center;
   gap: 0.75rem;
   padding: 0.75rem 0.75rem 0.75rem var(--a-gutter);
   border-bottom: 1px solid var(--color-border);
@@ -108,12 +115,21 @@
   color: var(--color-ink);
 }
 
+/* One line in the drawer. On a phone the sheet's footer already says where
+   answers come from, so the header keeps to its title. */
 .subtitle {
+  display: none;
   margin: 0.125rem 0 0;
   font-size: 0.8125rem;
   line-height: 1.125rem;
   color: var(--color-ink-secondary);
   text-wrap: pretty;
+}
+
+@media (min-width: 40rem) {
+  .subtitle {
+    display: block;
+  }
 }
 
 .actions {
@@ -448,7 +464,9 @@
 }
 
 /* Waiting for the first token: what is happening, with a light band sweeping
-   across it. The real answer replaces it as it streams; nothing is typed out. */
+   across it. After SLOW_AFTER_MS the same line says the answer is slow: only
+   its words change, with no new motion. The real answer replaces it as it
+   streams; nothing is typed out. */
 .searching {
   display: inline-block;
   color: var(--color-ink-secondary);
@@ -459,10 +477,29 @@
   animation: a-shimmer 1.6s linear infinite;
 }
 
-.sources {
+/* Under a settled answer: the pages it cites, and the copy button. */
+.answerFooter {
+  display: flex;
+  align-items: flex-end;
+  justify-content: space-between;
+  gap: 0.75rem;
   margin-top: 0.75rem;
   padding-top: 0.625rem;
   border-top: 1px solid var(--color-border);
+}
+
+.sources {
+  display: flex;
+  flex-direction: column;
+  gap: 0.375rem;
+  min-width: 0;
+}
+
+.sourcesLabel {
+  font: var(--text-label--font-weight) var(--text-label) / 1rem var(--font-mono);
+  letter-spacing: var(--text-label--letter-spacing);
+  text-transform: uppercase;
+  color: var(--color-ink-tertiary);
 }
 
 .sourceList {
@@ -496,11 +533,67 @@
   box-shadow: inset 0 0 0 1px var(--pill-outline-ring);
 }
 
-.sourceNames {
-  margin: 0.5rem 0 0;
-  font-size: 0.75rem;
-  line-height: 1.5;
-  color: var(--color-ink-secondary);
+/* Copy: an icon ghost whose glyph swaps for a tick, like the send button. */
+.copy {
+  flex: none;
+  display: grid;
+  place-items: center;
+  width: 1.75rem;
+  height: 1.75rem;
+  min-width: 1.75rem;
+  padding: 0;
+  color: var(--color-ink-tertiary);
+}
+
+.copy::after {
+  inset: -0.375rem;
+}
+
+.copy[data-state="done"] {
+  color: var(--color-positive);
+}
+
+.copyIcon {
+  grid-area: 1 / 1;
+  display: grid;
+  place-items: center;
+  transition:
+    opacity var(--motion-base) var(--ease-out),
+    transform var(--motion-press) var(--spring),
+    filter var(--motion-base) var(--ease-out);
+}
+
+.copy[data-state="done"] .copyIdle,
+.copy:not([data-state="done"]) .copyDone {
+  opacity: 0;
+  transform: scale(0.6);
+  filter: blur(2px);
+}
+
+/* Next steps under an answer: the site's buttons, wrapping on a phone. */
+.actionsRow {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.5rem;
+  margin-top: 0.125rem;
+}
+
+/* A finger needs more than the 28px button: 40px on a touch screen. */
+@media (pointer: coarse) {
+  .actionsRow > :is(a, button) {
+    height: 2.5rem;
+    padding-inline: 0.875rem;
+  }
+}
+
+/* The questions to ask next, under the latest answer: the starters' chips. */
+.followUps {
+  width: 100%;
+  margin-top: 0.5rem;
+}
+
+.followUps .label {
+  margin: 0 0 0.5rem;
 }
 
 @media (pointer: coarse) {
@@ -516,8 +609,31 @@
 
 /* ---- footer: stop, composer, privacy ------------------------------------------- */
 .footer {
+  position: relative;
   flex: none;
   padding: 0 var(--a-gutter);
+}
+
+/* Shown while the reader is above the newest text; it floats over the end of
+   the transcript, centred above the composer. */
+.jump {
+  position: absolute;
+  z-index: 1;
+  left: 50%;
+  bottom: calc(100% + 0.5rem);
+  translate: -50% 0;
+  height: 2rem;
+  border-radius: var(--radius-pill);
+  background: var(--color-surface);
+  box-shadow: var(--shadow-card);
+  color: var(--color-ink);
+  font-size: 0.78125rem;
+  animation: a-fade-in var(--motion-base) var(--ease-out) backwards;
+}
+
+.jump:hover {
+  background: var(--color-surface);
+  box-shadow: var(--shadow-card-hover);
 }
 
 .stopRow {
@@ -625,7 +741,14 @@
   color: var(--color-ink-tertiary);
 }
 
-/* Arrow and spinner share the button and swap with a blur-scale crossfade. */
+/* The answer has landed: a positive check on the resting ground. */
+.send[aria-disabled="true"][data-state="done"] {
+  color: var(--color-positive);
+}
+
+/* Arrow, spinner and check share the button and swap with a blur-scale
+   crossfade: the arrow, a spinner while an answer streams, then a check as it
+   lands, and the arrow again once typing starts or after a moment. */
 .sendIcon {
   grid-area: 1 / 1;
   display: grid;
@@ -636,8 +759,9 @@
     filter var(--motion-base) var(--ease-out);
 }
 
-.send[data-state="busy"] .arrow,
-.send:not([data-state="busy"]) .spinner {
+.send:is([data-state="busy"], [data-state="done"]) .arrow,
+.send:not([data-state="busy"]) .spinner,
+.send:not([data-state="done"]) .check {
   opacity: 0;
   transform: scale(0.6);
   filter: blur(2px);
@@ -736,7 +860,8 @@
   .chip,
   .sourceChip,
   .field,
-  .send {
+  .send,
+  .jump {
     border: 1px solid CanvasText;
   }
 

@@ -208,3 +208,49 @@ export function parseAnswer(answer: string): Block[] {
   closeList();
   return blocks;
 }
+
+/**
+ * An answer still streaming, without the opener of a bold or code run whose
+ * closer has not arrived yet: "**One ordered chain of che" renders as plain
+ * text instead of flashing literal asterisks, and turns bold the moment the
+ * closing marker lands. Fenced code is left alone (its fence is a run of
+ * three backticks the parser already shows as code while it is open).
+ */
+export function withoutDanglingMarkers(text: string): string {
+  let out = text;
+  if ((out.match(/\*\*/g)?.length ?? 0) % 2 === 1) {
+    const at = out.lastIndexOf("**");
+    out = out.slice(0, at) + out.slice(at + 2);
+  }
+  if (!out.includes("```") && (out.match(/`/g)?.length ?? 0) % 2 === 1) {
+    const at = out.lastIndexOf("`");
+    out = out.slice(0, at) + out.slice(at + 1);
+  }
+  return out;
+}
+
+/** Inline runs as plain text: the words, without their markers. */
+function plainInline(inlines: readonly Inline[]): string {
+  return inlines.map((inline) => (inline.kind === "text" || inline.kind === "code" ? inline.text : plainInline(inline.children))).join("");
+}
+
+/**
+ * An answer as plain text, for the clipboard: paragraphs separated by a blank
+ * line, list items as "- " or "1. ", code as written, and no `**`, `*` or
+ * backtick markers — what reads well pasted into an email.
+ */
+export function toPlainText(answer: string): string {
+  return parseAnswer(answer)
+    .map((block) => {
+      switch (block.kind) {
+        case "paragraph":
+        case "heading":
+          return plainInline(block.inlines);
+        case "list":
+          return block.items.map((item, i) => `${block.ordered ? `${i + 1}.` : "-"} ${plainInline(item)}`).join("\n");
+        case "code":
+          return block.text;
+      }
+    })
+    .join("\n\n");
+}

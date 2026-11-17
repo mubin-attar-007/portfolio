@@ -7,6 +7,7 @@ import test from "node:test";
 import assert from "node:assert/strict";
 
 import {
+  askedQuestions,
   historyForRequest,
   MAX_ASSISTANT_TURN_CHARS,
   MAX_HISTORY_TURNS,
@@ -83,4 +84,9 @@ test("history keeps whole pairs only, within the route's turn limit", () => {
 test("a turn still streaming is not context", () => {
   const turns = [user("q1"), answer("partial", { streaming: true })];
   assert.deepEqual(historyForRequest(turns, "q2"), [{ role: "user", content: "q2" }]);
+});
+
+test("the questions asked in a conversation are its user turns, in order", () => {
+  const turns = [user("q1"), answer("a1"), user("q2"), answer("", { note: "not-covered" })];
+  assert.deepEqual(askedQuestions(turns), ["q1", "q2"]);
 });

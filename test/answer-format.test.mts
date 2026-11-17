@@ -6,7 +6,7 @@
 import test from "node:test";
 import assert from "node:assert/strict";
 
-import { parseAnswer, parseInline, type Block } from "../lib/ai/answer-format.ts";
+import { parseAnswer, parseInline, toPlainText, withoutDanglingMarkers, type Block } from "../lib/ai/answer-format.ts";
 
 const text = (value: string) => ({ kind: "text", text: value }) as const;
 
@@ -79,4 +79,22 @@ test("the injection refusal's bold renders as bold", () => {
     kind: "strong",
     children: [text("the DBWhisper architecture")],
   });
+});
+
+test("an answer copies as plain text, without its markers", () => {
+  assert.equal(
+    toPlainText("CareLTC has **200+ users**.\n\n- the `API`\n- the *portal*\n\n1. first\n2. second"),
+    "CareLTC has 200+ users.\n\n- the API\n- the portal\n\n1. first\n2. second",
+  );
+  // A link is its text and address, as on screen; HTML stays text.
+  assert.equal(toPlainText("See [the case study](/work/careltc)."), "See the case study (/work/careltc).");
+  assert.equal(toPlainText("<b>x</b>"), "<b>x</b>");
+});
+
+test("while streaming, a bold or code opener without its closer is held back", () => {
+  assert.equal(withoutDanglingMarkers("- **One ordered chain of che"), "- One ordered chain of che");
+  assert.equal(withoutDanglingMarkers("**Done** and **half"), "**Done** and half");
+  assert.equal(withoutDanglingMarkers("run `DROP TAB"), "run DROP TAB");
+  assert.equal(withoutDanglingMarkers("**closed** and `code`"), "**closed** and `code`");
+  assert.equal(withoutDanglingMarkers("```sql\nSELECT `x"), "```sql\nSELECT `x", "an open fence is left to the parser");
 });

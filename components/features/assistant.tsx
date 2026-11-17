@@ -9,6 +9,7 @@ import {
   useState,
   useSyncExternalStore,
 } from "react";
+import { usePathname } from "next/navigation";
 import { Sparkles } from "lucide-react";
 import { ASSISTANT_COPY } from "@/components/assistant/copy";
 import {
@@ -69,7 +70,9 @@ function isEditable(el: Element | null): boolean {
  *
  * It owns the conversation: the header stays mounted across page changes, so
  * closing the panel or opening a cited page keeps the transcript until the tab
- * is closed. Nothing is stored.
+ * is closed. Nothing is stored. It also reads the current page, so the panel is
+ * page-aware (a case study's own starters, a prior for its passages) without
+ * any caller passing anything.
  *
  * Opening:
  * - the trigger; Ctrl+K, or ⌘K on Apple devices — a modifier shortcut, so
@@ -101,6 +104,9 @@ export function Assistant({ className }: { className?: string }) {
   // The launcher that opened the panel, if one did.
   const returnTo = useRef<HTMLElement | null>(null);
   const hint = useShortcutHint();
+  // The owner outlives page changes, so the pathname is the page the panel is
+  // open on now: its starters, and the prior its questions carry.
+  const page = usePathname();
 
   const launch = useCallback((question: string | null = null) => {
     const request = question ?? pendingQuestion.current;
@@ -226,6 +232,7 @@ export function Assistant({ className }: { className?: string }) {
             onClose={close}
             seed={seed}
             onSeedTaken={takeSeed}
+            page={page}
           />
         </Suspense>
       ) : null}

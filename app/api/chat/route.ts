@@ -15,10 +15,12 @@ export const dynamic = "force-dynamic";
 export const runtime = "nodejs";
 
 /**
- * Seconds the platform allows one request. Longer than the handler's own
- * ANSWER_TIMEOUT_MS (20 s), so the handler's timeout and fallback always run
- * before the platform kills the function. Must stay a literal: Next reads
- * segment config statically.
+ * Seconds the platform allows one request. Longer than a routing call
+ * (ROUTER_TIMEOUT_MS, 3.5 s) and the handler's own ANSWER_TIMEOUT_MS (25 s)
+ * together, so the handler's timeout and fallback always run before the
+ * platform stops the function. The panel waits longer still
+ * (CLIENT_TIMEOUT_MS). Must stay a literal: Next reads segment config
+ * statically.
  */
 export const maxDuration = 30;
 

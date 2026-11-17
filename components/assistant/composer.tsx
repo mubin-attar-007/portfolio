@@ -1,5 +1,5 @@
 import { useEffect, useId, type MouseEvent, type RefObject } from "react";
-import { ArrowUp, LoaderCircle } from "lucide-react";
+import { ArrowUp, Check, LoaderCircle } from "lucide-react";
 import { MAX_MESSAGE_CHARS } from "@/lib/ai/chat-contract";
 import { ASSISTANT_COPY } from "./copy";
 import styles from "./assistant.module.css";
@@ -25,6 +25,8 @@ type ComposerProps = {
   onSubmit: () => void;
   /** An answer is streaming: the send button shows a spinner. */
   busy: boolean;
+  /** An answer has just arrived: the empty send button shows a check for a moment. */
+  answered: boolean;
   /** There is a draft and nothing is streaming. */
   canSend: boolean;
 };
@@ -35,7 +37,8 @@ type ComposerProps = {
  * Enter sends and Shift+Enter starts a new line; an IME composition is never
  * cut short. The field grows with its text and collapses once it is cleared.
  * The send button swaps its arrow for a spinner while an answer streams, then
- * swaps back.
+ * for a check as the answer lands, then back to the arrow (once typing starts,
+ * or after a moment).
  *
  * A11y: the field's description is a short hint (plus the counter near the
  * limit), never the transcript. **Ask** reports its state with `aria-disabled`,
@@ -48,6 +51,7 @@ export function Composer({
   onDraftChange,
   onSubmit,
   busy,
+  answered,
   canSend,
 }: ComposerProps) {
   const hintId = useId();
@@ -101,7 +105,7 @@ export function Composer({
             type="submit"
             aria-label={ASSISTANT_COPY.send}
             aria-disabled={!canSend || undefined}
-            data-state={busy ? "busy" : undefined}
+            data-state={busy ? "busy" : answered && !canSend ? "done" : undefined}
             className={styles.send}
           >
             <span className={`${styles.sendIcon} ${styles.arrow}`} aria-hidden>
@@ -109,6 +113,9 @@ export function Composer({
             </span>
             <span className={`${styles.sendIcon} ${styles.spinner}`} aria-hidden>
               <LoaderCircle size={17} strokeWidth={2.25} />
+            </span>
+            <span className={`${styles.sendIcon} ${styles.check}`} aria-hidden>
+              <Check size={17} strokeWidth={2.25} />
             </span>
           </button>
         </div>

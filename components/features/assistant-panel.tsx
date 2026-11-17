@@ -4,43 +4,57 @@ import {
   useCallback,
   useEffect,
   useId,
+  useMemo,
   useRef,
   useState,
   type Dispatch,
   type SetStateAction,
 } from "react";
 import { createPortal } from "react-dom";
-import { Sparkles, Square, X } from "lucide-react";
+import { ArrowDown, Sparkles, Square, X } from "lucide-react";
 import { Composer } from "@/components/assistant/composer";
 import { ASSISTANT_COPY } from "@/components/assistant/copy";
 import { EmptyState } from "@/components/assistant/empty-state";
+import { CLIENT_TIMEOUT_MS, slowAnswerCue } from "@/components/assistant/pending";
 import { Turn } from "@/components/assistant/turn";
 import { isFailedTurn } from "@/components/assistant/turn-status";
+import { useKeyboardInset } from "@/components/assistant/viewport";
 import styles from "@/components/assistant/assistant.module.css";
+import { readActions } from "@/lib/ai/actions";
 import {
+  askedQuestions,
   historyForRequest,
   type AnswerMode,
   type AnswerNote,
+  type ChatRequest,
   type ChatTurn,
 } from "@/lib/ai/chat-contract";
 import { readCitations } from "@/lib/ai/citation-links";
+import { readFollowUps } from "@/lib/ai/follow-ups";
+import { STARTERS, startersFor } from "@/lib/ai/starters";
 import { useInertBackground } from "@/lib/use-inert-background";
 
 /**
  * AssistantPanel — a grounded, cited assistant over this site's content
- * (AI_ASSISTANT.md §5). A bottom sheet on phones and an inset drawer from `sm`,
- * the one place a large shadow is allowed. Streams from /api/chat over SSE and
- * renders the answer's small markdown subset as React elements (never as HTML).
+ * (AI_ASSISTANT.md §5). A bottom sheet on phones, kept above the on-screen
+ * keyboard, and an inset drawer from `sm`, the one place a large shadow is
+ * allowed. Streams from /api/chat over SSE and renders the answer's small
+ * markdown subset as React elements (never as HTML).
  *
  * The conversation itself belongs to the launcher (`Assistant`), which stays
  * mounted in the header across page changes: closing the panel, or opening a
  * cited page, keeps the transcript. Closing during an answer stops it.
  *
+ * Page-aware: on a case study or an article the starters are that page's, and
+ * every question carries the page, which retrieval uses as a mild prior.
+ *
  * A11y: modal dialog with a focus trap, Escape to close, focus restore (owned
- * by the launcher), a polite log for answers. Focus never drops to <body>:
- * sending moves it to the question field, and a control that disappears (a
- * starter, Stop, Clear, a retry) hands it back to the field first. The
- * transcript is a tab stop, so a long answer can be scrolled from the keyboard.
+ * by the launcher), a polite log for answers and a polite status line for
+ * what the panel does (searching, ready, copied). Focus never drops to
+ * <body>: sending moves it to the question field, and a control that
+ * disappears (a starter, a follow-up, Stop, Clear, a retry, Jump to latest)
+ * hands it back to the field first. The transcript is a tab stop, so a long
+ * answer can be scrolled from the keyboard.
  */
 
 /** A question handed to the panel by an `assistant:open` request. */
@@ -54,13 +68,21 @@ type Props = {
   seed: SeedQuestion | null;
   /** Called when the panel takes the seed, so it is sent once. */
   onSeedTaken: (id: number) => void;
+  /** The page the panel is open on (the current pathname); the route ignores anything else. */
+  page: string | null;
 };
 
 /** HTTP status /api/chat answers with when the per-client window is exhausted. */
 const RATE_LIMITED = 429;
 
-/** Longer than the route's own 20 s answer timeout, so the server's fallback normally wins. */
-const CLIENT_TIMEOUT_MS = 30_000;
+/** How long the send button shows its check after an answer lands. */
+const ANSWERED_MS = 1_400;
+
+/** How long a one-off announcement ("Answer copied") holds the status line. */
+const ANNOUNCE_MS = 2_500;
+
+/** Within this distance of the bottom, the transcript follows new text. */
+const FOLLOW_SLACK_PX = 48;
 
 const UNAVAILABLE =
   "The assistant is unavailable right now. You can still explore the case studies and résumé.";
@@ -131,6 +153,9 @@ function newId(): string {
     : `${Date.now().toString(36)}-${Math.random().toString(36).slice(2)}`;
 }
 
+/** True when the visitor prefers reduced motion: the transcript jumps instead of gliding. */
+const prefersReducedMotion = (): boolean => window.matchMedia("(prefers-reduced-motion: reduce)").matches;
+
 type ActiveRequest = {
   id: string;
   controller: AbortController;
@@ -138,9 +163,15 @@ type ActiveRequest = {
   reason: "stopped" | "timed-out" | null;
 };
 
-export function AssistantPanel({ turns, setTurns, onClose, seed, onSeedTaken }: Props) {
+export function AssistantPanel({ turns, setTurns, onClose, seed, onSeedTaken, page }: Props) {
   const [draft, setDraft] = useState("");
   const [busy, setBusy] = useState(false);
+  const [answered, setAnswered] = useState(false);
+  // The pending answer has sent no text for SLOW_AFTER_MS: say so, once.
+  const [slow, setSlow] = useState(false);
+  const [announcement, setAnnouncement] = useState<string | null>(null);
+  // The visitor scrolled up from the latest text: offer the way back down.
+  const [behind, setBehind] = useState(false);
   // Turns already in the transcript when the panel opened stay still; only
   // turns added while it is open rise into place.
   const [initialTurnIds] = useState(() => new Set(turns.map((turn) => turn.id)));
@@ -153,12 +184,17 @@ export function AssistantPanel({ turns, setTurns, onClose, seed, onSeedTaken }: 
   const mountedRef = useRef(true);
   const streamFrameRef = useRef<number | null>(null);
   const followTranscriptRef = useRef(true);
+  // The transcript's last scroll position, so a scroll can tell up from down.
+  const lastScrollTopRef = useRef(0);
+  const answeredTimer = useRef<number | null>(null);
+  const announceTimer = useRef<number | null>(null);
   const dialogTitleId = useId();
   const dialogDescId = useId();
 
   // The panel only exists while it is open, so the boundary is unconditional:
   // everything behind it is inert for exactly as long as this component lives.
   useInertBackground(true);
+  useKeyboardInset(panelRef);
 
   const patchTurn = useCallback(
     (id: string, patch: Partial<ChatTurn>) => {
@@ -176,6 +212,13 @@ export function AssistantPanel({ turns, setTurns, onClose, seed, onSeedTaken }: 
   }, []);
 
   const focusField = useCallback(() => inputRef.current?.focus(), []);
+
+  /** Say something once through the status line, then return it to the panel's state. */
+  const announce = useCallback((message: string) => {
+    setAnnouncement(message);
+    if (announceTimer.current !== null) window.clearTimeout(announceTimer.current);
+    announceTimer.current = window.setTimeout(() => setAnnouncement(null), ANNOUNCE_MS);
+  }, []);
 
   // Focus the question field on open; trap focus and handle Escape while open.
   // Every close path calls the launcher's `onClose`, which unmounts the panel
@@ -221,16 +264,28 @@ export function AssistantPanel({ turns, setTurns, onClose, seed, onSeedTaken }: 
     return () => {
       mountedRef.current = false;
       stop("stopped");
+      if (answeredTimer.current !== null) window.clearTimeout(answeredTimer.current);
+      if (announceTimer.current !== null) window.clearTimeout(announceTimer.current);
     };
   }, [stop]);
 
-  // Follow new tokens only while the reader is at the bottom of the transcript.
-  // Scrolling back to an earlier answer must not fight the incoming stream.
+  // Follow new text only while the reader is at the bottom of the transcript.
+  // Scrolling back to an earlier answer must not fight the incoming stream:
+  // "Jump to latest" appears instead.
   useEffect(() => {
     turnsRef.current = turns;
     const el = logRef.current;
-    if (el && turns.length > 0 && followTranscriptRef.current) el.scrollTop = el.scrollHeight;
+    if (!el || turns.length === 0) return;
+    if (followTranscriptRef.current) el.scrollTop = el.scrollHeight;
+    else setBehind(true);
   }, [turns]);
+
+  /** The send button's moment of confirmation once an answer has landed. */
+  const markAnswered = useCallback(() => {
+    setAnswered(true);
+    if (answeredTimer.current !== null) window.clearTimeout(answeredTimer.current);
+    answeredTimer.current = window.setTimeout(() => setAnswered(false), ANSWERED_MS);
+  }, []);
 
   const ask = useCallback(
     async (question: string) => {
@@ -238,6 +293,7 @@ export function AssistantPanel({ turns, setTurns, onClose, seed, onSeedTaken }: 
       if (!q || activeRef.current) return;
 
       const history = historyForRequest(turnsRef.current, q);
+      const asked = [...askedQuestions(turnsRef.current), q];
       const id = newId();
       setTurns((prev) => [
         ...prev,
@@ -248,15 +304,23 @@ export function AssistantPanel({ turns, setTurns, onClose, seed, onSeedTaken }: 
       // leaves a visitor's next question intact, ready to submit afterwards.
       setDraft("");
       setBusy(true);
+      setSlow(false);
+      setAnswered(false);
+      setBehind(false);
       followTranscriptRef.current = true;
-      // A starter button unmounts with the empty state; keep focus in the
-      // dialog, on the field the next question goes into (WCAG 2.4.3).
+      // A starter or follow-up button unmounts as the conversation moves on;
+      // keep focus in the dialog, on the field the next question goes into
+      // (WCAG 2.4.3).
       focusField();
 
       const active: ActiveRequest = { id, controller: new AbortController(), reason: null };
       activeRef.current = active;
       const timer = setTimeout(() => stop("timed-out"), CLIENT_TIMEOUT_MS);
+      const cue = slowAnswerCue(() => {
+        if (mountedRef.current && activeRef.current === active) setSlow(true);
+      });
       let text = "";
+      let landed = false;
       const flush = () => {
         if (streamFrameRef.current !== null) cancelAnimationFrame(streamFrameRef.current);
         streamFrameRef.current = null;
@@ -271,10 +335,11 @@ export function AssistantPanel({ turns, setTurns, onClose, seed, onSeedTaken }: 
       };
 
       try {
+        const body: ChatRequest = { messages: history, ...(page ? { page } : {}) };
         const res = await fetch("/api/chat", {
           method: "POST",
           headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({ messages: history }),
+          body: JSON.stringify(body),
           signal: active.controller.signal,
         });
         // The rate limiter answers 429 + Retry-After, not a stream — surface the
@@ -314,9 +379,14 @@ export function AssistantPanel({ turns, setTurns, onClose, seed, onSeedTaken }: 
               patchTurn(id, { mode: asMode(data.mode), note: asNote(data.note), content: "" });
             } else if (event === "token" && typeof data.text === "string") {
               text += data.text;
+              cue.arrived();
               schedule();
             } else if (event === "sources") {
               patchTurn(id, { sources: readCitations(data.citations) });
+            } else if (event === "actions") {
+              patchTurn(id, { actions: readActions(data.actions) });
+            } else if (event === "followups") {
+              patchTurn(id, { followups: readFollowUps(data.questions, asked) });
             } else if (event === "done") {
               finished = true;
               incomplete = data.incomplete === true;
@@ -327,6 +397,7 @@ export function AssistantPanel({ turns, setTurns, onClose, seed, onSeedTaken }: 
         // A stream that ends without `done` was cut off on the way here.
         const cut = incomplete || (!finished && text.length > 0);
         patchTurn(id, { streaming: false, incomplete: cut || undefined });
+        landed = finished && !cut;
       } catch {
         flush();
         if (active.reason) {
@@ -344,6 +415,7 @@ export function AssistantPanel({ turns, setTurns, onClose, seed, onSeedTaken }: 
         }
       } finally {
         clearTimeout(timer);
+        cue.cancel();
         if (streamFrameRef.current !== null) cancelAnimationFrame(streamFrameRef.current);
         streamFrameRef.current = null;
         if (activeRef.current === active) activeRef.current = null;
@@ -351,15 +423,18 @@ export function AssistantPanel({ turns, setTurns, onClose, seed, onSeedTaken }: 
           // Stop is about to disappear; never let focus fall with it.
           if (document.activeElement === stopRef.current) focusField();
           setBusy(false);
+          setSlow(false);
+          if (landed) markAnswered();
         }
       }
     },
-    [focusField, patchTurn, setTurns, stop],
+    [focusField, markAnswered, page, patchTurn, setTurns, stop],
   );
 
   const clear = useCallback(() => {
     stop("stopped");
     setTurns([]);
+    setBehind(false);
     focusField();
   }, [focusField, setTurns, stop]);
 
@@ -369,7 +444,18 @@ export function AssistantPanel({ turns, setTurns, onClose, seed, onSeedTaken }: 
     if (question?.role === "user") void ask(question.content);
   }, [ask]);
 
+  const askQuestion = useCallback((question: string) => void ask(question), [ask]);
+
   const submitDraft = useCallback(() => void ask(draft), [ask, draft]);
+
+  /** Back to the newest text, following it again; the button goes, so focus goes to the field. */
+  const jumpToLatest = useCallback(() => {
+    const el = logRef.current;
+    followTranscriptRef.current = true;
+    setBehind(false);
+    if (el) el.scrollTo({ top: el.scrollHeight, behavior: prefersReducedMotion() ? "auto" : "smooth" });
+    focusField();
+  }, [focusField]);
 
   // A question handed over by an `assistant:open` request is sent as if typed.
   // Deferred a frame, like the focus above, so a remount cancels it rather
@@ -384,13 +470,16 @@ export function AssistantPanel({ turns, setTurns, onClose, seed, onSeedTaken }: 
     return () => cancelAnimationFrame(frame);
   }, [seed, ask, onSeedTaken]);
 
+  const starters = useMemo(() => startersFor(page), [page]);
   const empty = turns.length === 0;
   const canSend = !busy && draft.trim().length > 0;
   const lastTurn = turns.at(-1);
   const retryable = lastTurn !== undefined && isFailedTurn(lastTurn);
-  const statusText = busy
-    ? "Searching the site and generating a cited answer."
-    : "Ready to search this site.";
+  // A polite status line: one change when an answer starts, at most one when it is slow
+  // (kept until it ends, so it is read once), and one when it ends.
+  const statusText =
+    announcement ??
+    (busy ? (slow ? ASSISTANT_COPY.statusSlow : ASSISTANT_COPY.statusSearching) : ASSISTANT_COPY.statusReady);
 
   // Portal to <body>: the header pill has backdrop-filter, which would otherwise
   // make it the containing block for this fixed panel and mis-anchor it.
@@ -448,7 +537,20 @@ export function AssistantPanel({ turns, setTurns, onClose, seed, onSeedTaken }: 
           className={styles.log}
           onScroll={(event) => {
             const el = event.currentTarget;
-            followTranscriptRef.current = el.scrollHeight - el.scrollTop - el.clientHeight < 48;
+            const atBottom = el.scrollHeight - el.scrollTop - el.clientHeight < FOLLOW_SLACK_PX;
+            const up = el.scrollTop < lastScrollTopRef.current;
+            lastScrollTopRef.current = el.scrollTop;
+            // Only the reader scrolling back up pauses the follow; reaching the
+            // end resumes it. A glide down (Jump to latest, or the follow
+            // itself) passes through "not at the end" on every frame, and must
+            // not bring the button back on its way.
+            if (atBottom) {
+              followTranscriptRef.current = true;
+              setBehind(false);
+            } else if (up) {
+              followTranscriptRef.current = false;
+              setBehind(true);
+            }
           }}
           role="log"
           aria-label={ASSISTANT_COPY.conversation}
@@ -459,23 +561,36 @@ export function AssistantPanel({ turns, setTurns, onClose, seed, onSeedTaken }: 
           tabIndex={0}
         >
           {empty ? (
-            <EmptyState onAsk={(question) => void ask(question)} />
+            <EmptyState starters={starters} onPage={starters !== STARTERS} onAsk={askQuestion} />
           ) : (
             <div className={styles.transcript}>
-              {turns.map((turn) => (
-                <Turn
-                  key={turn.id}
-                  turn={turn}
-                  onNavigate={onClose}
-                  animate={!initialTurnIds.has(turn.id)}
-                  onRetry={retryable && turn === lastTurn ? retry : undefined}
-                />
-              ))}
+              {turns.map((turn) => {
+                const latest = turn === lastTurn;
+                return (
+                  <Turn
+                    key={turn.id}
+                    turn={turn}
+                    slow={latest && slow}
+                    onNavigate={onClose}
+                    animate={!initialTurnIds.has(turn.id)}
+                    onRetry={retryable && latest ? retry : undefined}
+                    onAsk={latest && !busy ? askQuestion : undefined}
+                    followUps={latest ? turn.followups : undefined}
+                    onAnnounce={announce}
+                  />
+                );
+              })}
             </div>
           )}
         </div>
 
         <div className={styles.footer}>
+          {behind && !empty ? (
+            <button type="button" onClick={jumpToLatest} className={`${styles.ghost} ${styles.jump}`}>
+              <ArrowDown size={13} strokeWidth={2} aria-hidden />
+              {ASSISTANT_COPY.jump}
+            </button>
+          ) : null}
           {busy ? (
             <div className={styles.stopRow}>
               <button
@@ -498,9 +613,12 @@ export function AssistantPanel({ turns, setTurns, onClose, seed, onSeedTaken }: 
             onDraftChange={setDraft}
             onSubmit={submitDraft}
             busy={busy}
+            answered={answered}
             canSend={canSend}
           />
-          <p className={styles.privacy}>{ASSISTANT_COPY.privacy}</p>
+          <p className={styles.privacy}>
+            {ASSISTANT_COPY.disclosure} {ASSISTANT_COPY.privacy}
+          </p>
         </div>
         <span className="sr-only" role="status" aria-live="polite" aria-atomic="true">
           {statusText}

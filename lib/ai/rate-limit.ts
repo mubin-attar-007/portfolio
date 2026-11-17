@@ -13,7 +13,8 @@ import { ASSISTANT_DAILY_CAP } from "@/lib/env";
 //
 //   1. A sliding window of MAX_REQUESTS per WINDOW_MS per client.
 //   2. CLIENT_DAILY_LIVE_ANSWERS model calls per client per UTC day, so one
-//      client cannot spend the shared budget for every other visitor.
+//      client cannot spend the shared budget for every other visitor. A
+//      routing call (lib/ai/router.ts) is a model call and counts too.
 //   3. ASSISTANT_DAILY_CAP model calls per UTC day for the instance.
 //
 // A client is a salted SHA-256 of its address, never the address itself. The
@@ -24,14 +25,34 @@ import { ASSISTANT_DAILY_CAP } from "@/lib/env";
 const WINDOW_MS = 60_000; // 1 minute
 const MAX_REQUESTS = 15; // per client per window
 
+/** Model calls one client may cause per UTC day in production. */
+const DEFAULT_CLIENT_DAILY = 30;
+const MAX_CLIENT_DAILY = 20_000;
+
+/** Max Gemini generation calls per UTC day, per instance (ASSISTANT_DAILY_CAP). */
+export const GEMINI_DAILY_BUDGET = ASSISTANT_DAILY_CAP;
+
+/**
+ * The per-client daily allowance for an environment.
+ *
+ * - `ASSISTANT_CLIENT_DAILY_LIMIT`, when it is a whole number from 1 to
+ *   20,000, sets it.
+ * - Otherwise, under `next dev` (NODE_ENV=development) it is the instance
+ *   budget: every request from localhost is the same client, so a day of
+ *   local review would otherwise spend the allowance meant for one visitor.
+ * - Otherwise (production, tests) it is 30.
+ */
+export function clientDailyLimit(raw: string | undefined, nodeEnv: string | undefined): number {
+  const value = Number(raw?.trim());
+  if (raw?.trim() && Number.isInteger(value) && value >= 1 && value <= MAX_CLIENT_DAILY) return value;
+  return nodeEnv === "development" ? GEMINI_DAILY_BUDGET : DEFAULT_CLIENT_DAILY;
+}
+
 /**
  * Model calls one client may cause per UTC day. Past it, the client still gets
  * grounded site-search answers; only live synthesis stops until midnight UTC.
  */
-export const CLIENT_DAILY_LIVE_ANSWERS = 30;
-
-/** Max Gemini generation calls per UTC day, per instance (ASSISTANT_DAILY_CAP). */
-export const GEMINI_DAILY_BUDGET = ASSISTANT_DAILY_CAP;
+export const CLIENT_DAILY_LIVE_ANSWERS = clientDailyLimit(process.env.ASSISTANT_CLIENT_DAILY_LIMIT, process.env.NODE_ENV);
 
 /**
  * Most clients tracked for the daily allowance. A flood of fresh addresses

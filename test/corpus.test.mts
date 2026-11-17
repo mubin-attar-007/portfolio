@@ -29,3 +29,17 @@ test("a file without frontmatter is all body", () => {
 test("unsupported frontmatter fails loudly, naming the file", () => {
   assert.throws(() => splitFrontmatter("---\nnested:\n  key: value\n---\n", "content/notes/x.mdx"), /content\/notes\/x\.mdx/);
 });
+
+test("block lists of flat records are read (the /now page's exploring list)", () => {
+  const { data } = splitFrontmatter(
+    '---\nupdated: "2026-07-10"\nexploring:\n  - title: "One"\n    body: "First, with: a colon"\n  - title: "Two"\n    body: "Second"\n---\n',
+    "now.mdx",
+  );
+  assert.deepEqual(data, {
+    updated: "2026-07-10",
+    exploring: [
+      { title: "One", body: "First, with: a colon" },
+      { title: "Two", body: "Second" },
+    ],
+  });
+});

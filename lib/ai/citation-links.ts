@@ -1,12 +1,15 @@
-import type { Citation, CitationLink } from "./chat-contract";
+import type { CitationLink } from "./chat-contract";
 
 /**
- * The projects a source label can name. Duplicated from content/projects.ts on
- * purpose: this module also runs in the panel, a client component, which may
- * not import content (ARCHITECTURE.md §5). test/assistant-citations.test.mts
- * fails if a project in the registry is missing here.
+ * The products and projects a source label can name. Duplicated from
+ * content/flagship and content/projects.ts on purpose: this module also runs
+ * in the panel, a client component, which may not import content
+ * (ARCHITECTURE.md §5). test/assistant-citations.test.mts fails if a product
+ * or project in the registries is missing here.
  */
 const PROJECTS = [
+  { name: "Bench Discovery", slug: "bench-discovery" },
+  { name: "CareLTC", slug: "careltc" },
   { name: "DBWhisper", slug: "dbwhisper" },
   { name: "LLM Studio", slug: "llm-studio" },
   { name: "TradePulse", slug: "tradepulse" },
@@ -15,21 +18,19 @@ const PROJECTS = [
 
 /**
  * Every page shape a citation may point to: a case study, an essay, a note, or
- * one of the fixed profile pages, optionally with an in-page anchor. Links are
- * built on the server from the corpus, never from model output, and the panel
- * checks each one against this pattern again before rendering it, so even a
- * tampered response can only ever name a page of this site.
+ * one of the fixed pages, optionally with an in-page anchor. Links are built
+ * on the server from the corpus, never from model output, and the panel checks
+ * each one against this pattern again before rendering it, so even a tampered
+ * response can only ever name a page of this site. The home page is not a
+ * citation: it summarizes pages that are each cited in their own right.
  */
 const SITE_PATH =
-  /^\/(?:(?:work|writing|notes)\/[a-z0-9-]+|work|writing|notes|evals|hire|contact|resume|about|skills)(?:#[a-z0-9-]+)?$/;
+  /^\/(?:(?:work|writing|notes)\/[a-z0-9-]+|work|writing|notes|evals|hire|contact|resume|about|skills|uses|now|trust|privacy)(?:#[a-z0-9-]+)?$/;
 
 /** Longest link label the panel renders; anything longer is not one of ours. */
 const MAX_LABEL_CHARS = 120;
 
-/** Longest source line the panel renders. */
-const MAX_SOURCE_CHARS = 200;
-
-/** Most citations one answer shows; the route sends at most four. */
+/** Most pages one answer cites; the route sends at most one per cited passage. */
 const MAX_CITATIONS = 8;
 
 /** True when `href` is a page of this site that a citation may link to. */
@@ -37,10 +38,14 @@ export function isSitePath(href: string): boolean {
   return SITE_PATH.test(href);
 }
 
+/** A site path without its in-page anchor: "/evals#x" → "/evals". */
+export const pagePath = (href: string): string => href.split("#", 1)[0]!;
+
 /**
- * Resolve a human-readable source label to known site pages. Multi-project
- * labels expose every named case study. Unknown labels stay unlinked; model
- * output and arbitrary URLs can never become link targets.
+ * Resolve an FAQ answer's source label to the site pages it names. A label
+ * that names several projects exposes every case study it names. Unknown
+ * labels stay unlinked; model output and arbitrary URLs can never become
+ * link targets.
  */
 export function citationLinks(source: string): CitationLink[] {
   const links: CitationLink[] = [];
@@ -50,7 +55,7 @@ export function citationLinks(source: string): CitationLink[] {
     }
   }
   if (/projects \(all four\)/i.test(source)) {
-    links.push({ label: "Selected work", href: "/work" });
+    links.push({ label: "Work", href: "/work" });
   }
   if (/résumé|resume|education|sevina|linescripts|roles?\b/i.test(source)) {
     links.push({ label: "Résumé", href: "/resume" });
@@ -66,6 +71,9 @@ export function citationLinks(source: string): CitationLink[] {
   }
   if (/^evaluations?\b/i.test(source)) {
     links.push({ label: "Evals", href: "/evals" });
+  }
+  if (/\bprivacy\b/i.test(source)) {
+    links.push({ label: "Privacy", href: "/privacy" });
   }
   return links;
 }
@@ -88,20 +96,21 @@ export function mergeLinks(...lists: readonly (readonly CitationLink[])[]): Cita
 }
 
 /**
- * Show each page once per answer. A turn that cites three sections of one case
- * study keeps all three source lines, but only the first carries the link —
- * three identical "DBWhisper" links in a row read as noise, not as evidence.
+ * The pages an answer cites, each once: one chip per page, whatever the
+ * number of its sections the answer drew on. The first section's anchor is
+ * kept ("/work/careltc#what-broke"), so the chip opens where the answer came
+ * from; a later section of the same page adds nothing.
  */
-export function dedupeCitationLinks(citations: readonly Citation[]): Citation[] {
+export function citedPages(lists: readonly (readonly CitationLink[])[]): CitationLink[] {
   const seen = new Set<string>();
-  return citations.map((citation) => {
-    const links = citation.links.filter((link) => {
-      if (seen.has(link.href)) return false;
-      seen.add(link.href);
-      return true;
-    });
-    return { source: citation.source, links };
-  });
+  const pages: CitationLink[] = [];
+  for (const link of lists.flat()) {
+    const page = pagePath(link.href);
+    if (!isSitePath(link.href) || seen.has(page)) continue;
+    seen.add(page);
+    pages.push(link);
+  }
+  return pages.slice(0, MAX_CITATIONS);
 }
 
 /** One untrusted link from a response, or null if it is not one of ours. */
@@ -115,23 +124,25 @@ function readLink(value: unknown): CitationLink | null {
 }
 
 /**
- * Read the `sources` event of a response into citations the panel can render.
- * Malformed entries are dropped rather than blanking the list. A citation sent
- * without links (an older response shape) is resolved from its label.
+ * Read the `sources` event of a response into the pages the panel renders.
+ * Malformed entries are dropped rather than blanking the list. An entry in the
+ * older shape — a source line with its links, `{ source, links }` — is read
+ * as its links, or resolved from its label when it carries none, so a cached
+ * response or a test double still renders as pages, never as a bare label.
  */
-export function readCitations(value: unknown): Citation[] {
+export function readCitations(value: unknown): CitationLink[] {
   if (!Array.isArray(value)) return [];
-  const citations: Citation[] = [];
+  const lists: CitationLink[][] = [];
   for (const item of value.slice(0, MAX_CITATIONS)) {
     if (typeof item !== "object" || item === null) continue;
-    const { source, links: raw } = item as { source?: unknown; links?: unknown };
-    if (typeof source !== "string") continue;
-    const label = source.trim();
-    if (!label || label.length > MAX_SOURCE_CHARS) continue;
-    const links = Array.isArray(raw)
-      ? raw.map(readLink).filter((link): link is CitationLink => link !== null)
-      : citationLinks(label);
-    citations.push({ source: label, links });
+    const page = readLink(item);
+    if (page) {
+      lists.push([page]);
+      continue;
+    }
+    const { source, links } = item as { source?: unknown; links?: unknown };
+    if (Array.isArray(links)) lists.push(links.map(readLink).filter((link): link is CitationLink => link !== null));
+    else if (typeof source === "string") lists.push(citationLinks(source.trim()));
   }
-  return dedupeCitationLinks(citations);
+  return citedPages(lists);
 }
