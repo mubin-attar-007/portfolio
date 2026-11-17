@@ -5,18 +5,38 @@
  * It is kept apart from the printer so `test/resume-pdf.test.mts` can render
  * the same document without a browser and prove the committed PDF is current:
  * the printer records the document's hash in `resume-pdf.lock.json`, and the
- * test fails when content/resume.ts, config/site.ts or the eval registry has
- * changed since. No fabricated content — every line comes from the résumé
- * data, and every figure arrives with its scope, date and method link.
+ * test fails when content/resume.ts, config/site.ts, the flagship records or
+ * the eval registry has changed since. No fabricated content — every line comes
+ * from the résumé data, and every figure arrives with its scope, date and
+ * method link.
+ *
+ * Written for its first two readers:
+ * - Résumé-screening software (ATS). One column of real text in a standard
+ *   font; the five standard section headings as plain words, because
+ *   letter-spacing or a capitals transform makes extractors split a heading
+ *   into single letters; no tables, grids, icons or images of text; one date
+ *   format; contact details in the body, not a page header.
+ * - A recruiter's skim and an engineer's read. Name, role and contact first,
+ *   the flagship products in the summary and the first bullets, each linked to
+ *   its case study, and every figure beside its method.
+ *
+ * The phone number is published in the PDF and nowhere else (owner, 17 Nov
+ * 2026): the PDF is a document a recruiter chooses to download, while the
+ * site's pages, llms.txt and JSON-LD are read by anything that crawls them.
+ * This module holds the number only in parts (`PHONE_PARTS`), so no text file
+ * in this public repository carries it whole, which is what scrapers of source
+ * code match. `test/resume-phone.test.mts` keeps it that way.
  *
  * The palette literals below exist because a standalone print document cannot
- * read the site's CSS variables; they mirror the light theme
- * (design-system.md §11.1).
+ * read the site's CSS variables; they mirror the light tokens
+ * (design-system.md §2): ink, ink-secondary, ink-tertiary, border-strong and
+ * accent, the accent kept to links (§11.2).
  */
 import { createHash } from "node:crypto";
 import { fileURLToPath } from "node:url";
 import { resume } from "../content/resume.ts";
-import { SITE } from "../config/site.ts";
+import { flagshipHref, flagships } from "../content/flagship/index.ts";
+import { SITE, STATUS } from "../config/site.ts";
 
 /** Where the printer writes the PDF, and the lock that records its input. */
 export const RESUME_PDF_PATH = fileURLToPath(new URL("../public/Mubin_Attar_Resume.pdf", import.meta.url));
@@ -28,6 +48,72 @@ export type ResumePdfLock = {
   htmlSha256: string;
   pdfSha256: string;
 };
+
+/** A4's width, which the content width is derived from. */
+const A4_WIDTH_MM = 210;
+/**
+ * The page margins, in millimetres. Never below 12 (top and bottom) and 13
+ * (sides); test/resume-pdf.test.mts holds those floors too.
+ */
+const MARGIN_MM = { block: 14, inline: 15 } as const;
+
+/**
+ * The printed page: A4 at these margins. `contentWidth` is the width the text
+ * sets in (A4 less both inline margins), which the printer uses to measure the
+ * lines exactly as they print.
+ */
+export const PAGE = {
+  size: "A4",
+  marginBlockMm: MARGIN_MM.block,
+  marginInlineMm: MARGIN_MM.inline,
+  contentWidth: `${A4_WIDTH_MM - 2 * MARGIN_MM.inline}mm`,
+} as const;
+
+/**
+ * The type scale, in points, and the leading. A résumé is read at the size it
+ * prints, so the page is fitted by cutting words, never by shrinking type:
+ * body text stays at 10 pt or more, the smallest text at 9 pt or more, and
+ * test/resume-pdf.test.mts holds these floors.
+ */
+export const TYPE = { name: 22, role: 12, section: 12, entry: 10.5, text: 10, small: 9, leading: 1.35 } as const;
+
+/** The phone number's parts: country code, then the two halves of the national number. */
+const PHONE_PARTS = ["+91", "70387", "70374"] as const;
+
+/** The phone number: whole in the PDF only (see the module comment). */
+export const PHONE = {
+  display: PHONE_PARTS.join(" "),
+  href: `tel:${PHONE_PARTS.join("")}`,
+} as const;
+
+/**
+ * The PDF's document properties: what a PDF reader's Properties panel, a file
+ * browser and a résumé database show. Every keyword is a term the résumé
+ * itself uses (test/resume-pdf.test.mts checks), so the metadata adds no claim.
+ */
+export const RESUME_PDF_INFO = {
+  title: `${SITE.name} — ${SITE.role} — Résumé`,
+  author: SITE.name,
+  subject: `Résumé of ${SITE.name}, ${SITE.role}: LLM applications, RAG and agents, evaluation and guardrails, and production software on AWS.`,
+  keywords: [
+    SITE.role,
+    "AI Engineer",
+    "LLM applications",
+    "RAG",
+    "agents",
+    "evaluation",
+    "guardrails",
+    "Claude",
+    "Python",
+    "TypeScript",
+    "FastAPI",
+    "Next.js",
+    "React Native",
+    "PostgreSQL",
+    "pgvector",
+    "AWS",
+  ].join(", "),
+} as const;
 
 /** Hex SHA-256 of a document or a file's bytes. */
 export function sha256(input: string | Uint8Array): string {
@@ -41,97 +127,155 @@ const esc = (s: string): string =>
 /** An on-site path as the absolute URL a PDF reader can open. */
 export const absoluteUrl = (path: string): string => new URL(path, SITE.url).href;
 
-/** "https://mubin-attar.vercel.app" → "mubin-attar.vercel.app", for display. */
-const host = (url: string): string => url.replace(/^https?:\/\//, "").replace(/\/$/, "");
+/** "https://www.linkedin.com/in/x" → "linkedin.com/in/x", for display. */
+const display = (url: string): string => url.replace(/^https?:\/\/(?:www\.)?/, "").replace(/\/$/, "");
 
 const link = (href: string, label: string): string => `<a href="${esc(href)}">${esc(label)}</a>`;
+
+/** The separator between items on one line; real text, so extracted lines keep it. */
+const SEP = " · ";
+
+/**
+ * A number stays on the line of the word it counts ("200+ users", "3.5+
+ * years", "5–10 users"), by styling, not by a no-break space: the text an ATS
+ * extracts keeps ordinary spaces.
+ */
+const keepNumbersWithUnits = (html: string): string =>
+  html.replace(/(?<![\w/#.-])(\d+(?:[.,]\d+)*(?:–\d+(?:[.,]\d+)*)?\+?) ([A-Za-z]+)/g, `<span class="keep">$1 $2</span>`);
+
+/**
+ * A short parenthetical stays on one line ("(React Native)", "(Claude,
+ * pgvector)"), so a name is never split across lines; a long one may wrap.
+ */
+const keepShortParentheticals = (html: string): string =>
+  html.replace(/\([^()<>]{1,24}\)/g, (group) => `<span class="keep">${group}</span>`);
+
+/**
+ * A skill group's items, each kept on one line, so a line breaks between two
+ * skills and never inside one ("prompt / engineering"). Items split on the
+ * commas outside parentheses, as /skills and the assistant split them.
+ */
+const skillItems = (items: string): string =>
+  items
+    .split(/,\s*(?![^()]*\))/)
+    .map((item) => `<span class="keep">${esc(item)}</span>`)
+    .join(", ");
+
+/**
+ * `text` as HTML with the first mention of each flagship product linked to its
+ * case study, so the products the résumé leads with are one click from the
+ * evidence. The text itself is unchanged, which is what an ATS reads.
+ */
+function withFlagshipLinks(text: string): string {
+  let html = keepShortParentheticals(keepNumbersWithUnits(esc(text)));
+  for (const flagship of flagships) {
+    const name = esc(flagship.name);
+    const at = html.indexOf(name);
+    if (at !== -1) {
+      html = `${html.slice(0, at)}${link(absoluteUrl(flagshipHref(flagship.slug)), flagship.name)}${html.slice(at + name.length)}`;
+    }
+  }
+  return html;
+}
+
+/** An entry's first line: what and where on the left, when on the right. */
+const entryHead = (title: string, aside: string): string =>
+  `<div class="head"><h3>${title}</h3><p class="aside">${aside}</p></div>`;
+
+const STYLE = `
+  @page { size: ${PAGE.size}; margin: ${PAGE.marginBlockMm}mm ${PAGE.marginInlineMm}mm; }
+  * { box-sizing: border-box; }
+  :root {
+    --ink: #131316; --ink-2: #5e5f6e; --ink-3: #6e6f7e; --rule: #dcdce1; --accent: #6b4bff;
+    --name: ${TYPE.name}pt; --role: ${TYPE.role}pt; --section: ${TYPE.section}pt; --entry: ${TYPE.entry}pt;
+    --text: ${TYPE.text}pt; --small: ${TYPE.small}pt;
+  }
+  html { -webkit-print-color-adjust: exact; print-color-adjust: exact; }
+  body { margin: 0; color: var(--ink); font: var(--text)/${TYPE.leading} Arial, "Helvetica Neue", Helvetica, sans-serif; }
+  h1, h2, h3, p, ul { margin: 0; }
+  a { color: var(--accent); text-decoration: none; }
+  h1 { font-size: var(--name); line-height: 1.1; font-weight: 700; letter-spacing: -0.01em; }
+  .role { margin-top: 2pt; font-size: var(--role); color: var(--ink-2); }
+  .contact { font-size: var(--small); color: var(--ink-2); }
+  .role + .contact { margin-top: 5pt; }
+  .contact a { color: var(--ink-2); }
+  h2 { margin: 11.5pt 0 4pt; padding-bottom: 2pt; border-bottom: 0.75pt solid var(--rule); font-size: var(--section); font-weight: 700; }
+  .head { display: flex; justify-content: space-between; align-items: baseline; gap: 12pt; }
+  h3 { font-size: var(--entry); font-weight: 700; }
+  h3 a { color: var(--ink); }
+  h3 .at { font-weight: 400; color: var(--ink-2); }
+  .aside { flex: none; font-size: var(--small); color: var(--ink-3); }
+  .entry + .entry { margin-top: 6pt; }
+  ul { margin-top: 2pt; padding-left: 11pt; }
+  li { margin-top: 1.5pt; }
+  li::marker { color: var(--ink-3); }
+  p, li { text-wrap: pretty; }
+  .keep { white-space: nowrap; }
+  .detail { margin-top: 1pt; }
+  .figure { margin-top: 1pt; font-size: var(--small); color: var(--ink-2); }
+  .skill + .skill { margin-top: 1.5pt; }
+`;
 
 /** The résumé document the PDF is printed from. Pure: same data, same string. */
 export function renderResumeHtml(): string {
   const { labels } = resume;
-  return `<!doctype html><html lang="en"><head><meta charset="utf-8"><title>${esc(SITE.name)} — Résumé</title><style>
-  @page { size: A4; margin: 14mm 15mm; }
-  * { box-sizing: border-box; }
-  :root { --ink:#16181d; --muted:#5b606b; --faint:#8a8f9a; --accent:#4b3fb3; --rule:#e2e2e8; }
-  html { -webkit-print-color-adjust: exact; print-color-adjust: exact; }
-  body { margin:0; color:var(--ink); font:10.5px/1.5 "Helvetica Neue", Arial, sans-serif; }
-  a { color: var(--accent); text-decoration: none; }
-  .name { font-size: 26px; font-weight: 700; letter-spacing:-0.02em; margin:0; }
-  .tag { font-size:10px; font-weight:700; letter-spacing:0.12em; color:var(--accent); text-transform:uppercase; margin:3px 0 0; }
-  .contact { font-size:9.5px; color:var(--muted); margin:6px 0 0; }
-  .contact a { color:var(--muted); }
-  h2 { font-size:10px; font-weight:700; letter-spacing:0.11em; text-transform:uppercase; color:var(--accent);
-       margin:15px 0 7px; padding-bottom:3px; border-bottom:1px solid var(--rule); }
-  .summary { margin:12px 0 0; color:#2b2e36; }
-  .skills { display:grid; grid-template-columns:auto 1fr; gap:3px 12px; }
-  .skills dt { font-weight:700; color:var(--ink); white-space:nowrap; }
-  .skills dd { margin:0; color:var(--muted); }
-  .job { margin-top:9px; }
-  .job:first-of-type { margin-top:2px; }
-  .jobhead { display:flex; justify-content:space-between; align-items:baseline; gap:10px; }
-  .role { font-weight:700; }
-  .role .org { font-weight:400; color:var(--muted); }
-  .meta { font-size:9px; color:var(--faint); white-space:nowrap; font-style:italic; }
-  ul { margin:5px 0 0; padding-left:15px; }
-  li { margin:0 0 3px; color:#2b2e36; }
-  li::marker { color:var(--faint); }
-  .proj { margin-top:8px; break-inside:avoid; }
-  .proj:first-of-type { margin-top:2px; }
-  .projhead { display:flex; justify-content:space-between; align-items:baseline; gap:10px; }
-  .pname { font-weight:700; }
-  .pname a { color:var(--ink); }
-  .pstack { margin-left:6px; font-weight:400; font-size:9px; color:var(--faint); font-family:"SF Mono",ui-monospace,Menlo,monospace; }
-  .plink { font-size:9px; white-space:nowrap; }
-  .ptag { margin:2px 0 0; color:var(--muted); }
-  .pmeta { margin:2px 0 0; font-size:9px; color:var(--faint); font-family:"SF Mono",ui-monospace,Menlo,monospace; }
-  .edu { margin-top:2px; display:flex; justify-content:space-between; gap:10px; align-items:baseline; }
-  .edu b { font-weight:700; } .edu .s { color:var(--muted); } .edu .y { font-size:9px; color:var(--faint); font-style:italic; white-space:nowrap; }
-</style></head><body>
-  <p class="name">${esc(SITE.name)}</p>
-  <p class="tag">${esc(SITE.role)} · GenAI · LLMs · MLOps</p>
-  <p class="contact">${esc(SITE.location)} &nbsp;·&nbsp; ${link(`mailto:${SITE.email}`, SITE.email)}
-     &nbsp;·&nbsp; ${link(SITE.url, host(SITE.url))}
-     &nbsp;·&nbsp; ${link(SITE.socials.linkedin, host(SITE.socials.linkedin))}
-     &nbsp;·&nbsp; ${link(SITE.socials.github, host(SITE.socials.github))}</p>
+  // Two lines: how to reach him (with the notice period recruiters screen on),
+  // then where his work is. They do not fit one line of A4 at a size a person
+  // can read.
+  const notice = esc(`Notice period: ${STATUS.noticePeriod}`);
+  const reach = [esc(SITE.location), link(PHONE.href, PHONE.display), link(`mailto:${SITE.email}`, SITE.email), notice].join(SEP);
+  const profiles = [SITE.url, SITE.socials.github, SITE.socials.linkedin].map((url) => link(url, display(url))).join(SEP);
 
-  <h2>Summary</h2>
-  <p class="summary">${esc(resume.summary)}</p>
-
-  <h2>Technical Skills</h2>
-  <dl class="skills">
-    ${resume.skills.map((s) => `<dt>${esc(s.group)}</dt><dd>${esc(s.items)}</dd>`).join("")}
-  </dl>
-
-  <h2>Experience</h2>
-  ${resume.experience
+  const experience = resume.experience
     .map(
-      (e) => `<div class="job">
-      <div class="jobhead"><span class="role">${esc(e.org)} <span class="org">— ${esc(e.role)}</span></span>
-        <span class="meta">${esc(e.place)} · ${esc(e.period)}</span></div>
-      <ul>${e.points.map((p) => `<li>${esc(p)}</li>`).join("")}</ul></div>`,
+      (job) => `<div class="entry">
+      ${entryHead(`${esc(job.role)}<span class="at"> — ${esc(job.org)}</span>`, `${esc(job.place)}${SEP}${esc(job.period)}`)}
+      <ul>${job.points.map((point) => `<li>${withFlagshipLinks(point)}</li>`).join("")}</ul></div>`,
     )
-    .join("")}
+    .join("");
 
-  <h2>Featured Projects <span style="color:var(--faint);font-weight:400;letter-spacing:0">— ${esc(labels.projectsNote)}</span></h2>
-  ${resume.projects
-    .map((p) => {
-      const caseStudy = absoluteUrl(p.caseStudy);
+  const projects = resume.projects
+    .map((project) => {
+      const caseStudy = absoluteUrl(project.caseStudy);
       const links = [
         link(caseStudy, labels.caseStudy),
-        p.demo ? link(p.demo, labels.demo) : null,
-        p.source ? link(p.source, labels.source) : null,
+        project.demo ? link(project.demo, labels.demo) : null,
+        project.source ? link(project.source, labels.source) : null,
       ].filter((l): l is string => l !== null);
-      // The stack rides on the name line, which keeps the résumé to one page.
-      return `<div class="proj">
-      <div class="projhead"><span class="pname">${link(caseStudy, p.name)}<span class="pstack">${esc(p.stack)}</span></span>
-        <span class="plink">${links.join(" · ")}</span></div>
-      <p class="ptag">${esc(p.tagline)}</p>
-      ${p.metrics.map((m) => `<p class="pmeta">${esc(m.text)} · ${link(absoluteUrl(m.method), labels.method)}</p>`).join("")}</div>`;
+      // The stack is in the skills; the name line carries what the project is,
+      // the detail how it is built, and the figure what it was measured to do.
+      return `<div class="entry">
+      ${entryHead(`${link(caseStudy, project.name)}<span class="at"> — ${esc(project.tagline)}</span>`, links.join(SEP))}
+      ${project.detail ? `<p class="detail">${esc(project.detail)}</p>` : ""}
+      ${project.metrics.map((m) => `<p class="figure">${keepNumbersWithUnits(esc(m.text))}${SEP}${link(absoluteUrl(m.method), labels.method)}</p>`).join("")}</div>`;
     })
-    .join("")}
+    .join("");
 
-  <h2>Education</h2>
-  <div class="edu"><span><b>${esc(resume.education.degree)}</b> <span class="s">— ${esc(resume.education.school)}</span></span>
-    <span class="y">${esc(resume.education.year)}</span></div>
+  const skills = resume.skills
+    .map((s) => `<p class="skill"><strong>${esc(s.group)}:</strong> ${skillItems(s.items)}</p>`)
+    .join("");
+
+  const { degree, school, year } = resume.education;
+
+  return `<!doctype html><html lang="en"><head><meta charset="utf-8"><title>${esc(RESUME_PDF_INFO.title)}</title><style>${STYLE}</style></head><body>
+  <h1>${esc(SITE.name)}</h1>
+  <p class="role">${esc(SITE.role)}</p>
+  <p class="contact">${reach}</p>
+  <p class="contact">${profiles}</p>
+
+  <h2>${esc(labels.summary)}</h2>
+  <p>${withFlagshipLinks(resume.summary)}</p>
+
+  <h2>${esc(labels.experience)}</h2>
+  ${experience}
+
+  <h2>${esc(labels.projects)}</h2>
+  ${projects}
+
+  <h2>${esc(labels.skills)}</h2>
+  ${skills}
+
+  <h2>${esc(labels.education)}</h2>
+  ${entryHead(`${esc(degree)}<span class="at"> — ${esc(school)}</span>`, esc(year))}
 </body></html>`;
 }

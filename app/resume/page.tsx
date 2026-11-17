@@ -1,13 +1,14 @@
 import type { Metadata } from "next";
+import { ArrowDownToLine } from "lucide-react";
 import { Section } from "@/components/layout/section";
 import { ResumeDownloadLink } from "@/components/features/resume-download-link";
 import { resumePage } from "@/content/pages/resume";
 import styles from "@/components/resume/resume.module.css";
 import { buttonClassName } from "@/components/ui/button";
-import { Caret, CaretLink } from "@/components/ui/caret-link";
+import { ArrowOut, CaretLink } from "@/components/ui/caret-link";
 import { Chip } from "@/components/ui/chip";
 import { Kicker } from "@/components/ui/kicker";
-import { SmartLink } from "@/components/ui/smart-link";
+import { SmartLink, isWebLink } from "@/components/ui/smart-link";
 import { Timeline, TimelineEntry } from "@/components/ui/timeline";
 import { Toc } from "@/components/ui/toc";
 import { PAGE_TOP } from "@/constants/page";
@@ -59,17 +60,25 @@ export default function ResumePage() {
           <ul className={styles.contact}>
             {contacts.map((c) => (
               <li key={c.label}>
-                <SmartLink href={c.href}>
+                <SmartLink href={c.href} newTab={isWebLink(c.href)}>
                   {c.text}
+                  <ArrowOut inline />
                 </SmartLink>
               </li>
             ))}
           </ul>
         </div>
         <div className={styles.actions} data-print="hide">
-          <ResumeDownloadLink href={resume.pdf} className={buttonClassName("violet", "lg")}>
+          {/* A file, not a page: the glyph says it downloads (and dips on hover),
+              where a caret would say it navigates. */}
+          <ResumeDownloadLink href={resume.pdf} className={`group ${buttonClassName("violet", "lg")}`}>
             {resume.download}
-            <Caret />
+            <ArrowDownToLine
+              size={15}
+              strokeWidth={1.9}
+              aria-hidden
+              className="opacity-80 transition-transform duration-[var(--motion-slow)] ease-[var(--spring)] group-hover:translate-y-0.5 group-focus-visible:translate-y-0.5"
+            />
           </ResumeDownloadLink>
           <CaretLink href={resume.cta.href} tone="muted">
             {resume.cta.label}
@@ -143,6 +152,8 @@ export default function ResumePage() {
                     </span>
                   </div>
                   <p className={styles.tagline}>{p.tagline}</p>
+                  {/* How it is built, where that is the evidence: the same line the PDF sets. */}
+                  {p.detail ? <p className={styles.tagline}>{p.detail}</p> : null}
                   <ul className={styles.metrics}>
                     {p.metrics.map((m) => (
                       <li key={m.text} className={styles.metric}>
