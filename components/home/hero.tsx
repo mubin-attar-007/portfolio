@@ -1,5 +1,5 @@
 import Link from "next/link";
-import { ArrowDown, ArrowUpRight } from "lucide-react";
+import { ArrowDown, ArrowRight } from "lucide-react";
 import { Container } from "@/components/layout/container";
 import { buttonVariants } from "@/components/ui/button";
 import { SITE } from "@/config/site";
@@ -16,8 +16,12 @@ export function Hero() {
         <div className={styles.heroGrid}>
           <div className={styles.intro}>
             <p className={styles.eyebrow}>{SITE.name} <span aria-hidden>/</span> {SITE.role}</p>
+            {/* The space between the spans is for the text, not the layout: both
+                spans are blocks, so it renders nothing, but without it the
+                heading's text reads "AI systems,built for…" to anything that
+                extracts it (search snippets, screen-reader browse, copy). */}
             <h1 id="home-title" className={styles.headline}>
-              <span>{hero.titleLead}</span>
+              <span>{hero.titleLead}</span>{" "}
               <span className={styles.headlineRest}>{hero.titleAccent}</span>
             </h1>
             <p className={styles.lede}>{hero.lede}</p>
@@ -25,8 +29,9 @@ export function Hero() {
               <Link href={hero.primary.href} prefetch={false} className={buttonVariants("primary", "lg")}>
                 {hero.primary.label}<ArrowDown size={16} aria-hidden />
               </Link>
+              {/* → for a page of this site; ↗ is reserved for a new tab or mail. */}
               <Link href={hero.secondary.href} prefetch={false} className={buttonVariants("secondary", "lg")}>
-                {hero.secondary.label}<ArrowUpRight size={15} aria-hidden />
+                {hero.secondary.label}<ArrowRight size={15} aria-hidden />
               </Link>
             </div>
             <p className={styles.location}>

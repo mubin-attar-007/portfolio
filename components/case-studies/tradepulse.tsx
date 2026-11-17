@@ -28,7 +28,7 @@ export function TradePulseBody() {
           A backtest&apos;s only job is to tell you the truth about a strategy, and most retail
           backtesters lie in subtle ways: they let a strategy act on the same bar&apos;s close it used
           to decide, ignore trading costs, drift on float money, and let an AI narrate figures it
-          invented. TradePulse&apos;s entire thesis is <strong>honesty over flattering numbers</strong>
+          invented. TradePulse&apos;s entire thesis is <strong>honesty over flattering numbers</strong>{" "}
           — next-bar execution, explicit trading costs, and tests for the engine&apos;s invariants.
         </p>
       </CS>
@@ -147,7 +147,7 @@ export function TradePulseBody() {
 
       <CS id="what-id-do-differently" title="What I'd do differently">
         <p>
-          Several things are deliberately <em>not</em> claimed yet, and stating that is part of the
+          Several things are deliberately <em>not</em>{" "}claimed yet, and stating that is part of the
           honesty contract: a real-time consolidated feed, point-in-time survivorship-free
           fundamentals, an automatic in-sample/out-of-sample split, a Deflated-Sharpe / multiple-testing
           correction, and a buy-and-hold benchmark overlay. Those are the next things I&apos;d build.
@@ -155,7 +155,7 @@ export function TradePulseBody() {
       </CS>
 
       <CS id="evidence" title="Evidence">
-        <p>The app is live and the engine, DSL, and test suite are in the repository linked above.</p>
+        <p>The engine, DSL, and test suite are in the repository linked above.</p>
       </CS>
     </div>
   );

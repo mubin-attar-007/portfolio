@@ -1,5 +1,5 @@
 import { allWriting } from "@/lib/writing";
-import { allNotes } from "@/lib/notes";
+import { allNotes, noteDescription } from "@/lib/notes";
 import { renderRssFeed, feedResponse, type FeedItem } from "@/lib/feed";
 import { SITE } from "@/config/site";
 
@@ -22,7 +22,7 @@ export async function GET(): Promise<Response> {
       url: `${SITE.url}/notes/${note.slug}`,
       date: note.date,
       category: "note",
-      description: `A short note on ${note.tags.join(", ")}.`,
+      description: noteDescription(note),
     })),
   ];
 

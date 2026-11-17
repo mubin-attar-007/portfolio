@@ -37,7 +37,7 @@ export function EngineerStrip() {
             <div className="min-w-0">
               <p className="text-base font-medium text-ink">{SITE.name}</p>
               <p className="mt-1 text-sm text-ink-secondary">{SITE.role}</p>
-              <p className="mt-1 font-mono text-xs text-ink-tertiary">{profile.location}</p>
+              <p className="mt-1 font-mono text-xs text-ink-tertiary">{SITE.location}</p>
             </div>
           </div>
           <p className="mt-5 max-w-[52ch] text-sm leading-relaxed text-ink-secondary">

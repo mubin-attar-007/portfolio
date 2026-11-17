@@ -2,39 +2,43 @@ import type { Metadata } from "next";
 import Link from "next/link";
 import type { ReactNode } from "react";
 import { Container } from "@/components/layout/container";
-import { AuditLane } from "@/components/features/audit-lane";
-import { Button } from "@/components/ui/button";
-import { Tag } from "@/components/ui/tag";
-import { Card } from "@/components/ui/card";
+import { buttonVariants } from "@/components/ui/button";
 import { Callout } from "@/components/ui/callout";
 import { SectionHeading } from "@/components/ui/section-heading";
-import { home } from "@/content/site";
-import { Metric, MetricsRow, MetricsTable } from "@/components/ui/metric";
+import { Metric, MetricsTable } from "@/components/ui/metric";
 import { Figure } from "@/components/ui/figure";
 import { PullQuote } from "@/components/ui/pull-quote";
-import { BeforeAfter } from "@/components/ui/before-after";
 import { CodeBlock } from "@/components/ui/code-block";
 import { DecisionLog } from "@/components/mdx/decision-log";
 import { FailureLog } from "@/components/mdx/failure-log";
 import { SystemDiagram } from "@/components/diagrams/system-diagram";
 import type { DiagramSpec } from "@/components/diagrams/types";
 
+/**
+ * A preview route, not a page of the site (ADR-007): no canonical and no social
+ * card (`null` clears the root defaults), and noindex. robots.txt also disallows
+ * /dev/, so a crawler that obeys it never reads this tag.
+ */
 export const metadata: Metadata = {
   title: "Components",
+  description: "The component preview: every primitive in its states, with fixture data only.",
   robots: { index: false, follow: false },
+  alternates: null,
+  openGraph: null,
 };
 
-const RAG: DiagramSpec = {
+/** This site's assistant, as it ships (ADR-006, spec/AI_ASSISTANT.md). */
+const ASSISTANT: DiagramSpec = {
   nodes: [
-    { id: "ui", label: "Web UI", sublabel: "Next.js", description: "The visitor's browser; sends the question to the edge API.", col: 0, row: 1 },
-    { id: "api", label: "Edge API", sublabel: "/api/ask", description: "Embeds the query and retrieves before calling the model.", col: 1, row: 1 },
-    { id: "index", label: "Static index", sublabel: "search-index.json", description: "Pre-embedded content chunks held in memory — no vector DB.", col: 2, row: 0 },
-    { id: "llm", label: "Model", sublabel: "grounded", description: "Answers only from retrieved chunks, and cites them.", col: 2, row: 2 },
+    { id: "ui", label: "Assistant panel", sublabel: "client", description: "Sends the visitor's question, with the recent turns, to the route.", col: 0, row: 1 },
+    { id: "api", label: "Route handler", sublabel: "/api/chat", description: "Rate-limits and screens the request, then retrieves before any model call (Node.js runtime).", col: 1, row: 1 },
+    { id: "index", label: "BM25 index", sublabel: "in memory", description: "Site content split into passages and indexed at module load. No embeddings, no vector DB.", col: 2, row: 0 },
+    { id: "llm", label: "Gemini", sublabel: "grounded", description: "Answers only from the retrieved passages and cites them. Without a key or quota, the route serves the best FAQ answer instead.", col: 2, row: 2 },
   ],
   edges: [
     { from: "ui", to: "api", label: "question" },
     { from: "api", to: "index", label: "top-k" },
-    { from: "api", to: "llm", label: "context" },
+    { from: "api", to: "llm", label: "passages" },
   ],
 };
 
@@ -60,62 +64,32 @@ export default function ComponentsPage() {
           full of realistic-looking metrics is a liability, so every value below
           is deliberately impossible (999, 000, xx). */}
       <p className="mt-4 max-w-[var(--width-prose)] rounded-[var(--radius-md)] border border-warning/40 bg-warning/5 px-4 py-3 text-sm text-ink">
-        <strong className="font-medium">Fixture data.</strong> Every number, label and date on this
-        page is a deliberately impossible placeholder chosen so it can never be mistaken for a
-        measured result. Real metrics live on{" "}
+        <strong className="font-medium">Fixture data.</strong> Every figure and date on this page is
+        a deliberately impossible placeholder chosen so it can never be mistaken for a measured
+        result. Real metrics live on{" "}
         <Link href="/evals" prefetch={false} className="link-underline text-accent">
           /evals
         </Link>
         .
       </p>
-      <AuditLane
-        title="Audit lane"
-        items={[
-          ...home.proof.stats.map((stat) => ({
-            href: stat.href,
-            value: stat.value,
-            label: stat.label,
-          })),
-          { href: "/trust", label: "trust policy" },
-          { href: "/now", label: "now" },
-        ]}
-        className="mt-8"
-      />
 
-      <Row title="Buttons">
+      <Row title="Buttons (buttonVariants)">
         <div className="flex flex-wrap items-center gap-4">
-          <Button variant="primary">Primary</Button>
-          <Button variant="secondary">Secondary</Button>
-          <Button variant="ghost">Ghost</Button>
-          <Button variant="primary" disabled>
+          <button type="button" className={buttonVariants("primary")}>
+            Primary
+          </button>
+          <button type="button" className={buttonVariants("secondary")}>
+            Secondary
+          </button>
+          <button type="button" className={buttonVariants("subtle")}>
+            Subtle
+          </button>
+          <button type="button" className={buttonVariants("ghost")}>
+            Ghost
+          </button>
+          <button type="button" className={buttonVariants("primary")} disabled>
             Disabled
-          </Button>
-          <Button variant="primary" loading>
-            Loading
-          </Button>
-        </div>
-      </Row>
-
-      <Row title="Tags">
-        <div className="flex flex-wrap gap-2">
-          <Tag>TypeScript</Tag>
-          <Tag>FastAPI</Tag>
-          <Tag>production</Tag>
-        </div>
-      </Row>
-
-      <Row title="Card (quiet)">
-        <div className="grid gap-4 sm:grid-cols-2">
-          <Card as="article" className="group">
-            <h3 className="text-xl text-ink transition-colors group-hover:text-accent">Card title</h3>
-            <p className="mt-2 text-sm text-ink-secondary">
-              Surface background, hairline border, no lift or glow. Hover shifts the border and the
-              title to accent.
-            </p>
-          </Card>
-          <Card>
-            <p className="text-sm text-ink-secondary">A plain quiet card.</p>
-          </Card>
+          </button>
         </div>
       </Row>
 
@@ -132,28 +106,20 @@ export default function ComponentsPage() {
       </Row>
 
       <Row title="Metrics">
-        <MetricsRow>
+        <div className="flex flex-wrap gap-x-12 gap-y-6">
           <Metric label="review time per assessment" before="999 min" after="000 min" direction="down-good" method="Fixture value — not a measurement. See /evals for real results." />
           <Metric label="false-positive rate" before="99.9%" after="00.0%" direction="down-good" method="Fixture value — not a measurement. See /evals for real results." />
           <Metric label="cost per run" after="$0.0000" direction="down-good" method="Fixture value — not a measurement. See /evals for real results." />
-        </MetricsRow>
+        </div>
         <div className="mt-8">
           <MetricsTable
             rows={[
-              { label: "p95 latency", value: "214 ms", method: "1k requests, warm edge, synthetic data." },
-              { label: "throughput", value: "1,204 rows/s", method: "Batch export benchmark, single worker." },
-              { label: "monthly cost", value: "$0", method: "Free-tier stack; no paid infra." },
+              { label: "p95 latency", value: "999 ms", method: "Fixture value — not a measurement." },
+              { label: "throughput", value: "0,000 rows/s", method: "Fixture value — not a measurement." },
+              { label: "monthly cost", value: "$9.999", method: "Fixture value — not a measurement." },
             ]}
           />
         </div>
-      </Row>
-
-      <Row title="Before / after">
-        <BeforeAfter
-          label="v1 → v2"
-          before="Fixture: single-pass retrieval, 99.9% false positives."
-          after="Fixture: added a reranking pass, 00.0% false positives."
-        />
       </Row>
 
       <Row title="Decision log">
@@ -167,10 +133,11 @@ export default function ComponentsPage() {
               tradeoff: "Rule-maintenance burden; slower to cover novel edge cases.",
             },
             {
-              choice: "Build-time embeddings + a static index, not a vector DB",
+              choice: "An in-memory BM25 index, not a vector DB",
               alternatives: ["Pinecone", "pgvector"],
-              reason: "The corpus is under a thousand chunks; it fits in memory a hundred times over.",
-              tradeoff: "Re-embed on every content change; migrate only if the corpus 100×s.",
+              reason:
+                "The corpus fits in memory many times over, and lexical retrieval runs the same in the route and in a plain node --test run.",
+              tradeoff: "Matching depends on shared vocabulary; the index is rebuilt per server instance.",
             },
           ]}
         />
@@ -208,7 +175,7 @@ export default function ComponentsPage() {
       </Row>
 
       <Row title="System diagram (keyboard-navigable)">
-        <SystemDiagram spec={RAG} caption="A grounded RAG assistant — arrow-key or hover to trace the flow." />
+        <SystemDiagram spec={ASSISTANT} caption="This site's assistant — arrow-key or hover to trace the flow." />
       </Row>
     </Container>
   );

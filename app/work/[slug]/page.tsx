@@ -9,10 +9,10 @@ import { ArticleFooter } from "@/components/ui/article-footer";
 import { MetricCards } from "@/components/ui/metric";
 import { buttonVariants } from "@/components/ui/button";
 import { projects, projectBySlug, projectNeighbours } from "@/content/projects";
-import { PROJECT_STATUS_LABEL } from "@/content/article";
+import { PROJECT_LINKS, PROJECT_STATUS_LABEL } from "@/content/article";
 import type { Project } from "@/content/schema";
 import { formatDate } from "@/lib/format";
-import { SITE } from "@/config/site";
+import { absoluteUrl, pageMetadata } from "@/lib/seo";
 import { PAGE_BODY_BAND, PAGE_HEADER_BAND } from "@/constants/page";
 import {
   CROWNWAGER_SECTIONS,
@@ -46,25 +46,16 @@ export async function generateMetadata({
   const { slug } = await params;
   const p = projectBySlug(slug);
   if (!p) return {};
-  const url = `${SITE.url}/work/${slug}`;
   const lastPublished = p.changelog[p.changelog.length - 1]?.date;
   const lastUpdated = p.changelog[0]?.date;
 
-  return {
+  return pageMetadata({
+    path: `/work/${slug}`,
     title: `${p.title} — case study`,
     description: p.summary,
-    alternates: { canonical: url },
-    openGraph: {
-      type: "article",
-      siteName: SITE.name,
-      url,
-      title: `${p.title} · Case study`,
-      description: p.summary,
-      publishedTime: lastPublished,
-      modifiedTime: lastUpdated ?? lastPublished,
-      authors: [SITE.name],
-    },
-  };
+    social: { title: `${p.title} · Case study` },
+    article: { publishedTime: lastPublished, modifiedTime: lastUpdated ?? lastPublished },
+  });
 }
 
 /** Projects with an authored deep write-up and a shared section index for the TOC. */
@@ -75,51 +66,20 @@ const BODIES: Record<string, CaseStudyTemplate> = {
   "llm-studio": { Body: LlmStudioBody, sections: LLM_STUDIO_SECTIONS },
 };
 
-/**
- * Live-product demo tours (public/demos/<slug>.webm), recorded from each real
- * deployment — a title card + a captioned feature walkthrough. Poster is a real
- * screenshot; older Safari that can't play webm falls back to it. LLM Studio is
- * auth-gated, so its tour is signed into a real account (the chat UI, streaming,
- * and model switching), not a login screen. Rendered once, below the metrics row.
- */
-const DEMO_SHOTS: Record<
-  string,
-  { alt: string; caption: string; width: number; height: number }
-> = {
-  dbwhisper: {
-    alt: "Recorded scroll through the DBWhisper product website.",
-    caption: "Product website recording. Some on-screen claims predate the scoped results and limitations documented in this case study.",
-    width: 768,
-    height: 456,
-  },
-  crownwager: {
-    alt: "Recorded scroll through the CrownWager product website.",
-    caption: "Product website recording. The on-screen training count differs from the current five-fold evaluation on 15,115 games documented below.",
-    width: 1280,
-    height: 760,
-  },
-  tradepulse: {
-    alt: "Recorded scroll through the TradePulse product website.",
-    caption: "Product website recording. Market data is delayed; older on-screen references to real-time charting are not the current data contract.",
-    width: 1280,
-    height: 760,
-  },
-  "llm-studio": {
-    alt: "Recorded LLM Studio chat interface with conversation history and model selection.",
-    caption: "Application recording — a multi-model chat workspace with per-user history and model switching.",
-    width: 1280,
-    height: 720,
-  },
-};
-
 export default async function CaseStudyPage({ params }: { params: Promise<{ slug: string }> }) {
   const { slug } = await params;
   const p: Project | undefined = projectBySlug(slug);
   if (!p) notFound();
   const template = BODIES[slug];
   const sections = template?.sections ?? GENERIC_CASE_STUDY_SECTIONS;
-  const demo = DEMO_SHOTS[slug];
+  // The product recording (public/demos/<slug>.webm), captured from the real
+  // deployment, stays on the page when a free-tier demo is down, so the case
+  // study does not depend on a sleeping host. Its poster is a real screenshot,
+  // which older Safari shows when it cannot play webm. A project without one
+  // (DBWhisper, until it is re-recorded) opens on its metrics.
+  const demo = p.recording;
   const { previous, next } = projectNeighbours(slug);
+  const url = absoluteUrl(`/work/${slug}`);
 
   return (
     <>
@@ -128,7 +88,7 @@ export default async function CaseStudyPage({ params }: { params: Promise<{ slug
         <ProjectJsonLd
           title={p.title}
           description={p.summary}
-          url={`${SITE.url}/work/${slug}`}
+          url={url}
           timeline={p.timeline}
           role={p.role}
           systems={p.systems}
@@ -137,8 +97,8 @@ export default async function CaseStudyPage({ params }: { params: Promise<{ slug
         />
         <BreadcrumbJsonLd
           items={[
-            { name: "Work", url: `${SITE.url}/work` },
-            { name: p.title, url: `${SITE.url}/work/${slug}` },
+            { name: "Work", url: absoluteUrl("/work") },
+            { name: p.title, url },
           ]}
         />
         {demo ? <DemoPosterPreload href={`/demos/${slug}.webp`} /> : null}
@@ -161,17 +121,20 @@ export default async function CaseStudyPage({ params }: { params: Promise<{ slug
               rel="noopener noreferrer"
               className={buttonVariants("secondary", "sm")}
             >
-              Open live <ArrowUpRight size={14} strokeWidth={1.5} />
+              {PROJECT_LINKS.demo} <ArrowUpRight size={14} strokeWidth={1.5} aria-hidden />
             </a>
           ) : null}
+          {/* ↗ marks a link that leaves the site in a new tab — the demo
+              button beside it says so, and so must this. */}
           {p.links.repo ? (
             <a
               href={p.links.repo}
               target="_blank"
               rel="noopener noreferrer"
-              className="text-sm text-ink underline decoration-border-strong underline-offset-4 hover:decoration-accent"
+              className="inline-flex items-center gap-1 text-sm text-ink underline decoration-border-strong underline-offset-4 hover:decoration-accent"
             >
-              Source
+              {PROJECT_LINKS.source}
+              <ArrowUpRight size={14} strokeWidth={1.5} aria-hidden />
             </a>
           ) : null}
         </ArticleHeader>
@@ -199,10 +162,12 @@ export default async function CaseStudyPage({ params }: { params: Promise<{ slug
                             href={p.links.live}
                             target="_blank"
                             rel="noopener noreferrer"
-                            className="text-accent underline decoration-border-strong underline-offset-2 hover:text-accent-hover hover:decoration-accent"
+                            className="inline-flex items-center gap-0.5 text-accent underline decoration-border-strong underline-offset-2 hover:text-accent-hover hover:decoration-accent"
                           >
-                            Visit the live app →
-                          </a>
+                            {PROJECT_LINKS.captionDemo}
+                            <ArrowUpRight size={12} strokeWidth={1.6} aria-hidden />
+                          </a>{" "}
+                          ({PROJECT_LINKS.captionWake}).
                         </>
                       ) : null}
                     </>

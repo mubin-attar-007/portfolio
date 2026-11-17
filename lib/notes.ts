@@ -1,5 +1,6 @@
 import { NoteSchema, type NoteMeta } from "@/content/schema";
-import { createMdxCollection } from "@/lib/mdx-collection";
+import { fitDescription } from "@/lib/excerpt";
+import { createMdxCollection, type Entry } from "@/lib/mdx-collection";
 
 /**
  * The short notes in content/notes. Thin binding of the shared MDX collection
@@ -7,9 +8,6 @@ import { createMdxCollection } from "@/lib/mdx-collection";
  * validation, and sorting all live in lib/mdx-collection.ts.
  */
 const notes = createMdxCollection<NoteMeta>("notes", NoteSchema);
-
-/** Slugs of published notes, newest first. Excludes drafts everywhere. */
-export const publishedNoteSlugs = notes.publishedSlugs;
 
 /** Slugs that should resolve to a page — adds drafts in development only. */
 export const routableNoteSlugs = notes.routableSlugs;
@@ -22,3 +20,12 @@ export const loadNote = notes.load;
 
 /** The published notes either side of one slug, for the end-of-article footer. */
 export const noteNeighbours = notes.neighbours;
+
+/**
+ * A note's description for search results, its social card, its structured
+ * data, and the feeds: the author's `summary` when the note has one, otherwise
+ * its opening sentences, cut where a sentence ends (lib/excerpt.ts).
+ */
+export function noteDescription(note: Pick<Entry<NoteMeta>, "summary" | "excerpt">): string {
+  return note.summary ?? fitDescription(note.excerpt);
+}

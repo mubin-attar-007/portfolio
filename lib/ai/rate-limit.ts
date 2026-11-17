@@ -1,16 +1,94 @@
+import { createHash, randomBytes } from "node:crypto";
 import { ASSISTANT_DAILY_CAP } from "@/lib/env";
 
 // -----------------------------------------------------------------------------
-// In-memory sliding-window rate limiter, keyed by client IP.
+// Best-effort abuse limits for the assistant, held in one server instance's
+// memory.
 //
-// Intentionally simple and dependency-free. On serverless this is per-instance
-// (not globally shared), which is acceptable for a portfolio: it curbs abusive
-// bursts from a single client without external infra. No PII is stored — only
-// a coarse IP key and request timestamps, held in memory and pruned.
+// Three limits, all per instance: on serverless every warm instance keeps its
+// own counters, and a restart clears them. They bound what one client can do
+// to one instance; they are not a global ceiling. The real ceilings live
+// outside the function — a quota or budget cap on the Gemini key's Google
+// Cloud project, and a platform firewall rule (DEPLOY.md §3).
+//
+//   1. A sliding window of MAX_REQUESTS per WINDOW_MS per client.
+//   2. CLIENT_DAILY_LIVE_ANSWERS model calls per client per UTC day, so one
+//      client cannot spend the shared budget for every other visitor.
+//   3. ASSISTANT_DAILY_CAP model calls per UTC day for the instance.
+//
+// A client is a salted SHA-256 of its address, never the address itself. The
+// salt is random per process, so a key means nothing outside this instance
+// and nothing after it restarts.
 // -----------------------------------------------------------------------------
 
 const WINDOW_MS = 60_000; // 1 minute
-const MAX_REQUESTS = 15; // per IP per window
+const MAX_REQUESTS = 15; // per client per window
+
+/**
+ * Model calls one client may cause per UTC day. Past it, the client still gets
+ * grounded site-search answers; only live synthesis stops until midnight UTC.
+ */
+export const CLIENT_DAILY_LIVE_ANSWERS = 30;
+
+/** Max Gemini generation calls per UTC day, per instance (ASSISTANT_DAILY_CAP). */
+export const GEMINI_DAILY_BUDGET = ASSISTANT_DAILY_CAP;
+
+/**
+ * Most clients tracked for the daily allowance. A flood of fresh addresses
+ * evicts the oldest entries instead of growing the map without bound.
+ */
+const MAX_TRACKED_CLIENTS = 10_000;
+
+const MS_PER_DAY = 86_400_000;
+
+/** Random per process: a client key cannot be reversed or matched elsewhere. */
+const SALT = randomBytes(16).toString("hex");
+
+// ---------------------------------------------------------------------------
+// Client keys
+// ---------------------------------------------------------------------------
+
+/** A salted, truncated SHA-256 of a client address. */
+function hashClient(address: string): string {
+  return createHash("sha256").update(`${SALT}:${address}`).digest("hex").slice(0, 32);
+}
+
+/**
+ * Derive the client key from a request's forwarding headers: a salted hash of
+ * the address the platform saw. Falls back to one shared key when no address
+ * is present (dev / direct). The address itself is never stored or logged.
+ *
+ * Trust order matters: the LEFTMOST `x-forwarded-for` entry is fully
+ * client-controlled (an attacker can send `X-Forwarded-For: 1.2.3.4` to forge a
+ * fresh bucket per request and defeat the limiter), so it is never used.
+ *   1. `x-real-ip`               — Vercel sets this to the real client IP.
+ *   2. `x-vercel-forwarded-for`  — platform header; first entry is the client.
+ *   3. LAST hop of `x-forwarded-for` — the entry appended by the trusted proxy
+ *      nearest us, not the spoofable leftmost one.
+ *   4. "unknown"                 — dev / direct; a shared key.
+ */
+export function clientKeyFromHeaders(headers: Headers): string {
+  return hashClient(clientAddress(headers));
+}
+
+function clientAddress(headers: Headers): string {
+  const real = headers.get("x-real-ip")?.trim();
+  if (real) return real;
+
+  const vercel = headers.get("x-vercel-forwarded-for")?.split(",")[0]?.trim();
+  if (vercel) return vercel;
+
+  const hops = headers.get("x-forwarded-for")?.split(",") ?? [];
+  for (let i = hops.length - 1; i >= 0; i--) {
+    const hop = hops[i]?.trim();
+    if (hop) return hop;
+  }
+  return "unknown";
+}
+
+// ---------------------------------------------------------------------------
+// 1) Per-minute window
+// ---------------------------------------------------------------------------
 
 type Bucket = number[]; // ascending request timestamps (ms)
 
@@ -24,8 +102,8 @@ const PRUNE_INTERVAL_MS = 5 * WINDOW_MS;
 function prune(now: number): void {
   if (now - lastPrune < PRUNE_INTERVAL_MS) return;
   lastPrune = now;
-  for (const [key, ts] of buckets) {
-    const kept = ts.filter((t) => now - t < WINDOW_MS);
+  for (const [key, timestamps] of buckets) {
+    const kept = timestamps.filter((t) => now - t < WINDOW_MS);
     if (kept.length === 0) buckets.delete(key);
     else buckets.set(key, kept);
   }
@@ -38,69 +116,11 @@ export type RateResult = {
   remaining: number;
 };
 
-// -----------------------------------------------------------------------------
-// Global daily budget (cost cap) for Gemini generation calls.
-//
-// The per-IP limiter above can't fully bound abuse on serverless (it's
-// per-instance, and IPs rotate), and the Gemini key is SHARED with dbwhisper —
-// so runaway calls here could starve dbwhisper's quota. This is a hard-ish
-// ceiling: a module-level counter of generation calls that resets on UTC-day
-// change. When it's exhausted the route stops calling Gemini and serves the
-// grounded retrieval fallback only (still cited, never a 500).
-//
-// RESIDUAL (documented, not solved here): on serverless this counter lives in a
-// single instance's memory, so with N warm instances the true global cap is up
-// to N × GEMINI_DAILY_BUDGET. It still bounds any ONE instance and dramatically
-// lowers the blast radius vs. no cap. A globally-exact cap would need shared
-// state (KV/Redis), which this dependency-free portfolio intentionally avoids.
-// -----------------------------------------------------------------------------
-
-/** Max Gemini generation calls per UTC day, per instance. Tuned to free-tier. */
-export const GEMINI_DAILY_BUDGET = ASSISTANT_DAILY_CAP;
-
-let dailyCount = 0;
-let dailyEpochDay = -1; // floor(now / 86_400_000); -1 forces first-call init
-
-const MS_PER_DAY = 86_400_000;
-
-/** Roll the counter over when the UTC day changes. */
-function rollDay(now: number): void {
-  const day = Math.floor(now / MS_PER_DAY);
-  if (day !== dailyEpochDay) {
-    dailyEpochDay = day;
-    dailyCount = 0;
-  }
-}
-
-/**
- * Report whether the global daily Gemini budget still has headroom, WITHOUT
- * consuming it. The route checks this before deciding to call Gemini vs. serve
- * the retrieval fallback.
- */
-export function geminiBudgetAvailable(now: number = Date.now()): boolean {
-  rollDay(now);
-  return dailyCount < GEMINI_DAILY_BUDGET;
-}
-
-/**
- * Consume one unit of the global daily Gemini budget. Call this immediately
- * before actually invoking Gemini. Returns true if the call is within budget
- * (and was counted); false if the budget is exhausted (call should be skipped).
- */
-export function consumeGeminiBudget(now: number = Date.now()): boolean {
-  rollDay(now);
-  if (dailyCount >= GEMINI_DAILY_BUDGET) return false;
-  dailyCount += 1;
-  return true;
-}
-
-/** Record a request for `key` and report whether it's within the window budget. */
+/** Record a request for `key` and report whether it is within the window. */
 export function checkRateLimit(key: string, now: number = Date.now()): RateResult {
   prune(now);
 
-  const bucket = buckets.get(key) ?? [];
-  // Drop timestamps outside the window.
-  const recent = bucket.filter((t) => now - t < WINDOW_MS);
+  const recent = (buckets.get(key) ?? []).filter((t) => now - t < WINDOW_MS);
 
   if (recent.length >= MAX_REQUESTS) {
     const oldest = recent[0]!; // length >= MAX_REQUESTS >= 1
@@ -114,40 +134,44 @@ export function checkRateLimit(key: string, now: number = Date.now()): RateResul
   return { allowed: true, retryAfterSec: 0, remaining: MAX_REQUESTS - recent.length };
 }
 
+// ---------------------------------------------------------------------------
+// 2 + 3) Daily model calls: per client, and for the instance
+// ---------------------------------------------------------------------------
+
+let day = -1; // floor(now / MS_PER_DAY); -1 forces initialisation
+let instanceCalls = 0;
+const clientCalls = new Map<string, number>();
+
+/** Reset every daily counter when the UTC day changes. */
+function rollDay(now: number): void {
+  const today = Math.floor(now / MS_PER_DAY);
+  if (today === day) return;
+  day = today;
+  instanceCalls = 0;
+  clientCalls.clear();
+}
+
+/** Why a live answer was refused, or "ok" when one was reserved. */
+export type LiveAnswerReservation = "ok" | "client-allowance-reached" | "daily-budget-reached";
+
 /**
- * Derive a coarse client key from a request's forwarding headers. Falls back to
- * a shared bucket when no IP is present (dev / direct). Never logged.
- *
- * Trust order matters: the LEFTMOST `x-forwarded-for` entry is fully
- * client-controlled (an attacker can send `X-Forwarded-For: 1.2.3.4` to forge a
- * fresh bucket per request and defeat the limiter), so we NEVER key on it.
- * Instead we prefer headers our trusted proxy sets:
- *   1. `x-real-ip`               — Vercel sets this to the real client IP.
- *   2. `x-vercel-forwarded-for`  — platform header; first entry is the client.
- *   3. LAST hop of `x-forwarded-for` — the entry appended by our trusted proxy
- *      (the rightmost hop), not the spoofable leftmost one.
- *   4. "unknown"                 — dev / direct; a shared bucket.
+ * Reserve one model call for `key`: within the client's daily allowance and
+ * the instance's daily budget. Both counters move together or not at all, so
+ * a refused reservation never spends either. Call it immediately before the
+ * model call; on anything but "ok", serve the grounded fallback instead.
  */
-export function clientKeyFromHeaders(headers: Headers): string {
-  const real = headers.get("x-real-ip");
-  if (real?.trim()) return real.trim();
-
-  const vercelFwd = headers.get("x-vercel-forwarded-for");
-  if (vercelFwd) {
-    const ip = vercelFwd.split(",")[0]?.trim();
-    if (ip) return ip;
+export function reserveLiveAnswer(key: string, now: number = Date.now()): LiveAnswerReservation {
+  rollDay(now);
+  const used = clientCalls.get(key) ?? 0;
+  if (used >= CLIENT_DAILY_LIVE_ANSWERS) return "client-allowance-reached";
+  if (instanceCalls >= GEMINI_DAILY_BUDGET) return "daily-budget-reached";
+  instanceCalls += 1;
+  // Re-inserted so the map's insertion order stays least-recently-used first.
+  clientCalls.delete(key);
+  clientCalls.set(key, used + 1);
+  if (clientCalls.size > MAX_TRACKED_CLIENTS) {
+    const oldest = clientCalls.keys().next().value;
+    if (oldest !== undefined) clientCalls.delete(oldest);
   }
-
-  // Fall back to the LAST (rightmost) XFF hop — the one appended by the trusted
-  // proxy nearest us. The leftmost entries are attacker-supplied and ignored.
-  const fwd = headers.get("x-forwarded-for");
-  if (fwd) {
-    const parts = fwd.split(",");
-    for (let i = parts.length - 1; i >= 0; i--) {
-      const ip = parts[i]?.trim();
-      if (ip) return ip;
-    }
-  }
-
-  return "unknown";
+  return "ok";
 }

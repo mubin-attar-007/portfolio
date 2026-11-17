@@ -6,13 +6,21 @@
 // zero LLM quota.
 
 import { pathToFileURL, fileURLToPath } from "node:url";
-import { existsSync } from "node:fs";
+import { existsSync, statSync } from "node:fs";
 import { register } from "node:module";
 
 const projectRoot = new URL("../", import.meta.url); // repo root (test/ is one down)
 const TS_EXTS = [".ts", ".tsx"];
 
-/** If `urlHref` points at a nonexistent file, try the TS variants Next would. */
+/** True only for an existing regular file — a directory is not a module. */
+const isFile = (p) => existsSync(p) && statSync(p).isFile();
+
+/**
+ * If `urlHref` does not point at a file, try the TS variants Next would, in
+ * the bundler's order: the file with an extension before a directory's index.
+ * `content/projects` is both a directory (the MDX write-ups) and the stem of
+ * `content/projects.ts`, and the bundler picks the file.
+ */
 function withTsExtension(urlHref) {
   let p;
   try {
@@ -20,7 +28,7 @@ function withTsExtension(urlHref) {
   } catch {
     return urlHref;
   }
-  if (existsSync(p)) return urlHref;
+  if (isFile(p)) return urlHref;
   for (const ext of TS_EXTS) {
     if (existsSync(p + ext)) return pathToFileURL(p + ext).href;
   }

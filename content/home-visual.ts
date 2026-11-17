@@ -41,7 +41,7 @@ export const flagshipHome = {
       { t: "Predictive ML, financial research, and multi-user AI. Explore the implementation and the decisions behind each product." },
     ],
     caseStudy: "View case study",
-    live: "Live",
+    demo: "Demo",
     source: "Source",
     cta: { label: "See all four projects", href: "/work" },
   },

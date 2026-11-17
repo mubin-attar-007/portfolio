@@ -12,23 +12,14 @@ import { about, home } from "@/content/site";
 import { timelineIntro } from "@/content/timeline";
 import { SITE } from "@/config/site";
 import { FIGURE, PAGE_BODY_BAND, PAGE_HEADER_BAND, stagger } from "@/constants/page";
+import { pageMetadata } from "@/lib/seo";
 
-const ABOUT_PATH = "/about";
-
-export const metadata: Metadata = {
+export const metadata: Metadata = pageMetadata({
+  path: "/about",
   title: "About",
-  description:
-    "Mubin Attar — AI software engineer. Who I am, how I think, and the one rule across all of it.",
-  alternates: { canonical: `${SITE.url}${ABOUT_PATH}` },
-  openGraph: {
-    siteName: SITE.name,
-    title: "About — Mubin Attar",
-    description:
-      "Mubin Attar — AI software engineer. Who I am, how I think, and the one rule across all of it.",
-    url: `${SITE.url}${ABOUT_PATH}`,
-    type: "website",
-  },
-};
+  // What the page holds: the biography, then the three principles (home.principles).
+  description: `${SITE.name} — ${SITE.role}. Who I am, how I approach the work, and the three principles behind it.`,
+});
 
 /**
  * /about — identity, then "how I think".
@@ -65,10 +56,10 @@ export default function AboutPage() {
         <div className="grid gap-10 md:grid-cols-[minmax(0,1fr)_auto] md:items-center md:gap-16">
           <div className="min-w-0">
             <PageHeader kicker={about.kicker} title={about.headline} lede={about.body[0]}>
-              <Link href="/hire" className={buttonVariants("primary")}>
+              <Link href="/hire" prefetch={false} className={buttonVariants("primary")}>
                 {about.ctas.primary}
               </Link>
-              <Link href="/resume" className={buttonVariants("secondary")}>
+              <Link href="/resume" prefetch={false} className={buttonVariants("secondary")}>
                 {about.ctas.secondary}
               </Link>
             </PageHeader>

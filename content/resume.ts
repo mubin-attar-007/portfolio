@@ -1,10 +1,117 @@
+import { formatDate } from "@/lib/format";
+import { CROWNWAGER_EVIDENCE, DBWHISPER_EVIDENCE, requireCompleteEval } from "./evals";
+import { projectBySlug } from "./projects";
+
 /**
  * Résumé content — the single source of truth mirrored by /public/Mubin_Attar_Resume.pdf
- * (regenerated from this data via scripts/build-resume-pdf.mts) and LinkedIn. Site,
- * PDF, and LinkedIn must carry identical facts (launch checklist). Every metric here
- * is real and backed on the site (see /evals and the case studies) — no résumé number
- * exists that the portfolio can't defend.
+ * (regenerated from this data with `npm run build:resume`) and LinkedIn. Site,
+ * PDF, and LinkedIn must carry identical facts (launch checklist). Every metric
+ * here is real and backed on the site (see /evals and the case studies) — no
+ * résumé number exists that the portfolio can't defend.
  */
+
+/** One measured line on the résumé, with the page that documents its method. */
+export type ResumeMetric = {
+  /** The figure, its scope, and its date, in one line. */
+  text: string;
+  /** The on-site page (or anchor) that documents how it was measured. */
+  method: string;
+  /** What the method link explains, named in its accessible name ("Spider result"). */
+  topic: string;
+};
+
+const { policy, spider } = DBWHISPER_EVIDENCE;
+const cw = CROWNWAGER_EVIDENCE;
+const tradepulseCanary = requireCompleteEval("TradePulse", "Look-ahead canary + parity suite");
+
+/** A featured project as the résumé words it; its project record supplies the rest. */
+type ResumeProjectEntry = {
+  slug: string;
+  tagline: string;
+  metrics: readonly ResumeMetric[];
+  stack: string;
+};
+
+/**
+ * Featured projects — the résumé's own wording only. `slug` ties each entry to
+ * its project record (content/projects.ts), which supplies the name, the case
+ * study, and the demo and source links, so a demo that goes down loses its
+ * link here in the same change that removes it from the site. Every figure is
+ * read from the eval registry with its scope and date (content/evals.ts); none
+ * is typed here.
+ */
+const PROJECTS = [
+  {
+    slug: "dbwhisper",
+    tagline: "Natural-language-to-SQL agent — LangGraph pipeline, schema-aware pgvector retrieval, multi-LLM fallback, and a fail-closed read-only safety layer.",
+    metrics: [
+      {
+        text: `${spider.ratio} on a ${spider.label} — ${spider.scope}; ${spider.excluded} of ${spider.sampled} dropped (${formatDate(spider.date)})`,
+        method: spider.anchor,
+        topic: "Spider result",
+      },
+      {
+        text: `${policy.ratio} ${policy.label} — ${policy.kind.toLowerCase()} (${formatDate(policy.date)})`,
+        method: policy.anchor,
+        topic: "policy-corpus result",
+      },
+    ],
+    stack: "FastAPI · LangGraph · Next.js",
+  },
+  {
+    slug: "tradepulse",
+    tagline: "Quant backtesting platform with next-bar execution, costs modeled by default, Decimal accounting, and an AI copilot grounded in the backtest results.",
+    metrics: [
+      {
+        text: `Look-ahead canary + cash-conservation tests green (${formatDate(tradepulseCanary.date)})`,
+        method: tradepulseCanary.anchor,
+        topic: "look-ahead tests",
+      },
+    ],
+    stack: "FastAPI · Next.js · TimescaleDB · Redis",
+  },
+  {
+    slug: "crownwager",
+    tagline: "Sports-betting analytics & ML predictions — +EV best bets, a validated XGBoost model, cross-book arbitrage finder, and a graded, verifiable track record.",
+    metrics: [
+      {
+        text: `${cw.cv.result} XGBoost accuracy — ${cw.cv.folds}-fold cross-validation on ${cw.games} NBA games vs a ${cw.baseRate} base rate (${formatDate(cw.date)})`,
+        method: cw.anchor,
+        topic: "model accuracy",
+      },
+    ],
+    stack: "Django/DRF · FastAPI · Next.js",
+  },
+  {
+    slug: "llm-studio",
+    tagline: "Multi-user, ChatGPT-style AI chat SaaS — Argon2id auth, per-user tenancy, token streaming, OpenAI-compatible multi-LLM routing, and a shared-key daily quota.",
+    // Not an eval-registry row — the test count and tenancy model are documented
+    // in the case study's metric table, so that is this project's method page.
+    metrics: [
+      {
+        text: "Per-user tenancy · 31 tests",
+        method: "/work/llm-studio#performance-cost",
+        topic: "test suite",
+      },
+    ],
+    stack: "FastAPI · Postgres · Docker · CI",
+  },
+] as const satisfies readonly ResumeProjectEntry[];
+
+/** A résumé project with the name and links its project record supplies. */
+function withProjectRecord<T extends { slug: string }>(entry: T) {
+  const project = projectBySlug(entry.slug);
+  if (!project) throw new Error(`resume: no project record for "${entry.slug}".`);
+  return {
+    ...entry,
+    name: project.title,
+    caseStudy: `/work/${project.slug}`,
+    /** The deployed demo, only while it is up (see content/projects.ts). */
+    demo: project.links.live,
+    source: project.links.repo,
+  };
+}
+
 export const resume = {
   /**
    * Page chrome — the labels app/resume/page.tsx used to hardcode (Law 3). These
@@ -22,6 +129,11 @@ export const resume = {
     projectsNote: "case studies & source code",
     education: "Education",
     skills: "Skills",
+    /** Per-project link labels, on the page and in the PDF. */
+    caseStudy: "case study",
+    demo: "demo",
+    source: "source",
+    method: "method",
   },
   summary:
     "Applied AI Engineer with 3+ years in software engineering and a production-AI focus since 2024. I build LLM applications, agentic and RAG systems, predictive ML, and healthcare automation across FastAPI, Next.js, PostgreSQL, and Docker. Four public AI projects document my work in authentication, CI/CD, validation, and task-level evaluation.",
@@ -58,53 +170,11 @@ export const resume = {
     },
   ],
   /**
-   * Featured projects — all live and open-source. Each carries ONE real, defensible
-   * metric (mirrored from /evals and the case studies), never a marketing figure.
-   * `method` is the on-site page that documents how that metric was measured — the
-   * site renders it as a link so no number here is ever shown naked.
+   * Featured projects — public source and a case study each. Each metric line
+   * carries its method page, so the site and the PDF never show a number
+   * naked.
    */
-  projects: [
-    {
-      name: "DBWhisper",
-      tagline: "Natural-language-to-SQL agent — LangGraph pipeline, schema-aware pgvector retrieval, multi-LLM fallback, and a fail-closed read-only safety layer.",
-      // Spider figure is the /evals registry number (101/139 execution-match on the
-      // dev split) — the only one with a published method. Never round it differently.
-      metric: "101/139 Spider dev · 18/22 golden-set exact · 4/4 unsafe prompts refused",
-      stack: "FastAPI · LangGraph · Next.js",
-      method: "/evals",
-      live: "https://dbwhisper.vercel.app",
-      github: "https://github.com/mubin-attar-007/dbwhisper",
-    },
-    {
-      name: "TradePulse",
-      tagline: "Quant backtesting platform with next-bar execution, costs modeled by default, Decimal accounting, and an AI copilot grounded in the backtest results.",
-      metric: "Look-ahead canary + cash-conservation tests green",
-      stack: "FastAPI · Next.js · TimescaleDB · Redis",
-      method: "/evals",
-      live: "https://tradepulse-live.vercel.app",
-      github: "https://github.com/mubin-attar-007/tradepulse",
-    },
-    {
-      name: "CrownWager",
-      tagline: "Sports-betting analytics & ML predictions — +EV best bets, a validated XGBoost model, cross-book arbitrage finder, and a graded, verifiable track record.",
-      metric: "65.2% ± 0.8% XGBoost accuracy (5-fold CV)",
-      stack: "Django/DRF · FastAPI · Next.js",
-      method: "/evals",
-      live: "https://crownwager.vercel.app",
-      github: "https://github.com/mubin-attar-007/crownwager",
-    },
-    {
-      name: "LLM Studio",
-      tagline: "Multi-user, ChatGPT-style AI chat SaaS — Argon2id auth, per-user tenancy, token streaming, OpenAI-compatible multi-LLM routing, and a shared-key daily quota.",
-      // Not an eval-registry row — the test count and tenancy model are documented
-      // in the case study's metric table, so that is this project's method page.
-      metric: "Per-user tenancy · 31 tests",
-      stack: "FastAPI · Postgres · Docker · CI",
-      method: "/work/llm-studio",
-      // No live link while the hosted demo is offline (free-tier Space limit).
-      github: "https://github.com/mubin-attar-007/llm_studio",
-    },
-  ],
+  projects: PROJECTS.map(withProjectRecord),
   education: {
     degree: "Master of Computer Applications (MCA)",
     school: "Savitribai Phule University of Pune",

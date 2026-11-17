@@ -18,7 +18,7 @@ DBWhisper turns a plain-English question into **validated, read-only SQL** acros
 Natural-language-to-SQL has two failure modes that keep it out of production:
 
 1. **Hallucinated / unsafe SQL.** An LLM will happily emit `DROP TABLE`, a multi-statement payload, or a query against a table that doesn't exist. Trusting the model is not a safety model.
-2. **Schema blindness at scale.** Real databases have dozens to hundreds of tables. You can't paste the whole schema into a prompt — it's too large, too noisy, and the model picks the wrong tables. The agent needs to *retrieve* the right tables for each question.
+2. **Schema blindness.** Pasting the whole schema into every prompt is noisy and costly, and the model picks the wrong tables. The agent needs to *retrieve* the right tables for each question. Retrieval has not been benchmarked at scale yet: the largest schema enrolled in the repository has 16 tables.
 
 DBWhisper retrieves the relevant tables, then applies **SELECT-only validation and a read-only database connection** before executing a generated query.
 
@@ -65,13 +65,13 @@ Per-run guardrails keep the loop bounded: each tool result is cached per run, an
 
 ## Key Decisions & Trade-offs
 
-**1. Fail-closed SQL validator over LLM-trust.** `app/core/sql_validator.py` uses `sqlparse` (not a fragile regex-only check) to enforce: statement must start with `SELECT`/`WITH`; no DML/DDL/EXEC keywords (checked on tokenized keywords, skipping strings and comments to avoid false positives); single statement only; no `SELECT … INTO`; no `information_schema` / `sys.` / `pg_catalog.` access. The decisive design choice: when a `db_flag` is supplied, it loads that database's enrolled `schema_index.yaml` and **rejects any query referencing a table not in the enrolled schema — and if no schema index exists, it fails closed rather than open** ("a db_flag must have a readable schema index, otherwise we cannot vouch for the tables it touches"). CTE names defined in the same query are allowed. Trade-off: this rejects some exotic-but-valid queries and adds an enrollment step — deliberately, because a false "safe" is far more expensive than a false "unsafe."
+**1. Fail-closed SQL validator over LLM-trust.** Since DBWhisper v2 (24 August 2026), every statement passes `app/sqlpolicy`, a SQLGlot AST policy engine (`sql_policy@2.0.0`); `app/core/sql_validator.py` is now a thin wrapper over it, and the original keyword heuristics stay on as an independent second layer — the stricter result wins. The engine parses exactly one statement in the target dialect and admits a single read-only `SELECT`/`WITH`; it rejects DML, DDL, `GRANT`/`REVOKE`, `EXEC`, multiple statements, `SELECT … INTO`, system-catalog access (`information_schema`, `pg_catalog`, `sys.*`), a blocked-function list (file, network, sleep, lock), and tables outside the enrolled scope. It also enforces complexity limits and injects a row limit, and besides allow and deny it has a third decision, `needs_approval`, which pauses for a human. The decisive design choice: when a database is named, the query is checked against that database's enrolled schema **— and if that schema can't be loaded, it fails closed rather than open**. Trade-off: this rejects some exotic-but-valid queries and adds an enrollment step — deliberately, because a false "safe" is far more expensive than a false "unsafe." It is a structural filter, not a proof: its guarantee is bounded by how faithfully SQLGlot parses each dialect, and the adversarial corpus it is tested against covers only the attacks someone wrote down.
 
-**2. Defense in depth, not a single gate.** The validator is one layer. Below it: **read-only DB users** (a best-effort probe warns if a connection looks writable), a **query timeout + row cap**, and **log sanitization** that masks connection-string passwords, API keys, and SQL literals before anything is written to logs. These controls address different failure modes; the warning probe does not replace correctly configured database permissions.
+**2. Defense in depth, not a single gate.** The validator is one layer. Below it: **read-only DB users**, a **query timeout + row cap**, and **log sanitization** that masks connection-string passwords, API keys, and SQL literals before anything is written to logs. These controls address different failure modes. Enrollment runs a non-destructive privilege probe and refuses (HTTP 400) a connection that appears writable; the probe is a backstop, not a substitute for a SELECT-only role.
 
 **3. Multi-provider fallback over single-vendor lock-in.** A priority chain (OpenAI → OpenRouter → DeepSeek → Groq → Anthropic → Gemini) picks the first provider with credentials, with **Gemini configured as the final fallback**. Result summarization retries down the same chain on failure. Trade-off: more provider adapters to maintain, and requests still depend on a configured provider having available capacity and quota.
 
-**4. Retrieval over context-stuffing.** Rather than dump a schema into the prompt, schemas are documented, embedded, and semantically retrieved per question. This is what lets it work on large databases at all, and it keeps token cost (and hallucination surface) low.
+**4. Retrieval over context-stuffing.** Rather than dump a schema into the prompt, schemas are documented, embedded, and semantically retrieved per question. This keeps the prompt to the few tables a question needs, and token cost (and hallucination surface) low.
 
 ## Metrics / Results
 
@@ -79,12 +79,12 @@ Honest, qualitative-where-appropriate — no invented benchmark numbers:
 
 - **Validation before execution.** Generated queries pass SELECT-only, single-statement, and enrolled-table checks before using the read-only database connection. The validator has unit tests (`ruff` + `pytest` gate CI, alongside a `gitleaks` secret scan).
 - **The verified-query flywheel is real and compounding.** Once a question→SQL pair is human-approved for a database, future similar questions retrieve and adapt it — accuracy on a given database improves with curated use, rather than staying static.
-- **Runs on $0 infra.** Live split-deploy (Vercel + Hugging Face Docker Space + Neon Postgres + pgvector) with hosted-Google embeddings by default and a fully-local HuggingFace embedding path available for offline use.
+- **Runs on $0 infra.** A free-tier split deploy (Vercel + Hugging Face Docker Space + Neon Postgres + pgvector) that can sleep when idle, with hosted-Google embeddings by default and a fully-local HuggingFace embedding path available for offline use.
 - **Multi-database, multi-provider by construction** — Postgres, MySQL, and SQL Server via SQLAlchemy 2.0 + ODBC; six LLM providers behind one fallback interface.
 
 ## Lessons
 
 - **"Trust the LLM" is not a safety architecture.** The moment SQL can mutate a database, you need a deterministic gate the model cannot talk its way past. Failing *closed* — refusing when you can't prove safety — is the only defensible default.
-- **RAG over a schema beats stuffing a schema.** Documenting + embedding tables and retrieving per-question is what makes NL→SQL viable beyond toy databases.
+- **RAG over a schema beats stuffing a schema.** Documenting + embedding tables and retrieving per-question keeps the prompt to the tables that matter instead of the whole schema.
 - **A feedback loop is worth more than a bigger model.** The verified-query flywheel turns real usage into durable, per-database accuracy gains — cheaper and more reliable than prompt-tuning against a moving target.
 - **Free-tier constraints force good engineering.** Small prompts (section-scoped retrieval), bounded tool loops, and a lean Docker image weren't cost optimizations bolted on later — they shaped the design from the start.

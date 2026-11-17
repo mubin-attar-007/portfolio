@@ -1,5 +1,5 @@
 import { dbwhisperWalkthrough } from "@/content/dbwhisper-walkthrough";
-import { DBWHISPER_GOLDEN, requireEval } from "@/content/evals";
+import { DBWHISPER_EVIDENCE } from "@/content/evals";
 import { FlagshipWalkthrough } from "./walkthrough";
 
 /**
@@ -13,16 +13,17 @@ import { FlagshipWalkthrough } from "./walkthrough";
  * and scores are the same objects the request specimens and /evals render — one
  * source, three surfaces.
  *
- * The Spider score is looked up with `requireEval`, which throws at build time
- * if the row is renamed — the walkthrough cannot outlive the evidence it cites.
+ * The scores come from `DBWHISPER_EVIDENCE`, which reads the registry through
+ * `requireEval` and throws at build time if a row is renamed or retired — the
+ * walkthrough cannot outlive the evidence it cites, and every figure carries its
+ * scope in the same cell.
  */
 export function FlagshipWalkthroughSection() {
   const w = dbwhisperWalkthrough.walkthrough;
   const s = dbwhisperWalkthrough.stage;
+  const { policy, spider } = DBWHISPER_EVIDENCE;
 
   const sql = s.sql.map((tok) => (tok.t === "br" ? "\n" : tok.v)).join("");
-  const spider = requireEval("DBWhisper", "Spider");
-  const spiderValue = `${spider.result.split("%")[0]!.trim()}%`;
 
   return (
     <section id="request-walkthrough" aria-labelledby="walkthrough-title" className="my-14 scroll-mt-28 rounded-[var(--radius-lg)] border border-border bg-bg-subtle p-5 sm:p-8">
@@ -42,11 +43,13 @@ export function FlagshipWalkthroughSection() {
         verdict={s.verdict}
         sampleLabel={s.sampleLabel}
         scores={[
-          { value: DBWHISPER_GOLDEN.exactMatch, label: "exact execution match · 22 golden queries" },
-          { value: DBWHISPER_GOLDEN.failClosed, label: "fail-closed refusals · 4 of 4 unsafe prompts" },
-          { value: spiderValue, label: "Spider generation-core subset · 101/139 correct, 9 excluded" },
+          { value: policy.ratio, label: `${policy.label} · ${policy.kind.toLowerCase()}` },
+          {
+            value: spider.ratio,
+            label: `${spider.label} · ${spider.scope} · ${spider.excluded} of ${spider.sampled} dropped`,
+          },
         ]}
-        registryHref={DBWHISPER_GOLDEN.anchor}
+        registryHref="/evals"
       />
     </section>
   );

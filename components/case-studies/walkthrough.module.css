@@ -405,10 +405,12 @@
   color: var(--color-negative);
 }
 
-/* Scoreboard (evaluate stage). */
+/* Scoreboard (evaluate stage). One equal column per published score, so
+   retiring or adding a result never leaves an empty cell. */
 .score {
   display: grid;
-  grid-template-columns: repeat(3, minmax(0, 1fr));
+  grid-auto-columns: minmax(0, 1fr);
+  grid-auto-flow: column;
   gap: 0.625rem;
 }
 .scoreCell {
@@ -435,6 +437,6 @@
 }
 @media (max-width: 33rem) {
   .score {
-    grid-template-columns: 1fr;
+    grid-auto-flow: row;
   }
 }

@@ -49,6 +49,13 @@ const securityHeaders = [
 
 const nextConfig: NextConfig = {
   output: "standalone",
+  // The assistant's corpus (lib/ai/corpus.ts) reads these MDX folders with fs
+  // when /api/chat loads. The tracer follows the literal reads too; this list
+  // makes the bundle's contents a stated fact rather than an inference, so an
+  // essay or note can never silently drop out of the assistant on Vercel.
+  outputFileTracingIncludes: {
+    "/api/chat": ["./content/projects/*.mdx", "./content/writing/*.mdx", "./content/notes/*.mdx"],
+  },
   async headers() {
     return [
       {
@@ -57,15 +64,22 @@ const nextConfig: NextConfig = {
       },
     ];
   },
-  // Consolidated routes keep their inbound links alive (301, never a silent 404):
+  // Permanent redirects (308), never a silent 404. The metadata gate
+  // (scripts/lighthouse-budget.mjs) checks each one and that none is in the sitemap.
+  // Consolidated routes keep their inbound links alive:
   //   /talks    → /about  (removed until there is a real talk to list)
   //   /timeline → /about  (the career narrative now lives inside /about)
   //   /changelog→ /now     (the running record folded into the "now" surface)
+  // The paths recruiters, autocomplete and agents guess first:
+  //   /contact  → /hire    (moving /hire itself is a separate decision, ADR-015 §6)
+  //   /cv       → /resume
   async redirects() {
     return [
       { source: "/talks", destination: "/about", permanent: true },
       { source: "/timeline", destination: "/about", permanent: true },
       { source: "/changelog", destination: "/now", permanent: true },
+      { source: "/contact", destination: "/hire", permanent: true },
+      { source: "/cv", destination: "/resume", permanent: true },
     ];
   },
 };

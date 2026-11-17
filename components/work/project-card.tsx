@@ -9,13 +9,16 @@ import styles from "./project-card.module.css";
  * Methods and measured values come directly from the project's metric record.
  * Text stays selectable; the labelled capture is an ordinary case-study link.
  * Intrinsic image dimensions reserve space before these lazy captures load.
+ *
+ * Arrows state the destination: → for the case study (a page of this site), ↗
+ * only for the demo and source, which open a new tab.
  */
 export function ProjectCard({
   project,
   labels,
 }: {
   project: Project;
-  labels: { caseStudy: string; live: string; source: string };
+  labels: { caseStudy: string; demo: string; source: string };
 }) {
   const metric = project.metrics[0];
   const { card } = project;
@@ -44,7 +47,7 @@ export function ProjectCard({
               >
                 <span>{metric.value}</span>
                 <span className={styles.resultLabel}>{metric.label}</span>
-                <ArrowUpRight size={14} strokeWidth={1.75} aria-hidden />
+                <ArrowRight size={14} strokeWidth={1.75} aria-hidden />
               </Link>
             ) : null}
             <p className={styles.method}>{metric.method}</p>
@@ -62,9 +65,9 @@ export function ProjectCard({
               target="_blank"
               rel="noopener noreferrer"
               className={`text-link-control ${styles.sideAction}`}
-              aria-label={`${project.title} — ${labels.live} (opens in a new tab)`}
+              aria-label={`${project.title} — ${labels.demo} (opens in a new tab)`}
             >
-              {labels.live}
+              {labels.demo}
               <ArrowUpRight size={14} strokeWidth={1.75} aria-hidden />
             </a>
           ) : null}
@@ -101,7 +104,7 @@ export function ProjectCard({
           />
           <span className={styles.shotAction} aria-hidden>
             {labels.caseStudy}
-            <ArrowUpRight size={15} strokeWidth={1.75} className={styles.shotArrow} />
+            <ArrowRight size={15} strokeWidth={1.75} className={styles.shotArrow} />
           </span>
         </Link>
         <figcaption className={styles.caption}>{card.caption}</figcaption>

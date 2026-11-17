@@ -29,9 +29,11 @@ readers who want depth. The employment title at Sevina remains AI/ML Engineer.
   query, a SELECT INTO write, and a missing schema. “Illustrative cases · no
   query is sent” distinguishes them from actual executions.
 - **Measurements carry context.** Project metrics require a non-empty method
-  in `content/schema.ts`. The inspector footer shows bounded evaluation ratios and
-  links to the corresponding record; sample workflow values are labelled
-  illustrations, never presented as measured outcomes.
+  in `content/schema.ts`. The inspector footer shows one measured result —
+  DBWhisper's adversarial policy-corpus run, labelled in the frame as a
+  deterministic policy test, not model accuracy — with its date and a link to its
+  registry row; sample workflow values are labelled illustrations, never presented
+  as measured outcomes.
 
 The decorative evidence graph, repeated reliability/registry sections, and
 animated tech wall are retired. Case studies, evaluations, and the existing
@@ -264,13 +266,21 @@ record of that exception.
 - No metric without a linked method. `MetricSchema.method` is `.min(1)`.
 - No invented measurements, professional outcomes, testimonials, clients, or
   live-availability claims. Illustrative examples and fixtures must be visibly
-  identified and must not stand in for evaluation evidence.
+  identified and must not stand in for evaluation evidence. Projects carry the
+  status "Deployed demo" and link a demo only while it is up; nothing calls a
+  project "live" (spec/CONTENT_MODEL.md §1.1).
 - Sample data is labelled **at the point of display**, inside the frame — not in
   a footnote.
-- A measurement shown in two places must have **one source**. Homepage ratios
-  and walkthrough scores come from `DBWHISPER_GOLDEN` in `content/evals.ts`.
-  Include denominator/scope and a link to the method; a bounded test result is
-  not a guarantee for all future inputs.
+- A measurement shown in two places must have **one source**. Every figure is
+  written once in `content/evals.ts`; the homepage evidence line, walkthrough
+  scores, project cards and résumé read it through `DBWHISPER_EVIDENCE`,
+  `CROWNWAGER_EVIDENCE`, or `requireEval()`, and `test/evidence.test.mts` fails on a
+  retyped or retired figure. Include denominator/scope, date, and a link to the
+  method; a bounded test result is not a guarantee for all future inputs, and a
+  deterministic policy test is never presented as model accuracy.
+- A published result that turns out not to hold is **retired, not deleted**: its
+  registry row stays, muted, with the reason and the audit, and its figures come
+  down everywhere else (spec/CONTENT_MODEL.md §4).
 - `content/projects.ts` and `content/resume.ts` are the canonical structured
   sources for pages, retrieval, and PDF generation. Their former JSON duplicates
   are removed; MDX remains the long-form source.
@@ -380,9 +390,12 @@ excellent technical documentation?* If not, simplify.
 - Palette literals outside `tokens.css` exist only where CSS variables cannot be
   read or are not yet applied, and a palette change updates them in the same
   change: `lib/og.tsx` (six Satori literals — nothing tests OG colour), the
-  `theme-color` values in `app/layout.tsx` and
-  `components/features/theme-toggle.tsx` (asserted by `scripts/smoke.mjs`), and
-  the full-dark band grounds and print palette in `styles/globals.css`.
+  browser-chrome colours in `constants/theme.ts` (the `theme-color` tag, the theme
+  toggle, and the web manifest read them; `scripts/smoke.mjs` and
+  `test/icons.test.mts` check them), the mark in `app/icon.svg` (ground
+  `--color-bg`, stroke `--color-accent`, checked by `test/icons.test.mts`; then run
+  `npm run build:icons` to re-render `favicon.ico` and `apple-icon.png`), and the
+  full-dark band grounds and print palette in `styles/globals.css`.
 - Open Graph images are light-only.
 
 ### 11.2 Accent budget (hard rule)
@@ -406,7 +419,8 @@ in §4.
   headline, one short lede, one primary and one secondary action, and a location
   and experience line, beside the inspector figure. No badges, no social-icon
   row, and no motion beyond the single arrival settle (§6).
-- **Buttons** (`components/ui/button.tsx`): variants primary, secondary, subtle
+- **Buttons** (`buttonVariants` in `components/ui/button.tsx`, spread onto the
+  link or native `<button>` the action is): variants primary, secondary, subtle
   and ghost. **One primary button per viewport.** Focus is the global 2px accent
   outline at a 2px offset.
 - **Links:** in-prose links are ink, underlined at rest with a `border-strong`
@@ -415,13 +429,10 @@ in §4.
   link does not spend the accent budget.
 - **Static cards and project rows stay flat:** no lift, glow, or scale on hover;
   hover changes border or colour only. The one zoom is the clipped image inside a
-  project link (§6). `components/ui/card.tsx` still offers an `interactive`
-  hover lift; it is used only on `/dev/components`. Elevation is for things that
-  float — the assistant panel, the mobile menu — and the primary button.
+  project link (§6). Elevation is for things that float — the assistant panel,
+  the mobile menu — and the primary button.
 - **Metric:** a mono, tabular value; a delta pairs an arrow glyph with words;
   never in a coloured box; every metric links to its method.
-- **Tag:** an xs mono metadata chip (`--radius-xs`) — metadata only, never a
-  skills wall.
 - **Callout:** `bg-subtle` with a 3px left stripe (ink, warning, or accent for a
   note). No icon required.
 - **CodeBlock:** highlighted by Shiki on the server with the GitHub high-contrast
@@ -443,6 +454,11 @@ in §4.
 - Icons come from `lucide-react` and appear only where they carry meaning
   (external link, copy, menu, close, direction, status). Decorative glyphs are
   `aria-hidden`. Never decorative icon grids.
+- **An arrow states where a link goes.** ↗ (`ArrowUpRight`) only on a link that
+  opens a new tab (`target="_blank"`: demos, source, profiles, a booking page) or a
+  mail client; every new-tab link carries it. A page of this site — another
+  section's anchor included — gets → (`ArrowRight`), or `TextLink`'s chevron, and
+  its hover nudge moves forward, not diagonally.
 
 ### 11.6 Anti-patterns — banned (this section is law)
 

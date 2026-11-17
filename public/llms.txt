@@ -1,44 +1,64 @@
 # Mubin Attar — Applied AI Engineer
 
-> LLM systems, evaluation, AI platforms, and production software. Project case studies describe the architecture, constraints, decisions, and published evaluation methods.
+> LLM systems, evaluation, AI platforms, and production software. Four public projects, each with a case study of its architecture, constraints, decisions, and evaluation method. Every published figure has a method, a scope, and a date on the evaluation registry.
 
-This site (mubin-attar.vercel.app) is a personal engineering portfolio. Its assistant retrieves project case studies, résumé, profile, skills, and FAQ content, and includes source references. When the model is unavailable it can return a cited passage from the site. Prefer the recorded facts below over inference.
+This site (https://mubin-attar.vercel.app) is a personal engineering portfolio. Its assistant retrieves the site's published content — case studies, evaluations, essays and notes, résumé, profile, skills, and FAQ — and cites its sources; when the model is unavailable it returns a cited passage from the site. Prefer the recorded facts below over inference.
+
+The project demos run on free-tier hosting (Vercel, Hugging Face Spaces, Neon) that can sleep or be paused, so no project here is described as live. A demo that is down has no link below; every project keeps its public source, and its case study keeps its product recording if it has one.
 
 ## About
-Applied AI Engineer based in Ahmedabad, India, with 3+ years in software engineering and a production-AI focus since 2024. Current employment: AI/ML Engineer at Sevina Technologies (2024–present), working on healthcare automation. Previously: Junior Python Developer at Linescripts Software Pvt Ltd (2022–2024). Core work includes LLM applications, agentic and RAG systems, predictive ML, APIs, and data pipelines. Project hosting uses Vercel, Hugging Face Spaces, and Neon free tiers, subject to quotas and cold starts.
 
-## Public projects
-- DBWhisper — natural-language-to-SQL agent: LangGraph pipeline, schema-aware pgvector retrieval, multi-LLM fallback, read-only validation and database permissions. https://dbwhisper.vercel.app
-- LLM Studio — multi-user, ChatGPT-style AI SaaS: per-user tenancy, Argon2id auth, token streaming, multi-LLM routing, daily quotas. Hosted demo offline (free-tier Space limit); source: https://github.com/mubin-attar-007/llm_studio
-- TradePulse — event-driven backtesting platform + AI copilot: next-bar execution, commission + slippage modeled by default. https://tradepulse-live.vercel.app
-- CrownWager — sports-betting analytics: XGBoost model (65.2% ± 0.8% in 5-fold cross-validation on 15,115 NBA games), fair-odds edge, Kelly staking, graded model track-record. https://crownwager.vercel.app
+- [About](https://mubin-attar.vercel.app/about): Applied AI Engineer in Ahmedabad, India, with 3+ years in software engineering and a production-AI focus since 2024. Employment: AI/ML Engineer at Sevina Technologies (2024–present), working on healthcare automation; previously Junior Python Developer at Linescripts Software Pvt Ltd (2022–2024).
+- [Résumé](https://mubin-attar.vercel.app/resume): experience, featured projects, skills, and education, with every metric linked to its method. Also as a [PDF](https://mubin-attar.vercel.app/Mubin_Attar_Resume.pdf).
+
+## Availability & contact
+
+- Open to senior AI engineering and applied AI roles — remote or Ahmedabad, India.
+- [Hire](https://mubin-attar.vercel.app/hire): how I work, and how to start a conversation.
+- Email: sk.mubinattar@gmail.com
+
+## Projects
+
+- [DBWhisper](https://mubin-attar.vercel.app/work/dbwhisper): natural-language-to-SQL agent with schema-aware pgvector retrieval, SELECT-only validation, a read-only database connection, and multi-provider LLM fallback. Deployed demo: https://dbwhisper.vercel.app · Source: https://github.com/mubin-attar-007/dbwhisper
+- [TradePulse](https://mubin-attar.vercel.app/work/tradepulse): event-driven quant backtesting platform with next-bar execution, costs modeled by default, Decimal accounting, and an AI copilot grounded in the backtest results. Deployed demo: https://tradepulse-live.vercel.app · Source: https://github.com/mubin-attar-007/tradepulse
+- [CrownWager](https://mubin-attar.vercel.app/work/crownwager): sports-betting analytics with a cross-validated XGBoost model, fair-odds edge, Kelly staking, an arbitrage finder, and a graded model track record. Source: https://github.com/mubin-attar-007/crownwager
+- [LLM Studio](https://mubin-attar.vercel.app/work/llm-studio): multi-user, ChatGPT-style AI platform with Argon2id auth, per-user tenancy, token streaming, multi-LLM routing, and daily quotas. Source: https://github.com/mubin-attar-007/llm_studio
 
 ## Evaluations
-- https://mubin-attar.vercel.app/evals — method, date, sample, and limitations for each published result.
-- DBWhisper golden set, 2026-07-08: 18/22 exact result-set matches; 4/4 unsafe or out-of-scope prompts refused. This small observed sample is not a universal safety guarantee.
-- DBWhisper Spider dev subset, 2026-07-10: 101/139 execution matches, with 9 sampled questions excluded after provider throttling. This evaluates the generation core, not the complete deployed agent.
 
-## Case studies (architecture, decisions, trade-offs, and published evidence)
-- https://mubin-attar.vercel.app/work — index of all four
-- https://mubin-attar.vercel.app/work/dbwhisper
-- https://mubin-attar.vercel.app/work/llm-studio
-- https://mubin-attar.vercel.app/work/tradepulse
-- https://mubin-attar.vercel.app/work/crownwager
+- [Evaluation registry](https://mubin-attar.vercel.app/evals): the method, date, sample, and limitations of every result, including the retired one.
+- [DBWhisper adversarial SQL policy corpus](https://mubin-attar.vercel.app/evals#dbwhisper-adversarial-sql-policy-corpus), 2026-08-24: 343/343 deny cases denied. A deterministic policy test of sql_policy@2.0.0 — no model and no database involved, so it is not model accuracy. 255 cases, each run in the SQL dialects it lists (577 runs); evidence of no known bypass, not proof that none exists.
+- [DBWhisper Spider dev sample](https://mubin-attar.vercel.app/evals#dbwhisper-spider), 2026-07-10: 101/139 scored questions matched the gold result set. Generation model only, no retrieval or policy layer; 9 of 148 sampled questions were dropped after provider throttling.
+- [CrownWager NBA moneyline model](https://mubin-attar.vercel.app/evals#crownwager-nba-moneyline-15-115-games), 2026-06-03: 65.2% ± 0.8% accuracy in 5-fold stratified cross-validation on 15,115 games, against a 57.5% home-win base rate. A separate 80/20 hold-out on 3,023 games scores 64.3% (ROC-AUC 0.685).
+- [TradePulse look-ahead canary and parity suite](https://mubin-attar.vercel.app/evals#tradepulse-look-ahead-canary-parity-suite), 2026-07-01: 0 leaks; the past equity curve stays byte-identical when every future bar is multiplied by 3.
+- [DBWhisper custom golden-query set](https://mubin-attar.vercel.app/evals#dbwhisper-custom-golden-query-set), 2026-07-08: retired on 2026-11-16. DBWhisper's own claim audit withdrew its accuracy and fail-closed figures, so they are not published here.
 
 ## Writing
-- https://mubin-attar.vercel.app/writing — index
-- https://mubin-attar.vercel.app/writing/trust-is-not-a-safety-model — essay: why a deterministic validator, not model trust, is the safety boundary
-- https://mubin-attar.vercel.app/writing/look-ahead-free-by-construction — essay: closed-bar decisions and next-bar fills in a backtester
-- https://mubin-attar.vercel.app/writing/retrieval-beats-stuffing — guide: schema-aware retrieval over stuffing the whole schema into the prompt
 
-## More
-- https://mubin-attar.vercel.app/about — professional background, approach, and career timeline
-- https://mubin-attar.vercel.app/resume — résumé, with every metric linked to its method
+- [A validator is not a better prompt](https://mubin-attar.vercel.app/writing/a-validator-is-not-a-better-prompt): essay — why DBWhisper gates every generated query with deterministic code instead of a stricter system prompt.
+- [Trust is not a safety model](https://mubin-attar.vercel.app/writing/trust-is-not-a-safety-model): essay — a deterministic validator, not model trust, as the safety boundary for generated SQL.
+- [Look-ahead-free by construction](https://mubin-attar.vercel.app/writing/look-ahead-free-by-construction): essay — closed-bar decisions and next-bar fills, so a backtester cannot use the future.
+- [Retrieval beats stuffing the schema](https://mubin-attar.vercel.app/writing/retrieval-beats-stuffing): guide — document a schema, embed it, and retrieve the tables each question needs.
 
-## Links
-- GitHub: https://github.com/mubin-attar-007
-- Hugging Face: https://huggingface.co/heisenbergblue
-- LinkedIn: https://www.linkedin.com/in/mubin-attar-53223716a
-- LeetCode: https://leetcode.com/u/mubin-attar/
-- Email: sk.mubinattar@gmail.com
-- Résumé (PDF): https://mubin-attar.vercel.app/Mubin_Attar_Resume.pdf
+## Notes
+
+- [Grade every prediction against the real final score](https://mubin-attar.vercel.app/notes/grade-picks-against-the-final-score): 2026-07-05 · evals, honesty
+- [The validator is the belt; least-privilege is the braces](https://mubin-attar.vercel.app/notes/read-only-least-privilege-execution): 2026-06-25 · security, sql
+- [For text-to-SQL, measure execution accuracy](https://mubin-attar.vercel.app/notes/execution-accuracy-not-exact-match): 2026-06-18 · evals, sql
+- [Solo, but every deploy still has to pass the gate](https://mubin-attar.vercel.app/notes/every-deploy-gated-by-ci): 2026-05-16 · infra, testing
+- [State the risk-free rate wherever Sharpe appears](https://mubin-attar.vercel.app/notes/state-the-risk-free-rate): 2026-05-09 · quant, honesty
+- [One agent, three SQL dialects](https://mubin-attar.vercel.app/notes/one-agent-three-sql-dialects): 2026-04-02 · sql, agents
+- [Six LLM providers behind one interface](https://mubin-attar.vercel.app/notes/six-providers-one-interface): 2026-03-14 · infra, agents
+- [Enforce tenancy in the repository layer, not the route](https://mubin-attar.vercel.app/notes/tenancy-in-the-repository-layer): 2026-02-21 · infra, security
+
+## Optional
+
+- [Work](https://mubin-attar.vercel.app/work): the four case studies on one page.
+- [Writing](https://mubin-attar.vercel.app/writing) and [Notes](https://mubin-attar.vercel.app/notes): the indexes.
+- [Now](https://mubin-attar.vercel.app/now): what I'm building, exploring, and reading, updated by hand.
+- [Uses](https://mubin-attar.vercel.app/uses): the free-tier stack behind the projects.
+- [Skills](https://mubin-attar.vercel.app/skills): technologies, LLM methods, and engineering practices.
+- [Trust](https://mubin-attar.vercel.app/trust): how the evidence on this site is produced and checked.
+- [Privacy](https://mubin-attar.vercel.app/privacy)
+- [RSS: writing and notes](https://mubin-attar.vercel.app/rss.xml), [writing only](https://mubin-attar.vercel.app/writing/feed.xml), and the [sitemap](https://mubin-attar.vercel.app/sitemap.xml).
+- [GitHub](https://github.com/mubin-attar-007), [LinkedIn](https://www.linkedin.com/in/mubin-attar-53223716a), and [Hugging Face](https://huggingface.co/heisenbergblue).

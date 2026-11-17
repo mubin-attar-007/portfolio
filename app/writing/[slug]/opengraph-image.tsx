@@ -2,7 +2,8 @@ import { notFound } from "next/navigation";
 import { formatOgEyebrow, renderOg, OG_SIZE, OG_CONTENT_TYPE } from "@/lib/og";
 import { routableWritingSlugs, loadWriting } from "@/lib/writing";
 
-export const alt = "Writing — Mubin Attar";
+// One alt for every writing card (see app/work/[slug]/opengraph-image.tsx).
+export const alt = "Writing card from Mubin Attar's portfolio: the article's title and category";
 export const size = OG_SIZE;
 export const contentType = OG_CONTENT_TYPE;
 

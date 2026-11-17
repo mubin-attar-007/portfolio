@@ -1,7 +1,7 @@
 # ADR-009 — Lighthouse budget gate
 
 **Status:** Accepted
-**Date:** 2026-07-24 (facts updated 2026-11-13)
+**Date:** 2026-07-24 (facts updated 2026-11-16)
 
 ## Context
 
@@ -29,13 +29,20 @@ The gate:
   from 2,000 ms to the Core Web Vitals "good" threshold (ADR-012, decision 2);
 - prints first-load JavaScript against targets of 120 KB (home) and 90 KB
   (flagship, writing) as an advisory figure, not a failure;
-- before auditing, verifies canonical URLs, Open Graph/Twitter image metadata and
-  live images, the exact titles of `/`, `/trust`, and `/privacy`, that `/talks`,
-  `/timeline`, and `/changelog` permanently redirect and are absent from the
-  sitemap, and that sitemap freshness comes only from dated content.
+- before auditing, reads the sitemap and verifies every URL it lists: status 200,
+  exactly one canonical equal to the URL, og:url, a complete Open Graph/Twitter
+  card with a live same-origin image, RSS discovery, one h1, a title of at most 60
+  characters and a 50–160 character description (`constants/seo.ts`), and
+  parseable JSON-LD. It also checks that the 404 and `/dev/components` are noindex
+  and claim no canonical URL, the exact titles of `/`, `/trust`, and `/privacy`,
+  that every permanent redirect in `next.config.ts` answers 308 to its destination
+  and is absent from the sitemap, and that sitemap freshness comes only from dated
+  content. It reports every problem before failing. (Widened from three routes on
+  2026-11-16, when a root-layout canonical had given the 404 the homepage's URL.)
 
-`npm run test:metadata` runs only those pre-audit checks. The script starts its own
-standalone server from the build unless `LIGHTHOUSE_BASE_URL` points at one.
+`npm run test:metadata` runs only those pre-audit checks, and CI runs it on every
+pull request with the browser gates. The script starts its own standalone server
+from the build unless `LIGHTHOUSE_BASE_URL` points at one.
 
 INP remains a field metric. A navigation-only lab run cannot produce a
 representative INP value without a defined interaction journey, so the

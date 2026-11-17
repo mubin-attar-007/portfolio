@@ -18,9 +18,9 @@ checks but no schema validates.
 {
   slug: string,
   title: string,                    // system name, not a marketing name
-  summary: string,                  // ≤ 200 chars; the case-study header paragraph
-  status: "production" | "active-development" | "experiment" | "archived",
-  role: string,                     // "Designed, built, and maintain (solo)"
+  summary: string,                  // ≤ 160 chars; the case-study lede and the page's search description
+  status: "deployed-demo" | "active-development" | "experiment" | "archived",
+  role: string,                     // "Designed, built, and maintained (solo)"
   timeline: string,                 // "2025 – present"
   featured: boolean,                // exactly ONE project is featured (asserted by test/content.test.mts)
   order: number,
@@ -34,6 +34,11 @@ checks but no schema validates.
   }>,
   links: { live?: url, repo?: url },
   diagram?: string,                 // id of components/diagrams/data/<id>.ts
+  recording?: {                     // the product recording the case study plays (§1.3)
+    alt: string,                    // what the recording SHOWS
+    caption: string,                // the captured surface, and any on-screen statement the page does not stand behind
+    width: number, height: number
+  },
   card: {                           // the preview shared by the homepage and /work
     definition: string,             // ≤ 90 chars; what the product is
     category: string,               // the technical family, not a tag cloud
@@ -48,6 +53,15 @@ checks but no schema validates.
 
 There are four projects (asserted by `test/content.test.mts`): DBWhisper (featured),
 TradePulse, CrownWager, and LLM Studio.
+
+`status` says what a project is, not whether its host is awake. `deployed-demo`
+(label "Deployed demo", `PROJECT_STATUS_LABEL` in `content/article.ts`) is a public
+deployment on free-tier hosting that can sleep or be paused, so it claims no uptime
+and no operating users; nothing on the site calls a project "live". A demo that is
+down drops `links.live` — which removes its card link, the case-study "Open demo"
+button and caption link, its résumé and PDF link, and its assistant passage — and
+keeps its source, and its recording if it has one. Restore `links.live` when the host
+runs again.
 
 ### 1.2 Case-study body — `components/case-studies/<slug>.tsx`
 
@@ -80,15 +94,23 @@ Architecture and Decisions.
 - `components/diagrams/data/<slug>.ts` — typed `DiagramSpec` nodes and edges.
 - `content/projects/<slug>.mdx` — a long-form summary (sections: Executive Summary,
   Problem, Architecture, Key Decisions & Trade-offs, Metrics / Results, Lessons). It is
-  **not rendered on the site**; `lib/ai/retrieval.ts` chunks it by `##` heading into the
+  **not rendered on the site**; `lib/ai/corpus.ts` chunks it by `##` heading into the
   assistant's corpus, so keep it consistent with the case study. Its frontmatter is not
   schema-validated.
 - `public/demos/<slug>.webm`, `.vtt`, and `.webp` — the product recording, its
-  captions, and its poster (the poster is also the card capture), wired in
-  `app/work/[slug]/page.tsx`.
+  captions, and its poster (the poster is also the card capture). A project lists its
+  recording in `recording` (§1.1), and `app/work/[slug]/page.tsx` plays it above the
+  metrics. `test/content.test.mts` fails when a listed recording is missing one of its
+  files, or when a video or captions file is served for a project that lists none, so
+  withdrawing a recording takes it off the site. DBWhisper has no recording since
+  2026-11-16: its product-site capture showed the withdrawn golden-set figures and the
+  scale and uptime claims its claim audit deleted (§4.4 at `bca0635`), which a caption
+  cannot take off the screen. Its `.webp` stays as the card capture. A new recording
+  is made from the current v2 site and passes the release check in §4.
 - `content/dbwhisper-walkthrough.ts` and `content/dbwhisper-boundary.ts` — curated,
   labelled sample data for the walkthrough and the homepage inspector; never measured
-  results.
+  results. The walkthrough's Evaluate stage is the exception: its counts are read from
+  the eval registry (`DBWHISPER_EVIDENCE`), never typed.
 
 ### 1.4 Compliance rule (healthcare content)
 
@@ -102,10 +124,14 @@ in doubt: describe the mechanism, omit the number.
 ## 2. Writing — `content/writing/*.mdx` (`WritingSchema`)
 
 ```ts
-{ title, summary (≤ 220), date, updated?,
+{ title, summary (≤ 160), date, updated?,
   category: "essay" | "guide" | "note",
   topics: string[], draft: boolean }          // slug = file name; must match /^[a-z0-9-]+$/
 ```
+
+The summary is the article's lede and its search, social-card, structured-data and
+feed description, so it is held to the snippet limit (`constants/seo.ts`); the schema
+fails the build past 160 characters.
 
 - **essay** — trade-offs and judgment.
 - **guide** — implementation, reproducible, code-heavy.
@@ -118,10 +144,14 @@ a case study's Key decisions.
 
 ## 3. Notes and /now
 
-- **Notes — `content/notes/*.mdx` (`NoteSchema`):** `{ title, date, tags (≥ 1),
-  source?: url, draft }`. Short, dated, tag-indexed; `/notes` filters by tag. Loaded by
-  `lib/notes.ts`. As for writing, the slug is the file name and must match
-  `/^[a-z0-9-]+$/` (`lib/content-slug.ts`), or the build fails.
+- **Notes — `content/notes/*.mdx` (`NoteSchema`):** `{ title, summary? (≤ 160), date,
+  tags (≥ 1), source?: url, draft }`. Short, dated, tag-indexed; `/notes` filters by tag.
+  Loaded by `lib/notes.ts`. As for writing, the slug is the file name and must match
+  `/^[a-z0-9-]+$/` (`lib/content-slug.ts`), or the build fails. A note is described —
+  in search, on its social card, in its structured data and in `/rss.xml` — by its
+  `summary` if it has one, otherwise by its opening sentences cut at a sentence
+  boundary (`noteDescription`); never by its tags. A title past about 46 characters
+  is shown without the " · Mubin Attar" suffix rather than cut.
 - **Now — `content/now.mdx` (`NowSchema`):** `{ updated (required), lede, exploring:
   [{ title, body }] }`. `updated` is required so "Last updated" can never go silently
   stale; the homepage shows the first three `exploring` items. Loaded by `lib/now.ts`.
@@ -138,36 +168,82 @@ feeds, the sitemap, and generated routes in production, and keeps it previewable
   built, learned, mistake, changed }`, rendered on `/about`. Growth over titles; the
   `mistake` field is required — it is the credibility engine of the section.
 - **Evaluations — `content/evals.ts` (`EvalSchema`):** `{ system, benchmark, metric,
-  result, status: "in-progress" | "complete" | "planned", date?, note?, link? }`. An
-  unfinished run renders muted, never as a result. `evalAnchor()` builds `/evals`
-  anchors; `requireEval()` throws if a referenced row is renamed or removed;
-  `DBWHISPER_GOLDEN` derives the homepage's exact and refusal ratios from the
-  registry note. Its `failClosed: "100%"` is still typed by hand (a known defect:
-  derive it, or remove it).
+  result, score?: { passed, scored, sampled? }, status: "in-progress" | "complete" |
+  "planned" | "retired", date?, note?, link?, retired?: { date, reason, link } }`.
+  - An unfinished run renders muted, never as a result.
+  - **A figure is written down once.** Each run's recorded values are constants in
+    `content/evals.ts`, copied from the project's own records at the commit the row
+    links; every string a page shows (`101/139`, `72.7%`, `65.2% ± 0.8%`) is
+    formatted from them there. A scored row's `result` must contain its
+    `passed/scored` counts (schema-checked).
+  - Surfaces read figures through `DBWHISPER_EVIDENCE` (the policy-corpus and
+    Spider results with their scope labels — the homepage evidence line, the
+    walkthrough, the résumé), `CROWNWAGER_EVIDENCE` (cross-validation and hold-out
+    figures — the project card, case study, diagram, résumé), or
+    `requireCompleteEval()`; `requireEval()` and these throw at module load if a row
+    they cite is renamed, removed, or no longer complete. `evalAnchor()` builds
+    `/evals` anchors.
+  - **A result that does not hold is retired, not deleted.** The row keeps its
+    `status: "retired"`, the reason, and a fixed-commit link to the audit that
+    withdrew it; it renders muted on `/evals` and carries no `score` and no digit in
+    its `result` (schema-checked). Its figures come down from every other surface.
+    DBWhisper's golden-query run (18/22 exact, 4/4 refused) was retired on
+    2026-11-16 after DBWhisper's own claim audit (§4.4 at commit `bca0635`) withdrew
+    it.
+  - **A deterministic policy test is labelled as one** wherever it appears — "not
+    model accuracy" — because it measures a decision function on written-down
+    cases, with no model and no database.
+  - Before (re)publishing a project's figure, re-read that project's README and
+    claim audit at the commit the row will cite, and link that commit — not a
+    branch. A recording gets the same release check: before it is published, every
+    frame and every caption cue is checked against the project's claim audit, and the
+    captions are timed to the cut. A recording that shows a withdrawn figure or claim
+    is removed, not captioned.
+  - A row's `date` is the date of the run that produced its figures (the commit that
+    recorded them when the run has no other record), never the date a page was edited.
+  - `test/evidence.test.mts` fails when any surface quotes a retired figure or a
+    deleted scale or availability claim, when code retypes a registry figure, or when static text
+    (MDX, captions, `public/llms.txt`) quotes one that disagrees with the registry.
 - **Résumé — `content/resume.ts`:** the single source for `/resume`, `/skills`, the
-  assistant, and `public/Mubin_Attar_Resume.pdf` (regenerate with
-  `node --import ./test/alias-loader.mjs scripts/build-resume-pdf.mts`; the loader
-  resolves the `@/` alias that `config/site.ts` imports). Site, PDF, and LinkedIn must
-  carry identical facts. The download link emits the `resume_downloaded` analytics
-  event.
+  assistant, and `public/Mubin_Attar_Resume.pdf`. Each featured project names its
+  `slug`; the project record supplies the name, case-study path, and demo and source
+  links, so a demo that goes down loses its résumé link in the same change. Each
+  metric line is read from the registry with its scope and date and carries its own
+  method link. Regenerate the PDF with `npm run build:resume`
+  (`scripts/build-resume-pdf.mts`, printing the document that
+  `scripts/resume-document.mts` renders); it records the document's and the PDF's
+  hashes in `scripts/resume-pdf.lock.json`, and `test/resume-pdf.test.mts` fails
+  until a résumé, site-config, or registry change is followed by a regeneration. The
+  PDF links the site, every case study, every method, every source, and only the
+  demos that are up. Site, PDF, and LinkedIn must carry identical facts. The
+  download link emits the `resume_downloaded` analytics event.
 
 ---
 
 ## 5. Site and page copy
 
-- `config/site.ts` — name, role, email, location, socials, integrations, the
-  availability line (`STATUS`), and footer copy.
+- `config/site.ts` — name, role (`role` for labels and titles, `roleInSentence`
+  inside a sentence — never `role.toLowerCase()`, which lowercases "AI"), the site
+  description (`SITE.description`, ≤ 160: the homepage's search description and the
+  default), email, location, socials, integrations, the availability line (`STATUS`),
+  and footer copy.
 - `config/nav.ts` — primary navigation, the header's one action, and the footer map.
 - `content/home-visual.ts` — homepage copy (`flagshipHome`).
-- `content/site.ts` — copy for `/about`, `/hire`, `/uses`, `/trust`, `/now`, and the
-  index pages (`pages`), plus the proof row and principles.
+- `content/site.ts` — copy for `/about`, `/hire`, `/uses`, `/trust`, `/now`, the
+  index pages and the 404 (`pages`), plus the proof row and principles.
 - `content/article.ts` — article header and footer labels shared by case studies,
   essays, and notes.
-- `content/profile.json` — profile fields for the homepage engineer strip and the
-  assistant; `content/faq.json` (14 grounded Q&A) and `content/skills.json` feed the
-  assistant's retrieval only.
+- `content/profile.json` — only what nothing else holds: `focus`, `tagline` and
+  `ethos` (the assistant's profile passage) and `headshot` (the homepage engineer
+  strip). Name, role, email, location and socials live in `config/site.ts`, and the
+  summary in `content/resume.ts`. `content/faq.json` (15 grounded Q&A) feeds the
+  assistant's retrieval only; the assistant's skills passages come from
+  `content/resume.ts` (`content/skills.json` was removed).
 
 There are no contact forms: contact is email, `/hire`, and an optional booking link.
+The newsletter form on `/writing`, `/notes`, and their articles is off unless
+`NEXT_PUBLIC_BUTTONDOWN_USERNAME` is set; it has no committed default, so it stays
+hidden until the Buttondown list is confirmed to deliver.
 
 ---
 

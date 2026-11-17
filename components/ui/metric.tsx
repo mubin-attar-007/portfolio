@@ -1,4 +1,3 @@
-import type { ReactNode } from "react";
 import Link from "next/link";
 import { deltaArrow, deltaTone, type DeltaTone, type MetricDirection } from "@/lib/format";
 
@@ -45,7 +44,7 @@ export function Metric({
         <p className="max-w-[52ch] text-xs text-ink-tertiary">
           Method:{" "}
           {methodHref ? (
-            <Link href={methodHref} className="link-underline text-ink-secondary">
+            <Link href={methodHref} prefetch={false} className="link-underline text-ink-secondary">
               {method}
             </Link>
           ) : (
@@ -57,18 +56,13 @@ export function Metric({
   );
 }
 
-/** Horizontal group of Metrics — a loose row, for use inside prose. */
-export function MetricsRow({ children }: { children: ReactNode }) {
-  return <div className="flex flex-wrap gap-x-12 gap-y-6">{children}</div>;
-}
-
 /**
  * MetricCards — the pull-out metric block at the top of a case study.
  *
  * A case study opens by asking the reader to spend ten minutes. The numbers that
- * justify that have to read as objects, not as a run of text: the previous
- * `MetricsRow` set them as bare figures in the flow, so the three claims a
- * write-up rests on looked like a caption.
+ * justify that have to read as objects, not as a run of text: set as bare
+ * figures in the flow, the three claims a write-up rests on looked like a
+ * caption.
  *
  * Each card is the site's one panel treatment. The value is mono and tabular,
  * the label sits under it, and the method line is a LINK to the chapter that
@@ -100,7 +94,7 @@ export function MetricCards({
             {m.label}
             <span className="mt-4 block border-t border-border pt-3 text-xs leading-relaxed text-ink-tertiary">
               {methodHref ? (
-                <Link href={methodHref} className="link-underline text-ink-secondary">
+                <Link href={methodHref} prefetch={false} className="link-underline text-ink-secondary">
                   How this was measured
                 </Link>
               ) : (

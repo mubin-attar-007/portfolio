@@ -6,24 +6,18 @@ import { buttonVariants } from "@/components/ui/button";
 import { TextLink } from "@/components/ui/text-link";
 import { PAGE_BODY_BAND, PAGE_HEADER_BAND } from "@/constants/page";
 import { resume } from "@/content/resume";
-import { SITE } from "@/config/site";
+import { pageMetadata } from "@/lib/seo";
 
-const SKILLS_PATH = "/skills";
-
-export const metadata: Metadata = {
+export const metadata: Metadata = pageMetadata({
+  path: "/skills",
   title: "Skills",
   description:
     "Technology stack, LLM practices, and engineering disciplines I use to ship production AI/ML systems.",
-  alternates: { canonical: `${SITE.url}${SKILLS_PATH}` },
-  openGraph: {
-    siteName: SITE.name,
-    title: "Skills — Mubin Attar",
+  social: {
     description:
       "Technology stack, LLM practices, and engineering disciplines used across four shipped AI products.",
-    url: `${SITE.url}${SKILLS_PATH}`,
-    type: "website",
   },
-};
+});
 
 export default function SkillsPage() {
   return (
@@ -34,7 +28,7 @@ export default function SkillsPage() {
           title="Skills"
           lede="A practical stack map for building production AI/ML systems: language tooling, model architecture, data layers, and safety disciplines."
         >
-          <Link href="/resume" className={buttonVariants("secondary")}>
+          <Link href="/resume" prefetch={false} className={buttonVariants("secondary")}>
             Résumé context
           </Link>
           <TextLink href="/uses" tone="quiet">

@@ -8,23 +8,13 @@ import { TextLink } from "@/components/ui/text-link";
 import { LABEL, PAGE_BODY_BAND, PAGE_HEADER_BAND, PANEL, stagger } from "@/constants/page";
 import { trust } from "@/content/site";
 import { SITE } from "@/config/site";
+import { pageMetadata } from "@/lib/seo";
 
-const TRUST_PATH = "/trust";
-
-export const metadata: Metadata = {
+export const metadata: Metadata = pageMetadata({
+  path: "/trust",
   title: "Trust",
-  description:
-    "Evidence-first trust page for Mubin Attar: safety controls, engineering discipline, and quality standards.",
-  alternates: { canonical: `${SITE.url}${TRUST_PATH}` },
-  openGraph: {
-    siteName: SITE.name,
-    title: "Trust — Mubin Attar",
-    description:
-      "Evidence-first trust page for Mubin Attar: safety controls, engineering discipline, and quality standards.",
-    url: `${SITE.url}${TRUST_PATH}`,
-    type: "website",
-  },
-};
+  description: `Evidence-first trust page for ${SITE.name}: safety controls, engineering discipline, and quality standards.`,
+});
 
 export default function TrustPage() {
   return (

@@ -1,4 +1,5 @@
 import Link from "next/link";
+import { ArrowUpRight } from "lucide-react";
 import { Container } from "./container";
 import { BoundaryMark } from "@/components/ui/boundary-mark";
 import { LABEL } from "@/constants/page";
@@ -88,15 +89,17 @@ export function Footer({ year }: { year: number }) {
             <nav aria-label="Elsewhere">
               <h2 className={LABEL}>Elsewhere</h2>
               <ul className="mt-4 flex flex-col gap-2.5">
+                {/* ↗ is the site's new-tab cue: these leave the site. */}
                 {PROFILES.map((l) => (
                   <li key={l.label}>
                     <a
                       href={l.href}
                       target="_blank"
                       rel="noopener noreferrer"
-                      className={FOOTER_LINK}
+                      className={`${FOOTER_LINK} inline-flex items-center gap-1`}
                     >
                       {l.label}
+                      <ArrowUpRight size={12} strokeWidth={1.6} aria-hidden />
                     </a>
                   </li>
                 ))}

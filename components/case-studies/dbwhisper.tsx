@@ -5,8 +5,9 @@ import { SystemDiagram } from "@/components/diagrams/system-diagram";
 import { DecisionLog } from "@/components/mdx/decision-log";
 import { FailureLog } from "@/components/mdx/failure-log";
 import { MetricsTable } from "@/components/ui/metric";
+import Link from "next/link";
 import { dbwhisperDiagram } from "@/components/diagrams/data/dbwhisper";
-import { evals } from "@/content/evals";
+import { evalAnchor, evals } from "@/content/evals";
 import { FlagshipWalkthroughSection } from "./request-walkthrough";
 
 export const DBWHISPER_SECTIONS: readonly CaseStudySection[] = [
@@ -31,7 +32,9 @@ export const DBWHISPER_SECTIONS: readonly CaseStudySection[] = [
 export function DBWhisperBody() {
   // Single-source the flagship's own measured results from the eval registry —
   // never re-typed here, so the case study and /evals can't drift.
-  const dbEvals = evals.filter((e) => e.system === "DBWhisper");
+  const ownEvals = evals.filter((e) => e.system === "DBWhisper");
+  const dbEvals = ownEvals.filter((e) => e.status !== "retired");
+  const retiredEvals = ownEvals.filter((e) => e.status === "retired");
   return (
     <div>
       <CS id="context" title="Context">
@@ -47,12 +50,14 @@ export function DBWhisperBody() {
 
       <CS id="constraints" title="Constraints">
         <p>
-          Three constraints shaped the design. <strong>Safety must be structural</strong> — the
-          read-only promise can&apos;t depend on the model behaving. <strong>Schemas are large</strong> —
-          real databases have dozens to hundreds of tables, too many to paste into a prompt, so the
-          agent has to retrieve the right ones. And it runs on a <strong>$0 stack</strong> (Vercel +
-          a Hugging Face Docker Space + Neon Postgres), which rules out waste: small prompts, bounded
-          loops, lean images.
+          Three constraints shaped the design. <strong>Safety must be structural</strong>{" "}
+          — the read-only promise can&apos;t depend on the model behaving.{" "}
+          <strong>Schemas outgrow the prompt</strong>{" "}
+          — pasting every table into every prompt wastes tokens and invites the wrong tables, so
+          the agent retrieves the ones a question needs. Retrieval has not been benchmarked at
+          scale yet: the largest schema enrolled in the repository has 16 tables. And it runs on
+          a <strong>$0 stack</strong> (Vercel + a Hugging Face Docker Space + Neon Postgres), which
+          rules out waste: small prompts, bounded loops, lean images.
         </p>
       </CS>
 
@@ -70,8 +75,8 @@ export function DBWhisperBody() {
           <strong>Enrollment (once per database).</strong> A target database is introspected, each
           table is documented into structured sections (summary, columns, relationships, stats), and
           those chunks are embedded into pgvector. Retrieval later searches the{" "}
-          <em>documentation embeddings</em>, not the raw schema — which is what makes it work on large
-          databases at all.
+          <em>documentation embeddings</em>, not the raw schema, so the prompt carries only the
+          tables a question needs.
         </p>
       </CS>
 
@@ -98,14 +103,14 @@ export function DBWhisperBody() {
               choice: "A deterministic, fail-closed SQL validator — not LLM trust",
               alternatives: ["trust the model's SQL", "an LLM-as-judge safety check"],
               reason:
-                "It uses sqlparse (not fragile regex) to enforce SELECT/WITH-only, single-statement, no DDL/DML/EXEC, no information_schema/sys/pg_catalog — and, given a database, rejects any query touching a table outside the enrolled schema. If no schema index exists, it fails closed rather than open.",
-              tradeoff: "Rejects some exotic-but-valid queries and adds an enrollment step — a false 'safe' is far costlier than a false 'unsafe'.",
+                "Since v2 a SQLGlot AST policy engine parses each query in its target dialect and admits only a single read-only SELECT/WITH: no DDL/DML/EXEC, no SELECT INTO, no information_schema/sys/pg_catalog, no blocked functions — and, given a database, no table outside its enrolled schema. If that schema can't be loaded, it fails closed rather than open. The original keyword heuristics stay on as a second layer, and the stricter result wins.",
+              tradeoff: "Rejects some exotic-but-valid queries and adds an enrollment step — a false 'safe' is far costlier than a false 'unsafe'. It is a structural filter, not a proof: bounded by how faithfully SQLGlot parses each dialect.",
             },
             {
               choice: "Defense in depth, not a single gate",
               alternatives: ["rely on the validator alone"],
               reason:
-                "Below the validator: read-only DB users (a probe warns if a connection looks writable), a query timeout + row cap, and log sanitization that masks passwords, API keys, and SQL literals. The warning probe does not replace correctly configured database permissions.",
+                "Below the validator: read-only DB users, a query timeout + row cap, and log sanitization that masks passwords, API keys, and SQL literals. Enrollment runs a non-destructive privilege probe and refuses (HTTP 400) a connection that appears writable; the probe is a backstop, not a substitute for a SELECT-only role.",
               tradeoff: "More moving parts to maintain and test.",
             },
             {
@@ -129,8 +134,8 @@ export function DBWhisperBody() {
       <CS id="what-failed" title="What failed">
         <p>
           Early on, the model would emit <strong>SELECT TOP n</strong> against Postgres — valid T-SQL,
-          invalid everywhere else — so cross-dialect queries failed. The fix was a deterministic
-          <strong> dialect directive</strong> injected before generation, stating the target
+          invalid everywhere else — so cross-dialect queries failed. The fix was a deterministic{" "}
+          <strong>dialect directive</strong>{" "}injected before generation, stating the target
           dialect&apos;s rule explicitly (LIMIT for Postgres/MySQL, TOP for SQL Server) rather than
           hoping the model inferred it.
         </p>
@@ -149,22 +154,25 @@ export function DBWhisperBody() {
         </p>
         <MetricsTable
           rows={[
-            { label: "query execution", value: "read-only", method: "Fail-closed validator + read-only DB user; a query is rejected if it references a table outside the enrolled schema." },
+            { label: "query execution", value: "read-only", method: "Fail-closed policy engine + least-privilege DB login; a query is rejected if it references a table outside the enrolled schema. The session itself is also read-only on PostgreSQL and MySQL; SQL Server has no session-level read-only mode, so there it rests on the policy engine, the login and the query timeout." },
             { label: "LLM providers", value: "6", method: "One fallback interface; Gemini free tier is the final fallback so it runs with zero paid keys." },
             { label: "SQL dialects", value: "3", method: "Postgres, MySQL, SQL Server via SQLAlchemy 2.0 + ODBC." },
             { label: "per-run guardrails", value: "k=4 · ≤8 calls · 30s", method: "Retrieval returns the top 4 tables; each tool is capped at 8 calls per run; execution runs under a 30s timeout, a 1000-row cap, and a 5000-char SQL limit." },
             { label: "infra cost", value: "$0", method: "Vercel + Hugging Face Docker Space + Neon Postgres, all free-tier." },
           ]}
         />
-        {/* Results (measured) — surfaced here so the flagship shows its OWN best
-            numbers, single-sourced from content/evals.ts (never re-typed). */}
+        {/* Results (measured) — surfaced here so the flagship shows its OWN
+            numbers, single-sourced from content/evals.ts (never re-typed). A
+            retired result is not listed as a measurement; one sentence says it
+            exists and links to the registry row that explains why. */}
         <div className="mt-8 rounded-[var(--radius-lg)] border border-border bg-bg-subtle p-5">
           <p className="font-mono text-xs uppercase tracking-[0.04em] text-ink-tertiary">
             Results (measured)
           </p>
           <p className="mt-2 max-w-[var(--width-prose)] text-sm text-ink-secondary">
-            Two evaluation scopes: the complete pipeline on the golden set, and the generation
-            core on a Spider dev subset. Each result states its method and limitations:
+            Two measured scopes, neither of them the complete agent: the policy engine on its
+            adversarial corpus, and the generation model alone on a Spider dev sample. Each result
+            states its method and limitations:
           </p>
           <dl className="mt-4 flex flex-col gap-4">
             {dbEvals.map((e) => (
@@ -181,6 +189,19 @@ export function DBWhisperBody() {
               </div>
             ))}
           </dl>
+          {retiredEvals.map((e) => (
+            <p key={e.benchmark} className="mt-4 max-w-[var(--width-prose)] text-sm text-ink-secondary">
+              An earlier end-to-end result, on a {e.benchmark.toLowerCase()}, is retired: DBWhisper&apos;s
+              own audit withdrew it.{" "}
+              <Link
+                href={`/evals#${evalAnchor(e)}`}
+                prefetch={false}
+                className="text-ink underline decoration-border-strong underline-offset-4 hover:decoration-accent"
+              >
+                Why it was retired
+              </Link>
+            </p>
+          ))}
           <TextLink href="/evals" className="mt-4">
             See the full eval registry
           </TextLink>
@@ -195,10 +216,12 @@ export function DBWhisperBody() {
           before write, and the validator&apos;s rules are covered by unit tests that gate CI
           (pytest + ruff, alongside a gitleaks secret scan).
         </p>
+        {/* Verbatim: the policy engine's own docstring at bca0635 (DBWhisper v2),
+            the commit the /evals rows cite. */}
         <CodeBlock
-          filename="app/core/sql_validator.py"
+          filename="app/sqlpolicy/engine.py"
           lang="py"
-          code={`def validate_sql(sql: str, db_flag: str | None) -> None:\n    stmt = _single_statement(sql)              # exactly one statement\n    _require_read_only(stmt)                    # starts with SELECT/WITH; no DDL/DML/EXEC\n    _reject_system_tables(stmt)                 # no information_schema / sys. / pg_catalog.\n    if db_flag:\n        schema = _load_schema_index(db_flag)    # fail closed if missing\n        _require_enrolled_tables(stmt, schema)  # only tables we can vouch for`}
+          code={`"""The policy engine: \`\`PolicyEngine.evaluate(sql, ctx) -> PolicyDecision\`\`.\n\nStages (each producing typed :class:\`RuleResult\` entries, all recorded on the decision):\n\n1. length + invisible-character checks; parse exactly one statement in the declared dialect;\n2. root statement class must be SELECT / set operation; denied node types anywhere in the tree;\n3. blocked functions (file, network, sleep, lock, sequence, config introspection);\n4. object allowlist: system catalogs, cross-database refs, unknown tables, unresolvable columns,\n   sensitive columns (deny / approval);\n5. complexity limits for the policy level;\n6. AST row-limit enforcement; optional parameterisation;\n7. independent legacy heuristic layer; stricter result wins;\n8. fingerprint + normalised SQL.\n\nThis engine is a structural filter, not a proof: it is one layer of defence in depth together with a\nleast-privilege database role, read-only transactions, timeouts and row caps.\n"""`}
         />
       </CS>
 
@@ -214,8 +237,8 @@ export function DBWhisperBody() {
 
       <CS id="evidence" title="Evidence">
         <p>
-          The app is live and the source is public — the validator, the agent tools, and the
-          multi-provider chain are all in the repository linked at the top of this page.
+          The source is public — the validator, the agent tools, and the multi-provider chain are
+          all in the repository linked at the top of this page.
         </p>
       </CS>
     </div>

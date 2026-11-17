@@ -75,27 +75,55 @@ Heavy things are lazy by rule: the assistant panel, diagrams below the fold, dem
 (no video bytes until played), and below-fold images. Static generation for all content
 routes; no client data fetching for content.
 
+Prefetch is opt-in, never by viewport: every `next/link` sets `prefetch={false}`
+(`TextLink` included), and only the primary nav prefetches, on hover or focus
+(`components/layout/nav-links.tsx`). A viewport prefetch downloads each linked route
+and preloads its stylesheet; on /about that was 13 background requests and a Chrome
+warning about the unused CSS. ESLint fails a `<Link>` without a `prefetch` prop
+(`eslint.config.mjs`), and the smoke test fails on any console warning.
+
 ## 6. Testing (right-sized, honest)
 
 - **Unit (requirement):** every exported function in `lib/`, logic-bearing components,
   and content schema validation have tests. The runner is Node's `node:test`: `npm test`
   runs `test/**/*.test.mts` with `test/alias-loader.mjs` resolving the `@/` alias and
-  extensionless TS imports; Node 24 strips the types natively.
-  Current coverage (2026-11-16): 52 tests in 9 files covering content law (projects,
-  metric methods, links), feeds, formatting, navigation, reading time, citation links,
-  assistant retrieval, env parsing (`GEMINI_MODEL`), and the content-slug guard
-  (`lib/content-slug.ts`). Gap against the requirement: some exported `lib/` functions
-  have no direct test yet, notably the rate limiter (`lib/ai/rate-limit.ts`) and the
-  MDX collection loader beyond its slug guard (`lib/mdx-collection.ts`).
-- **Assistant grounding:** `test/retrieval.test.mts` checks the BM25 corpus against the
-  question set in `lib/ai/test-questions.ts`, the relevance floor for off-topic queries,
-  and the injection screen — without any LLM quota. See AI_ASSISTANT.md §7.
+  extensionless TS imports (a file before a same-named directory, as the bundler
+  resolves them); Node 24 strips the types natively.
+  Current coverage (2026-11-16): 152 tests in 21 files covering content law (projects,
+  metric methods, links, and recordings served only while a project lists them), feeds,
+  formatting, navigation, reading time, env parsing
+  (`GEMINI_MODEL`), the content-slug guard (`lib/content-slug.ts`); the assistant
+  (corpus, retrieval, citations, the injection guard, answer formatting, the chat
+  contract and handler, the rate limiter); the published evidence: no retired or
+  retyped evaluation figure, the superseded job title, and the role's sentence form
+  (`evidence.test.mts`); `public/llms.txt` completeness, with the static pages read
+  from `app/` (`llms-txt.test.mts`); the résumé PDF's currency and links
+  (`resume-pdf.test.mts`); search metadata — `pageMetadata`, note descriptions, and the
+  title and description limits for every note, essay and case study (`seo.test.mts`);
+  and the icons — not the create-next-app favicon, drawn in the current palette, and
+  rendered from `app/icon.svg` (`icons.test.mts`). Gap against the requirement: some
+  exported `lib/` functions have no direct test yet, notably the MDX collection loader
+  beyond its slug guard and excerpt (`lib/mdx-collection.ts`), which compiles React and
+  so cannot run under the plain test runner.
+- **Assistant grounding:** `test/retrieval.test.mts` checks the corpus and per-question
+  relevance against 16 detailed and 24 short questions (`test/fixtures/test-questions.ts`),
+  plus off-topic questions, follow-ups and every starter's fallback;
+  `test/guard.test.mts` checks the injection screen against attack and legitimate
+  question lists; `test/chat-handler.test.mts` drives the route's handler with real
+  requests and fake model streams — all without any LLM quota. See AI_ASSISTANT.md §7.
 - **Browser gates (Playwright scripts in `scripts/`):** accessibility (`test:a11y`),
   interaction contracts (`test:interaction`), motion (`test:motion`), accent drift
   (`test:hue`), print (`test:print`), screenshots and overflow (`test:screens`), links
-  (`test:links`), deployment smoke (`test:smoke`), and Lighthouse (`test:lighthouse`).
+  (`test:links`), deployment smoke with zero console errors or warnings
+  (`test:smoke`), metadata on every sitemap URL (`test:metadata`, no browser), and
+  Lighthouse (`test:lighthouse`).
   Every gate runs in Chromium only (CI installs no other engine); Firefox and
   Safari are not exercised by any automated check.
+- **Copy gate (`test:copy`, `scripts/copy-audit.mjs`):** reads the prerendered HTML in
+  `.next/server/app` after a build — no browser, no server — and fails when an inline
+  element touches the next word ("structural</strong>— the"). JSX drops whitespace
+  that contains a line break, so only the built output proves the text reads
+  correctly; the fix is an explicit `{" "}`.
 - Not chasing coverage %; chasing "every behavior that can silently break has a test."
 
 ## 7. Git workflow
@@ -105,8 +133,8 @@ routes; no client data fetching for content.
 - Conventional Commits. PR description: what/why + screenshots for visual changes +
   DoD checklist pasted and ticked.
 - CI (`.github/workflows/ci.yml`) on every pull request and every push to `main`:
-  type-check → lint → test → build → browser gates (a11y, interaction, motion, accent
-  drift in both themes, print, internal links, smoke). Lighthouse budgets run on pushes
+  type-check → lint → test → build → copy gate → browser gates (a11y, interaction,
+  motion, accent drift in both themes, print, internal links, metadata, smoke). Lighthouse budgets run on pushes
   to `main` and on pull requests that target `main`. Red CI = no merge, no exceptions.
 
 ## 8. Definition of Ready (before coding any story)
@@ -124,6 +152,8 @@ exists in `content/` (placeholder copy is a spec violation, not a stopgap).
 [ ] prefers-reduced-motion respected
 [ ] Typed; zero TS errors; zero ESLint errors
 [ ] Tests added/updated and passing
+[ ] Published figures re-checked against the project's README and claim audit at the
+    cited commit; `npm run build:resume` run if résumé data or a figure changed
 [ ] No hardcoded copy/colors/spacing (tokens + content only)
 [ ] JSDoc + /dev/components entry (if component)
 [ ] Budgets respected (check bundle output for route)
@@ -145,6 +175,8 @@ Privacy-first analytics: `@vercel/analytics`, rendered only on Vercel deployment
 (`VERCEL=1`); no cookies, no consent banner. Custom events, sent through
 `lib/analytics.ts`: `case_study_read_depth` (25/50/75/100, from the case-study reading
 outline) and `resume_downloaded`. Error tracking: none beyond the platform's logs. The
-assistant route's only log line is the model id and HTTP status when Gemini rejects a
-request (never the key, the request, the response body, or visitor text); rate limiting
-keeps only an in-memory client key and timestamps.
+assistant route logs one JSON line per answered turn — mode, note, passages retrieved,
+timings, the finish or failure reason and token counts; never the question, the answer,
+the key or the client address — warns with the model id and HTTP status when Gemini
+rejects a request, and warns when a content collection is unreadable. The rate limiter
+keeps salted address hashes, timestamps and daily counters in memory only.

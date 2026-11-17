@@ -28,7 +28,7 @@ export function formatOgEyebrow(label: string) {
 }
 
 export function renderOg(opts: {
-  /** mono meta line, e.g. "Mubin Attar · AI Software Engineer" */
+  /** mono meta line, e.g. "Mubin Attar · Applied AI Engineer" (SITE.role) */
   eyebrow: string;
   /** large sentence-case title */
   title: string;

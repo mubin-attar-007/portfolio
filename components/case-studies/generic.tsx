@@ -30,8 +30,8 @@ export function GenericBody({ project }: { project: Project }) {
       <CS id="write-up" title="Full write-up">
         <p>
           A deep write-up of {project.title} — architecture, key decisions, and trade-offs — is in
-          progress. In the meantime the app is live and the source is public (linked above), and every
-          number on this page is method-backed.
+          progress. In the meantime the source is public (linked above), and every number on this
+          page is method-backed.
         </p>
       </CS>
     </div>

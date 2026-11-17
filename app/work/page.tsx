@@ -9,26 +9,18 @@ import { ProjectCard } from "@/components/work/project-card";
 import { buttonVariants } from "@/components/ui/button";
 import { FIGURE, PAGE_BODY_BAND, PAGE_HEADER_BAND } from "@/constants/page";
 import { EyebrowChip } from "@/components/ui/eyebrow-chip";
-import { SITE } from "@/config/site";
 import { pages } from "@/content/site";
 import { flagshipHome } from "@/content/home-visual";
 import { featuredProject, secondaryProjects } from "@/content/projects";
+import { pageMetadata } from "@/lib/seo";
 import cardStyles from "@/components/work/project-card.module.css";
 
-export const metadata: Metadata = {
+export const metadata: Metadata = pageMetadata({
+  path: "/work",
   title: "Work",
   description:
     "Four applied AI projects, with architecture, engineering decisions, source code, and measured results.",
-  alternates: { canonical: `${SITE.url}/work` },
-  openGraph: {
-    siteName: SITE.name,
-    title: "Work — Mubin Attar",
-    description:
-      "Four applied AI projects, with architecture, engineering decisions, source code, and measured results.",
-    url: `${SITE.url}/work`,
-    type: "website",
-  },
-};
+});
 
 /**
  * /work — four projects, with the flagship given a shape the other three do not
@@ -51,7 +43,7 @@ export default function WorkIndex() {
   const flagship = featuredProject;
   const labels = {
     caseStudy: flagshipHome.work.caseStudy,
-    live: flagshipHome.work.live,
+    demo: flagshipHome.work.demo,
     source: flagshipHome.work.source,
   };
 
@@ -102,14 +94,14 @@ export default function WorkIndex() {
                   href={flagship.links.live}
                   target="_blank"
                   rel="noopener noreferrer"
-                  className="group/live inline-flex items-center gap-1.5 text-sm font-medium text-ink-secondary transition-colors duration-fast ease-[var(--ease-out)] hover:text-ink"
+                  className="group/demo inline-flex items-center gap-1.5 text-sm font-medium text-ink-secondary transition-colors duration-fast ease-[var(--ease-out)] hover:text-ink"
                 >
-                  {labels.live}
+                  {labels.demo}
                   <ArrowUpRight
                     size={14}
                     strokeWidth={2.25}
                     aria-hidden
-                    className="transition-transform duration-fast ease-[var(--ease-out)] group-hover/live:-translate-y-0.5 group-hover/live:translate-x-0.5"
+                    className="transition-transform duration-fast ease-[var(--ease-out)] group-hover/demo:-translate-y-0.5 group-hover/demo:translate-x-0.5"
                   />
                 </a>
               ) : null}

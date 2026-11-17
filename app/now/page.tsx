@@ -3,26 +3,18 @@ import Link from "next/link";
 import { Section } from "@/components/layout/section";
 import { PageHeader } from "@/components/ui/page-header";
 import { buttonVariants } from "@/components/ui/button";
-import { SITE, STATUS } from "@/config/site";
+import { STATUS } from "@/config/site";
 import { nowPage } from "@/content/site";
 import { loadNow } from "@/lib/now";
 import { formatDate } from "@/lib/format";
 import { LABEL, PAGE_BODY_BAND, PAGE_HEADER_BAND, PANEL } from "@/constants/page";
+import { pageMetadata } from "@/lib/seo";
 
-const NOW_PATH = "/now";
-
-export const metadata: Metadata = {
+export const metadata: Metadata = pageMetadata({
+  path: "/now",
   title: "Now",
   description: "What I'm building, exploring, and reading right now — a running snapshot.",
-  alternates: { canonical: `${SITE.url}${NOW_PATH}` },
-  openGraph: {
-    siteName: SITE.name,
-    title: "Now — Mubin Attar",
-    description: "What I'm building, exploring, and reading right now — a running snapshot.",
-    url: `${SITE.url}${NOW_PATH}`,
-    type: "website",
-  },
-};
+});
 
 /**
  * /now — a hand-updated snapshot of current work.
@@ -88,7 +80,7 @@ export default async function NowPage() {
           <h2 className={LABEL}>{nowPage.openTo.title}</h2>
           <p className="mt-4 text-lg text-ink">{STATUS.text}.</p>
           <div className="mt-6">
-            <Link href={nowPage.openTo.cta.href} className={buttonVariants("primary")}>
+            <Link href={nowPage.openTo.cta.href} prefetch={false} className={buttonVariants("primary")}>
               {nowPage.openTo.cta.label}
             </Link>
           </div>

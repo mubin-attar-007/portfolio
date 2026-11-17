@@ -1,19 +1,22 @@
+import { CROWNWAGER_EVIDENCE } from "./evals";
 import { ProjectSchema, type Project } from "./schema";
 
 /**
  * Projects — real, shipped work. Every metric is method-backed; where a hard
  * benchmark doesn't exist, the value states a real fact/status (never invented).
- * Exactly one project is `featured` (the flagship). To hand the flagship to a
- * future project, flip `featured`.
+ * A measured value is read from the eval registry rather than retyped, so the
+ * card and /evals cannot disagree. Exactly one project is `featured` (the
+ * flagship). To hand the flagship to a future project, flip `featured`.
  */
+const cw = CROWNWAGER_EVIDENCE;
 const RAW = [
   {
     slug: "dbwhisper",
     title: "DBWhisper",
     summary:
       "A natural-language-to-SQL agent with schema-aware retrieval, SELECT-only validation, a read-only database connection, and multi-provider LLM fallback.",
-    status: "production",
-    role: "Designed, built, and maintain (solo)",
+    status: "deployed-demo",
+    role: "Designed, built, and maintained (solo)",
     timeline: "2025 – present",
     featured: true,
     order: 1,
@@ -33,6 +36,11 @@ const RAW = [
     },
     links: { live: "https://dbwhisper.vercel.app", repo: "https://github.com/mubin-attar-007/dbwhisper" },
     diagram: "dbwhisper",
+    // No recording. The old product-site capture showed the golden-set figures
+    // and the scale and uptime claims DBWhisper's claim audit withdrew (§4.4 at
+    // bca0635), and a caption cannot take a figure off the screen. Re-record
+    // from the current v2 site, check every frame and caption against the
+    // audit, then add `recording` here (2026-11-16).
     changelog: [
       { date: "2026-07-03", summary: "Schema browser, a verified NL→SQL training flywheel, and the full marketing site." },
       { date: "2026-07-01", summary: "Flagship web console — auto-generated charts, CSV export, sortable results, staged progress." },
@@ -45,7 +53,7 @@ const RAW = [
     title: "TradePulse",
     summary:
       "An honest quant backtesting platform — a look-ahead-free event-driven engine, costs modeled by default, and a grounded NL→strategy AI copilot.",
-    status: "production",
+    status: "deployed-demo",
     role: "Designed and built (solo)",
     timeline: "2025 – present",
     featured: false,
@@ -65,6 +73,12 @@ const RAW = [
     },
     links: { live: "https://tradepulse-live.vercel.app", repo: "https://github.com/mubin-attar-007/tradepulse" },
     diagram: "tradepulse",
+    recording: {
+      alt: "Recorded scroll through the TradePulse product website.",
+      caption: "Product website recording. Market data is delayed; older on-screen references to real-time charting are not the current data contract.",
+      width: 1280,
+      height: 760,
+    },
     changelog: [
       { date: "2026-07-03", summary: "Public per-ticker pages, a position-sizing calculator, and real paper-trading email alerts." },
       { date: "2026-07-02", summary: "A public methodology page and a reality pass — cut anything the engine couldn't back." },
@@ -78,14 +92,14 @@ const RAW = [
     title: "CrownWager",
     summary:
       "+EV sports-betting analytics — a validated XGBoost model turned into fair-odds edge, Kelly staking, an arbitrage finder, and a graded model track-record.",
-    status: "production",
+    status: "deployed-demo",
     role: "Designed and built (solo)",
     timeline: "2025 – present",
     featured: false,
     order: 3,
     systems: ["XGBoost model", "fair-odds edge + Kelly staking", "graded model track-record"],
     metrics: [
-      { label: "model accuracy", value: "65.2% ± 0.8%", method: "5-fold stratified cross-validation on 15,115 NBA games; base home-win rate is 57.5%, so a real ~8-point edge (ROC-AUC 0.685)." },
+      { label: "model accuracy", value: cw.cv.result, method: `${cw.cv.folds}-fold stratified cross-validation (fixed seed) on ${cw.games} NBA games against a ${cw.baseRate} home-win base rate, so a real ~${cw.edge}-point edge. A separate 80/20 hold-out on ${cw.holdout.games} games scores ${cw.holdout.accuracy} (ROC-AUC ${cw.holdout.rocAuc}, log-loss ${cw.holdout.logLoss}).` },
       { label: "track-record", value: "graded vs finals", method: "Every published pick is settled against the real final score; the record is flagged 'insufficient' below 20 settled picks." },
     ],
     card: {
@@ -96,8 +110,18 @@ const RAW = [
       alt: "CrownWager's website introducing its sports analytics, beside an illustrative betting-odds panel.",
       caption: "CrownWager · product website",
     },
-    links: { live: "https://crownwager.vercel.app", repo: "https://github.com/mubin-attar-007/crownwager" },
+    // No live link while the hosted demo is down: its backend Space is paused,
+    // so the app cannot load data (Space stage PAUSED and health check 503 on
+    // 2026-11-16). The case study keeps the recording and the source. Restore
+    // `live: "https://crownwager.vercel.app"` once the Space is running again.
+    links: { repo: "https://github.com/mubin-attar-007/crownwager" },
     diagram: "crownwager",
+    recording: {
+      alt: "Recorded scroll through the CrownWager product website.",
+      caption: `Product website recording. The on-screen training count differs from the current ${cw.cv.folds}-fold evaluation on ${cw.games} games documented below.`,
+      width: 1280,
+      height: 760,
+    },
     changelog: [
       { date: "2026-07-02", summary: "A verifiable model track-record and prediction confidence grades; cut a cherry-picked split in a reality pass." },
       { date: "2026-07-01", summary: "Best-bets credibility layer — fair odds, confidence grades, and filters." },
@@ -111,7 +135,7 @@ const RAW = [
     title: "LLM Studio",
     summary:
       "A multi-user, ChatGPT-style AI platform — per-user tenancy, token streaming, multi-LLM routing, and daily quotas, Dockerized and CI'd.",
-    status: "production",
+    status: "deployed-demo",
     role: "Designed and built (solo)",
     timeline: "2025 – present",
     featured: false,
@@ -131,9 +155,18 @@ const RAW = [
     },
     // No live link while the hosted demo is offline: the free Hugging Face tier
     // runs three Spaces at a time, and the other three demos hold those slots.
-    // Restoring `live` brings back the card link, "Open live" and the caption link.
+    // Restoring `live` brings back the card link, "Open demo", the caption link
+    // and the résumé link.
     links: { repo: "https://github.com/mubin-attar-007/llm_studio" },
     diagram: "llm-studio",
+    // Auth-gated, so the tour is signed into a real account (the chat UI,
+    // streaming and model switching), not a login screen.
+    recording: {
+      alt: "Recorded LLM Studio chat interface with conversation history and model selection.",
+      caption: "Application recording — a multi-model chat workspace with per-user history and model switching.",
+      width: 1280,
+      height: 720,
+    },
     changelog: [
       { date: "2026-07-02", summary: "End-to-end account flows (change/forgot password, delete account) and SEO/PWA metadata." },
       { date: "2026-07-01", summary: "A ChatGPT-parity UI overhaul and clearer provider rate-limit / quota error handling." },

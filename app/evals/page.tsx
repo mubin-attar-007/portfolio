@@ -4,27 +4,19 @@ import { ArrowUpRight, Check, ChevronDown } from "lucide-react";
 import { Section } from "@/components/layout/section";
 import { PageHeader } from "@/components/ui/page-header";
 import { PAGE_BODY_BAND, PAGE_HEADER_BAND } from "@/constants/page";
-import { SITE } from "@/config/site";
 import { formatDate } from "@/lib/format";
+import { pageMetadata } from "@/lib/seo";
 import { evalAnchor, evals, evalsIntro } from "@/content/evals";
 import type { EvalRow } from "@/content/schema";
 
-export const metadata: Metadata = {
+export const metadata: Metadata = pageMetadata({
+  path: "/evals",
   title: "Evals",
   description:
     "The eval registry — how each system is measured, the method, and the honest current state.",
-  alternates: { canonical: `${SITE.url}/evals` },
-  openGraph: {
-    siteName: SITE.name,
-    title: "Evals — Mubin Attar",
-    description:
-      "The eval registry — how each system is measured, the method, and the honest current state.",
-    url: `${SITE.url}/evals`,
-    type: "website",
-  },
-};
+});
 
-/** Status pill — muted for in-progress/planned (never fake-green before a run). */
+/** Status pill — muted for in-progress, planned and retired (never fake-green). */
 function Status({
   status,
   result,
@@ -67,7 +59,7 @@ function ResultLink({
       {children} <ArrowUpRight size={12} strokeWidth={1.6} aria-hidden />
     </a>
   ) : (
-    <Link href={href} className={cls}>
+    <Link href={href} prefetch={false} className={cls}>
       {children}
     </Link>
   );
@@ -84,19 +76,43 @@ function ResultLink({
  * signal saying "all good" about numbers whose entire point is that some of them
  * are not, and that one of them replaced a flattering figure with a lower true
  * one. Completion is carried by a status chip that says the word instead.
+ *
+ * A retired row is muted (a subtle ground, no elevation, secondary ink) and
+ * carries no figure. Its reason and the audit that withdrew it stay visible
+ * rather than collapsed: the retraction is the evidence this row now offers.
+ * The word "Retired" is in the chip and in the text, so the state never rests
+ * on the muted colour alone.
  */
 function EvalCard({ e }: { e: EvalRow }) {
+  const { retired } = e;
   return (
     <li
       id={evalAnchor(e)}
-      className="scroll-mt-28 rounded-[var(--radius-md)] border border-border bg-surface p-6 shadow-[var(--shadow-surface)]"
+      className={`scroll-mt-28 rounded-[var(--radius-md)] border border-border p-6 ${
+        retired ? "bg-bg-subtle" : "bg-surface shadow-[var(--shadow-surface)]"
+      }`}
     >
       <div className="grid gap-x-8 gap-y-5 md:grid-cols-[1fr_auto]">
         <div className="min-w-0">
           <p className="font-mono text-xs uppercase tracking-[0.06em] text-ink-tertiary">
             {e.system} · {e.benchmark}
           </p>
-          <p className="mt-2 text-base font-medium text-ink">{e.metric}</p>
+          <p className={`mt-2 text-base font-medium ${retired ? "text-ink-secondary" : "text-ink"}`}>
+            {e.metric}
+          </p>
+          {retired ? (
+            <div className="mt-3 max-w-[var(--width-prose)] border-l-[length:var(--stripe-width)] border-l-border-strong pl-4">
+              <p className="text-sm leading-relaxed text-ink-secondary">
+                <span className="font-medium text-ink">
+                  {evalsIntro.retired.on} <time dateTime={retired.date}>{formatDate(retired.date)}</time>.
+                </span>{" "}
+                {retired.reason}
+              </p>
+              <span className="mt-3 block">
+                <ResultLink href={retired.link}>{evalsIntro.retired.audit}</ResultLink>
+              </span>
+            </div>
+          ) : null}
           {/* The method is the point of this registry, so it is never hidden —
               it is COLLAPSED, in a native <details>. That distinction matters:
               a native disclosure is keyboard-operable, announced correctly,
@@ -157,7 +173,8 @@ function EvalCard({ e }: { e: EvalRow }) {
  * lede + the fine print (`evalsIntro.body`) establish what counts as a
  * measurement BEFORE the readings, then each system's real result is the focal
  * point of its card. No fake-green: an unfinished run shows a muted pill, never
- * a borrowed number.
+ * a borrowed number, and a retired result stays listed with the reason it was
+ * withdrawn instead of disappearing.
  */
 export default function EvalsPage() {
   return (
@@ -181,23 +198,11 @@ export default function EvalsPage() {
         </div>
 
         {/* How to read a row — the definitions, before the readings. Without
-            these, "execution accuracy" and "exact match" look like synonyms, and
-            the difference between them is the argument this page is making. */}
+            these, a policy test reads like model accuracy and a retired row
+            reads like a missing one; the difference is the argument this page
+            is making. */}
         <dl className="mt-10 grid gap-x-10 gap-y-4 border-y border-border py-6 sm:grid-cols-2 lg:grid-cols-3">
-          {[
-            {
-              term: "Execution accuracy",
-              def: "The generated query is RUN against the real database and its result set is compared — not its text.",
-            },
-            {
-              term: "Exact match",
-              def: "The returned rows are identical to the reference. An extra correct column still counts as a miss.",
-            },
-            {
-              term: "Fail-closed refusal",
-              def: "An unsafe or out-of-scope prompt is rejected before execution rather than answered approximately.",
-            },
-          ].map((d) => (
+          {evalsIntro.terms.map((d) => (
             <div key={d.term}>
               <dt className="font-mono text-xs uppercase tracking-[0.06em] text-ink">{d.term}</dt>
               <dd className="mt-1.5 text-sm leading-relaxed text-ink-secondary">{d.def}</dd>

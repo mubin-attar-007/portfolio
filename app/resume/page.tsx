@@ -8,21 +8,13 @@ import { ResumeDownloadLink } from "@/components/features/resume-download-link";
 import { SITE } from "@/config/site";
 import { resume } from "@/content/resume";
 import { LABEL, PAGE_BODY_BAND, PAGE_HEADER_BAND, PANEL } from "@/constants/page";
+import { pageMetadata } from "@/lib/seo";
 
-const RESUME_PATH = "/resume";
-
-export const metadata: Metadata = {
+export const metadata: Metadata = pageMetadata({
+  path: "/resume",
   title: "Résumé",
-  description: "Mubin Attar — AI Software Engineer. Experience, skills, and education.",
-  alternates: { canonical: `${SITE.url}${RESUME_PATH}` },
-  openGraph: {
-    siteName: SITE.name,
-    title: "Résumé — Mubin Attar",
-    description: "Mubin Attar — AI Software Engineer. Experience, skills, and education.",
-    url: `${SITE.url}${RESUME_PATH}`,
-    type: "website",
-  },
-};
+  description: `${SITE.name} — ${SITE.role}. Experience, featured projects, skills, and education.`,
+});
 
 /**
  * /resume — the same facts as /public/Mubin_Attar_Resume.pdf and LinkedIn, from
@@ -106,42 +98,67 @@ export default function ResumePage() {
               {resume.projects.map((p) => (
                 <div key={p.name}>
                   <div className="flex flex-wrap items-baseline justify-between gap-x-3 gap-y-1">
-                    <h3 className="text-lg text-ink">{p.name}</h3>
+                    {/* The name is the way into the case study the heading above
+                        promises. Underlined at rest, so it never reads as a link by
+                        colour alone (WCAG 1.4.1). */}
+                    <h3 className="text-lg text-ink">
+                      <Link
+                        href={p.caseStudy}
+                        prefetch={false}
+                        className="underline decoration-border-strong underline-offset-4 hover:decoration-accent"
+                      >
+                        {p.name}
+                      </Link>
+                    </h3>
                     <span className="flex items-center gap-3">
-                      {"live" in p ? (
-                        <TextLink href={p.live} external tone="quiet">
-                          live
+                      {/* A demo link only while the deployed demo is up; the
+                          source is always public. */}
+                      {p.demo ? (
+                        <TextLink href={p.demo} external tone="quiet">
+                          {resume.labels.demo}
                         </TextLink>
                       ) : null}
-                      <TextLink href={p.github} external tone="quiet">
-                        github
-                      </TextLink>
+                      {p.source ? (
+                        <TextLink href={p.source} external tone="quiet">
+                          {resume.labels.source}
+                        </TextLink>
+                      ) : null}
                     </span>
                   </div>
                   <p className="mt-1 max-w-[var(--width-prose)] text-sm leading-[1.65] text-ink-secondary">
                     {p.tagline}
                   </p>
-                  {/* No naked numbers: every metric carries a link to the page that
-                      documents how it was measured (site rule — evidence over claims). */}
-                  <p className="mt-1.5 font-mono text-xs tabular-nums text-ink-secondary">
-                    {p.metric} <span className="text-ink-tertiary">· {p.stack}</span>{" "}
-                    <span className="text-ink-tertiary">
-                      ·{" "}
-                      {/* Accessible name leads with the visible word so voice-control users
-                          can say "click method" (WCAG 2.5.3 Label in Name); the suffix
-                          disambiguates the four otherwise-identical links.
-                          The underline is persistent, not hover-only: this link sits inside
-                          a run of text, so colour alone would be its only distinguishing
-                          cue (WCAG 1.4.1 Use of Colour). */}
-                      <Link
-                        href={p.method}
-                        aria-label={`method — how the ${p.name} numbers were measured`}
-                        className="text-accent underline decoration-from-font underline-offset-2 hover:text-accent-hover"
+                  {/* No naked numbers: every metric line carries a link to the
+                      page that documents how it was measured, with its scope and
+                      date in the line itself (site rule — evidence over claims). */}
+                  <ul className="mt-1.5 flex flex-col gap-1">
+                    {p.metrics.map((m) => (
+                      <li
+                        key={m.text}
+                        className="max-w-[var(--width-prose)] font-mono text-xs leading-relaxed tabular-nums text-ink-secondary"
                       >
-                        method
-                      </Link>
-                    </span>
-                  </p>
+                        {m.text}{" "}
+                        <span className="text-ink-tertiary">
+                          ·{" "}
+                          {/* Accessible name leads with the visible word so voice-control
+                              users can say "click method" (WCAG 2.5.3 Label in Name); the
+                              suffix names the figure, so the links stay distinguishable.
+                              The underline is persistent, not hover-only: this link sits
+                              inside a run of text, so colour alone would be its only
+                              distinguishing cue (WCAG 1.4.1 Use of Colour). */}
+                          <Link
+                            href={m.method}
+                            prefetch={false}
+                            aria-label={`${resume.labels.method} for ${p.name}'s ${m.topic}`}
+                            className="text-accent underline decoration-from-font underline-offset-2 hover:text-accent-hover"
+                          >
+                            {resume.labels.method}
+                          </Link>
+                        </span>
+                      </li>
+                    ))}
+                  </ul>
+                  <p className="mt-1 font-mono text-xs text-ink-tertiary">{p.stack}</p>
                 </div>
               ))}
             </div>

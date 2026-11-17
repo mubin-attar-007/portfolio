@@ -1,4 +1,12 @@
+import { CROWNWAGER_EVIDENCE as cw } from "@/content/evals";
 import type { DiagramSpec } from "../types";
+
+/*
+ * The model's figures are read from the eval registry, which formats them
+ * once from the project's metrics file, so the diagram cannot drift from
+ * /evals. This module is imported only by the server-rendered case study; the
+ * client diagram receives the finished strings as props.
+ */
 
 /** CrownWager — decoupled Django + FastAPI ML service. */
 export const crownwagerDiagram: DiagramSpec = {
@@ -61,14 +69,14 @@ export const crownwagerDiagram: DiagramSpec = {
     {
       id: "xgb",
       label: "XGBoost",
-      sublabel: "65.2% 5-fold CV",
-      description: "Shallow model (max_depth 3) predicting NBA moneyline; accuracy from 5-fold stratified CV.",
+      sublabel: `${cw.cv.mean} ${cw.cv.folds}-fold CV`,
+      description: `Shallow model (max_depth 3) predicting NBA moneyline; accuracy from ${cw.cv.folds}-fold stratified CV.`,
       col: 2,
       row: 0,
       decision: {
         rejected: "A neural net, and the legacy 'best of 300 random splits' 68% claim",
-        why: "The inherited claim was cherry-picked after the fact, never validated. XGBoost was chosen for reproducibility (one fixed split + 5-fold stratified CV → 65.2% ± 0.8% on 15,115 games vs a 57.5% base rate), interpretability (depth capped at 3, real feature importances), and fast JSON serving. Honesty over a marginal, unverifiable accuracy gain.",
-        tradeoff: "65% isn't state-of-the-art — but it's a number that holds up.",
+        why: `The inherited claim was cherry-picked after the fact, never validated. XGBoost was chosen for reproducibility (${cw.cv.folds}-fold stratified CV with a fixed seed → ${cw.cv.result} on ${cw.games} games vs a ${cw.baseRate} base rate, plus a separate 80/20 hold-out), interpretability (depth capped at 3, real feature importances), and fast JSON serving. Honesty over a marginal, unverifiable accuracy gain.`,
+        tradeoff: `${cw.cv.mean} isn't state-of-the-art — but it's a number that holds up.`,
       },
     },
     { id: "pg", label: "PostgreSQL", sublabel: "Celery + Redis", description: "Odds, bets, and graded results; Celery + Redis for async jobs and cache.", col: 3, row: 1 },

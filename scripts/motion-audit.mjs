@@ -208,8 +208,9 @@ async function writingFeedback(page) {
   await page.waitForTimeout(400);
   const focusArrow = await appearance(link.locator("svg"));
   const focusText = await appearance(text);
+  // Forward, not diagonal: the row opens an essay on this site (↗ is for a new tab).
   check("writing row: the arrow animates toward its destination with equivalent hover and focus feedback", animated
-    && hoverArrow.x > 0 && hoverArrow.y < 0 && hoverArrow.color !== arrowBefore.color
+    && hoverArrow.x > 0 && Math.abs(hoverArrow.y) < 0.01 && hoverArrow.color !== arrowBefore.color
     && Math.abs(hoverArrow.x - focusArrow.x) < 0.01 && Math.abs(hoverArrow.y - focusArrow.y) < 0.01
     && hoverArrow.color === focusArrow.color,
     JSON.stringify({ animated, hoverArrow: { x: hoverArrow.x, y: hoverArrow.y }, focusArrow: { x: focusArrow.x, y: focusArrow.y } }));

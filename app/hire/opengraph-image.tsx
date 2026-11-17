@@ -1,6 +1,7 @@
 import { renderOg, OG_SIZE, OG_CONTENT_TYPE, formatOgEyebrow } from "@/lib/og";
+import { SITE } from "@/config/site";
 
-export const alt = "Hire — Mubin Attar, AI Software Engineer";
+export const alt = `Hire — ${SITE.name}, ${SITE.role}`;
 export const size = OG_SIZE;
 export const contentType = OG_CONTENT_TYPE;
 

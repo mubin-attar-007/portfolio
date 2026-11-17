@@ -1,5 +1,5 @@
 import Link from "next/link";
-import { ArrowUpRight } from "lucide-react";
+import { ArrowRight } from "lucide-react";
 import { Section } from "@/components/layout/section";
 import { TextLink } from "@/components/ui/text-link";
 import { LABEL } from "@/constants/page";
@@ -69,7 +69,8 @@ export function WritingAndNow({
                       {post.category} · <time dateTime={post.date}>{formatDate(post.date)}</time>
                     </span>
                   </span>
-                  <ArrowUpRight
+                  {/* →, as on /writing: each row opens an essay on this site. */}
+                  <ArrowRight
                     size={16}
                     strokeWidth={1.5}
                     aria-hidden

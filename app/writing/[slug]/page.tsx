@@ -4,7 +4,7 @@ import { Section } from "@/components/layout/section";
 import { PAGE_TOP } from "@/constants/page";
 import { routableWritingSlugs, loadWriting, writingNeighbours } from "@/lib/writing";
 import { formatDate } from "@/lib/format";
-import { SITE } from "@/config/site";
+import { absoluteUrl, pageMetadata } from "@/lib/seo";
 import { ArticleJsonLd, BreadcrumbJsonLd } from "@/components/seo/json-ld";
 import {
   NewsletterForm,
@@ -29,23 +29,12 @@ export async function generateMetadata({
   const { slug } = await params;
   const w = await loadWriting(slug);
   if (!w) return {};
-  const url = `${SITE.url}/writing/${slug}`;
-  return {
+  return pageMetadata({
+    path: `/writing/${slug}`,
     title: w.meta.title,
     description: w.meta.summary,
-    alternates: { canonical: url },
-    openGraph: {
-      type: "article",
-      siteName: SITE.name,
-      title: w.meta.title,
-      description: w.meta.summary,
-      url,
-      publishedTime: w.meta.date,
-      modifiedTime: w.meta.updated,
-      tags: w.meta.topics,
-      authors: [SITE.name],
-    },
-  };
+    article: { publishedTime: w.meta.date, modifiedTime: w.meta.updated, tags: w.meta.topics },
+  });
 }
 
 export default async function WritingPost({ params }: { params: Promise<{ slug: string }> }) {
@@ -56,7 +45,7 @@ export default async function WritingPost({ params }: { params: Promise<{ slug: 
   // Writing is sorted newest-first, so the entry BEFORE this one in the index is
   // the newer one — the footer labels that direction "Newer" for this collection.
   const { newer, older } = await writingNeighbours(slug);
-  const url = `${SITE.url}/writing/${slug}`;
+  const url = absoluteUrl(`/writing/${slug}`);
 
   return (
     // PAGE_TOP: every route opens 128px from the nav; `space="lg"`'s 192 top
@@ -72,7 +61,7 @@ export default async function WritingPost({ params }: { params: Promise<{ slug: 
       />
       <BreadcrumbJsonLd
         items={[
-          { name: "Writing", url: `${SITE.url}/writing` },
+          { name: "Writing", url: absoluteUrl("/writing") },
           { name: meta.title, url },
         ]}
       />

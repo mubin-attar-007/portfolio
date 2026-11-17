@@ -44,6 +44,12 @@ with a production-AI focus since 2024" (used in `content/resume.ts`,
    rate on a bounded set is not a universal safety guarantee. (Since ADR-016 the
    ratios sit in the inspector footer, and the linked project count and experience
    are in the proof row on `/about` and `/hire`.)
+   *Superseded in part, 2026-11-16:* the golden-query ratios (18/22, 4/4) are
+   retired — DBWhisper's own claim audit (commit `bca0635`, 24 Aug 2026) withdrew
+   them — and `DBWHISPER_GOLDEN` is removed. The footer now shows DBWhisper's
+   policy-corpus result from `DBWHISPER_EVIDENCE`, labelled as a deterministic
+   policy test, not model accuracy. The "keep proof scoped" rule stands; see the
+   note on ADR-016.
 4. **Use one short homepage sequence:** identity and illustration → proof →
    three other projects → one existing interactive DBWhisper walkthrough →
    portrait and professional experience → three essays and current interests

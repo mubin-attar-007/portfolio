@@ -9,19 +9,14 @@ import { CopyEmail } from "@/components/features/copy-email";
 import { SITE, STATUS, INTEGRATIONS } from "@/config/site";
 import { hire, home, trust } from "@/content/site";
 import { LABEL, PANEL, PAGE_TOP } from "@/constants/page";
+import { pageMetadata } from "@/lib/seo";
 
-export const metadata: Metadata = {
+export const metadata: Metadata = pageMetadata({
+  path: "/hire",
   title: "Hire me",
   description: "What I'm open to, how I work, and the fastest way to start a conversation.",
-  alternates: { canonical: `${SITE.url}/hire` },
-  openGraph: {
-    siteName: SITE.name,
-    title: "Hire Mubin Attar",
-    description: "What I'm open to, how I work, and the fastest way to start a conversation.",
-    url: `${SITE.url}/hire`,
-    type: "website",
-  },
-};
+  social: { title: `Hire ${SITE.name}` },
+});
 
 /**
  * /hire — the single funnel for contact intent.

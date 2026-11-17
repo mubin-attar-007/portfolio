@@ -66,6 +66,10 @@ jobs:
       - name: Build
         run: npm run build
 
+      # Reads the prerendered HTML, so it needs the build but no server.
+      - name: Copy gate (no words run together)
+        run: npm run test:copy
+
       # Playwright's guidance is not to cache browsers: restoring the cache takes
       # about as long as the download, and the OS packages cannot be cached.
       - name: Install Playwright (chromium)
@@ -74,7 +78,7 @@ jobs:
       # One server, every gate that needs one. Kept in a single step on purpose:
       # a background process started with `&` surviving into a later step is a
       # runner implementation detail, not a guarantee.
-      - name: Browser gates (a11y, interaction, motion, accent drift, print, links, smoke)
+      - name: Browser gates (a11y, interaction, motion, accent drift, print, links, metadata, smoke)
         run: |
           set -euo pipefail
           cp -R .next/static .next/standalone/.next/static
@@ -111,6 +115,13 @@ jobs:
 
           echo "::group::Internal links and fragments"
           npm run test:links
+          echo "::endgroup::"
+
+          # Every sitemap URL's canonical, social card, title and description
+          # limits, the unindexed routes, and the redirects — cheap enough for
+          # every pull request; the Lighthouse step below repeats it on main.
+          echo "::group::Metadata (every sitemap URL)"
+          LIGHTHOUSE_BASE_URL="$BASE_URL" npm run test:metadata
           echo "::endgroup::"
 
           # The same smoke test can be pointed at a Vercel preview or production.

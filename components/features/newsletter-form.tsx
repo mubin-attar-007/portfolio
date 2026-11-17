@@ -1,20 +1,28 @@
 import { buttonVariants } from "@/components/ui/button";
-import { INTEGRATIONS } from "@/config/site";
 
 /**
  * NewsletterForm — email capture at the foot of Writing/Notes (never the hero).
- * Wired to Buttondown when NEXT_PUBLIC_BUTTONDOWN_USERNAME is set; otherwise it
- * renders NOTHING — no placeholder/"coming soon" UI ever ships to prod (F-01).
- * Pages gate the whole block on NEWSLETTER_ENABLED so no empty wrapper remains.
+ *
+ * Off by default. It renders only when NEXT_PUBLIC_BUTTONDOWN_USERNAME names
+ * the Buttondown account to post to — one setting, with no committed default,
+ * so the form cannot reach visitors before the owner has confirmed the list
+ * delivers (hidden on 2026-11-16 until that is checked). Unset, empty, or not a
+ * plain handle: it renders NOTHING — no placeholder/"coming soon" UI ever ships
+ * to prod (F-01). Pages gate the whole block on NEWSLETTER_ENABLED so no empty
+ * wrapper remains.
+ *
  * A11y: labelled input (visually-hidden label), real submit button with a
  * visible focus ring. This is intentionally a Server Component: the browser's
  * native form submission provides the full interaction, so shipping a React
  * client boundary here would add hydration work without adding capability.
  */
-const BUTTONDOWN_USER = process.env.NEXT_PUBLIC_BUTTONDOWN_USERNAME ?? INTEGRATIONS.buttondownUsername;
+const configuredHandle = process.env.NEXT_PUBLIC_BUTTONDOWN_USERNAME?.trim() ?? "";
 
-/** True only when the list is actually connected. Pages import this to gate the block. */
-export const NEWSLETTER_ENABLED = Boolean(BUTTONDOWN_USER);
+/** The account the form posts to. Only a plain handle counts, so the action URL stays a path segment. */
+const BUTTONDOWN_USER = /^[A-Za-z0-9_-]+$/.test(configuredHandle) ? configuredHandle : "";
+
+/** True only when the list is explicitly connected. Pages import this to gate the block. */
+export const NEWSLETTER_ENABLED = BUTTONDOWN_USER !== "";
 
 export function NewsletterForm() {
   // No placeholder UI on prod: render nothing until the list is connected.

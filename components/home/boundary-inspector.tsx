@@ -2,7 +2,7 @@
 
 import { useState, type CSSProperties, type ReactNode } from "react";
 import Link from "next/link";
-import { ArrowDown, ArrowUpRight, Check, Minus, ShieldCheck, X } from "lucide-react";
+import { ArrowDown, ArrowRight, Check, Minus, ShieldCheck, X } from "lucide-react";
 import type { BoundaryCase } from "@/content/dbwhisper-boundary";
 import styles from "./boundary-inspector.module.css";
 
@@ -77,7 +77,7 @@ export function BoundaryInspector({ cases, evidence }: {
       </div>
       <figcaption className={styles.caption}>
         <span>Illustrative cases · no query is sent</span>
-        <Link href="/work/dbwhisper#request-walkthrough" prefetch={false}>Full request path<ArrowUpRight size={13} aria-hidden /></Link>
+        <Link href="/work/dbwhisper#request-walkthrough" prefetch={false}>Full request path<ArrowRight size={13} aria-hidden /></Link>
       </figcaption>
       <div className={styles.evidence}>{evidence}</div>
       <p className="sr-only" role="status">{announcement}</p>

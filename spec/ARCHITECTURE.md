@@ -21,7 +21,7 @@
 
 ```
 .
-├── app/                  # routes, layout, metadata, OG images, feeds, /api/chat
+├── app/                  # routes, layout, metadata, OG images, icons, manifest, feeds, /api/chat
 ├── components/
 │   ├── case-studies/     # one body per project, walkthrough, reading outline
 │   ├── diagrams/         # SystemDiagram + data/<slug>.ts
@@ -30,14 +30,14 @@
 │   ├── layout/           # header, footer, navigation, container, section
 │   ├── mdx/              # MDX component map, DecisionLog, FailureLog, prose classes
 │   ├── seo/              # JSON-LD
-│   ├── ui/               # primitives: button, tag, callout, metric, code block, …
+│   ├── ui/               # primitives: button variants, callout, metric, code block, …
 │   └── work/             # ProjectCard
 ├── config/               # site.ts (identity, status, integrations), nav.ts
-├── constants/            # shared class constants (page.ts, bands.ts)
+├── constants/            # shared class constants (page.ts, bands.ts), SEO limits (seo.ts), browser chrome (theme.ts)
 ├── content/              # typed content modules, Zod schemas, MDX, JSON (CONTENT_MODEL.md)
-├── lib/                  # loaders, formatting, feeds, env, analytics, hooks; ai/ (assistant)
+├── lib/                  # loaders, formatting, feeds, page metadata (seo.ts), env, analytics, hooks; ai/ (assistant)
 ├── public/               # résumé PDF, demo recordings + captions, portrait, llms.txt
-├── scripts/              # browser gates, Lighthouse, résumé PDF, Sites build staging
+├── scripts/              # browser gates, Lighthouse + metadata gate, résumé PDF, icons, Sites build staging
 ├── styles/               # tokens.css, globals.css
 ├── test/                 # node:test unit tests + alias loader
 ├── spec/                 # charter, standards, architecture, content model, assistant, ADRs
@@ -57,13 +57,17 @@
 | `/about`, `/hire`, `/uses`, `/trust` | `content/site.ts` (and `content/timeline.ts` on `/about`) |
 | `/resume`, `/skills` | `content/resume.ts` |
 | `/privacy` | Copy written in `app/privacy/page.tsx` |
-| `/dev/components` | Component preview, `noindex` (ADR-007) |
+| `/dev/components` | Component preview, `noindex`, no canonical URL (ADR-007) |
 | `/api/chat` | Assistant route handler (AI_ASSISTANT.md) |
 | `/rss.xml`, `/writing/feed.xml` | RSS 2.0: writing + notes, and writing only |
-| `/sitemap.xml`, `/robots.txt`, `*/opengraph-image` | Metadata routes |
+| `/sitemap.xml`, `/robots.txt`, `/manifest.webmanifest`, `*/opengraph-image` | Metadata routes |
+| `/favicon.ico`, `/icon.svg`, `/apple-icon.png` | `app/` icon files; the raster two are rendered from `app/icon.svg` (`npm run build:icons`) |
 
-`/talks` and `/timeline` permanently redirect to `/about`, and `/changelog` to `/now`
-(`next.config.ts`).
+Permanent redirects (`next.config.ts`): `/talks` and `/timeline` → `/about` and
+`/changelog` → `/now` (consolidated routes), `/contact` → `/hire` and `/cv` →
+`/resume` (the paths people guess first; moving `/hire` itself remains the separate
+decision ADR-015 §6 names). The metadata gate checks each one and that none is in
+the sitemap.
 
 - Everything content is **statically generated** at build: `[slug]` routes use
   `generateStaticParams` with `dynamicParams = false`, and the feeds are
@@ -85,13 +89,19 @@ content/resume.ts, site.ts, home-visual.ts, …      → typed `as const` module
 content/{writing,notes}/*.mdx                      → lib/mdx-collection.ts: fs read → compileMDX (frontmatter) → Zod
 content/now.mdx                                    → lib/now.ts: compileMDX → NowSchema
 case-study bodies                                  → components/case-studies/<slug>.tsx (props from content/)
-assistant corpus                                   → lib/ai/retrieval.ts at module load: faq.json, projects/*.mdx,
-                                                     profile.json, resume.ts, skills.json → BM25 index
+assistant corpus                                   → lib/ai/corpus.ts at module load: faq.json, projects.ts +
+                                                     projects/*.mdx, profile.json, resume.ts (roles, education,
+                                                     skills), evals.ts, config/site.ts (contact), published
+                                                     writing/*.mdx and notes/*.mdx → BM25 index (lib/ai/retrieval.ts)
 ```
 
 Drafts (`draft: true`) are excluded from indexes, feeds, the sitemap, and generated routes
 in production builds, and stay previewable in `next dev`. `public/llms.txt` is a
-hand-maintained static file — no script generates it. Adding a project means a record in
+hand-maintained static file in the llmstxt.org layout — no script generates it, so it
+is served as-is by both the Vercel and the static Sites builds — and
+`test/llms-txt.test.mts` fails when it misses a published page, project, essay, note,
+or evaluation row, links a demo the site no longer links, or (with
+`test/evidence.test.mts`) quotes a figure the registry does not hold. Adding a project means a record in
 `content/projects.ts`, a body in `components/case-studies/`, a diagram in
 `components/diagrams/data/`, and a write-up in `content/projects/` for the assistant.
 
@@ -124,45 +134,71 @@ first.
 ## 6. Assistant data flow (detail in AI_ASSISTANT.md)
 
 ```
-module load: content/ → passages → BM25 index (in memory, per server instance)
-runtime:     AssistantPanel → POST /api/chat (Node.js)
-             → rate limit → sanitize → injection screen
-             → BM25 top-4 above the relevance floor
-             → daily budget check → Gemini streamGenerateContent (system prompt + passages)
+module load: content/ → passages (lib/ai/corpus.ts) → BM25 index (in memory, per server instance)
+runtime:     AssistantPanel → POST /api/chat (Node.js) → lib/ai/chat-handler.ts
+             → request screen (same-origin, JSON) → rate limit → sanitize → injection screen
+             → retrieval (judged per question, follow-up aware;
+               nothing relevant → "not covered", no model call)
+             → live-answer reservation (per client, per instance)
+             → Gemini streamGenerateContent (system prompt + passages; 8 s first token, 20 s total)
              → SSE: meta · token… · sources · done → panel renders text + source links
-fallback:    no key / quota / error → best FAQ answer verbatim (or best passage) + citation
+fallback:    no key / quota / error / timeout / empty or blocked reply
+             → best passage verbatim + its citation
 ```
 
-No vector DB, no embeddings (ADR-006). No conversation persistence server-side.
+No vector DB, no embeddings (ADR-006). No conversation persistence server-side: the
+transcript lives only in the launcher's memory (`components/features/assistant.tsx`),
+which stays mounted across page changes, until the tab closes.
 
 ## 7. Environment & config
 
 `GEMINI_API_KEY` (server only, optional) · `GEMINI_MODEL` (server only, optional; default
 `gemini-3.5-flash-lite`) · `NEXT_PUBLIC_SITE_URL` (optional; defaults to
 `https://mubin-attar.vercel.app`) · `ASSISTANT_DAILY_CAP` (optional; default 500) ·
-`NEXT_PUBLIC_CAL_URL` and `NEXT_PUBLIC_BUTTONDOWN_USERNAME` (optional overrides of
-`config/site.ts`). `lib/env.ts` parses the site URL, the cap and the model with safe
+`NEXT_PUBLIC_CAL_URL` (optional override of the booking link in `config/site.ts`) ·
+`NEXT_PUBLIC_BUTTONDOWN_USERNAME` (optional, no default: the newsletter form renders
+only when it names a Buttondown handle). `lib/env.ts` parses the site URL, the cap and the model with safe
 fallbacks — an invalid value (for the model, anything but a bare model id) falls back to
 its default instead of failing the build or a request.
-`config/site.ts` holds name, role, email, location, socials, integrations, the
-availability line, and footer copy — by rule the ONLY non-`content/` place copy may
-live. Some copy is still written inline (`app/privacy/page.tsx`, the assistant panel's
-labels and starter questions). DEPLOY.md documents each variable.
+`config/site.ts` holds name, role, the site description, email, location, socials,
+integrations, the availability line, and footer copy — by rule the ONLY
+non-`content/` place copy may live. Some copy is still written inline (`app/privacy/page.tsx`, the assistant panel's
+labels); the starter questions live in `lib/ai/starters.ts`, shared by the panel and
+the retrieval test. DEPLOY.md documents each variable.
 
 ## 8. SEO & machine-readability
 
-- Metadata API per route; canonical URLs; `sitemap.ts` (published content only, with
-  `lastModified` only where content carries a date); `robots.ts` (block `/api/`, `/dev/`).
+- **Every public page builds its metadata with `pageMetadata`** (`lib/seo.ts`): its own
+  canonical URL and og:url, a complete social card (site name, `en_US` locale, type,
+  title, description; articles add their dates and tags), and RSS discovery. Next
+  merges metadata shallowly — a page's `openGraph` or `alternates` replaces the root's
+  whole — so the root layout sets only defaults true of any page and never a URL; a
+  root canonical was once inherited by the 404 and `/dev/components`.
+- Titles fit a results page: at most 60 characters with the " · Mubin Attar" suffix,
+  which `documentTitle` drops rather than let the page's own name be cut.
+  Descriptions are 50–160 characters (`constants/seo.ts`): project and writing
+  summaries are capped at 160 by their schemas; a note uses its optional `summary`,
+  else its opening sentences (`noteDescription`, `lib/excerpt.ts`) — never its tags.
+  The same description feeds the meta tag, the social card, the structured data, and
+  `/rss.xml`. `SITE.description` is the homepage's and the default.
+- `sitemap.ts` (published content only, with `lastModified` only where content
+  carries a date); `robots.ts` (block `/api/`, `/dev/`). The 404 and `/dev/components`
+  are `noindex` with no canonical URL and no social card of their own.
 - JSON-LD: `Person` + `WebSite` in the root layout, `BlogPosting` on writing and notes,
   `CreativeWork` on case studies, `BreadcrumbList` on detail pages.
-- OG images per route through `lib/og.tsx` (`next/og`, light theme only).
+- OG images per route through `lib/og.tsx` (`next/og`, light theme only). Icons: the
+  `app/icon.svg` mark, with `favicon.ico` and the 180px `apple-icon.png` rendered from
+  it, and `app/manifest.ts` for home-screen shortcuts (opens as a browser tab).
+- `npm run test:metadata` reads the sitemap and checks every URL against all of the
+  above, plus the unindexed routes and every redirect (README, Checks).
 - `public/llms.txt` + per-page clean semantics: visitors include AI screeners; the site
   must be as legible to them as to humans.
 
 ## 9. Error, empty, loading conventions
 
 Static-first means loading states are rare; where present (the assistant), a pending
-answer shows a mono "searching…" line until the first token arrives, no shimmer. `app/not-found.tsx`: one sentence + links to
-Work, Writing, and Home. `app/error.tsx` and `app/global-error.tsx` offer a retry and a
-real link home. Assistant errors: honest, small, and grounded — the route falls back to
+answer shows a mono "searching…" line until the first token arrives, no shimmer.
+`app/not-found.tsx`: the shared page header, then links to Home, the primary
+navigation, and every case study. `app/error.tsx` and `app/global-error.tsx` offer a
+retry and a real link home. Assistant errors: honest, small, and grounded — the route falls back to
 site search instead of failing. Never a dead end.

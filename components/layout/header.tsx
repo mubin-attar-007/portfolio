@@ -24,9 +24,10 @@ import { PRIMARY_CTA } from "@/config/nav";
  * 4. The primary action survives to `sm`. On a phone it moves into the menu,
  *    where it is the first thing under the links rather than a fifth row.
  *
- * The assistant shows its label and ⌘K hint only from `xl`, where there is room
- * for it beside the action. Below that it is the icon, with the same accessible
- * name and the same two keyboard shortcuts.
+ * The assistant shows its label and the shortcut hint (⌘K on Apple devices,
+ * Ctrl K elsewhere) only from `xl`, where there is room for it beside the
+ * action. Below that it is the icon, with the same accessible name and the same
+ * single shortcut. There is no bare "/" shortcut (WCAG 2.1.4).
  */
 export function Header() {
   return (

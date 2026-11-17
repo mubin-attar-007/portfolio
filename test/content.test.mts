@@ -6,6 +6,8 @@
 
 import test from "node:test";
 import assert from "node:assert/strict";
+import { readdirSync } from "node:fs";
+import { fileURLToPath } from "node:url";
 
 import { projects, featuredProject } from "../content/projects.ts";
 
@@ -66,4 +68,21 @@ test("exactly one project is featured (the flagship)", () => {
   const featured = projects.filter((p) => p.featured);
   assert.equal(featured.length, 1, "there must be exactly one featured project");
   assert.equal(featuredProject.slug, featured[0]!.slug, "featuredProject must be the featured one");
+});
+
+// A recording is served only while its project lists it: removing `recording`
+// from a project (a withdrawn capture) must take its video and captions off
+// the site too, not leave them reachable by URL.
+test("every recording has its video, captions and poster, and no other recording is served", () => {
+  const demos = fileURLToPath(new URL("../public/demos/", import.meta.url));
+  const served = readdirSync(demos);
+  for (const p of projects) {
+    if (!p.recording) continue;
+    for (const ext of [".webm", ".vtt", ".webp"]) {
+      assert.ok(served.includes(`${p.slug}${ext}`), `${p.slug}: public/demos/${p.slug}${ext} is missing`);
+    }
+  }
+  const recorded = new Set(projects.filter((p) => p.recording).map((p) => p.slug));
+  const orphans = served.filter((file) => /\.(?:webm|vtt)$/.test(file) && !recorded.has(file.replace(/\.[^.]+$/, "")));
+  assert.deepEqual(orphans, [], `served without a project recording: ${orphans.join(", ")}`);
 });
