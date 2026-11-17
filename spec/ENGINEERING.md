@@ -75,7 +75,7 @@ the budget; changing a budget needs an ADR.
 | Route JS (gzip, first load) | ≤ 120 KB home · ≤ 90 KB content pages | printed, not failing; over budget. CI, 2026-11-16 (before the redesign): home 164 KB, case study 164 KB, writing 157 KB. The redesign, measured the same way on 2026-11-17: home 160 KB, case study (`/work/dbwhisper`, which now holds the boundary inspector) 174 KB, writing 159 KB. With the flagship case studies, on a production build the same day: gzip bodies home 155.8 KB, every case study, flagships included, 166.0 KB, writing 149.6 KB; with headers, as CI's Lighthouse counts them, 164.8, 175.9 and 158.6 KB. CI, 2026-11-17 evening (f273f65, after the flagship routes and the chunk merge): home 164 KB in 9 scripts, case study 172 KB in 9, writing 158 KB in 9 |
 | Assistant panel chunk | lazy: fetched when a pointer or focus first reaches a launcher, or on open; ≤ 60 KB | review. 10.8 KB gzip in two chunks on a production build (2026-11-17, after the assistant upgrade; 7 KB before it), fetched on the first pointer over a launcher, with no extra stylesheet. esbuild's upper bound over everything the panel imports is 12.6 KB of JS (AI_ASSISTANT.md §9) |
 | INP | < 200 ms | field metric; no lab gate and no field data yet |
-| Fonts | ≤ 130 KB woff2 in total, self-hosted by `next/font` | review: 78.4 KB in two preloaded files (2026-11-17) |
+| Fonts | ≤ 130 KB woff2 in total, self-hosted by `next/font` | review: 51.2 KB in two files (2026-11-18). Geist, 28.6 KB, is preloaded (the LCP text is set in it); Geist Mono, 22.6 KB, is fetched after the first contentful paint (below, "What the LCP budget measures") |
 | Images | AVIF/WebP through `next/image`, explicit dimensions, lazy below the fold | review |
 
 The route-JS gate prints rather than fails because framework chunks shared by every
@@ -117,17 +117,30 @@ and four facts follow, each checked against Lantern's source and CI's own traces
 - **Requests cost as much as bytes.** Each request waits for one of six connections and
   a round trip, and scripts queue last (Lantern places a Low-priority request one second
   behind the rest), so the last framework chunk to finish is the end of the graph.
-  `next.config.ts` therefore chunks CSS by route (`cssChunking: "graph"`) and merges
-  each page's small JavaScript chunks (`turbopackChunking.minChunkSize`, 200 KB).
+  `next.config.ts` therefore keeps Next's default CSS merging (`cssChunking: true`: two
+  or three stylesheets a page) and merges each page's small JavaScript chunks
+  (`turbopackChunking.minChunkSize`, 200 KB). Graph chunking (`"graph"`) sends a page
+  closer to only its own CSS, but in five to nine files: on the case study 9 files and
+  32.8 KB against 2 files and 34.5 KB, and the seven extra requests cost more than the
+  bytes they save. It also gave home and writing 2–14 KB less CSS, which they can
+  afford to carry (production builds, 2026-11-18).
+- **A font counts when it finishes before the paint.** Geist Mono did on every page,
+  though no first screen shows mono text: the home hero's hidden prompt preview and
+  every mono label below the fold ask for the face during the first layout. Lantern
+  charged its 23 KB to LCP. The boot script in `app/layout.tsx` now fetches it after
+  the first contentful paint, and `mono-pending` (`styles/tokens.css`) sets mono text in
+  the system's monospace face until then: about −160 ms on the home page and −90 ms on
+  the case study, priced locally in CI's regime (2026-11-18).
 - **The document counts in steps.** Its bytes arrive in TCP slow start, 14.6 KB in the
   first round trip and then 29.2 KB a round trip, before any other request starts, so
   a document over 43.8 KB (headers included) costs a whole extra 150 ms round trip.
   `/work/dbwhisper` is 50.7 KB.
 
-Measured locally on the case study (CI's regime: react-dom left out), only changes the
-size of the content close the gap: moving the full write-up off the page (−150 ms,
-document −40%), one stylesheet instead of nine (−20 ms on its own), keeping Geist Mono
-out of the first screenful (−90 to −160 ms). On the home page, the showcase's two
+Measured locally on the case study (CI's regime: react-dom left out), before the two
+changes above: moving the full write-up off the page would save about 150 ms (document
+−40%), fewer stylesheets 20–230 ms depending on what else shares the connections, and
+keeping Geist Mono out of the first paint 90–160 ms. The last two are now done without
+touching the design; the write-up stays where it is. On the home page, the showcase's two
 CareLTC captures near y = 3300 px load at first layout (Chrome's lazy-loading distance
 reaches them) and cost about 80 ms. A local run on Windows cannot reproduce CI's race:
 there the first paint waits 200–400 ms for the software GPU to compile some 40 shader

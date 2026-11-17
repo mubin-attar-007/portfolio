@@ -111,6 +111,14 @@ remapped on dark.
 No serif: `--font-serif` maps to the sans so an older call site still renders the brand
 face. Both are self-hosted by `next/font`.
 
+Geist is preloaded: the hero text, which is each page's LCP element, is set in it.
+Geist Mono is fetched only after the first contentful paint (`BOOT_SCRIPT` in
+`app/layout.tsx`, `mono-pending` in `styles/tokens.css`); until then mono text sets in
+the system's monospace face. So the swap stays out of sight, **keep mono text out of the
+first screenful of the home page and the case studies** (412 × 823, the gate's mobile
+viewport). A first-screen mono line is not broken, it just shows the swap. See
+`spec/ENGINEERING.md` §5 for why the face can't load before that paint.
+
 | Token (utility `text-*`) | Size | Line · tracking · weight | Used by |
 |---|---|---|---|
 | `display` | `clamp(2.5rem, 5.2vw, 4rem)` — 40 → 64px | 1.125 · −0.035em · 700 | page titles (`PageHeader size="display"`) |

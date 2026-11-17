@@ -14,6 +14,9 @@ import { JsonLd } from "@/components/seo/json-ld";
 /**
  * Fonts: Geist for everything read, Geist Mono for values, labels and code.
  * Both are subsetted and self-hosted by next/font (no third-party request).
+ * Geist is preloaded: the hero text, the LCP element, is set in it. Geist Mono
+ * is neither preloaded nor requested before the first paint; BOOT_SCRIPT
+ * fetches it afterwards.
  */
 const geistSans = Geist({
   variable: "--font-geist-sans",
@@ -47,7 +50,30 @@ export const metadata: Metadata = {
 
 /** The site is light-only; dark pages set their own theme colour (constants/theme.ts). */
 export const viewport: Viewport = { themeColor: BROWSER_CHROME.light };
-const JS_CLASS_SCRIPT = "document.documentElement.classList.add('js')";
+/**
+ * Runs in <head>, before the body is laid out.
+ * - `js` switches off the no-JavaScript fallbacks (`html:not(.js)` in CSS).
+ * - `mono-pending` keeps Geist Mono out of the first paint (styles/tokens.css):
+ *   mono text sets in the system's monospace face while the first screen
+ *   renders. Once the first contentful paint has happened, the script fetches
+ *   the face and drops the class, so Geist Mono swaps in. A browser without
+ *   paint timing fetches it three seconds after `load`.
+ */
+const BOOT_SCRIPT = [
+  "(function(){",
+  "var d=document,r=d.documentElement,started=false;",
+  "r.classList.add('js','mono-pending');",
+  "function show(){r.classList.remove('mono-pending')}",
+  "function load(){if(started)return;started=true;",
+  "var f=getComputedStyle(r).getPropertyValue('--font-geist-mono');",
+  "if(!f||!d.fonts){show();return}",
+  "d.fonts.load('1em '+f).then(show,show)}",
+  "try{new PerformanceObserver(function(l,o){",
+  "if(l.getEntriesByName('first-contentful-paint').length){o.disconnect();setTimeout(load,0)}",
+  "}).observe({type:'paint',buffered:true})}catch(e){}",
+  "addEventListener('load',function(){setTimeout(load,3000)})",
+  "})()",
+].join("");
 const IS_VERCEL_DEPLOYMENT = process.env.VERCEL === "1";
 
 export default function RootLayout({ children }: Readonly<{ children: React.ReactNode }>) {
@@ -61,7 +87,7 @@ export default function RootLayout({ children }: Readonly<{ children: React.Reac
       suppressHydrationWarning
     >
       <head>
-        <script dangerouslySetInnerHTML={{ __html: JS_CLASS_SCRIPT }} />
+        <script dangerouslySetInnerHTML={{ __html: BOOT_SCRIPT }} />
         <JsonLd />
       </head>
       <body className="flex min-h-screen flex-col">

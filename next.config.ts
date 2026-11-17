@@ -50,15 +50,15 @@ const securityHeaders = [
 
 const nextConfig: NextConfig = {
   output: "standalone",
-  // Render-blocking CSS per route. Turbopack's default chunking merged CSS from
-  // every route (the home showcase, the flagship template, the evals table,
-  // the lazy assistant panel) into one shared chunk that every page loaded,
-  // which more than doubled each page's CSS and pushed LCP past the Lighthouse
-  // budget (spec/ENGINEERING.md §5). `graph` groups CSS by what each route
-  // imports, weighing bytes against requests, so a route loads close to only
-  // its own CSS.
+  // Render-blocking CSS: Next's default merging, kept explicit because it is a
+  // measured choice. A page loads two or three stylesheets (34–39 KB gzip),
+  // some of it other routes' CSS. `graph` chunking sends a page closer to only
+  // its own CSS, but in five to nine files, and under the Lighthouse budget's
+  // model (six HTTP/1.1 connections, a round trip per request) those requests
+  // cost more than the 2–14 KB they save: the case study goes from 9 files to
+  // 2 for 1.7 KB more (spec/ENGINEERING.md §5).
   experimental: {
-    cssChunking: "graph",
+    cssChunking: true,
     // Fewer, larger JavaScript chunks per page. Every page loads all of its
     // chunks before it can hydrate, and the Lighthouse budget's model fetches
     // them over six HTTP/1.1 connections a round trip apiece, so a request
