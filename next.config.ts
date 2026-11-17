@@ -50,6 +50,16 @@ const securityHeaders = [
 
 const nextConfig: NextConfig = {
   output: "standalone",
+  // Render-blocking CSS per route. Turbopack's default chunking merged CSS from
+  // every route (the home showcase, the flagship template, the evals table,
+  // the lazy assistant panel) into one shared chunk that every page loaded,
+  // which more than doubled each page's CSS and pushed LCP past the Lighthouse
+  // budget (spec/ENGINEERING.md §5). `graph` groups CSS by what each route
+  // imports, weighing bytes against requests, so a route loads close to only
+  // its own CSS.
+  experimental: {
+    cssChunking: "graph",
+  },
   // The assistant's corpus (lib/ai/corpus.ts) reads these MDX folders with fs
   // when /api/chat loads. The tracer follows the literal reads too; this list
   // makes the bundle's contents a stated fact rather than an inference, so an
