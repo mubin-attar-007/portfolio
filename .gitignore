@@ -81,3 +81,6 @@ srv.err.log
 docs/*.rar
 # Output of scripts/release-diff.mjs (npm run test:release-diff).
 release-diff.json
+
+# Private local working files (dossiers, denylists, references). Never committed or deployed.
+.local/

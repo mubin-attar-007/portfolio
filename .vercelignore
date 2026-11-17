@@ -7,3 +7,6 @@ node_modules
 !.env.example
 .next-dev.log
 tsconfig.tsbuildinfo
+
+# Private local working files: never upload, even with a CLI deploy.
+.local
