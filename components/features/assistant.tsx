@@ -32,6 +32,18 @@ const AssistantPanel = lazy(() => loadPanel().then((m) => ({ default: m.Assistan
 const ASSISTANT_LAUNCHER_ATTR = "data-assistant-launcher";
 const PANEL_ID = "assistant-panel-dialog";
 
+/** How long closing keeps trying to hand focus back while the page leaves its inert state. */
+const FOCUS_RESTORE_BUDGET_MS = 1000;
+
+/** What can take focus inside a launcher that is itself a wrapper. */
+const FOCUSABLE = 'a[href], button:not([disabled]), [tabindex]:not([tabindex="-1"]), summary';
+
+/** The element to focus for a launcher, or null while it cannot take focus (detached, inert or hidden). */
+function focusTargetOf(el: HTMLElement | null): HTMLElement | null {
+  if (!el || !el.isConnected || el.closest("[inert]") || el.getClientRects().length === 0) return null;
+  return el.matches(FOCUSABLE) ? el : el.querySelector<HTMLElement>(FOCUSABLE);
+}
+
 /** True on macOS, iOS and iPadOS, where the shortcut is ⌘K rather than Ctrl+K. */
 function isApplePlatform(): boolean {
   const nav = navigator as Navigator & { userAgentData?: { platform?: string } };
@@ -137,38 +149,42 @@ export function Assistant({ className }: { className?: string }) {
     setSeed((current) => (current?.id === id ? null : current));
   }, []);
 
-  // Restore to the launcher that opened the panel, or else to the one that is
-  // actually visible at the current breakpoint. getClientRects() is robust for
-  // both fixed and in-flow controls.
+  // Restore to the launcher that opened the panel, or else to the first one
+  // that can take focus at the current breakpoint (WCAG 2.4.3).
   //
-  // Deferred by a frame, and that frame is load-bearing. While the panel is
-  // open the page behind it is `inert`, and the launchers live in that inert
-  // subtree. Focusing one in the same tick as `setOpen(false)` would silently
-  // do nothing: the panel has not unmounted yet, so the page is still inert and
-  // inert elements cannot take focus. The frame lets React commit the unmount
-  // and run the boundary's cleanup first.
+  // Deferred to animation frames, and the wait is load-bearing. While the panel
+  // is open the page behind it is `inert`, and the launchers live in that inert
+  // subtree, so focusing one before React commits the unmount and the
+  // boundary's cleanup runs silently does nothing. How many frames that takes
+  // is a scheduler detail, not a contract: on a slow device or a busy CI runner
+  // it is more than one. So each frame skips launchers that are still inert,
+  // hidden or detached, focuses the first that takes it, and tries again on the
+  // next frame within a short budget. It never moves focus the visitor (or
+  // another component) has already placed outside the closing panel.
   const close = useCallback(() => {
     setOpen(false);
     setSeed(null);
-    const restore = () => {
+    const deadline = performance.now() + FOCUS_RESTORE_BUDGET_MS;
+    const restore = (): boolean => {
       const launchers = [
         returnTo.current,
         ...document.querySelectorAll<HTMLElement>(`[${ASSISTANT_LAUNCHER_ATTR}]`),
       ];
       for (const el of launchers) {
-        if (el && el.getClientRects().length > 0) {
-          el.focus();
-          return document.activeElement === el;
-        }
+        const target = focusTargetOf(el);
+        if (!target) continue;
+        target.focus();
+        if (document.activeElement === target) return true;
       }
-      return true;
+      return false;
     };
-    // One retry. Effect-flush timing is a scheduler detail, not a contract, so
-    // if the first attempt lands while the page is still inert we take the
-    // next frame rather than leaving focus stranded on <body> (WCAG 2.4.3).
-    requestAnimationFrame(() => {
-      if (!restore()) requestAnimationFrame(restore);
-    });
+    const step = () => {
+      const active = document.activeElement;
+      if (active && active !== document.body && !active.closest(`#${PANEL_ID}`)) return;
+      if (restore() || performance.now() > deadline) return;
+      requestAnimationFrame(step);
+    };
+    requestAnimationFrame(step);
   }, []);
 
   useEffect(() => {
