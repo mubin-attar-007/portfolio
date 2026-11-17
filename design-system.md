@@ -115,8 +115,10 @@ Geist is preloaded: the hero text, which is each page's LCP element, is set in i
 Geist Mono is fetched only after the first contentful paint (`BOOT_SCRIPT` in
 `app/layout.tsx`, `mono-pending` in `styles/tokens.css`); until then mono text sets in
 the system's monospace face. So the swap stays out of sight, **keep mono text out of the
-first screenful of the home page and the case studies** (412 × 823, the gate's mobile
-viewport). A first-screen mono line is not broken, it just shows the swap. See
+first screenful** where you can. Today the home page and the DBWhisper case study have
+none there at 412 × 823 (the gate's mobile viewport); the visible exceptions are small
+labels, the header's "Ctrl K" hint on desktop and a flagship's "Private repository"
+line, where a swap between two monospace faces is hard to see. See
 `spec/ENGINEERING.md` §5 for why the face can't load before that paint.
 
 | Token (utility `text-*`) | Size | Line · tracking · weight | Used by |

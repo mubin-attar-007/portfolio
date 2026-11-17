@@ -321,9 +321,11 @@
    until the script has fetched Geist Mono, which starts just after the first
    contentful paint, and then drops the class. Lighthouse charged every page's
    LCP for the face because it finished before that paint (spec/ENGINEERING.md
-   §5). The first screenful of the home page and of the case studies holds no
-   mono text, so the swap happens out of sight there. Without JavaScript the
-   class never applies and the face loads as it always did. */
+   §5). The first mobile screenful of the home page and of the DBWhisper case
+   study holds no mono text; elsewhere only small labels do (the header's Ctrl K
+   hint on desktop, a flagship's repository line), where the swap between two
+   monospace faces is hard to see. Without JavaScript the class never applies
+   and the face loads as it always did. */
 :root.mono-pending {
   --font-mono: ui-monospace, "SFMono-Regular", Consolas, monospace;
 }

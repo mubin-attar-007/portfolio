@@ -69,7 +69,7 @@ the budget; changing a budget needs an ADR.
 | Metric | Budget | Enforced today |
 |---|---|---|
 | Lighthouse | ≥ 95 Performance · 100 Accessibility · 100 Best Practices · 100 SEO | fails the gate |
-| LCP | ≤ 2.5 s (raised from 2.0 s in 2026; the reason is recorded in ADR-018, "Carried forward") | fails the gate. CI, 2026-11-17 (f273f65): home 2657 ms, case study 2734 ms, writing 2272 ms, so home and the case study miss it; see "What the LCP budget measures" below |
+| LCP | ≤ 2.5 s (raised from 2.0 s in 2026; the reason is recorded in ADR-018, "Carried forward") | fails the gate. CI, 2026-11-18 (52089fd): home 2573 ms, case study 2570 ms, writing 2195 ms (performance 97, 97, 98), so home and the case study miss it by about 70 ms; see "What the LCP budget measures" below |
 | CLS | < 0.05 | fails the gate |
 | TBT (lab) | < 150 ms | fails the gate |
 | Route JS (gzip, first load) | ≤ 120 KB home · ≤ 90 KB content pages | printed, not failing; over budget. CI, 2026-11-16 (before the redesign): home 164 KB, case study 164 KB, writing 157 KB. The redesign, measured the same way on 2026-11-17: home 160 KB, case study (`/work/dbwhisper`, which now holds the boundary inspector) 174 KB, writing 159 KB. With the flagship case studies, on a production build the same day: gzip bodies home 155.8 KB, every case study, flagships included, 166.0 KB, writing 149.6 KB; with headers, as CI's Lighthouse counts them, 164.8, 175.9 and 158.6 KB. CI, 2026-11-17 evening (f273f65, after the flagship routes and the chunk merge): home 164 KB in 9 scripts, case study 172 KB in 9, writing 158 KB in 9 |
@@ -125,8 +125,9 @@ and four facts follow, each checked against Lantern's source and CI's own traces
   bytes they save. It also gave home and writing 2–14 KB less CSS, which they can
   afford to carry (production builds, 2026-11-18).
 - **A font counts when it finishes before the paint.** Geist Mono did on every page,
-  though no first screen shows mono text: the home hero's hidden prompt preview and
-  every mono label below the fold ask for the face during the first layout. Lantern
+  though the home page and the case study show no mono text in their first mobile
+  screen: the home hero's hidden prompt preview and every mono label below the fold ask
+  for the face during the first layout. Lantern
   charged its 23 KB to LCP. The boot script in `app/layout.tsx` now fetches it after
   the first contentful paint, and `mono-pending` (`styles/tokens.css`) sets mono text in
   the system's monospace face until then: about −160 ms on the home page and −90 ms on
@@ -136,13 +137,19 @@ and four facts follow, each checked against Lantern's source and CI's own traces
   a document over 43.8 KB (headers included) costs a whole extra 150 ms round trip.
   `/work/dbwhisper` is 50.7 KB.
 
-Measured locally on the case study (CI's regime: react-dom left out), before the two
-changes above: moving the full write-up off the page would save about 150 ms (document
-−40%), fewer stylesheets 20–230 ms depending on what else shares the connections, and
-keeping Geist Mono out of the first paint 90–160 ms. The last two are now done without
-touching the design; the write-up stays where it is. On the home page, the showcase's two
-CareLTC captures near y = 3300 px load at first layout (Chrome's lazy-loading distance
-reaches them) and cost about 80 ms. A local run on Windows cannot reproduce CI's race:
+After the two changes above, CI measured home 2573 ms and the case study 2570 ms
+(52089fd). What is left of the gap is JavaScript. Priced on that build's own traces in
+CI's regime (react-dom left out), 10% fewer script bytes would save 75 ms on home and
+150 ms on the case study, while a smaller document, less CSS or dropping the home page's
+two CareLTC captures (near y = 3300 px, which Chrome's lazy-loading distance reaches at
+first layout) would not move LCP at all. The counted scripts are almost all framework:
+Next's router and Flight client (48 KB gzip) on top of the 72 KB react-dom chunk the
+race can leave out, against 20–28 KB of the site's own code (the layout's islands, then
+the page's). A third of that would have to go, which no design-neutral change does. Served the way Vercel serves the site,
+the same build passes with room to spare: brotli alone gives 2355 and 2277 ms, and
+HTTP/2 with brotli 1749 and 1884 ms (2051 and 2184 ms with react-dom charged too).
+Changing how the gate serves the build is an ADR-009 decision for the owner, not a fix.
+A local run on Windows cannot reproduce CI's race:
 there the first paint waits 200–400 ms for the software GPU to compile some 40 shader
 programs, so every script counts. To price a change on CI's terms, record a run
 (Lighthouse `-G`), set each response's size in the DevTools log to what the server
