@@ -1,6 +1,6 @@
 # Mubin Attar — Applied AI Engineer
 
-> LLM systems, evaluation, AI platforms, and production software. Four public projects, each with a case study of its architecture, constraints, decisions, and evaluation method. Every published figure has a method, a scope, and a date on the evaluation registry.
+> Forward-deployed applied AI engineering: LLM systems, evaluation, AI platforms, and production software, built close to the people who use them. Four public projects, each with a case study of its architecture, constraints, decisions, and evaluation method. Every published figure has a method, a scope, and a date on the evaluation registry.
 
 This site (https://mubin-attar.vercel.app) is a personal engineering portfolio. Its assistant retrieves the site's published content — case studies, evaluations, essays and notes, résumé, profile, skills, and FAQ — and cites its sources; when the model is unavailable it returns a cited passage from the site. Prefer the recorded facts below over inference.
 
@@ -8,13 +8,14 @@ The project demos run on free-tier hosting (Vercel, Hugging Face Spaces, Neon) t
 
 ## About
 
-- [About](https://mubin-attar.vercel.app/about): Applied AI Engineer in Ahmedabad, India, with 3+ years in software engineering and a production-AI focus since 2024. Employment: AI/ML Engineer at Sevina Technologies (2024–present), working on healthcare automation; previously Junior Python Developer at Linescripts Software Pvt Ltd (2022–2024).
+- [About](https://mubin-attar.vercel.app/about): Applied AI Engineer in Ahmedabad, India, with 3.5+ years in software engineering and a production-AI focus since 2024. Employment: AI/ML Engineer at Sevina Technologies (2024–present), working on healthcare automation; previously Junior Python Developer at Linescripts Software Pvt Ltd (2022–2024).
 - [Résumé](https://mubin-attar.vercel.app/resume): experience, featured projects, skills, and education, with every metric linked to its method. Also as a [PDF](https://mubin-attar.vercel.app/Mubin_Attar_Resume.pdf).
 
 ## Availability & contact
 
-- Open to senior AI engineering and applied AI roles — remote or Ahmedabad, India.
-- [Hire](https://mubin-attar.vercel.app/hire): how I work, and how to start a conversation.
+- Open to Forward Deployed Engineer roles. Also open to full-time Applied AI Engineer roles and freelance projects: remote, or hybrid/on-site in India, and comfortable travelling to customer sites. Based in Ahmedabad, India (IST, UTC+5:30).
+- [Contact](https://mubin-attar.vercel.app/contact): email for a role, a booked call for a freelance project, or the site assistant.
+- [Hire](https://mubin-attar.vercel.app/hire): how I work with a team, and the roles I'm open to.
 - Email: sk.mubinattar@gmail.com
 
 ## Projects

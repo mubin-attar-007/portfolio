@@ -4,8 +4,7 @@ import { EVIDENCE_FRAME, EVIDENCE_SPACING } from "@/components/mdx/prose";
 
 /**
  * CodeBlock — Shiki-highlighted code, build/render-time (zero client JS for the
- * highlighting). Dual light/dark themes emitted as CSS vars; the dark palette
- * activates under [data-theme="dark"] (see globals.css).
+ * highlighting). One light theme, emitted as CSS variables.
  *
  * The chrome is a real filename bar: it sits on --color-bg-subtle so the bar and
  * the code well are two distinct planes rather than one flat box, with a hairline

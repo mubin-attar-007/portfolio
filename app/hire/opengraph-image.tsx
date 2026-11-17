@@ -1,14 +1,14 @@
 import { renderOg, ogAlt, OG_SIZE, OG_CONTENT_TYPE, type OgCard } from "@/lib/og";
 import { STATUS } from "@/config/site";
+import { hirePage } from "@/content/pages/hire";
 
 /**
- * The headline is the redesigned /hire h1 (spec/prototype/hire.html); when the
- * page's copy module lands (content/pages/hire.ts), read it from there instead.
- * The line is the site's availability sentence, single-sourced in STATUS.
+ * The headline is the /hire h1 with its accent (content/pages/hire.ts); the
+ * line is the site's availability sentence, single-sourced in STATUS.
  */
 const CARD = {
   kicker: "Hire me",
-  title: "I turn customer problems into running systems inside their rules",
+  title: `${hirePage.hero.title} ${hirePage.hero.accent}`,
   description: STATUS.text,
 } satisfies OgCard;
 

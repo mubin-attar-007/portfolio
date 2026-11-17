@@ -1,7 +1,7 @@
 import type { Metadata } from "next";
 import { Section } from "@/components/layout/section";
 import { ResumeDownloadLink } from "@/components/features/resume-download-link";
-import { resumePage } from "@/components/resume/copy";
+import { resumePage } from "@/content/pages/resume";
 import styles from "@/components/resume/resume.module.css";
 import { buttonClassName } from "@/components/ui/button";
 import { Caret, CaretLink } from "@/components/ui/caret-link";

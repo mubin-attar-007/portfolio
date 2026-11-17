@@ -3,7 +3,7 @@
 import { useId, useMemo, useState } from "react";
 import { StatusPill } from "@/components/ui/status-pill";
 import { cx } from "@/components/ui/cx";
-import { evalsPage } from "./copy";
+import { evalsPage } from "@/content/pages/evals";
 import type { BoardRow, ProjectOption } from "./rows";
 import styles from "./evals.module.css";
 

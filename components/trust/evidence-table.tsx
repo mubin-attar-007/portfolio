@@ -1,6 +1,6 @@
 import { CaretLink } from "@/components/ui/caret-link";
 import { StatusPill } from "@/components/ui/status-pill";
-import { TRUST_PAGE, type EvidenceRow } from "./trust-copy";
+import { TRUST_PAGE, type EvidenceRow } from "@/content/pages/trust";
 import styles from "./trust.module.css";
 
 /**

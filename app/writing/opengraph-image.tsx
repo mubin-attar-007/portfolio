@@ -1,14 +1,11 @@
 import { renderOg, ogAlt, OG_SIZE, OG_CONTENT_TYPE, type OgCard } from "@/lib/og";
 import { pages } from "@/content/site";
+import { writingPage } from "@/content/pages/writing";
 
-/**
- * The headline is the redesigned /writing header (spec/prototype/writing.html),
- * which names all three kinds in the index; when the page states it in a copy
- * module, read it from there instead.
- */
+/** The headline is the /writing header (content/pages/writing.ts). */
 const CARD = {
   kicker: pages.writing.kicker,
-  title: "Essays, guides and notes",
+  title: writingPage.title,
   description: "Drawn from the decisions and failures in my projects.",
 } satisfies OgCard;
 

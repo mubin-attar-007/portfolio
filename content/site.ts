@@ -14,8 +14,8 @@ import { projects } from "./projects";
 /**
  * Homepage + about copy that is NOT the homepage's own layout data.
  *
- * The homepage's sections read `flagshipHome` (content/home-visual.ts). What
- * survives here are the two blocks that other routes render:
+ * The homepage's own copy lives in `content/pages/home.ts`. What survives here
+ * are the two blocks that other routes render:
  *
  * - `proof`     the employer-anchored credibility row on /about and /hire.
  * - `principles` the three rules, rendered by /about.
@@ -175,7 +175,6 @@ export const nowPage = {
   /** Heading for the structured `exploring` list in the front-matter. */
   exploringTitle: "Currently exploring",
   openTo: {
-    title: "Open to",
     cta: { label: "Work with me", href: "/hire" },
   },
 } as const;

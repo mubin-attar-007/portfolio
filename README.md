@@ -1,8 +1,14 @@
 # Portfolio — Mubin Attar
 
-The personal site of **Mubin Attar, Applied AI Engineer**: four project case
-studies, an evaluation registry, professional experience, technical writing,
-and a grounded assistant that answers questions about the work.
+The personal site of **Mubin Attar, Applied AI Engineer**, open to Forward Deployed
+Engineer roles: four public case studies, two anonymous field reports (drafts until
+the owner publishes them), an evaluation registry, professional experience, technical
+writing, and a grounded assistant that answers questions about the work.
+
+The visual system is light-only with dark plates and three dark pages, built to a
+Clerk-grade bar from the approved prototype in `spec/prototype/`
+([ADR-018](spec/decisions/ADR-018-clerk-grade-visual-system.md),
+[design-system.md](design-system.md)).
 
 Production: [mubin-attar.vercel.app](https://mubin-attar.vercel.app).
 
@@ -26,13 +32,15 @@ source — when no key or quota is available. See
 | Location | Responsibility |
 | --- | --- |
 | `app/` | Routes, layout, metadata, OG images, feeds, `/api/chat` |
-| `components/` | UI primitives, layout, homepage, case-study bodies, diagrams, assistant |
+| `components/` | UI primitives (`ui/`), chrome (`layout/`), motion, one folder of sections per page, case-study bodies, diagrams, assistant |
 | `config/site.ts`, `config/nav.ts` | Identity, availability line, integrations, navigation |
 | `constants/` | Shared class strings, search-result limits (`seo.ts`), browser-chrome colours (`theme.ts`) |
 | `content/projects.ts` | Canonical project records and card content |
 | `content/resume.ts` | Canonical résumé, used by pages, retrieval, and the PDF |
 | `content/evals.ts`, `content/schema.ts` | Evaluation registry and the Zod content schemas |
-| `content/*.ts` (other) | Homepage, page, and article copy; the career timeline; illustrative inspector and walkthrough data |
+| `content/pages/*.ts` | One copy module per page (home, about, hire, contact, work, writing, evals, résumé, now, trust, uses) |
+| `content/field/*.ts` | The two anonymous field reports and their `published` flag |
+| `content/*.ts` (other) | Shared and article copy; the career timeline; illustrative inspector and walkthrough data |
 | `content/writing`, `content/notes`, `content/now.mdx` | Essays, notes, and the `/now` page (MDX) |
 | `content/projects/*.mdx` | Long-form project summaries for assistant retrieval |
 | `content/*.json` | Profile and FAQ data (the FAQ feeds the assistant only) |
@@ -68,7 +76,7 @@ npm run test:copy # prerendered HTML: no words run together around inline elemen
 
 Browser gates run against a production server and take `BASE_URL`
 (CI uses the standalone server on port 3200): `test:a11y`, `test:interaction`,
-`test:motion`, `test:hue` (with `THEME=light` or `THEME=dark`), `test:print`,
+`test:motion`, `test:hue` (the site is light-only), `test:print`,
 `test:screens`, `test:links`, and `test:smoke` (which also fails on any console
 warning). `test:lighthouse` and `test:metadata` start their own standalone server
 from the build unless `LIGHTHOUSE_BASE_URL` points at one. `test:metadata` reads
@@ -89,7 +97,23 @@ palette, run `npm run build:icons` and commit them with `scripts/icons.lock.json
 `npm test` fails until you do.
 
 `public/llms.txt` is written by hand; `npm test` fails when it misses a published
-page or evaluation row, or quotes a figure that disagrees with `content/evals.ts`.
+page or evaluation row, or quotes a figure that disagrees with `content/evals.ts`. It
+lists no field report until that report is published.
+
+## Routes
+
+| Route | Page |
+| --- | --- |
+| `/` | Home |
+| `/work`, `/work/[slug]` | The work overview and the four public case studies (DBWhisper, TradePulse, CrownWager, LLM Studio) |
+| `/work/field/[slug]` | The field reports `records-triage` and `nfc-room-rounds` (noindex drafts) |
+| `/evals` | The evaluation registry |
+| `/writing`, `/writing/[slug]`, `/notes`, `/notes/[slug]` | Essays, guides and notes; `/notes` is the writing index with Notes selected |
+| `/about`, `/hire`, `/contact` | About, the careers-style hire page, and the contact funnel |
+| `/resume`, `/now`, `/uses`, `/skills`, `/trust`, `/privacy` | Résumé, now, stack, capability map, evidence, privacy |
+| `/rss.xml`, `/writing/feed.xml`, `/sitemap.xml`, `/llms.txt` | Feeds and machine-readable indexes |
+
+Details, redirects and rendering: [spec/ARCHITECTURE.md §3](spec/ARCHITECTURE.md#3-routes-and-rendering).
 
 ## CI
 
@@ -97,7 +121,7 @@ page or evaluation row, or quotes a figure that disagrees with `content/evals.ts
 on pull requests, and on manual dispatch: type-check, lint, unit tests, build, the
 copy gate over the prerendered HTML, then one standalone server for the browser
 gates — accessibility, interaction,
-motion, accent drift in both themes, print, internal links, metadata, and the
+motion, accent drift, print, internal links, metadata, and the
 smoke test. The Lighthouse budget (which repeats the metadata gate) runs on pushes
 to `main` and on pull requests that target `main`. A failed run uploads the server log and the
 `.screenshots/` folder (the print gate's PDFs) as an artifact. A separate `audit` job
@@ -120,7 +144,7 @@ a separate step.
 
 ## Documentation
 
-- [design-system.md](design-system.md) — tokens, typography, motion, and the design law
+- [design-system.md](design-system.md) — tokens, typography, components, motion, page patterns, and the design law
 - [spec/PROJECT_CHARTER.md](spec/PROJECT_CHARTER.md) — purpose, audiences, principles
 - [spec/ENGINEERING.md](spec/ENGINEERING.md) — standards, budgets, testing, workflow
 - [spec/ARCHITECTURE.md](spec/ARCHITECTURE.md) — structure, routes, rendering, configuration

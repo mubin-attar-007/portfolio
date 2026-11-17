@@ -1,6 +1,6 @@
 import { SmartLink } from "@/components/ui/smart-link";
 import type { Evidence } from "./stack-evidence";
-import { monogram } from "./tool-notes";
+import { monogram } from "@/content/pages/uses";
 import styles from "./misc.module.css";
 
 /** The four tile tints (violet, cyan, green, amber), cycled by category. */

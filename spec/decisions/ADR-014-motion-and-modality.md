@@ -1,11 +1,15 @@
 # ADR-014 — Motion, disclosure, and the modal boundary
 
-Status: **Accepted; §1 superseded.** Extends ADR-012 (Clerk fidelity) and ADR-013
-(palette). §1's section reveal was removed by ADR-015 — the `Reveal` component no
-longer exists and homepage content is always visible — but its failure analysis is why
-no content is ever hidden behind an engine. The walkthrough in §2 moved to the DBWhisper
-case study (ADR-016). Facts checked against the code on 2026-11-13; point-in-time gate
-counts and local measurements were removed (git history, commit `8949fdf`).
+Status: **Accepted; §1 superseded.** §2 (walkthrough playback), §3 (native
+`<details>` methodology) and §4 (the `inert` modal boundary) still govern the code.
+§1's section reveal was removed by ADR-015 — the `Reveal` component no longer exists
+and content is always visible — but its failure analysis is why no content is ever
+hidden behind an engine (the motion law in ADR-018). The walkthrough in §2 lives on
+the DBWhisper case study. ADR-012 and ADR-013, which this record extended, were
+removed on 2026-11-17 (git history); the per-theme hue gate described under "The gates
+this added" now runs once, on the light-only site (ADR-018). Facts checked against the
+code on 2026-11-13; point-in-time gate counts and local measurements were removed
+(git history, commit `8949fdf`).
 
 ## Context
 

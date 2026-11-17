@@ -4,7 +4,7 @@ import { DarkSurface } from "@/components/layout/dark-surface";
 import { Section } from "@/components/layout/section";
 import { EvalsBoard } from "@/components/evals/evals-board";
 import { MethodNotes } from "@/components/evals/method-notes";
-import { evalsPage } from "@/components/evals/copy";
+import { evalsPage } from "@/content/pages/evals";
 import { boardRows, projectOptions } from "@/components/evals/rows";
 import evalStyles from "@/components/evals/evals.module.css";
 import { Button } from "@/components/ui/button";

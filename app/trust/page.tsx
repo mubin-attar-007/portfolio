@@ -6,7 +6,7 @@ import { PageHeader } from "@/components/ui/page-header";
 import { SectionHeader } from "@/components/ui/section-header";
 import { EvidenceTable } from "@/components/trust/evidence-table";
 import { Practices } from "@/components/trust/practices";
-import { EVIDENCE, TRUST_PAGE } from "@/components/trust/trust-copy";
+import { EVIDENCE, TRUST_PAGE } from "@/content/pages/trust";
 import styles from "@/components/trust/trust.module.css";
 import { SITE } from "@/config/site";
 import { pageMetadata } from "@/lib/seo";

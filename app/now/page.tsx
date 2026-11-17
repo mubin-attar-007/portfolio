@@ -1,6 +1,6 @@
 import type { Metadata } from "next";
 import { Section } from "@/components/layout/section";
-import { nowCopy } from "@/components/now/copy";
+import { nowCopy } from "@/content/pages/now";
 import { loadNowEntries, type NowEntry } from "@/components/now/now-entries";
 import styles from "@/components/now/now.module.css";
 import { Button } from "@/components/ui/button";

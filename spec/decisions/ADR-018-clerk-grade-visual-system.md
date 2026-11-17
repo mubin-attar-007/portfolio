@@ -1,0 +1,144 @@
+# ADR-018 — A Clerk-grade visual system
+
+Status: **Accepted**, 17 November 2026. Supersedes ADR-012 (Clerk fidelity), ADR-013
+(the two-theme palette), ADR-016 (the homepage boundary inspector) and ADR-017
+(responsive interaction), which were removed on this date and remain in git history.
+Supersedes the theme and homepage decisions of ADR-015 (decisions 1, 2, 4 and 5) and
+keeps its role, scoped-proof and canonical-data decisions. Keeps ADR-014 §2–§4.
+`design-system.md` is the specification of the system this record chooses; where the two
+disagree, `styles/tokens.css` wins, then `design-system.md`.
+
+## Context
+
+The site read as a careful document but not as a product. The owner set clerk.com as
+the quality bar for structure, layout, effects and motion, with original code, copy and
+assets and his own real content. A static prototype (`spec/prototype/`) was built
+first, measured against captured Clerk pages and approved, then the live site was
+rebuilt from it page by page.
+
+Three things in the old system blocked that bar:
+
+- **Two themes.** A remembered dark theme with its own accent (lime) doubled every
+  visual decision, needed a toggle and a pre-paint script, and made dark *sections* —
+  which Clerk uses for emphasis — a theme-switch problem.
+- **A motion ban that was too broad.** "No marquees, no looping ambient animation"
+  ruled out the small, purposeful loops and hover-driven illustrations that make Clerk
+  feel alive, while the real failure (content hidden behind scroll reveals) needed a
+  narrower rule.
+- **One page shape.** Every page was a header and a ruled list. Clerk uses a distinct
+  pattern per job — product page, leaderboard, changelog, legal document, blog post.
+
+## Decision
+
+1. **Light-only, with dark plates and dark pages.** There is one theme. The theme
+   toggle, the pre-paint script and `prefers-color-scheme` handling are deleted;
+   `<html data-theme="light">` is static (the gates read it). Dark appears in three
+   scopes, all fed by one remap in `styles/tokens.css`: a dark band or notched plate
+   inside a light page (`.tone-invert`), a dark *page* (`[data-surface="dark"]`, the
+   `DarkSurface` wrapper: `/about`, `/evals`, the 404 and the error pages), and the
+   chrome of a page that contains a dark surface (`html:has([data-surface="dark"])
+   [data-chrome]`). These are surfaces, not modes: nothing is a visitor preference.
+2. **Geist only.** Geist and Geist Mono. Newsreader and every serif use are removed;
+   `--font-serif` maps to the sans so no call site renders a fallback face.
+3. **The palette.** Canvas `#f7f7f8`, white surfaces, ink `#131316`, one violet accent
+   `#6b4bff`, status green, amber and red, and a plate ramp (`#131316`, deep
+   `#0f0f12`) with its own lifted violet `#9d8cff` and a cyan `#63d2ef` for data on dark
+   grounds only. Every text colour is AA on the ground it is used on; the ratios are
+   in `tokens.css`. The existing `--color-*` names keep their meaning so components
+   written before the redesign render in the new palette.
+4. **The grid.** Content is 1200px wide (it starts at x=120 at 1440); the gutter is
+   `clamp(16px, 3vw, 24px)`; the floating pill nav is 1232px.
+5. **The motion law.** Motion is allowed in three forms and no others:
+   - *Micro-interactions on springs*: the arrow-swap caret, the button press
+     (`scale(.97)`), the tab hover pill, menu entry, list-row and link colour shifts.
+   - *Illustrations that react to hover or focus-within*: wires pulse, a hub lights up,
+     charts redraw, bars fill, checks pop, replies rise. The reaction is decoration;
+     the information is already on screen at rest.
+   - *A few ambient loops*: the marquee (paused on hover and focus), a slow float, the
+     12s pulse rings, the sheen on a showcase change, the assistant's "searching"
+     shimmer.
+   Banned: scroll-triggered fade or slide-up reveals, typing effects, cursor
+   followers, scroll-jacking and parallax. Content is never hidden waiting for an
+   observer. Under `prefers-reduced-motion: reduce` every loop stops, every transition
+   is instant, and the marquee is a static, centred row; one blanket rule in
+   `styles/globals.css` enforces it so a new component cannot forget.
+6. **One pattern per page job.** Each page takes the pattern that fits what it is
+   for (design-system.md §7.1 is the full map):
+
+   | Page | Pattern |
+   |---|---|
+   | `/` | Product home: announcement bar, hero, tabbed showcase, field-work plate, public bento, agent section with the copy-prompt chip, writing, CTA |
+   | `/work` | Product overview: hero, field-work plate, public-systems grid, stack band, CTA |
+   | `/work/[slug]` | Product page: work sub-nav, browser-frame recording, numbered steps beside a sticky frame, decision bento, results with methods, what broke, stack |
+   | `/work/field/[slug]` | The product-page pattern, anonymous, with a draft ribbon while unpublished |
+   | `/about` (dark) | Company page with a halftone portrait quote band |
+   | `/hire` | Careers page: glass mark with pulse rings, letter, stats, roles |
+   | `/contact` | Contact page: cards with dotted guides and an aurora glow |
+   | `/writing`, `/notes` | Blog index: filter chips, featured covers, full list |
+   | `/writing/[slug]`, `/notes/[slug]` | Blog post: 680px body, sticky sidebar with a table of contents and "Ask AI about this" |
+   | `/evals` (dark) | Leaderboard: filters, tinted score tiles, retired rows kept |
+   | `/resume` | Document layout with a sticky section nav and a print stylesheet |
+   | `/now` | Changelog: date rail with dots |
+   | `/trust` | Security page: evidence table including what is *not* claimed |
+   | `/uses`, `/skills` | Glossary grid with a sticky category nav; a capability map |
+   | `/privacy` | Legal page with a sticky nested table of contents |
+   | 404, errors (dark) | A halftone "404" in a dotted frame, then useful links |
+
+7. **New routes.** `/contact` becomes a page (the contact funnel, `STATUS.href`) and
+   no longer redirects to `/hire`, which stays the careers-style page.
+   `/work/field/[slug]` publishes the two anonymous field reports, behind a
+   `published` flag (CONTENT_MODEL.md §1.5).
+
+## Carried forward from the removed records
+
+- **The LCP budget is 2,500 ms** (from ADR-012, decision 2). It was raised from
+  2,000 ms to the Core Web Vitals "good" threshold after CI measured 2,018–2,373 ms at
+  performance 98/99; the residual is the Geist swap repainting the hero text, and a
+  budget below that would push toward `font-display: optional` and drop the brand face
+  on slow connections. The redesign must keep LCP well under it: the hero text is
+  server-rendered, no blocking client JS sits above the fold, and no large image is
+  above the fold.
+- **The footer is a curated map, not a sitemap** (from ADR-012), capped by
+  `test/navigation.test.mts`.
+- **The boundary inspector stays honest** (from ADR-016). It moved from the homepage
+  to `/work/dbwhisper`. It shows three curated cases with native radio controls and
+  the in-frame label "Illustrative cases · no query is sent"; it has no parser, model
+  call or database request. Its footer shows DBWhisper's policy-corpus result,
+  labelled a deterministic policy test, not model accuracy. The golden-set counts it
+  once showed are retired and the DBWhisper recording stays withdrawn; the case study
+  shows its capture, never that video.
+- **Static project cards do not lift as a whole** (from ADR-016/017) is replaced:
+  bento cards may change ground and shadow on hover, and their art may lean in
+  (`--card-art-scale`), but text never moves and nothing is revealed only on hover.
+
+## Consequences
+
+- One remap block replaces a second theme, so a dark plate costs nothing to add and
+  cannot drift from a dark page.
+- The primitives in `components/ui`, `components/layout` and `components/motion`
+  (design-system.md §5) carry the system; a page composes them and keeps only its own
+  composition in a CSS module.
+- Page copy moved into one module per page under `content/pages/`
+  (CONTENT_MODEL.md §5).
+- Some legacy primitives (`TextLink`, `Metric`, `BoundaryMark`) remain where older
+  components use them; `SectionHeading`, `EyebrowChip` and `Breadcrumb` have no
+  importers left and should be deleted.
+- Open Graph cards use one renderer with a light and a dark tone (ARCHITECTURE.md §8).
+
+## Gates changed
+
+- `test:a11y`, `test:hue` and every other browser gate run the light site once; the
+  `THEME=dark` CI steps are removed. The dark pages and plates are inside the light
+  pass.
+- `test:hue` allows the neutrals, the violet accent, the plate cyan and the status
+  green, amber and red.
+- The inspector and walkthrough checks (`test:interaction`, `walkthrough-input-audit`,
+  `boundary-audit`) run on `/work/dbwhisper`.
+- `test:motion` checks the new contracts: the caret swap, the menus, the tab pill and
+  panel crossfade, the marquee's hover pause, the copy chip, and each reduced-motion
+  alternative.
+- `test:links` and `test:smoke` cover `/contact` and the field reports (noindex, but
+  linked, so they must resolve). `test:print` checks the new résumé print styles.
+- `test/icons.test.mts` checks the browser-chrome colours against the light canvas and
+  the plate-deep token rather than a `--dark-bg` theme ramp.
+- The Lighthouse budgets are unchanged (ADR-009).

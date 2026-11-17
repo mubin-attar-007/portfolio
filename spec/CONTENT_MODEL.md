@@ -4,9 +4,10 @@ Site copy lives in `content/` and `config/site.ts`. Projects, evaluations and th
 timeline are typed TypeScript modules parsed with Zod at module load; writing, notes
 and `/now` frontmatter is validated with Zod when it is loaded. Either way, invalid
 content throws and the build fails, and the types are inferred from the schemas in
-`content/schema.ts` — never hand-written. The résumé and the page-copy modules
-(`site.ts`, `home-visual.ts`, `article.ts`) are `as const` objects that TypeScript
-checks but no schema validates.
+`content/schema.ts` — never hand-written. The résumé, the field reports
+(`content/field/`) and the page-copy modules (`site.ts`, `article.ts`,
+`content/pages/*.ts`) are typed objects that TypeScript checks but no schema
+validates.
 
 ---
 
@@ -119,6 +120,32 @@ methodology only. No PHI, no resident-level data, no facility-identifiable claim
 figures, no payer contract terms. All screenshots reproduced with synthetic data. When
 in doubt: describe the mechanism, omit the number.
 
+### 1.5 Field reports — `content/field/*.ts` (`FieldReport`)
+
+The two anonymous reports of employment work, `records-triage` and `nfc-room-rounds`,
+rendered at `/work/field/[slug]`. The type is `content/field/types.ts`; the registry
+`fieldReports` (`content/field/index.ts`) holds them in the sub-nav's order; labels
+shared by both are `content/field/labels.ts`, and passages both reuse (the agent-direction
+line, the walkthrough offer) are `content/field/shared.ts`.
+
+- **Disclosure.** A report names no employer, product, client, facility or private
+  repository, and mentions no key or secret. `name` is a plain description of the
+  system, never a product name. The employer's name appears only in the résumé and
+  About experience, never beside field work. Every report carries `PRIVATE_NOTICE`
+  ("Private repository · walkthrough on request"). Only material approved for
+  publication by default is written here; owner-gated incidents and figures are left
+  out, not hidden.
+- **The `published` flag.** `published: false` (both reports today) means the page
+  renders for the owner's review only: a visible "Draft for owner review" ribbon
+  (`FIELD_DRAFT`), `robots: noindex, nofollow`, and no sitemap, RSS, `llms.txt` or
+  assistant-index entry. Nothing outside the report page, its OG image, the Work menu,
+  `/work`, the sub-nav and the homepage field cards reads the registry while a report
+  is a draft. Setting `published: true` is the owner's sign-off; the sitemap,
+  `public/llms.txt` and the assistant corpus must then add it in the same change.
+- **Claims.** Status pills are `StatusPill` values ("In use", "Pilot"). "What broke"
+  entries state the break, cause, change and guard. Verification lists what is checked
+  and an explicit "Not measured" list: no figure is implied where none is published.
+
 ---
 
 ## 2. Writing — `content/writing/*.mdx` (`WritingSchema`)
@@ -227,10 +254,21 @@ feeds, the sitemap, and generated routes in production, and keeps it previewable
   description (`SITE.description`, ≤ 160: the homepage's search description and the
   default), email, location, socials, integrations, the availability line (`STATUS`),
   and footer copy.
-- `config/nav.ts` — primary navigation, the header's one action, and the footer map.
-- `content/home-visual.ts` — homepage copy (`flagshipHome`).
-- `content/site.ts` — copy for `/about`, `/hire`, `/uses`, `/trust`, `/now`, the
-  index pages and the 404 (`pages`), plus the proof row and principles.
+- `config/nav.ts` — the header (the Work and About menus, the plain links, the
+  Résumé and Hire me pills), the mobile menu, the footer map, and `WORK_ITEMS`, the
+  work sub-nav's order (the four public systems from the registry, then the two
+  field reports).
+- `content/pages/<page>.ts` — **one module per page for the copy that page alone
+  shows**: `home`, `about`, `hire`, `contact`, `work` (the index and the case-study
+  frame), `writing` (the index and the article frame), `evals`, `resume`, `now`,
+  `trust` and `uses`. A page's sections import their words from here, never from a
+  `copy.ts` beside the components. Figures are never typed into these files: they
+  import from `content/evals.ts` (`DBWHISPER_EVIDENCE`, `CROWNWAGER_EVIDENCE`,
+  `requireEval()`) and addresses from `config/site.ts`.
+- `content/site.ts` — copy that more than one route reads: the index-page and 404
+  frames (`pages`), `/about` and `/hire` shared blocks, the proof row and principles,
+  `/now`'s frame (`nowPage`), `/uses`'s stack (`uses`) and `/trust`'s content
+  (`trust`).
 - `content/article.ts` — article header and footer labels shared by case studies,
   essays, and notes.
 - `content/profile.json` — only what nothing else holds: `focus`, `tagline` and
@@ -240,7 +278,16 @@ feeds, the sitemap, and generated routes in production, and keeps it previewable
   assistant's retrieval only; the assistant's skills passages come from
   `content/resume.ts` (`content/skills.json` was removed).
 
-There are no contact forms: contact is email, `/hire`, and an optional booking link.
+There are no contact forms: contact is `/contact` (email, an optional booking link,
+the assistant), with `/hire` as the careers-style page.
+
+**Stack evidence — the "Used in" rule.** `/uses` and `/skills` link a tool to a
+project only through `components/misc/stack-evidence.ts`, which reads the `stack`
+frontmatter of each `content/projects/<slug>.mdx` (with a small alias table, e.g.
+`postgresql` ↔ `postgres`). If a case study does not list the tool, no "Used in" link is
+drawn; a link is never asserted by hand. Field reports are not linked this way (their
+repositories are private). The per-tool sentences on `/uses` are `TOOL_NOTES` in
+`content/pages/uses.ts`.
 The newsletter form on `/writing`, `/notes`, and their articles is off unless
 `NEXT_PUBLIC_BUTTONDOWN_USERNAME` is set; it has no committed default, so it stays
 hidden until the Buttondown list is confirmed to deliver.
@@ -251,7 +298,7 @@ hidden until the Buttondown list is confirmed to deliver.
 
 `components/mdx/mdx-components.tsx` binds markdown elements to the shared reading
 scale (`components/mdx/prose.ts`; `h2`/`h3` get slug ids) and exposes six custom
-blocks inside MDX: `Callout` · `PullQuote` (serif italic, long-form only) · `CodeBlock`
+blocks inside MDX: `Callout` · `PullQuote` (long-form only) · `CodeBlock`
 (filename + copy) · `Figure` · `DecisionLog` · `FailureLog`. Other evidence
 components, such as `SystemDiagram` and `MetricsTable`, are imported directly by
 case-study components and are not available in MDX. Plain markdown everywhere else —

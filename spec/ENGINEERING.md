@@ -27,7 +27,8 @@ and their types are inferred with `z.infer` — never duplicated by hand.
 
 Header JSDoc must document: **Purpose · Props · Variants · Accessibility · Performance
 notes**. Plus: usage example added to `/dev/components`, and a test if it contains logic
-(conditional rendering, keyboard handling, formatting).
+(conditional rendering, keyboard handling, formatting). The primitives and their APIs
+are listed in design-system.md §5.
 
 ## 4. Accessibility — WCAG 2.2 AA (contractual)
 
@@ -38,8 +39,11 @@ notes**. Plus: usage example added to `/dev/components`, and a test if it contai
 - Images: meaningful `alt`; diagrams get text alternatives (the narration list).
 - Forms/controls: labeled, error text linked via `aria-describedby`.
 - Automated gate: `npm run test:a11y` (Playwright + axe-core, WCAG 2.0–2.2 A/AA tags) on
-  18 routes × light/dark × 1280/768/360px, plus the open mobile menu, the open assistant
-  panel, the reduced-motion contract, and keyboard focus traps → **zero violations**.
+  every route in its list — `/contact` and both `/work/field/*` reports included — at
+  1280/768/360px, plus the open Work and About menus, the open mobile menu, the open
+  assistant panel, the reduced-motion contract, and keyboard focus traps → **zero
+  violations**. The site is light-only (ADR-018), so there is one pass, not one per
+  theme; the dark pages and plates are covered inside it.
   Manual check for UI changes: a keyboard-only pass and a screen-reader spot check.
 
 ## 5. Performance budgets
@@ -56,7 +60,7 @@ the budget; changing a budget needs an ADR.
 | Metric | Budget | Enforced today |
 |---|---|---|
 | Lighthouse | ≥ 95 Performance · 100 Accessibility · 100 Best Practices · 100 SEO | fails the gate |
-| LCP | ≤ 2.5 s (raised from 2.0 s by ADR-012, decision 2) | fails the gate |
+| LCP | ≤ 2.5 s (raised from 2.0 s in 2026; the reason is recorded in ADR-018, "Carried forward") | fails the gate |
 | CLS | < 0.05 | fails the gate |
 | TBT (lab) | < 150 ms | fails the gate |
 | Route JS (gzip, first load) | ≤ 120 KB home · ≤ 90 KB content pages | printed, not failing; over budget (CI, 2026-11-13: home 174 KB, case study 175 KB, writing 167 KB) |
@@ -77,7 +81,7 @@ routes; no client data fetching for content.
 
 Prefetch is opt-in, never by viewport: every `next/link` sets `prefetch={false}`
 (`TextLink` included), and only the primary nav prefetches, on hover or focus
-(`components/layout/nav-links.tsx`). A viewport prefetch downloads each linked route
+(`components/layout/nav-link.tsx`). A viewport prefetch downloads each linked route
 and preloads its stylesheet; on /about that was 13 background requests and a Chrome
 warning about the unused CSS. ESLint fails a `<Link>` without a `prefetch` prop
 (`eslint.config.mjs`), and the smoke test fails on any console warning.
@@ -89,7 +93,7 @@ warning about the unused CSS. ESLint fails a `<Link>` without a `prefetch` prop
   runs `test/**/*.test.mts` with `test/alias-loader.mjs` resolving the `@/` alias and
   extensionless TS imports (a file before a same-named directory, as the bundler
   resolves them); Node 24 strips the types natively.
-  Current coverage (2026-11-16): 152 tests in 21 files covering content law (projects,
+  Current coverage (2026-11-17): 153 tests in 21 files covering content law (projects,
   metric methods, links, and recordings served only while a project lists them), feeds,
   formatting, navigation, reading time, env parsing
   (`GEMINI_MODEL`), the content-slug guard (`lib/content-slug.ts`); the assistant
@@ -117,6 +121,15 @@ warning about the unused CSS. ESLint fails a `<Link>` without a `prefetch` prop
   (`test:links`), deployment smoke with zero console errors or warnings
   (`test:smoke`), metadata on every sitemap URL (`test:metadata`, no browser), and
   Lighthouse (`test:lighthouse`).
+  What ADR-018 changed in them: every gate runs the light site once (no `THEME=dark`
+  pass); `test:hue` allows the neutrals, the violet accent, the plate cyan and the
+  status green, amber and red; the boundary-inspector and walkthrough checks run on
+  `/work/dbwhisper`, where the inspector now lives, instead of `/`; `test:motion`
+  checks the arrow-swap caret, the menus, the tab pill and panel crossfade, the
+  marquee's hover pause, the copy chip and each reduced-motion alternative; the link
+  and smoke gates include `/contact` and the field reports, which are `noindex` but
+  linked and must resolve; and the dialog and trigger names come from
+  `components/assistant/copy.ts` (AI_ASSISTANT.md §5).
   Every gate runs in Chromium only (CI installs no other engine); Firefox and
   Safari are not exercised by any automated check.
 - **Copy gate (`test:copy`, `scripts/copy-audit.mjs`):** reads the prerendered HTML in
@@ -134,7 +147,7 @@ warning about the unused CSS. ESLint fails a `<Link>` without a `prefetch` prop
   DoD checklist pasted and ticked.
 - CI (`.github/workflows/ci.yml`) on every pull request and every push to `main`:
   type-check → lint → test → build → copy gate → browser gates (a11y, interaction,
-  motion, accent drift in both themes, print, internal links, metadata, smoke). Lighthouse budgets run on pushes
+  motion, accent drift, print, internal links, metadata, smoke). Lighthouse budgets run on pushes
   to `main` and on pull requests that target `main`. Red CI = no merge, no exceptions.
 
 ## 8. Definition of Ready (before coding any story)

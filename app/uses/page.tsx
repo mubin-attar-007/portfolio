@@ -6,7 +6,7 @@ import { Toc } from "@/components/ui/toc";
 import { JumpBar } from "@/components/misc/jump-bar";
 import { ToolCard } from "@/components/misc/tool-card";
 import { evidenceFor } from "@/components/misc/stack-evidence";
-import { TOOL_NOTES } from "@/components/misc/tool-notes";
+import { TOOL_NOTES } from "@/content/pages/uses";
 import styles from "@/components/misc/misc.module.css";
 import { uses } from "@/content/site";
 import { pageMetadata } from "@/lib/seo";

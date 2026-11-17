@@ -9,7 +9,7 @@ Component development needs a place to see all primitives, states, and themes to
 A single `/dev/components` route (`app/dev/components/page.tsx`) — `noindex`, disallowed
 in `robots.ts`, absent from the navigation, and with no canonical URL or social card
 of its own — rendering the primitives in their variants and states. It is one of the
-routes the accessibility gate audits in both themes, and the metadata gate checks it
+routes the accessibility gate audits, and the metadata gate checks it
 stays unindexed.
 
 ## Why

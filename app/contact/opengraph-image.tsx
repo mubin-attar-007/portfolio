@@ -1,14 +1,14 @@
 import { renderOg, ogAlt, OG_SIZE, OG_CONTENT_TYPE, type OgCard } from "@/lib/og";
+import { contactPage } from "@/content/pages/contact";
 
 /**
- * The headline is the /contact page header (spec/prototype/contact.html); when
- * the page's copy module lands (content/pages/contact.ts), read it from there
- * instead. The line names the page's two routes: email for a role, a booked
+ * The kicker and headline are the /contact page header
+ * (content/pages/contact.ts). The line names the page's two routes: email for a role, a booked
  * call for a freelance project.
  */
 const CARD = {
-  kicker: "Contact",
-  title: "Let's talk about what you're building",
+  kicker: contactPage.header.kicker,
+  title: contactPage.header.title,
   description: "Email me about a role, or book a call about a freelance project.",
 } satisfies OgCard;
 

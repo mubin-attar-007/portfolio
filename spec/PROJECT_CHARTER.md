@@ -66,11 +66,11 @@ navigation is Work, Evals, Writing, and About, plus one contact action to `/hire
 | Learn      | Short notes on AI/ML, systems, papers                  | **Notes** — `/notes` (footer) |
 | Write      | Technical articles and implementation guides           | **Writing** (nav) — guides |
 | Experiment | Small demos, benchmarks, prototypes                    | Not built — there is no Lab route |
-| Connect    | About, résumé, contact, GitHub, LinkedIn               | **About** (nav), `/resume`, and the contact action to `/hire` |
+| Connect    | About, résumé, contact, GitHub, LinkedIn               | The **About** menu (About, Résumé, Now, Uses, Trust) and the **Contact** and **Hire me** pills (`/contact`, `/hire`) |
 
 The evaluation registry (`/evals`, from `content/evals.ts`) sits outside the
 pillars but in the primary navigation, because the registry is the portfolio's
-differentiator (ADR-012).
+differentiator (ADR-018).
 
 "About" is minimal by design: identity emerges from the work, not a biography.
 

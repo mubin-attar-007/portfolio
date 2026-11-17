@@ -1,10 +1,16 @@
 # ADR-015 — A compact personal platform
 
-Status: **Accepted**, 2026-09-11; decisions 2 and 4 refined by ADR-016. Supersedes
-the homepage composition in ADR-011 (removed 2026-11-13; in git history at commit
-`8949fdf`) and ADR-012, and the homepage entrance, motif, and stack-wall motion in
-ADR-014. Retains the palette (ADR-013), accessible interactions, and existing route
-model. Validation results are not recorded in this decision.
+Status: **Accepted, partly superseded**, 2026-09-11. Decisions 1, 2, 4 and 5 (the
+theme, the homepage figure, the homepage sequence and the removed sections) and the
+theme preference in decision 6 are superseded by ADR-018 (17 November 2026), which also
+removed ADR-012, ADR-013, ADR-016 and ADR-017; the references to them below are
+historical and resolve in git history. **Still in force:** the role and its supporting
+descriptor (Context), "keep proof scoped" (decision 3), the kept depth and routes
+(decision 6, with `/contact` now a page), and canonical project and résumé data
+(decision 7). Validation results are not recorded in this decision.
+
+*Amended 2026-11-17:* the approved experience statement is now "3.5+ years"
+(`content/resume.ts`, `content/site.ts`, `content/faq.json`, `public/llms.txt`).
 
 ## Context
 

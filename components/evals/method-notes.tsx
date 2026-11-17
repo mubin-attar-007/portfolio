@@ -2,7 +2,7 @@ import { CaretLink } from "@/components/ui/caret-link";
 import { StatusPill } from "@/components/ui/status-pill";
 import { evalAnchor, evals, evalsIntro } from "@/content/evals";
 import { formatDate } from "@/lib/format";
-import { evalsPage } from "./copy";
+import { evalsPage } from "@/content/pages/evals";
 import styles from "./evals.module.css";
 
 /**

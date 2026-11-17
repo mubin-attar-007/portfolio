@@ -2,7 +2,7 @@ import { Check, Code2, Radar, ShieldCheck, type LucideIcon } from "lucide-react"
 import { Bento, Card, CardBody } from "@/components/ui/card";
 import { CaretLink } from "@/components/ui/caret-link";
 import { trust } from "@/content/site";
-import { PRACTICE_LINKS } from "./trust-copy";
+import { PRACTICE_LINKS } from "@/content/pages/trust";
 import styles from "./trust.module.css";
 
 const ICONS: Record<string, LucideIcon> = {

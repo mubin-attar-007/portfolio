@@ -20,7 +20,7 @@ Before starting any task, always read the relevant documentation. It lives in
 The documentation is the authoritative source for:
 
 - Product vision — `spec/PROJECT_CHARTER.md`
-- Brand identity — `design-system.md` §1–§2 and `spec/decisions/` (ADR-013, ADR-015, ADR-016)
+- Brand identity — `design-system.md` §1–§2 and `spec/decisions/` (ADR-015, ADR-018)
 - Design system — `design-system.md`
 - Engineering standards — `spec/ENGINEERING.md`
 - Architecture — `spec/ARCHITECTURE.md`, `spec/CONTENT_MODEL.md`, `spec/AI_ASSISTANT.md`

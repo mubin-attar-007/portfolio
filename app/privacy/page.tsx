@@ -12,7 +12,7 @@ import { SITE } from "@/config/site";
 import { pageMetadata } from "@/lib/seo";
 
 /** When this policy last changed: the date the page shows, and its machine-readable form. */
-const LAST_UPDATED = { label: "November 16, 2026", iso: "2026-11-16" } as const;
+const LAST_UPDATED = { label: "November 17, 2026", iso: "2026-11-17" } as const;
 
 export const metadata: Metadata = {
   ...pageMetadata({
@@ -96,7 +96,7 @@ export default function PrivacyPage() {
                 limited to what is required for rendering, delivery, and uptime.
               </p>
               <ul>
-                <li>Theme preference is stored locally as a browser key, not sent to the server.</li>
+                <li>Nothing is stored on your device: the site sets no cookies and uses no browser storage.</li>
                 <li>
                   <strong>Assistant messages</strong> are used to generate a grounded answer for that request
                   and are not persisted in custom site storage.
@@ -134,9 +134,9 @@ export default function PrivacyPage() {
             <section aria-labelledby="storage">
               <h2 id="storage">Cookies and local storage</h2>
               <p>
-                I do not use marketing cookies. Theme preference is saved in local browser storage so your
-                display choice stays stable across reloads. If you clear site data, the theme setting is
-                removed.
+                This site sets no cookies and saves nothing in your browser&apos;s local storage. The
+                assistant keeps a conversation in memory only while the page is open; closing or reloading
+                the page clears it.
               </p>
             </section>
 

@@ -193,45 +193,76 @@ Cloud project and a platform firewall rule (DEPLOY.md §3).
 
 ## 5. UI — `Assistant` + `AssistantPanel`
 
-- **Launcher** (`components/features/assistant.tsx`): an "Ask this site" button in the
-  header. <kbd>Ctrl</kbd>+<kbd>K</kbd> — <kbd>⌘</kbd>+<kbd>K</kbd> on Apple devices —
-  opens it from anywhere; there is no single-character shortcut (WCAG 2.1.4), and on a
-  Mac, <kbd>Ctrl</kbd>+<kbd>K</kbd> in a text field keeps its system meaning. The
-  `<kbd>` hint shows the device's own shortcut once hydrated, in a fixed width so it
-  shifts nothing; `aria-keyshortcuts="Control+K Meta+K"`; the accessible name is the
-  visible label. The mobile menu opens it through the `open-assistant` event. The panel
-  is lazy-loaded (`React.lazy`) on first open.
-- **Conversation:** held by the launcher, which stays mounted in the header across page
-  changes, so closing the panel or opening a cited page keeps the transcript until the
-  tab closes. Nothing is stored. **Clear** empties it; closing the panel during an
-  answer stops that answer.
-- **Panel** (`components/features/assistant-panel.tsx`): a portalled modal dialog — a
-  bottom sheet on phones, a 408px floating panel from the `sm` breakpoint;
-  `--shadow-overlay` is permitted here. Focus is trapped, <kbd>Esc</kbd> closes, the
-  page behind is `inert` (`lib/use-inert-background.ts`), and focus returns to the
-  visible launcher one frame after close. Focus never drops to `<body>`: sending moves it
-  to the question field, **Ask** is `aria-disabled` rather than `disabled`, and a
-  control that disappears (a starter, **Stop answering**, **Clear**) hands focus to the
-  field first.
-- **Empty state:** one line of scope and four starter questions (`lib/ai/starters.ts`,
-  shared with the grounding test) as quiet buttons.
-- **Answers** stream into a polite log; a pending answer shows "searching…". The answer's
-  markdown subset (`lib/ai/answer-format.ts`) is rendered as React elements — paragraphs,
-  lists, bold, italic, code — never as HTML; a markdown link is shown as its text and
-  address, and an unclosed marker stays literal while streaming.
-- **Labels** for a turn that is not a complete live answer: "declined — out of scope",
-  "from site search", "live answers unavailable — site search only", "live answers paused
-  for today — site search only", "rate limited" (with the wait from `Retry-After`),
-  "stopped", "timed out", "cut short". A "not covered" answer and an input prompt speak
-  for themselves.
-- **Stop answering** appears while an answer streams; the panel also gives up after 30 s.
+Interface copy lives once in `components/assistant/copy.ts` (`ASSISTANT_COPY`); a string
+marked `GATE` there is matched by name in a browser gate, so renaming one updates the gate
+in the same change. The trigger's name starts "Ask this site"; the dialog's name starts
+"Ask about" ("Ask about Mubin's work").
+
+- **Owner and launchers.** `Assistant` (`components/features/assistant.tsx`) is mounted
+  once in the header and owns the panel and the conversation. Any element marked
+  `data-assistant-launcher` is a launcher: the header trigger, the floating "Ask AI"
+  launcher (`components/layout/ask-launcher.tsx`), and the mobile menu's entry.
+  <kbd>Ctrl</kbd>+<kbd>K</kbd> — <kbd>⌘</kbd>+<kbd>K</kbd> on Apple devices — opens it
+  from anywhere; there is no single-character shortcut (WCAG 2.1.4), and on a Mac,
+  <kbd>Ctrl</kbd>+<kbd>K</kbd> in a text field keeps its system meaning. The `<kbd>`
+  hint shows the device's own shortcut once hydrated, in a fixed width so it shifts
+  nothing; `aria-keyshortcuts="Control+K Meta+K"`; the accessible name is the visible
+  label. The panel is lazy-loaded (`React.lazy`) on first open.
+- **Opening from a page.** A page CTA calls `openAssistant(question?)`
+  (`components/assistant/open-assistant.ts`), which dispatches the window event
+  `assistant:open` (`ASSISTANT_OPEN_EVENT`) with an optional `{ question }`. The owner
+  also listens for the older `open-assistant` event, which the mobile menu sends after
+  closing itself. The detail is untrusted input: `requestedQuestion()` accepts only a
+  non-empty string and caps it at `MAX_MESSAGE_CHARS`. A carried question is sent as if
+  typed once the panel is open; while an answer streams it waits in the field instead. If
+  another modal owns focus, the request is ignored rather than layering a second dialog.
+  Callers today: the announcement bar, the home agent section, `/contact`, and an
+  article's "Ask AI about this".
+- **Conversation:** held by the owner, which stays mounted across page changes, so
+  closing the panel or opening a cited page keeps the transcript until the tab closes.
+  Nothing is stored. **Clear** empties it; closing the panel during an answer stops that
+  answer.
+- **Panel** (`components/features/assistant-panel.tsx`, styles in
+  `components/assistant/assistant.module.css`): a portalled modal dialog — a bottom sheet
+  (88dvh) on phones and a 440px drawer inset 8px from the viewport edges from the `sm`
+  breakpoint, arriving over `--motion-panel` on a spring (instant under reduced motion).
+  It is the one surface allowed the large overlay shadow. A header with the sparkle mark,
+  the title, the subtitle and a close control; focus is trapped, <kbd>Esc</kbd> closes,
+  and the page behind is `inert` (`lib/use-inert-background.ts`).
+- **Focus return.** On close, focus goes back to the launcher that opened the panel if
+  it is still on screen, otherwise to the first visible launcher. It is deferred one
+  animation frame (with one retry) because the launchers sit inside the inert subtree,
+  and focusing them before the panel unmounts is a silent no-op (ADR-014 §4). Focus never
+  drops to `<body>`: sending moves it to the question field, **Ask** is `aria-disabled`
+  rather than `disabled`, and a control that disappears (a starter, **Stop answering**,
+  **Clear**, **Try again**) hands focus to the field first.
+- **Transcript tab stop.** The transcript is a polite `role="log"` named
+  "Conversation", with `tabIndex={0}`, so a long answer can be scrolled from the keyboard.
+- **Empty state:** one line of scope and the starter questions (`lib/ai/starters.ts`,
+  shared with the grounding test) as chips.
+- **Answers:** the visitor's message is a dark bubble, the answer a light one. A pending
+  answer shows "Searching the site" with a subtle shimmer (static under reduced motion).
+  The answer's markdown subset (`lib/ai/answer-format.ts`) is rendered as React elements —
+  paragraphs, lists, bold, italic, code — never as HTML; a markdown link is shown as its
+  text and address, and an unclosed marker stays literal while streaming.
+- **Labels** for a turn that is not a complete live answer (`components/assistant/turn-status.ts`):
+  "declined — out of scope", "from site search", "live answers unavailable — site search
+  only", "live answers paused for today — site search only", "rate limited" (with the wait
+  from `Retry-After`), "stopped", "timed out", "cut short". A "not covered" answer and an
+  input prompt speak for themselves.
+- **Retry card.** A turn that failed — the request errored, was rate limited, or timed
+  out before any text arrived — renders as a calm card in the caution tone, and the
+  latest such turn carries **Try again**, which re-sends the question before it.
+- **Composer:** the send button swaps its arrow for a spinner while an answer streams.
+  **Stop answering** appears while an answer streams; the panel also gives up after 30 s.
   The field takes up to 1,000 characters, with a counter from 800; its description is a
   short hint, not the transcript.
-- **Sources:** each citation's links are checked again in the panel against the site's
-  page patterns (`lib/ai/citation-links.ts`), and each page is linked once per answer.
-  Model output and arbitrary URLs never become links.
-- Footer line: "Cited · may be imperfect · not stored." No avatar, no typing-dots
-  theater, no sound.
+- **Sources:** citation chips. Each citation's links are checked again in the panel
+  against the site's page patterns (`lib/ai/citation-links.ts`), and each page is linked
+  once per answer. Model output and arbitrary URLs never become links.
+- **Privacy line**, under the composer: "Your question is used for one answer. This site
+  doesn't store it." It matches what `/privacy` says (§6). No avatar, no typing-dots
+  theatre, no sound.
 
 ## 6. Privacy
 

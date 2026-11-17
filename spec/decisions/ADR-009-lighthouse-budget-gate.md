@@ -26,7 +26,7 @@ The gate:
 - enforces Performance ≥ 95, Accessibility = 100, Best Practices = 100, and
   SEO = 100;
 - enforces LCP ≤ 2,500 ms, CLS < 0.05, and TBT < 150 ms. LCP was re-baselined
-  from 2,000 ms to the Core Web Vitals "good" threshold (ADR-012, decision 2);
+  from 2,000 ms to the Core Web Vitals "good" threshold (ADR-018, "Carried forward");
 - prints first-load JavaScript against targets of 120 KB (home) and 90 KB
   (flagship, writing) as an advisory figure, not a failure;
 - before auditing, reads the sitemap and verifies every URL it lists: status 200,
