@@ -166,12 +166,32 @@ const TABLE_RECORD_SIZE = 16;
 const GPOS_TAG = 0x47504f53; // "GPOS"
 const HIDDEN_GPOS_TAG = 0x5f504f53; // "_POS": a tag no font parser reads
 
+// A failed font request is tried again after these pauses. The cards prerender
+// in parallel at the start of the build, and a CI runner's first connections
+// to Google have failed there in well under a second (Node reports ETIMEDOUT
+// when no address answers in time), which failed the whole build on a blip.
+const FETCH_RETRY_DELAYS_MS = [500, 1_500, 4_000] as const;
+const isRetryableStatus = (status: number): boolean => status === 429 || status >= 500;
+
 async function fetchOrThrow(url: string): Promise<Response> {
-  // force-cache keeps each response in Next's data cache, so a rebuild that
-  // restores .next/cache renders the cards without reaching Google again.
-  const response = await fetch(url, { cache: "force-cache" });
-  if (!response.ok) throw new Error(`OG font request failed: ${response.status} ${url}`);
-  return response;
+  for (let attempt = 0; ; attempt++) {
+    const delay = FETCH_RETRY_DELAYS_MS[attempt];
+    try {
+      // force-cache keeps each response in Next's data cache, so a rebuild that
+      // restores .next/cache renders the cards without reaching Google again.
+      const response = await fetch(url, { cache: "force-cache" });
+      if (response.ok) return response;
+      if (!isRetryableStatus(response.status) || delay === undefined) {
+        throw new Error(`OG font request failed: ${response.status} ${url}`);
+      }
+      await response.body?.cancel();
+    } catch (error) {
+      // A network failure (fetch rejects with a TypeError) is retried; an
+      // error status that will not change is not.
+      if (!(error instanceof TypeError) || delay === undefined) throw error;
+    }
+    await new Promise((resolve) => setTimeout(resolve, delay));
+  }
 }
 
 /**
