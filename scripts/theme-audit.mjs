@@ -1,78 +1,73 @@
-// Hue audit. Walks every route in a given theme and reports any computed
-// colour whose hue falls outside that theme's allowed accent families.
+// Hue audit. Walks every route and reports any computed colour whose hue falls
+// outside the palette's allowed families.
 //
 // This exists because a stray accent is invisible to every other gate: axe
 // checks contrast, the screens sweep checks overflow, and neither notices that
-// one section is violet inside a lime theme. That defect shipped once.
+// one section is the wrong hue. That defect shipped once.
 //
 //   BASE_URL=http://localhost:3200 node scripts/theme-audit.mjs
-//   THEME=light node scripts/theme-audit.mjs
 //
-// Exit 1 on any offender.
+// The site has one theme (ADR-018): a light canvas with dark pages and plates
+// built into the design, so one pass covers both. THEME is accepted for the CI
+// call (`THEME=light`) and any other value fails loudly rather than auditing
+// something that does not exist. Exit 1 on any offender.
 
 import { chromium } from "playwright";
 
 const BASE = process.env.BASE_URL ?? "http://localhost:3200";
-const THEME = process.env.THEME ?? "dark";
+const THEME = process.env.THEME ?? "light";
+if (THEME !== "light") {
+  console.error(`theme-audit: the site has one theme (ADR-018); THEME="${THEME}" does not exist.`);
+  process.exit(1);
+}
 
 const ROUTES = (
   process.env.ROUTES ??
-  "/,/work,/work/dbwhisper,/writing,/writing/a-validator-is-not-a-better-prompt,/notes,/evals,/about,/hire,/resume,/now,/uses,/trust,/skills"
+  "/,/work,/work/dbwhisper,/work/field/records-triage,/work/field/nfc-room-rounds,/writing,/writing/a-validator-is-not-a-better-prompt,/notes,/evals,/about,/hire,/contact,/resume,/now,/uses,/trust,/skills,/privacy"
 )
   .split(",")
   .filter(Boolean);
 
 /**
- * Allowed accent hue windows per theme, in degrees.
+ * Allowed hue windows, in degrees, from styles/tokens.css:
  *
- * dark  — lime only (~65-95°). Violet (~250-290°) is the specific regression
- *         this guards: the dark theme is single-accent.
- * light — violet (~250-285°) plus the ambient blue (~200-250°) that appears in
- *         gradients and data visuals.
+ * - violet, the one accent: --color-accent #6b4bff (251°), its hover #5a37ef,
+ *   the button gradient, and the plate violet #9d8cff (250°);
+ * - cyan, the dark plates' second signal: --color-plate-cyan #63d2ef (192°)
+ *   and the --color-ambient sky #38bdf8 (198°) used in data visuals.
  *
+ * Anything else with chroma — a blue, a teal, a pink, a lime — is drift.
  * Neutrals are exempt (see CHROMA_FLOOR). Product SCREENSHOTS are exempt —
  * they are photographs of other apps, not our palette — as is `.shiki` syntax
- * highlighting, which is a semantic system of its own: keywords, strings and
- * functions are expected to be polychrome, and collapsing them into one hue
- * would cost real code readability.
+ * highlighting, a semantic system of its own.
  */
-const ALLOWED = {
-  dark: [[55, 100]],
-  light: [
-    [245, 290],
-    [195, 250],
-  ],
-};
+const ALLOWED = [
+  [245, 260], // violet
+  [188, 200], // plate cyan and ambient sky
+];
 
 /**
- * Semantic status hues, allowed in BOTH themes in addition to the accent
- * families above. These are not accents — they carry meaning (live, measured,
- * regressed, caution) and sit deliberately outside the brand family so they
- * cannot be mistaken for one. Kept as a separate list so the audit stays a real
- * guard on accent drift rather than a list of everything currently on the page.
+ * Semantic status hues. These are not accents — they carry meaning (live,
+ * measured, regressed, caution) and sit deliberately outside the brand family
+ * so they cannot be mistaken for one. Kept as a separate list so the audit
+ * stays a real guard on accent drift rather than a list of everything on the
+ * page. Windows are the light and plate tokens' hues with a little room.
  */
 const STATUS = [
-  [150, 185], // positive — emerald
-  [0, 20],    // negative — red
-  [25, 50],   // warning — amber
+  [136, 150], // positive — #15803d (142°), plate #4ade80 (142°)
+  [0, 8], // negative — #dc2626, plate #f87171 (0°)
+  [352, 360], // negative, the other side of 0°
+  [20, 48], // warning — #b45309 (26°), plate #fbbf24 (43°)
 ];
 /**
  * Neutral test, by CHROMA (max-min across RGB) rather than HSL saturation.
- * At near-black, HSL inflates saturation — our #0d1214 surface computes s=0.21
- * while being visually pure grey — so a saturation floor flagged every dark
- * panel. Chroma is luminance-independent: 7 is neutral, 72 is a colour.
+ * At near-black, HSL inflates saturation, so a saturation floor flags every
+ * dark plate. Chroma is luminance-independent: 7 is neutral, 72 is a colour.
  */
 const CHROMA_FLOOR = 28;
 
 const browser = await chromium.launch();
 const ctx = await browser.newContext({ viewport: { width: 1440, height: 1000 } });
-await ctx.addInitScript((t) => {
-  try {
-    localStorage.setItem("theme", t);
-  } catch {
-    /* storage disabled — the page falls back to its default */
-  }
-}, THEME);
 
 const offenders = [];
 
@@ -164,7 +159,7 @@ for (const route of ROUTES) {
       }
       return hits;
     },
-    { allowed: ALLOWED[THEME], status: STATUS, chromaFloor: CHROMA_FLOOR },
+    { allowed: ALLOWED, status: STATUS, chromaFloor: CHROMA_FLOOR },
   );
 
   // Collapse to unique element+property+colour so one repeated card is one row.
@@ -177,7 +172,7 @@ for (const route of ROUTES) {
   });
 
   if (unique.length > 0) offenders.push({ route, hits: unique });
-  console.log(`${unique.length === 0 ? "✓" : "✗"} [${THEME}] ${route}${unique.length ? ` — ${unique.length} off-hue` : ""}`);
+  console.log(`${unique.length === 0 ? "✓" : "✗"} ${route}${unique.length ? ` — ${unique.length} off-hue` : ""}`);
   await page.close();
 }
 
@@ -186,7 +181,7 @@ await browser.close();
 if (offenders.length > 0) {
   console.error(
     `
-OFF-HUE for the ${THEME} theme (accent ${JSON.stringify(ALLOWED[THEME])}, status ${JSON.stringify(STATUS)}):`,
+OFF-HUE (accent ${JSON.stringify(ALLOWED)}, status ${JSON.stringify(STATUS)}):`,
   );
   for (const o of offenders) {
     console.error(`\n  ${o.route}`);
@@ -196,5 +191,5 @@ OFF-HUE for the ${THEME} theme (accent ${JSON.stringify(ALLOWED[THEME])}, status
   }
   process.exitCode = 1;
 } else {
-  console.log(`\nNo off-hue colours in the ${THEME} theme across ${ROUTES.length} routes.`);
+  console.log(`\nNo off-hue colours across ${ROUTES.length} routes.`);
 }

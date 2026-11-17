@@ -83,8 +83,8 @@ from the build unless `LIGHTHOUSE_BASE_URL` points at one. `test:metadata` reads
 the sitemap and checks every URL — one canonical equal to the URL, og:url, a
 complete social card whose image loads, RSS discovery, one h1, a title of at most
 60 characters and a 50–160 character description (`constants/seo.ts`), parseable
-structured data — plus noindex and no canonical on the 404 and `/dev/components`,
-and every redirect in `next.config.ts`.
+structured data — plus noindex and no canonical on the 404, `/dev/components` and
+every draft field report `/work` links to, and every redirect in `next.config.ts`.
 
 The résumé PDF is generated from `content/resume.ts`, `config/site.ts`, and the
 eval registry. When any of them changes, run `npm run build:resume` (which prints

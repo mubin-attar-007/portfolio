@@ -208,7 +208,9 @@ export default async function CaseStudyPage({ params }: { params: Promise<{ slug
       </section>
 
       {/* ---- how it works ---- */}
-      <Section space="md" id="how-it-works" ariaLabelledBy={isFlagship ? "walkthrough-title" : "how-title"}>
+      {/* The flagship's walkthrough is its own region, named by its title; naming
+          this wrapper after the same heading made two regions of one name. */}
+      <Section space="md" id="how-it-works" ariaLabelledBy={isFlagship ? undefined : "how-title"}>
         {isFlagship ? (
           <FlagshipWalkthroughSection />
         ) : template && steps ? (

@@ -52,6 +52,7 @@
   border-radius: var(--radius-pill);
   background: var(--color-surface);
   box-shadow: var(--shadow-card);
+  cursor: pointer; /* the whole pill copies (prompt-chip.tsx) */
   transition: box-shadow var(--motion-slow) var(--ease-out);
 }
 .chip:is(:hover, :focus-within) {
@@ -186,12 +187,15 @@
   transform: none;
   filter: none;
 }
-.copied .iconCopy {
+/* `.chip.copied` outranks the hover and focus rule above, so the copy icon
+   gives way to the tick while the pointer or focus is still on the chip —
+   which is always the case at the moment of copying. */
+.chip.copied .iconCopy {
   opacity: 0;
   transform: scale(0.6);
   filter: blur(2px);
 }
-.copied .iconCheck {
+.chip.copied .iconCheck {
   opacity: 1;
   transform: none;
   filter: none;

@@ -18,7 +18,7 @@ test("global navigation: unique destinations and a curated footer", () => {
   assert.equal(new Set(header).size, header.length, "header destinations are unique");
   assert.equal(new Set(footer).size, footer.length, "footer destinations are unique");
   assert.equal(new Set(NAV.map((i) => i.href)).size, NAV.length);
-  assert.ok(footer.length <= 24, "the footer is a curated Clerk-style map (ADR-012), not a sitemap");
+  assert.ok(footer.length <= 24, "the footer is a curated Clerk-style map (ADR-018), not a sitemap");
   assert.equal(header.includes("/skills"), false, "/skills stays out of the header (reached from the footer and the pages)");
 });
 

@@ -74,7 +74,7 @@ export default function SkillsPage() {
           size="sm"
           lead="This is an inventory, not a self-rating. The case studies show where each capability was used, what boundary it owned, and how the result was measured."
         />
-        <ul className="mt-10 grid gap-2.5 md:grid-cols-2">
+        <ul className="mt-10 grid grid-cols-1 gap-2.5 md:grid-cols-2">
           {GROUPS.map((group) => (
             <li
               key={group.group}
@@ -84,7 +84,9 @@ export default function SkillsPage() {
               <ul className="mt-4 flex flex-wrap gap-1.5" aria-label={`${group.group} skills`}>
                 {group.skills.map((skill) => (
                   <li key={skill}>
-                    <Chip>{skill}</Chip>
+                    {/* A long label wraps inside its chip instead of pushing a
+                        360px viewport into horizontal scroll. */}
+                    <Chip className="max-w-full whitespace-normal">{skill}</Chip>
                   </li>
                 ))}
               </ul>

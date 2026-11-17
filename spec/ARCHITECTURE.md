@@ -57,7 +57,7 @@ Each page's visual pattern is in design-system.md §7.1.
 | `/` | `content/pages/home.ts` and the registries | |
 | `/work` | `content/pages/work.ts`, `content/projects.ts`, `content/field/` | Field work on a dark plate (`#field`), then the public systems (`#public`) |
 | `/work/[slug]` | `content/projects.ts`; bodies in `components/case-studies/<slug>.tsx` | The four public case studies, under the work sub-nav. The DBWhisper boundary inspector lives on `/work/dbwhisper` |
-| `/work/field/[slug]` | `content/field/*.ts` | The two anonymous field reports. While a report is `published: false` it shows a draft ribbon, is `noindex, nofollow`, and is absent from the sitemap, feeds, `llms.txt` and the assistant index. The Work menu, `/work` and the sub-nav still link it, so it must resolve |
+| `/work/field/[slug]` | `content/field/*.ts` | The two anonymous field reports. While a report is `published: false` it shows a draft ribbon, is `noindex, nofollow` with no canonical URL or og:url, and is absent from the sitemap, feeds, `llms.txt` and the assistant index. The Work menu, `/work` and the sub-nav still link it, so it must resolve |
 | `/writing`, `/writing/[slug]` | `content/writing/*.mdx`, `content/pages/writing.ts` | The index has filter chips; `?type=essay`, `guide` or `note` preselects one |
 | `/notes`, `/notes/[slug]` | `content/notes/*.mdx` | `/notes` renders the same writing index with Notes preselected. It is not a redirect, so it keeps its own title, description and social card. `/notes/[slug]` is unchanged |
 | `/now` | `content/now.mdx`, `content/pages/now.ts` | |
@@ -193,7 +193,9 @@ the retrieval test. DEPLOY.md documents each variable.
   `/rss.xml`. `SITE.description` is the homepage's and the default.
 - `sitemap.ts` (published content only, with `lastModified` only where content
   carries a date); `robots.ts` (block `/api/`, `/dev/`). The 404 and `/dev/components`
-  are `noindex` with no canonical URL and no social card of their own.
+  are `noindex` with no canonical URL and no social card of their own. A draft field
+  report is `noindex, nofollow` and names no canonical URL or og:url; its card image
+  stays, so a review link still previews.
 - JSON-LD: `Person` + `WebSite` in the root layout, `BlogPosting` on writing and notes,
   `CreativeWork` on case studies, `BreadcrumbList` on detail pages.
 - OG images per route through one renderer, `renderOg` in `lib/og.tsx` (`next/og`,

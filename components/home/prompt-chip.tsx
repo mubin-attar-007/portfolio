@@ -35,7 +35,11 @@ export function PromptChip({
 
   return (
     <div className={styles.promptWrap}>
-      <div className={cx(styles.chip, state === "copied" && styles.copied)}>
+      {/* The whole pill copies. On hover the button folds to an icon at the
+          end, so the point a visitor aimed at becomes the prompt preview; a
+          click there must still copy. The button stays the one keyboard and
+          screen-reader control, and its click bubbles up to this handler. */}
+      <div className={cx(styles.chip, state === "copied" && styles.copied)} onClick={copy}>
         <span className={styles.agents} aria-hidden="true">
           {AGENT_GLYPHS.map((glyph) => (
             <span key={glyph}>{glyph}</span>
@@ -44,7 +48,7 @@ export function PromptChip({
         <span className={styles.promptText} aria-hidden="true">
           {preview}
         </span>
-        <button type="button" className={styles.copyBtn} aria-label={label} onClick={copy}>
+        <button type="button" className={styles.copyBtn} aria-label={label}>
           <span className={styles.copyLabel}>{label}</span>
           <Copy className={styles.iconCopy} strokeWidth={1.8} aria-hidden />
           <Check className={styles.iconCheck} strokeWidth={2.2} aria-hidden />

@@ -41,12 +41,23 @@ function htmlFiles(dir) {
   });
 }
 
-/** The markup a reader sees: no scripts, styles, or comments. */
+/**
+ * The markup a reader sees: no scripts, styles, or comments. Two kinds of
+ * inline element carry no words to run together, so they are dropped first:
+ * an empty one (a CSS dot, `<i></i>`), and a text-only one marked
+ * `aria-hidden="true"` (a heading's "#" anchor, a decorative prompt glyph) —
+ * a screen reader and a search snippet skip it. Its neighbours then meet, so a
+ * word glued across it is still caught.
+ */
+const DECORATIVE_INLINE = new RegExp(`<(${INLINE})\\b[^>]*\\baria-hidden="true"[^>]*>[^<]*</\\1>`, "gi");
+const EMPTY_INLINE = new RegExp(`<(${INLINE})\\b[^>]*></\\1>`, "gi");
 const visibleMarkup = (html) =>
   html
     .replace(/<script\b[\s\S]*?<\/script>/gi, "")
     .replace(/<style\b[\s\S]*?<\/style>/gi, "")
-    .replace(/<!--[\s\S]*?-->/g, "");
+    .replace(/<!--[\s\S]*?-->/g, "")
+    .replace(DECORATIVE_INLINE, "")
+    .replace(EMPTY_INLINE, "");
 
 const files = htmlFiles(ROOT);
 if (files.length === 0) {

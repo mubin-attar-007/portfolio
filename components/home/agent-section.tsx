@@ -43,7 +43,9 @@ export function AgentSection() {
           <Marquee key={i} duration={ROWS[i]!.duration} delay={ROWS[i]!.delay} fade={false}>
             {row.map((question) => (
               <Chip key={question} variant="raised" size="md" mono>
-                <b className={styles.prompt}>›</b>
+                <b className={styles.prompt} aria-hidden="true">
+                  ›
+                </b>
                 {question}
               </Chip>
             ))}

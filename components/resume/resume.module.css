@@ -162,7 +162,7 @@
   background: var(--color-positive);
 }
 .method {
-  margin-left: 6px;
+  margin-left: 2px; /* plus the word space before the link */
   color: var(--color-accent);
   font-weight: 550;
   text-decoration: underline;

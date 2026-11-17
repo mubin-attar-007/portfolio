@@ -17,15 +17,21 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
   const { slug } = await params;
   const report = fieldReportBySlug(slug);
   if (!report) return {};
+  const metadata = pageMetadata({
+    path: `/work/field/${slug}`,
+    title: `${report.name} — field report`,
+    description: report.summary,
+    social: { title: `${report.headline} · Field report` },
+  });
+  if (report.published) return metadata;
+  // A draft stays out of search until the owner publishes it and, like every
+  // unindexed route (lib/seo.ts, ADR-007), names no URL as its own: no
+  // canonical and no og:url. The metadata gate checks both.
   return {
-    ...pageMetadata({
-      path: `/work/field/${slug}`,
-      title: `${report.name} — field report`,
-      description: report.summary,
-      social: { title: `${report.headline} · Field report` },
-    }),
-    // A draft stays out of search until the owner publishes it.
-    robots: report.published ? undefined : { index: false, follow: false },
+    ...metadata,
+    alternates: { types: metadata.alternates?.types },
+    openGraph: { ...metadata.openGraph, url: undefined },
+    robots: { index: false, follow: false },
   };
 }
 

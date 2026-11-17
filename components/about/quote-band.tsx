@@ -25,7 +25,7 @@ export function QuoteBand() {
             {SITE.monogram}
           </span>
           <span>
-            <b>{SITE.name}</b>
+            <b>{SITE.name}</b>{" "}
             From the essay{" "}
             <Link href={essay.href} prefetch={false}>
               {essay.label}

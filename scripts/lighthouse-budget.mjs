@@ -32,6 +32,7 @@ const TITLE_ROUTES = [
 ];
 // Pages that must never be indexed or claim a canonical URL: the component
 // preview (ADR-007) and the 404, reached through a path that cannot exist.
+// Draft field reports join them at run time (draftFieldRoutes).
 const UNINDEXED_ROUTES = [
   { path: "/dev/components", status: 200 },
   { path: "/metadata-gate-missing-page", status: 404 },
@@ -49,7 +50,7 @@ const AUDIT_BUDGETS = {
     label: "LCP",
     // Re-baselined 2000 → 2500 (the Core Web Vitals "good" threshold) after CI
     // measured 2018-2373ms at performance 98/99: the residual is the Geist swap
-    // repainting the hero lede, not a load regression. ADR-012 records the
+    // repainting the hero lede, not a load regression. ADR-018 records the
     // decision; a real regression still fails this loudly.
     limit: 2_500,
     unit: "ms",
@@ -397,10 +398,25 @@ async function pageProblems(loc, baseUrl, served) {
   return problems;
 }
 
-/** The preview route and the 404 are never indexed, and never name a URL as theirs. */
-async function unindexedProblems(baseUrl) {
+/**
+ * Field reports that are linked from /work but not in the sitemap: drafts the
+ * owner has not published (content/field). They must resolve, stay out of
+ * search, and name no URL as theirs, like the routes above. Found from the live
+ * links rather than listed here, so publishing a report (which adds it to the
+ * sitemap) moves it to the sitemap checks with no change to this gate.
+ */
+async function draftFieldRoutes(baseUrl, locs) {
+  const listed = new Set(locs.map((loc) => new URL(loc).pathname));
+  const response = await fetch(new URL("/work", baseUrl), { headers: CRAWLER });
+  const html = await response.text();
+  const linked = new Set([...html.matchAll(/href="(\/work\/field\/[a-z0-9-]+)"/g)].map((match) => match[1]));
+  return [...linked].filter((path) => !listed.has(path)).map((path) => ({ path, status: 200 }));
+}
+
+/** The preview route, the 404 and draft field reports are never indexed, and never name a URL as theirs. */
+async function unindexedProblems(baseUrl, routes) {
   const problems = [];
-  for (const route of UNINDEXED_ROUTES) {
+  for (const route of routes) {
     const response = await fetch(new URL(route.path, baseUrl), { headers: CRAWLER });
     const html = await response.text();
     const robots = metaTags(html, "robots").map((tag) => attribute(tag, "content")).join(", ");
@@ -492,7 +508,8 @@ async function verifyMetadata(baseUrl) {
       problems.push(`${new URL(loc).pathname}: ${problem}`);
     }
   }
-  problems.push(...(await unindexedProblems(baseUrl)));
+  const unindexed = [...UNINDEXED_ROUTES, ...(await draftFieldRoutes(baseUrl, locs))];
+  problems.push(...(await unindexedProblems(baseUrl, unindexed)));
   problems.push(...(await titleProblems(baseUrl)));
   problems.push(...(await redirectProblems(baseUrl, sitemapXml)));
   problems.push(...freshnessProblems(sitemapXml));
@@ -501,7 +518,7 @@ async function verifyMetadata(baseUrl) {
     throw new Error(`Metadata gate: ${problems.length} problem${problems.length === 1 ? "" : "s"}\n- ${problems.join("\n- ")}`);
   }
   console.log(
-    `Metadata gate: PASS (${locs.length} sitemap URLs; ${UNINDEXED_ROUTES.length} unindexed routes; ${TITLE_ROUTES.length} exact titles; redirects; freshness)`,
+    `Metadata gate: PASS (${locs.length} sitemap URLs; ${unindexed.length} unindexed routes; ${TITLE_ROUTES.length} exact titles; redirects; freshness)`,
   );
 }
 

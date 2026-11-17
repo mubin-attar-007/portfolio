@@ -1,6 +1,7 @@
-// WCAG 2.2 AA gate. Loads each key route in every theme × viewport combination,
-// plus the overlay states a plain page load never reaches, injects axe-core, and
-// fails (exit 1) on any violation. Requires a running server:
+// WCAG 2.2 AA gate. Loads each key route at every viewport, plus the overlay
+// states a plain page load never reaches, injects axe-core, and fails (exit 1)
+// on any violation of the WCAG 2.2 A/AA rules or of the best-practice rules
+// Lighthouse scores (BEST_PRACTICE_RULES). Requires a running server:
 //
 //   npm run build && npm run start -- -p 3200     # or: npm run dev -- -p 3200
 //   BASE_URL=http://localhost:3200 npm run test:a11y
@@ -20,6 +21,22 @@ const AXE = readFileSync(
 // 2.2 tags included deliberately: the suite claims WCAG 2.2 AA, and without
 // wcag22a/wcag22aa the 2.2-only rules (e.g. target-size) never run.
 const TAGS = ["wcag2a", "wcag2aa", "wcag21a", "wcag21aa", "wcag22a", "wcag22aa"];
+// axe's best-practice rules that Lighthouse's accessibility score counts, plus
+// landmark-unique. Lighthouse audits three routes and must score 100; running
+// these on every route and state here finds a heading out of order (the home
+// showcase shipped an h3 straight after the h1) before that budget does.
+const BEST_PRACTICE_RULES = [
+  "accesskeys",
+  "empty-heading",
+  "heading-order",
+  "identical-links-same-purpose",
+  "image-redundant-alt",
+  "landmark-one-main",
+  "landmark-unique",
+  "skip-link",
+  "table-duplicate-name",
+  "tabindex",
+];
 
 // 360px is the narrowest phone the layout supports; 768 exercises the compact
 // tablet navigation; 1280 sits above the desktop navigation boundary.
@@ -38,54 +55,74 @@ const ROUTES = [
   "/now",
   "/evals",
   "/hire",
+  "/contact",
   "/about",
   "/uses",
   "/resume",
   "/skills",
   "/privacy",
   "/trust",
+  // Field reports are noindex but linked from /work, so a visitor reaches them.
+  "/work/field/records-triage",
+  "/work/field/nfc-room-rounds",
   "/route-that-does-not-exist",
   "/dev/components",
 ];
 
-// The app deliberately ignores prefers-color-scheme and switches on a
-// [data-theme] attribute seeded from localStorage (app/layout.tsx). Emulating
-// the media query therefore audited nothing — the dark palette was never seen.
-// Each pass seeds localStorage before any page script runs and then ASSERTS the
-// attribute actually landed, so this can never silently no-op again.
+// The site has one theme (ADR-018): a light canvas, with dark pages and plates
+// built into the design rather than chosen by the visitor. So each viewport is
+// one pass. open() still asserts the root's data-theme is "light", so a theme
+// switch reintroduced without its own pass fails here instead of going unseen.
 const PASSES = [
-  { theme: "light", device: "desktop", viewport: DESKTOP },
-  { theme: "dark", device: "desktop", viewport: DESKTOP },
-  { theme: "light", device: "tablet", viewport: TABLET },
-  { theme: "dark", device: "tablet", viewport: TABLET },
-  { theme: "light", device: "mobile", viewport: MOBILE },
-  { theme: "dark", device: "mobile", viewport: MOBILE },
+  { device: "desktop", viewport: DESKTOP },
+  { device: "tablet", viewport: TABLET },
+  { device: "mobile", viewport: MOBILE },
 ];
+const THEME = "light";
 
 /**
  * Overlay states worth auditing on top of the static routes: focus order and
- * labelling bugs hide in open dialogs, which no route load can reach. The
- * The header presents the assistant as a compact icon on narrow screens and a
- * labelled control on desktop; both retain the same accessible name.
+ * labelling bugs hide in open overlays, which no route load can reach. The
+ * assistant is a modal dialog at every width. Above 1000px the Work and About
+ * menus are disclosure panels under their triggers; below it the site menu is
+ * one disclosure panel (`#mobile-menu`). None of the menus is a dialog, so each
+ * is found through its trigger's state or its id.
  */
-function dialogsFor(device) {
+function overlaysFor(device) {
   const assistant = {
     label: "assistant panel",
-    trigger: /^Ask this site/,
-    dialog: /^Ask about/,
+    trigger: (page) => page.getByRole("button", { name: /^Ask this site/ }).first(),
+    open: (page) => page.getByRole("dialog", { name: /^Ask about/ }),
   };
+  const navMenu = (id, label) => ({
+    label: `${label} menu`,
+    trigger: (page) => page.locator(`button[aria-controls="${id}"]`),
+    open: (page) => page.locator(`button[aria-controls="${id}"][aria-expanded="true"]`),
+  });
   return device === "desktop"
-    ? [assistant]
-    : [{ label: "mobile nav drawer", trigger: /^Open menu$/, dialog: /^Menu$/ }, assistant];
+    ? [navMenu("nav-work", "Work"), navMenu("nav-about", "About"), assistant]
+    : [
+        {
+          label: "mobile menu",
+          trigger: (page) => page.getByRole("button", { name: "Open menu", exact: true }),
+          open: (page) => page.locator("#mobile-menu"),
+        },
+        assistant,
+      ];
 }
 
 /** Inject axe-core and return the violations for the page's current state. */
 async function runAxe(page) {
   await page.addScriptTag({ content: AXE });
-  const res = await page.evaluate(
-    (tags) => axe.run(document, { runOnly: { type: "tag", values: tags } }),
-    TAGS,
-  );
+  const res = await page.evaluate(([tags, extra]) => {
+    // The same rules a tag run selects (experimental and deprecated ones stay
+    // off), plus the extras.
+    const tagged = axe
+      .getRules(tags)
+      .filter((rule) => !rule.tags.includes("experimental") && !rule.tags.includes("deprecated"));
+    const rules = new Set([...tagged.map((rule) => rule.ruleId), ...extra]);
+    return axe.run(document, { runOnly: { type: "rule", values: [...rules] } });
+  }, [TAGS, BEST_PRACTICE_RULES]);
   return res.violations;
 }
 
@@ -118,8 +155,8 @@ async function open(page, route, expectedTheme) {
   if (applied !== expectedTheme) {
     throw new Error(
       `theme never applied on ${route}: expected data-theme="${expectedTheme}", got ` +
-        `${applied === null ? "no attribute" : `"${applied}"`}. The dark pass would ` +
-        `have audited the light palette — fix the seeding before trusting this run.`,
+        `${applied === null ? "no attribute" : `"${applied}"`}. The site has one theme ` +
+        `(ADR-018); a second one needs its own audit pass before this gate can trust a run.`,
     );
   }
   // let on-load entrance animations (e.g. the hero) settle before auditing, so
@@ -164,13 +201,6 @@ async function auditReducedMotion(browser) {
     viewport: MOBILE,
     reducedMotion: "reduce",
   });
-  await context.addInitScript(() => {
-    try {
-      window.localStorage.setItem("theme", "light");
-    } catch {
-      // The theme assertion in open() reports storage failures.
-    }
-  });
   const page = await context.newPage();
 
   try {
@@ -201,15 +231,25 @@ async function auditReducedMotion(browser) {
         .filter(({ animation, transition }) => animation > 80 || transition > 80)
         .slice(0, 10);
 
+      // The site has no entrance reveals (ADR-018), so nothing readable may
+      // start faded: every rendered heading, paragraph and list item in <main>
+      // is fully opaque, counting its ancestors' opacity. Decorative subtrees
+      // (aria-hidden, inert) and hidden panels are not content.
       const hiddenEntranceContent = Array.from(
-        document.querySelectorAll(".reveal, .hero-item"),
+        document.querySelectorAll("main :is(h1, h2, h3, p, li)"),
       )
+        .filter((element) => element.getClientRects().length > 0)
+        .filter((element) => !element.closest('[aria-hidden="true"], [inert], [hidden]'))
+        .filter((element) => getComputedStyle(element).visibility !== "hidden")
         .filter((element) => {
-          const style = getComputedStyle(element);
-          return Number.parseFloat(style.opacity) < 0.99 || style.transform !== "none";
+          let opacity = 1;
+          for (let node = element; node; node = node.parentElement) {
+            opacity *= Number.parseFloat(getComputedStyle(node).opacity);
+          }
+          return opacity < 0.99;
         })
         .slice(0, 10)
-        .map((element) => element.tagName.toLowerCase());
+        .map((element) => `${element.tagName.toLowerCase()} "${(element.textContent ?? "").trim().slice(0, 30)}"`);
 
       return {
         matches: window.matchMedia("(prefers-reduced-motion: reduce)").matches,
@@ -228,11 +268,11 @@ async function auditReducedMotion(browser) {
     }
     if (result.hiddenEntranceContent.length > 0) {
       throw new Error(
-        `entrance content remained hidden under reduced motion: ` +
+        `readable content is faded under reduced motion: ` +
           result.hiddenEntranceContent.join(", "),
       );
     }
-    console.log("✓ [reduced motion] / — durations collapsed; entrance content visible");
+    console.log("✓ [reduced motion] / — durations collapsed; no readable content faded");
   } finally {
     await context.close();
   }
@@ -269,13 +309,6 @@ async function describeFocus(page) {
 
 async function auditOverlayKeyboard(browser) {
   const desktopContext = await browser.newContext({ viewport: DESKTOP });
-  await desktopContext.addInitScript(() => {
-    try {
-      window.localStorage.setItem("theme", "light");
-    } catch {
-      // The theme assertion in open() reports storage failures.
-    }
-  });
   const desktopPage = await desktopContext.newPage();
 
   try {
@@ -310,47 +343,58 @@ async function auditOverlayKeyboard(browser) {
   }
 
   const mobileContext = await browser.newContext({ viewport: MOBILE });
-  await mobileContext.addInitScript(() => {
-    try {
-      window.localStorage.setItem("theme", "light");
-    } catch {
-      // The theme assertion in open() reports storage failures.
-    }
-  });
   const mobilePage = await mobileContext.newPage();
 
   try {
     await open(mobilePage, "/", "light");
+    // The menu is a disclosure (ADR-018): focus stays on its button, Tab moves
+    // into the panel's links, Escape closes it and returns focus to the button.
     const trigger = mobilePage.getByRole("button", { name: "Open menu", exact: true });
     await trigger.click();
-    const menu = mobilePage.getByRole("dialog", { name: "Menu", exact: true });
+    const menu = mobilePage.locator("#mobile-menu");
     await menu.waitFor();
-    const box = await menu.boundingBox();
-    if (!box || box.height > MOBILE.height * 0.75) {
-      throw new Error("Mobile menu is taller than the compact-menu budget");
+    const toggle = mobilePage.getByRole("button", { name: "Close menu", exact: true });
+    if ((await toggle.getAttribute("aria-expanded")) !== "true") {
+      throw new Error("Mobile menu button does not report aria-expanded=\"true\" when open");
     }
-
-    const close = menu.getByRole("button", { name: /^Close$/ });
-    if (!(await focusLandsOn(close))) {
-      throw new Error(`Mobile menu did not focus its visible Close action (focus: ${await describeFocus(mobilePage)})`);
+    if (!(await focusLandsOn(toggle))) {
+      throw new Error(`Mobile menu moved focus off its button on open (focus: ${await describeFocus(mobilePage)})`);
     }
-    await mobilePage.keyboard.press("Shift+Tab");
-    const assistant = menu.getByRole("button", { name: /^Ask this site/ });
-    if (!(await focusLandsOn(assistant))) {
-      throw new Error(`Mobile menu focus trap did not wrap to its final action (focus: ${await describeFocus(mobilePage)})`);
+    // On the narrowest phone the open panel ends inside the viewport, and when
+    // its groups are taller than that space it scrolls itself, so every link
+    // is reachable without the page moving under it (WCAG 1.4.10).
+    await settleAnimations(mobilePage);
+    const fit = await menu.evaluate((panel) => ({
+      bottom: panel.getBoundingClientRect().bottom,
+      viewport: window.innerHeight,
+      overflows: panel.scrollHeight > panel.clientHeight + 1,
+      scrolls: ["auto", "scroll"].includes(getComputedStyle(panel).overflowY),
+    }));
+    if (fit.bottom > fit.viewport + 1 || (fit.overflows && !fit.scrolls)) {
+      throw new Error(`Mobile menu does not fit a ${MOBILE.width}×${MOBILE.height} viewport: ${JSON.stringify(fit)}`);
     }
     await mobilePage.keyboard.press("Tab");
-    if (!(await focusLandsOn(close))) {
-      throw new Error(`Mobile menu focus trap did not wrap back to Close (focus: ${await describeFocus(mobilePage)})`);
+    const firstLink = menu.getByRole("link").first();
+    if (!(await focusLandsOn(firstLink))) {
+      throw new Error(`Tab from the menu button did not enter the panel (focus: ${await describeFocus(mobilePage)})`);
     }
     await mobilePage.keyboard.press("Escape");
-    await menu.waitFor({ state: "detached" });
+    await mobilePage.locator("#mobile-menu").waitFor({ state: "detached" });
     if (!(await focusLandsOn(trigger))) {
-      throw new Error(`Mobile menu did not restore focus to its trigger (focus: ${await describeFocus(mobilePage)})`);
+      throw new Error(`Mobile menu did not return focus to its button on Escape (focus: ${await describeFocus(mobilePage)})`);
+    }
+    // The panel fades out before visibility flips to hidden; wait for that.
+    await settleAnimations(mobilePage);
+    const closedLinks = await mobilePage.evaluate(() => {
+      const panel = document.querySelector("#site-mobile-nav");
+      return panel ? getComputedStyle(panel).visibility : "missing";
+    });
+    if (closedLinks !== "hidden") {
+      throw new Error(`The closed mobile menu panel is ${closedLinks}, so its links stay in the tab order`);
     }
 
     console.log(
-      "✓ [keyboard] / — compact mobile menu and dynamic assistant focus traps",
+      "✓ [keyboard] / — mobile menu disclosure and the assistant focus trap",
     );
   } finally {
     await mobileContext.close();
@@ -368,13 +412,6 @@ async function auditOverlayKeyboard(browser) {
  */
 async function auditAssistantConversation(browser) {
   const context = await browser.newContext({ viewport: DESKTOP });
-  await context.addInitScript(() => {
-    try {
-      window.localStorage.setItem("theme", "light");
-    } catch {
-      // The theme assertion in open() reports storage failures.
-    }
-  });
   const page = await context.newPage();
   const answer = [
     'event: meta\ndata: {"mode":"fallback"}\n\n',
@@ -477,31 +514,21 @@ const browser = await chromium.launch();
 try {
   for (const pass of PASSES) {
     const context = await browser.newContext({ viewport: pass.viewport });
-    // Runs before any page script, so the layout's pre-paint theme script reads
-    // it and applies [data-theme] on the very first paint — exactly as it does
-    // for a returning visitor who chose a theme.
-    await context.addInitScript((theme) => {
-      try {
-        window.localStorage.setItem("theme", theme);
-      } catch {
-        // private-mode / storage-disabled: the assertion below will catch it
-      }
-    }, pass.theme);
     const page = await context.newPage();
-    const prefix = `[${pass.theme} ${pass.device}]`;
+    const prefix = `[${pass.device}]`;
 
     for (const route of ROUTES) {
-      await open(page, route, pass.theme);
+      await open(page, route, THEME);
       const v = await runAxe(page);
       total += v.length;
       report(`${prefix} ${route}`, v);
     }
 
-    for (const d of dialogsFor(pass.device)) {
-      await open(page, "/", pass.theme);
-      await page.getByRole("button", { name: d.trigger }).first().click();
-      await page.getByRole("dialog", { name: d.dialog }).waitFor({ timeout: 10000 });
-      // The dialog exists before its entrance finishes; audit the settled state.
+    for (const d of overlaysFor(pass.device)) {
+      await open(page, "/", THEME);
+      await d.trigger(page).click();
+      await d.open(page).waitFor({ timeout: 10000 });
+      // The overlay exists before its entrance finishes; audit the settled state.
       await settleAnimations(page);
       const v = await runAxe(page);
       total += v.length;

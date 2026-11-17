@@ -33,7 +33,7 @@ export function HireLetter() {
         <div className={styles.signoff}>
           <Image src="/mubin.png" alt="" width={HEADSHOT} height={HEADSHOT} />
           <span>
-            <b>{SITE.name}</b>
+            <b>{SITE.name}</b>{" "}
             {signoff}
           </span>
         </div>

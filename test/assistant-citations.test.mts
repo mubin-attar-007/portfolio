@@ -29,7 +29,7 @@ test("every project in the registry is linkable from a source label", () => {
 });
 
 test("contact and evaluation sources link to their pages", () => {
-  assert.deepEqual(citationLinks("Contact — availability and email"), [{ label: "Contact", href: "/hire" }]);
+  assert.deepEqual(citationLinks("Contact — availability and email"), [{ label: "Contact", href: "/contact" }]);
   assert.ok(citationLinks("Evaluations — How I measure the work").some((l) => l.href === "/evals"));
 });
 

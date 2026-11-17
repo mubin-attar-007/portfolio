@@ -12,7 +12,14 @@
 import { chromium } from "playwright";
 
 const BASE = process.env.BASE_URL ?? "http://localhost:3200";
-const WALKTHROUGH_URL = `${BASE}/work/dbwhisper#request-walkthrough`;
+// DBWhisper is the flagship: first in the homepage's public-work grid, and the
+// case study whose request-path walkthrough is the product specimen below.
+const FEATURED_PATH = "/work/dbwhisper";
+const WALKTHROUGH_URL = `${BASE}${FEATURED_PATH}#request-walkthrough`;
+// The homepage leads with field reports (noindex, but linked and public).
+const FIELD_REPORT_PATH = "/work/field/records-triage";
+// The homepage's contact path. The email address itself lives on /contact.
+const CONTACT_PATH = "/contact";
 const results = [];
 
 const browser = await chromium.launch();
@@ -66,12 +73,14 @@ for (const width of [390, 1440]) {
     const h1 = page.locator("main h1");
     check(`no JavaScript ${width}px: the page has one visible headline`,
       await h1.count() === 1 && await h1.isVisible());
-    const featuredSelector = 'main a[href="/work/dbwhisper#request-walkthrough"]';
+    const featuredSelector = `main a[href="${FEATURED_PATH}"]`;
     const featured = page.locator(featuredSelector).first();
     check(`no JavaScript ${width}px: the featured case study is reachable`,
       await featured.isVisible());
-    check(`no JavaScript ${width}px: the email contact link is reachable`,
-      await page.locator('main a[href^="mailto:"]').first().isVisible());
+    check(`no JavaScript ${width}px: a field report is reachable`,
+      await page.locator(`main a[href="${FIELD_REPORT_PATH}"]`).first().isVisible());
+    check(`no JavaScript ${width}px: the contact page is reachable`,
+      await page.locator(`main a[href="${CONTACT_PATH}"]`).first().isVisible());
     const content = await page.evaluate(headingVisibility);
     check(`no JavaScript ${width}px: real sections remain readable`,
       content.count >= 5 && content.unreadable.length === 0, JSON.stringify(content));
@@ -100,14 +109,36 @@ for (const width of [390, 1440]) {
     // Own the destination wait explicitly: click's implicit pre-navigation
     // wait occasionally remained pending after a successful no-JS navigation.
     await Promise.all([
-      page.waitForURL(WALKTHROUGH_URL, { waitUntil: "commit" }),
+      page.waitForURL(`${BASE}${FEATURED_PATH}`, { waitUntil: "commit" }),
       featured.click({ noWaitAfter: true }),
     ]);
-    const destination = page.locator("#request-walkthrough #walkthrough-title");
+    const destination = page.locator("main h1#case-study-title");
     await destination.waitFor({ state: "visible" });
     await page.waitForLoadState("load");
-    check(`no JavaScript ${width}px: the featured link opens the case-study walkthrough`,
+    check(`no JavaScript ${width}px: the featured link opens the case study`,
       await destination.isVisible());
+    // The specimen is server-rendered: without JavaScript it is a readable first
+    // stage, not an empty frame waiting for a script.
+    check(`no JavaScript ${width}px: the case-study walkthrough renders its first stage`,
+      await page.locator("#request-walkthrough #walkthrough-title").isVisible() &&
+        await page.locator("#request-walkthrough #walkthrough-panel-retrieve").isVisible());
+  });
+
+  // The email address is one step from every page; without JavaScript the
+  // contact page must still hand it over as a working mailto link.
+  await withPage({ javaScriptEnabled: false, viewport: { width, height: 900 } }, async (page) => {
+    await page.goto(`${BASE}${CONTACT_PATH}`, { waitUntil: "load" });
+    check(`no JavaScript ${width}px: the contact page's email link is reachable`,
+      await page.locator('main a[href^="mailto:"]').first().isVisible());
+  });
+
+  // A field report opens without JavaScript, readable from its headline down.
+  await withPage({ javaScriptEnabled: false, viewport: { width, height: 900 } }, async (page) => {
+    await page.goto(`${BASE}${FIELD_REPORT_PATH}`, { waitUntil: "load" });
+    const content = await page.evaluate(headingVisibility);
+    check(`no JavaScript ${width}px: a field report is readable`,
+      await page.locator("main h1").count() === 1 && content.count >= 3 && content.unreadable.length === 0,
+      JSON.stringify(content));
   });
 }
 
@@ -383,74 +414,181 @@ await withPage({ reducedMotion: "reduce" }, async (page) => {
   check("reduced motion: no inert transport is rendered", transport === 0, `${transport} controls`);
 });
 
-// ------------------------------------------------------- eval disclosure
+// ------------------------------------------------------- eval registry
+// The registry is a table: each row states its result, and its Method link
+// lands on the full method further down the page. The method is one click
+// away, never withheld; the filters narrow the rows without hiding the count.
 await withPage({}, async (page) => {
   await page.goto(`${BASE}/evals`, { waitUntil: "networkidle" });
-  const details = page.locator("details").first();
-  check("evals: methodology is a native disclosure", (await page.locator("details").count()) > 0);
+  const registry = page.getByRole("table", { name: /^Evaluation registry/ });
+  const rows = registry.locator("tbody tr");
+  const rowCount = await rows.count();
+  check("evals: the registry lists its rows", rowCount > 0, `${rowCount} rows`);
 
-  // textContent returns collapsed content too, so VISIBILITY is the only
-  // honest measure of a disclosure.
-  const body = details.locator("p").last();
-  const hiddenWhenClosed = !(await body.isVisible());
-  await details.locator("summary").click();
-  await page.waitForTimeout(200);
-  const shownWhenOpen = await body.isVisible();
-  check("evals: expanding reveals the full method", hiddenWhenClosed && shownWhenOpen,
-    `closed-hidden=${hiddenWhenClosed} open-shown=${shownWhenOpen}`);
+  // Every row carries its finding in the row itself.
+  const findings = await rows.evaluateAll((trs) =>
+    trs.map((tr) => Array.from(tr.cells).map((cell) => (cell.textContent ?? "").trim())));
+  const bare = findings.filter((cells) => cells.length < 5 || cells.slice(1, 5).some((text) => text === ""));
+  check("evals: every row states its project, metric, result and scope", rowCount > 0 && bare.length === 0,
+    JSON.stringify(bare));
 
-  // A closed row must still state what was measured — the method is collapsed,
-  // never withheld.
-  const summaryText = await details.locator("summary").textContent();
-  check("evals: a closed row still carries its finding", (summaryText ?? "").trim().length > 40);
+  // A row's Method link lands on that method, and the method is shown in full.
+  const method = registry.getByRole("link", { name: /^Method: / }).first();
+  const href = (await method.getAttribute("href")) ?? "";
+  await method.click();
+  await page.waitForTimeout(400);
+  const landed = await page.evaluate((hash) => {
+    const target = hash.startsWith("#") ? document.getElementById(decodeURIComponent(hash.slice(1))) : null;
+    if (!target) return { found: false };
+    const box = target.getBoundingClientRect();
+    return {
+      found: true,
+      hash: location.hash,
+      inView: box.top < innerHeight && box.bottom > 0,
+      words: (target.textContent ?? "").trim().split(/\s+/).length,
+    };
+  }, href);
+  check("evals: a row's Method link lands on its method", landed.found && landed.hash === href && landed.inView,
+    `${href} ${JSON.stringify(landed)}`);
+  check("evals: the method behind a row is shown in full", landed.found && landed.words > 40,
+    JSON.stringify(landed));
+
+  // The filters narrow the table and say how many rows they show.
+  const status = page.getByRole("radiogroup", { name: "Status" });
+  const counter = page.getByText(/^Showing \d+ of \d+ results?$/);
+  const countBefore = (await counter.textContent()) ?? "";
+  await status.getByRole("radio", { name: "All" }).check();
+  await page.waitForTimeout(250);
+  const allRows = await rows.count();
+  const countAll = (await counter.textContent()) ?? "";
+  await status.getByRole("radio", { name: "Retired" }).check();
+  await page.waitForTimeout(250);
+  const retiredRows = await rows.count();
+  const countRetired = (await counter.textContent()) ?? "";
+  check("evals: the status filter narrows the registry and updates its count",
+    allRows > rowCount && retiredRows > 0 && retiredRows < allRows &&
+      countAll !== countBefore && countRetired.startsWith(`Showing ${retiredRows} `),
+    `current ${rowCount} (${countBefore}) · all ${allRows} (${countAll}) · retired ${retiredRows} (${countRetired})`);
 });
 
 // ------------------------------------------------------- header + menu
+// The header is a floating pill in a sticky band (ADR-018). The pill stays in
+// reach however far the page scrolls, and the band around it is click-through,
+// so content scrolling past either side of the pill stays clickable.
 await withPage({}, async (page) => {
   await page.goto(`${BASE}/`, { waitUntil: "networkidle" });
-  const before = await page.locator("header > div").first().getAttribute("data-scrolled");
-  await page.evaluate(() => window.scrollTo(0, 400));
+  await page.evaluate(() => window.scrollTo(0, 1600));
   await page.waitForTimeout(400);
-  const after = await page.locator("header > div").first().getAttribute("data-scrolled");
-  check("header: state changes after scrolling", before === null && after !== null);
+  const pill = await page.evaluate(() => {
+    const nav = document.querySelector('header nav[aria-label="Primary"]');
+    if (!nav) return null;
+    const box = nav.getBoundingClientRect();
+    // A point in the band, level with the pill but outside it.
+    const x = Math.max(2, Math.floor(box.left / 2));
+    const y = Math.round(box.top + box.height / 2);
+    const hit = box.left > 4 ? document.elementFromPoint(x, y) : null;
+    return {
+      scrolled: Math.round(scrollY),
+      top: Math.round(box.top),
+      bottom: Math.round(box.bottom),
+      besidePillHitsHeader: hit ? hit.closest("header") !== null : null,
+    };
+  });
+  check("header: the nav pill stays in view after scrolling",
+    pill !== null && pill.scrolled > 0 && pill.top >= 0 && pill.bottom <= 120, JSON.stringify(pill));
+  check("header: the band beside the pill is click-through",
+    pill !== null && pill.besidePillHitsHeader === false, JSON.stringify(pill));
+});
+
+// Below 1000px the site menu is a disclosure, not a modal (components/layout/
+// mobile-menu.tsx): the panel opens under the bar while the page stays live.
+// It closes on Escape (focus back on its button), a tap outside, choosing a
+// link, and the window widening past the breakpoint.
+const MENU_PANEL = "#mobile-menu";
+const openMobileMenu = async (page) => {
+  await page.getByRole("button", { name: "Open menu", exact: true }).click();
+  await page.locator(MENU_PANEL).waitFor({ state: "visible" });
+  await page.waitForTimeout(300); // the panel's entrance
+};
+
+await withPage({ viewport: { width: 390, height: 844 } }, async (page) => {
+  await page.goto(`${BASE}/`, { waitUntil: "networkidle" });
+  await openMobileMenu(page);
+  const toggle = page.getByRole("button", { name: "Close menu", exact: true });
+  check("mobile menu: opens", await page.locator(MENU_PANEL).isVisible() &&
+    await toggle.getAttribute("aria-expanded") === "true");
+  check("mobile menu: it is a disclosure, not a second modal",
+    await page.getByRole("dialog").count() === 0 &&
+      await page.locator("main").evaluate((el) => !el.closest("[inert]") && !el.inert));
+  check("mobile menu: the page behind it keeps scrolling", await page.evaluate(() =>
+    document.body.style.overflow !== "hidden" && document.documentElement.style.overflow !== "hidden"));
+  await page.keyboard.press("Escape");
+  await page.waitForTimeout(400);
+  check("mobile menu: Escape closes it", (await page.locator(MENU_PANEL).count()) === 0);
+  const focused = await page.evaluate(() => document.activeElement?.getAttribute("aria-label"));
+  check("mobile menu: focus returns to the trigger", focused === "Open menu", focused ?? "none");
 });
 
 await withPage({ viewport: { width: 390, height: 844 } }, async (page) => {
   await page.goto(`${BASE}/`, { waitUntil: "networkidle" });
-  await page.getByRole("button", { name: "Open menu" }).click();
-  await page.waitForTimeout(300);
-  check("mobile menu: opens", await page.getByRole("dialog", { name: "Menu" }).isVisible());
-  await page.keyboard.press("Escape");
-  await page.waitForTimeout(600);
-  check("mobile menu: Escape closes it", (await page.getByRole("dialog", { name: "Menu" }).count()) === 0);
-  const focused = await page.evaluate(() => document.activeElement?.getAttribute("aria-label"));
-  check("mobile menu: focus returns to the trigger", focused === "Open menu", focused ?? "none");
+  await openMobileMenu(page);
+  // A point on the page itself, below the panel and on no control, so the tap
+  // does nothing but land outside. The URL must not change either, so a tap
+  // that hit a menu link cannot pass this.
+  const outside = await page.evaluate((selector) => {
+    const box = document.querySelector(selector)?.getBoundingClientRect();
+    if (!box) return null;
+    for (let y = Math.ceil(box.bottom) + 8; y < innerHeight - 4; y += 8) {
+      for (const x of [24, Math.round(innerWidth / 2), innerWidth - 24]) {
+        const hit = document.elementFromPoint(x, y);
+        const control = "a, button, input, select, textarea, label, summary, header, " +
+          "[role=button], [role=link], [role=tab], [role=option], [role=radio], [role=checkbox], [role=switch]";
+        if (hit && !hit.closest(control)) {
+          return { x, y };
+        }
+      }
+    }
+    return null;
+  }, MENU_PANEL);
+  const before = page.url();
+  if (outside) await page.mouse.click(outside.x, outside.y);
+  await page.waitForTimeout(400);
+  check("mobile menu: a tap outside closes it",
+    outside !== null && page.url() === before && (await page.locator(MENU_PANEL).count()) === 0,
+    outside ? page.url() : "the open panel leaves no page below it to tap");
+
+  await openMobileMenu(page);
+  const link = page.locator(MENU_PANEL).getByRole("link", { name: "Evals" }).first();
+  await Promise.all([page.waitForURL("**/evals"), link.click()]);
+  await page.waitForTimeout(400);
+  check("mobile menu: choosing a link navigates and closes it",
+    (await page.locator(MENU_PANEL).count()) === 0, page.url());
+
+  await openMobileMenu(page);
+  await page.setViewportSize({ width: 1280, height: 844 });
+  await page.waitForTimeout(400);
+  check("mobile menu: widening past the breakpoint closes it", (await page.locator(MENU_PANEL).count()) === 0);
 });
 
 // --------------------------------------------------- modal inert boundary
 // A dialog that only traps Tab still leaves the page behind it in the
 // accessibility tree and in the audit's contrast sample. `inert` is what makes
 // the scrim a real boundary; these contracts prove it is applied AND released.
+// The assistant is the site's one modal, at every width (the mobile menu is a
+// disclosure, covered above), so it is checked at both.
 for (const modal of [
-  {
-    name: "assistant",
-    open: async (page) => {
-      await page.getByRole("button", { name: /Ask this site/ }).first().click();
-      await page.waitForTimeout(600);
-    },
-    launcher: /Ask this site/,
+  { name: "assistant", viewport: { width: 1440, height: 900 } },
+  { name: "assistant (390px)", viewport: { width: 390, height: 844 } },
+].map((m) => ({
+  ...m,
+  open: async (page) => {
+    await page.getByRole("button", { name: /^Ask this site/ }).first().click();
+    await page.getByRole("dialog", { name: /^Ask about/ }).waitFor();
+    await page.waitForTimeout(600);
   },
-  {
-    name: "mobile menu",
-    viewport: { width: 390, height: 844 },
-    open: async (page) => {
-      await page.getByRole("button", { name: "Open menu" }).click();
-      await page.waitForTimeout(400);
-    },
-    launcher: /Open menu/,
-  },
-]) {
-  await withPage(modal.viewport ? { viewport: modal.viewport } : {}, async (page) => {
+  launcher: /^Ask this site/,
+}))) {
+  await withPage({ viewport: modal.viewport }, async (page) => {
     await page.goto(`${BASE}/`, { waitUntil: "networkidle" });
     await modal.open(page);
 
@@ -503,19 +641,32 @@ for (const modal of [
   });
 }
 
-// Shortcuts hand off from the menu rather than creating competing dialogs.
-await withPage({ viewport: { width: 390, height: 844 } }, async (page) => {
-  await page.goto(`${BASE}/`, { waitUntil: "networkidle" });
-  await page.getByRole("button", { name: "Open menu" }).click();
-  await page.getByRole("dialog", { name: "Menu" }).waitFor();
-  await page.keyboard.press("Control+k");
-  const assistant = page.getByRole("dialog", { name: "Ask about my work" });
-  await assistant.waitFor();
-  check("assistant shortcut: menu hands off to exactly one dialog", await page.getByRole("dialog").count() === 1);
-  check("assistant shortcut: the new modal retains its boundary", await page.locator("main").evaluate((el) => el.inert));
-  await page.keyboard.press("Escape");
-  await assistant.waitFor({ state: "detached" });
-});
+// The assistant opening closes the menu first, so the visitor never has an open
+// panel left behind a modal — whether the shortcut or the menu's own Ask row
+// opened it.
+for (const via of ["the shortcut", "the menu's Ask row"]) {
+  await withPage({ viewport: { width: 390, height: 844 } }, async (page) => {
+    await page.goto(`${BASE}/`, { waitUntil: "networkidle" });
+    await openMobileMenu(page);
+    if (via === "the shortcut") {
+      await page.keyboard.press("Control+k");
+    } else {
+      await page.locator(MENU_PANEL).getByRole("button", { name: /^Ask/ }).click();
+    }
+    const assistant = page.getByRole("dialog", { name: /^Ask about/ });
+    await assistant.waitFor();
+    await page.waitForTimeout(400);
+    check(`assistant from ${via}: the menu closes and exactly one dialog opens`,
+      await page.getByRole("dialog").count() === 1 && await page.locator(MENU_PANEL).count() === 0);
+    check(`assistant from ${via}: the modal retains its boundary`,
+      await page.locator("main").evaluate((el) => el.inert || el.closest("[inert]") !== null));
+    await page.keyboard.press("Escape");
+    await assistant.waitFor({ state: "detached" });
+    const focused = await page.evaluate(() => document.activeElement?.getAttribute("aria-label") ?? document.activeElement?.tagName);
+    check(`assistant from ${via}: focus returns to a live control`,
+      focused !== "BODY" && focused !== undefined, focused ?? "none");
+  });
+}
 
 // A delayed mocked response reproduces typing the next question while busy.
 // No live model request or quota is needed to test the complete UI path.

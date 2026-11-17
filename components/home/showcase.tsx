@@ -31,7 +31,9 @@ function Focus({ title, hint, foot, wide, children }: { title: string; hint: str
   return (
     <div className={cx(styles.focus, wide && styles.wide)} data-focus>
       <div className={styles.focusBody}>
-        <h3>{title}</h3>
+        {/* The mock screen's own title: part of the illustration, not a heading
+            of the page (its tab panel is already named by its tab). */}
+        <p className={styles.focusTitle}>{title}</p>
         <p className={styles.hint}>{hint}</p>
         {children}
       </div>

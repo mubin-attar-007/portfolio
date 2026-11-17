@@ -147,7 +147,7 @@ export default function ResumePage() {
                     {p.metrics.map((m) => (
                       <li key={m.text} className={styles.metric}>
                         <span>
-                          {m.text}
+                          {m.text}{" "}
                           <SmartLink
                             href={m.method}
                             className={styles.method}

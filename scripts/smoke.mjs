@@ -48,11 +48,15 @@ async function withPage(opts, fn) {
 
 // ---------------------------------------------------------------- routes
 const ROUTES = [
-  { path: "/", must: /AI systems,\s*built for the real world/i, name: "homepage" },
+  { path: "/", must: /I ship AI and software inside the customer.s rules/i, name: "homepage" },
   { path: "/work", must: /Work/i, name: "work" },
   { path: "/work/dbwhisper", must: /DBWhisper/i, name: "DBWhisper case study" },
   { path: "/evals", must: /eval/i, name: "evals" },
   { path: "/about", must: /About|engineer/i, name: "about" },
+  { path: "/contact", must: /Let.s talk about what you.re building/i, name: "contact" },
+  { path: "/writing", must: /Essays, guides and notes/i, name: "writing" },
+  // Field reports are noindex but linked from /work and the homepage.
+  { path: "/work/field/records-triage", must: /Records triage/i, name: "field report" },
   { path: "/resume", must: /Experience|Résumé|Resume/i, name: "resume" },
 ];
 
@@ -74,7 +78,10 @@ for (const route of ROUTES) {
   });
 }
 
-// ------------------------------------------------------------ light theme
+// ------------------------------------------------------------------ theme
+// One theme (ADR-018): the light canvas, with dark pages built into the design.
+// There is no toggle and nothing is stored, so a visitor's device can never
+// put the site in a state the gates did not audit.
 await withPage({}, async (page) => {
   await page.goto(`${BASE}/`, { waitUntil: "networkidle" });
   const state = await page.evaluate(() => ({
@@ -82,54 +89,25 @@ await withPage({}, async (page) => {
     scheme: getComputedStyle(document.documentElement).colorScheme,
     bg: getComputedStyle(document.body).backgroundColor,
     chrome: document.querySelector('meta[name="theme-color"]')?.getAttribute("content"),
+    toggle: document.querySelectorAll('button[aria-label*="theme" i]').length,
   }));
   check(
-    "light theme is the default for a first-time visitor",
-    state.theme === "light" && state.bg === "rgb(252, 252, 254)",
+    "the light canvas renders for every visitor",
+    state.theme === "light" && state.bg === "rgb(247, 247, 248)",
     JSON.stringify(state),
   );
-  check("color-scheme follows the theme (native UI, scrollbars)", state.scheme === "light", state.scheme);
-  check("browser chrome matches the default ground", state.chrome === "#fcfcfe", state.chrome ?? "none");
-
-  // And the visitor can still get to dark, with the chrome following.
-  await page.getByRole("button", { name: /Switch to dark theme/i }).click();
-  await page.waitForTimeout(300);
-  const after = await page.evaluate(() => ({
-    theme: document.documentElement.getAttribute("data-theme"),
-    chrome: document.querySelector('meta[name="theme-color"]')?.getAttribute("content"),
-    stored: localStorage.getItem("theme"),
-  }));
-  check(
-    "the toggle reaches dark, persists it, and moves the chrome with it",
-    after.theme === "dark" && after.stored === "dark" && after.chrome === "#03080a",
-    JSON.stringify(after),
-  );
+  check("color-scheme is light (native UI, scrollbars)", state.scheme === "light", state.scheme);
+  check("browser chrome matches the canvas", state.chrome === "#f7f7f8", state.chrome ?? "none");
+  check("there is no theme toggle", state.toggle === 0, `${state.toggle} toggle(s)`);
 });
 
-// Remembered themes must also restore the matching mobile browser chrome.
-for (const preference of [{ theme: "light", chrome: "#fcfcfe" }, { theme: "dark", chrome: "#03080a" }]) {
-  await withPage({}, async (page) => {
-    await page.addInitScript((theme) => localStorage.setItem("theme", theme), preference.theme);
-    await page.goto(`${BASE}/`, { waitUntil: "networkidle" });
-    const state = await page.evaluate(() => ({
-      theme: document.documentElement.getAttribute("data-theme"),
-      chrome: document.querySelector('meta[name="theme-color"]')?.getAttribute("content"),
-    }));
-    check(`a stored ${preference.theme} preference restores the page and browser chrome`,
-      state.theme === preference.theme && state.chrome === preference.chrome, JSON.stringify(state));
-  });
-}
-
-await withPage({}, async (page, errors) => {
-  await page.addInitScript(() => {
-    Object.defineProperty(window, "localStorage", {
-      get() { throw new DOMException("Storage disabled", "SecurityError"); },
-    });
-  });
-  await page.goto(`${BASE}/`, { waitUntil: "networkidle" });
-  await page.getByRole("button", { name: "Switch to dark theme" }).click();
-  await page.getByRole("button", { name: "Switch to light theme" }).waitFor();
-  check("theme toggle works when storage is blocked", errors.length === 0, errors.join(" | "));
+// A dark page sets its own browser chrome, so the address bar continues it.
+await withPage({}, async (page) => {
+  await page.goto(`${BASE}/about`, { waitUntil: "networkidle" });
+  const chrome = await page.evaluate(
+    () => document.querySelector('meta[name="theme-color"]')?.getAttribute("content"),
+  );
+  check("a dark page (/about) moves the browser chrome to its canvas", chrome === "#0f0f12", chrome ?? "none");
 });
 
 // ---------------------------------------------------------- assistant modal
@@ -157,9 +135,11 @@ await withPage({ viewport: { width: 390, height: 844 } }, async (page) => {
   await page.goto(`${BASE}/`, { waitUntil: "networkidle" });
   await page.getByRole("button", { name: "Open menu" }).click();
   await page.waitForTimeout(500);
-  check("mobile nav: opens", await page.getByRole("dialog", { name: "Menu" }).isVisible());
+  // A disclosure panel under the bar, not a modal (ADR-018).
+  const menu = page.locator("#mobile-menu");
+  check("mobile nav: opens", await menu.isVisible());
 
-  const links = await page.getByRole("dialog", { name: "Menu" }).getByRole("link").count();
+  const links = await menu.getByRole("link").count();
   check("mobile nav: carries the primary links", links >= 4, `${links} links`);
 
   await page.keyboard.press("Escape");
@@ -203,12 +183,20 @@ await withPage({ reducedMotion: "reduce" }, async (page) => {
 // ------------------------------------------------------------------ the rest
 await withPage({}, async (page) => {
   await page.goto(`${BASE}/evals`, { waitUntil: "networkidle" });
-  const details = page.locator("details").first();
-  const bodyText = details.locator("p").last();
-  const closed = !(await bodyText.isVisible());
-  await details.locator("summary").click();
-  await page.waitForTimeout(250);
-  check("evals: the method disclosure expands", closed && (await bodyText.isVisible()));
+  // The registry: each row links to its method section on the same page.
+  const method = page.getByRole("link", { name: /^Method:/ }).first();
+  const target = ((await method.getAttribute("href")) ?? "").split("#")[1] ?? "";
+  await method.click();
+  await page.waitForTimeout(600);
+  const landed = target
+    ? await page.evaluate((id) => {
+        const el = document.getElementById(id);
+        if (!el) return false;
+        const r = el.getBoundingClientRect();
+        return r.top < innerHeight && r.bottom > 0;
+      }, target)
+    : false;
+  check("evals: a result's method link lands on its method", landed, `#${target}`);
 });
 
 for (const path of ["/sitemap.xml", "/robots.txt", "/rss.xml"]) {

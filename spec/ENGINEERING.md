@@ -38,12 +38,13 @@ are listed in design-system.md §5.
 - `prefers-reduced-motion` respected globally (see design-system.md §6).
 - Images: meaningful `alt`; diagrams get text alternatives (the narration list).
 - Forms/controls: labeled, error text linked via `aria-describedby`.
-- Automated gate: `npm run test:a11y` (Playwright + axe-core, WCAG 2.0–2.2 A/AA tags) on
-  every route in its list — `/contact` and both `/work/field/*` reports included — at
-  1280/768/360px, plus the open Work and About menus, the open mobile menu, the open
-  assistant panel, the reduced-motion contract, and keyboard focus traps → **zero
-  violations**. The site is light-only (ADR-018), so there is one pass, not one per
-  theme; the dark pages and plates are covered inside it.
+- Automated gate: `npm run test:a11y` (Playwright + axe-core: the WCAG 2.0–2.2 A/AA
+  rules, plus the best-practice rules Lighthouse scores, such as `heading-order`, and
+  `landmark-unique`) on every route in its list — `/contact` and both `/work/field/*`
+  reports included — at 1280/768/360px, plus the open Work and About menus, the open
+  mobile menu, the open assistant panel, the reduced-motion contract, and keyboard
+  focus traps → **zero violations**. The site is light-only (ADR-018), so there is one
+  pass, not one per theme; the dark pages and plates are covered inside it.
   Manual check for UI changes: a keyboard-only pass and a screen-reader spot check.
 
 ## 5. Performance budgets
@@ -136,7 +137,10 @@ warning about the unused CSS. ESLint fails a `<Link>` without a `prefetch` prop
   `.next/server/app` after a build — no browser, no server — and fails when an inline
   element touches the next word ("structural</strong>— the"). JSX drops whitespace
   that contains a line break, so only the built output proves the text reads
-  correctly; the fix is an explicit `{" "}`.
+  correctly; the fix is an explicit `{" "}`. An empty inline element (a CSS dot) and a
+  text-only one marked `aria-hidden="true"` (a heading's `#` anchor, a prompt glyph)
+  carry no words, so they are dropped first and their neighbours checked against each
+  other.
 - Not chasing coverage %; chasing "every behavior that can silently break has a test."
 
 ## 7. Git workflow

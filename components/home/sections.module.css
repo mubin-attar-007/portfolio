@@ -209,7 +209,8 @@
   color: var(--color-ink);
   transition: color var(--motion-fast) var(--ease-out);
 }
-.wcard:hover .wcardLink {
+/* Keyboard focus inside the card gets the same feedback as hover. */
+.wcard:is(:hover, :focus-within) .wcardLink {
   color: var(--color-accent);
 }
 .wcardLink::after {

@@ -6,6 +6,8 @@ import { chromium } from "playwright";
 const BASE = new URL(process.env.BASE_URL ?? "http://127.0.0.1:3200");
 const browser = await chromium.launch();
 const page = await browser.newPage();
+// The sitemap seeds the crawl; these are pages it does not list but a visitor
+// can still reach: the component preview and the old paths that redirect.
 const pending = new Set(["/", "/dev/components", "/talks", "/timeline", "/changelog"]);
 const checked = new Map();
 const fragments = [];
@@ -67,13 +69,24 @@ try {
     }
   }
 
+  // Draft field reports are noindex and absent from the sitemap, but the work
+  // pages link to them, so the crawl must reach them (ADR-018). Reaching none
+  // means the links went missing, or this gate silently stopped checking them.
+  const fieldReports = [...checked.keys()].filter((path) => path.startsWith("/work/field/"));
+  if (fieldReports.length === 0) {
+    failures.push("no /work/field/* report was reached from any page; the work pages should link them");
+  }
+
   for (const fragment of fragments) {
     const target = checked.get(fragment.target);
     if (target?.ids && !target.ids.has(fragment.id)) {
       failures.push(`${fragment.from} → ${fragment.target}#${fragment.id}: missing fragment`);
     }
   }
-  console.log(`${checked.size} same-site pages/assets, ${links} link references, ${fragments.length} fragment references checked.`);
+  console.log(
+    `${checked.size} same-site pages/assets (${fieldReports.length} field reports), ${links} link references, ` +
+      `${fragments.length} fragment references checked.`,
+  );
   console.log(`${failures.length} broken destinations.`);
   if (failures.length > 0) {
     console.error(failures.join("\n"));
