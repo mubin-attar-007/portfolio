@@ -29,6 +29,10 @@ The gate:
   from 2,000 ms to the Core Web Vitals "good" threshold (ADR-018, "Carried forward");
 - prints first-load JavaScript against targets of 120 KB (home) and 90 KB
   (the case study and writing) as an advisory figure, not a failure;
+- prints, also as advice only, each run's observed timeline: the observed FCP and
+  LCP, what had finished by the observed LCP (Lantern charges LCP for all of it),
+  when the stylesheets and scripts finished, and the long main-thread tasks around
+  the paint (ENGINEERING.md §5, "What the LCP budget measures");
 - before auditing, reads the sitemap and verifies every URL it lists: status 200,
   exactly one canonical equal to the URL, og:url, a complete Open Graph/Twitter
   card with a live same-origin image, RSS discovery, one h1, a title of at most 60

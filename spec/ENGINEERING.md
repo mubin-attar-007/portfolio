@@ -69,10 +69,10 @@ the budget; changing a budget needs an ADR.
 | Metric | Budget | Enforced today |
 |---|---|---|
 | Lighthouse | ≥ 95 Performance · 100 Accessibility · 100 Best Practices · 100 SEO | fails the gate |
-| LCP | ≤ 2.5 s (raised from 2.0 s in 2026; the reason is recorded in ADR-018, "Carried forward") | fails the gate |
+| LCP | ≤ 2.5 s (raised from 2.0 s in 2026; the reason is recorded in ADR-018, "Carried forward") | fails the gate. CI, 2026-11-17 (f273f65): home 2657 ms, case study 2734 ms, writing 2272 ms, so home and the case study miss it; see "What the LCP budget measures" below |
 | CLS | < 0.05 | fails the gate |
 | TBT (lab) | < 150 ms | fails the gate |
-| Route JS (gzip, first load) | ≤ 120 KB home · ≤ 90 KB content pages | printed, not failing; over budget. CI, 2026-11-16 (before the redesign): home 164 KB, case study 164 KB, writing 157 KB. The redesign, measured the same way on 2026-11-17: home 160 KB, case study (`/work/dbwhisper`, which now holds the boundary inspector) 174 KB, writing 159 KB. With the flagship case studies, on a production build the same day: gzip bodies home 155.8 KB, every case study, flagships included, 166.0 KB, writing 149.6 KB; with headers, as CI's Lighthouse counts them, 164.8, 175.9 and 158.6 KB |
+| Route JS (gzip, first load) | ≤ 120 KB home · ≤ 90 KB content pages | printed, not failing; over budget. CI, 2026-11-16 (before the redesign): home 164 KB, case study 164 KB, writing 157 KB. The redesign, measured the same way on 2026-11-17: home 160 KB, case study (`/work/dbwhisper`, which now holds the boundary inspector) 174 KB, writing 159 KB. With the flagship case studies, on a production build the same day: gzip bodies home 155.8 KB, every case study, flagships included, 166.0 KB, writing 149.6 KB; with headers, as CI's Lighthouse counts them, 164.8, 175.9 and 158.6 KB. CI, 2026-11-17 evening (f273f65, after the flagship routes and the chunk merge): home 164 KB in 9 scripts, case study 172 KB in 9, writing 158 KB in 9 |
 | Assistant panel chunk | lazy: fetched when a pointer or focus first reaches a launcher, or on open; ≤ 60 KB | review. 10.8 KB gzip in two chunks on a production build (2026-11-17, after the assistant upgrade; 7 KB before it), fetched on the first pointer over a launcher, with no extra stylesheet. esbuild's upper bound over everything the panel imports is 12.6 KB of JS (AI_ASSISTANT.md §9) |
 | INP | < 200 ms | field metric; no lab gate and no field data yet |
 | Fonts | ≤ 130 KB woff2 in total, self-hosted by `next/font` | review: 78.4 KB in two preloaded files (2026-11-17) |
@@ -97,6 +97,43 @@ script requested while the page loads and settles, gzip bodies plus headers. Two
 - A local proxy or antivirus can strip compression on the way to the browser, so a
   local Lighthouse run may report uncompressed bytes (about 500 KB). Re-fetch each
   script with `Accept-Encoding: gzip` to read the real transfer, or rely on CI.
+
+### What the LCP budget measures
+
+Lighthouse simulates LCP (Lantern): it replays every request that **finished before the
+observed LCP** of an unthrottled load over a modelled slow-4G link (150 ms RTT,
+1.6 Mbps, six HTTP/1.1 connections, CPU ×4). On this site that is almost the whole page,
+and four facts follow, each checked against Lantern's source and CI's own traces
+(the gate prints the observed timeline under each route, as advice):
+
+- **The JavaScript counts.** CI's first paint lands at 130–210 ms, after every script
+  has downloaded. A script is left out only when its own evaluation (10 ms or more)
+  starts after that paint. Turbopack's chunks register modules in 0–3 ms, which Lantern
+  ignores, so they always count; only the chunk evaluated last, the one that runs the
+  hydration bootstrap, can be left out (usually react-dom, 72 KB).
+- **That exclusion is a race.** The bootstrap starts 1–33 ms after CI's paint. If it
+  starts first, about 72 KB more is charged and LCP rises by roughly 500 ms: the
+  writing page measured 2337, 2830 and 2349 ms on three commits that did not touch it.
+- **Requests cost as much as bytes.** Each request waits for one of six connections and
+  a round trip, and scripts queue last (Lantern places a Low-priority request one second
+  behind the rest), so the last framework chunk to finish is the end of the graph.
+  `next.config.ts` therefore chunks CSS by route (`cssChunking: "graph"`) and merges
+  each page's small JavaScript chunks (`turbopackChunking.minChunkSize`, 200 KB).
+- **The document counts in steps.** Its bytes arrive in TCP slow start, 14.6 KB in the
+  first round trip and then 29.2 KB a round trip, before any other request starts, so
+  a document over 43.8 KB (headers included) costs a whole extra 150 ms round trip.
+  `/work/dbwhisper` is 50.7 KB.
+
+Measured locally on the case study (CI's regime: react-dom left out), only changes the
+size of the content close the gap: moving the full write-up off the page (−150 ms,
+document −40%), one stylesheet instead of nine (−20 ms on its own), keeping Geist Mono
+out of the first screenful (−90 to −160 ms). On the home page, the showcase's two
+CareLTC captures near y = 3300 px load at first layout (Chrome's lazy-loading distance
+reaches them) and cost about 80 ms. A local run on Windows cannot reproduce CI's race:
+there the first paint waits 200–400 ms for the software GPU to compile some 40 shader
+programs, so every script counts. To price a change on CI's terms, record a run
+(Lighthouse `-G`), set each response's size in the DevTools log to what the server
+sends compressed, leave the bootstrap chunk's request out, and audit it (`-A`).
 
 Heavy things are lazy by rule: the assistant panel, diagrams below the fold, demo videos
 (no video bytes until played), and below-fold images. Static generation for all content
