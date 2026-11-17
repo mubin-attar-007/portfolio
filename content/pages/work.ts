@@ -79,7 +79,14 @@ export const caseStudyPage = {
     from: "Receives from",
     to: "Hands to",
   },
+  /**
+   * DBWhisper's "Try the boundary" section, the boundary inspector's home.
+   * `id` is its anchor and `cta` the label of every link into it (the case
+   * study's hero and the home DBWhisper card).
+   */
   boundary: {
+    id: "try-the-boundary",
+    cta: "Try the validator",
     kicker: "Try the boundary",
     title: "The model proposes. The validator decides.",
     lead: "Pick a case and watch which check stops it. These are curated examples of the documented policy; nothing is sent to a database.",

@@ -20,9 +20,14 @@ import styles from "@/components/assistant/trigger.module.css";
 import type { ChatTurn } from "@/lib/ai/chat-contract";
 import type { SeedQuestion } from "./assistant-panel";
 
-const AssistantPanel = lazy(() =>
-  import("./assistant-panel").then((m) => ({ default: m.AssistantPanel })),
-);
+/**
+ * The panel's code-split chunk. It is never part of a page's first load: it is
+ * fetched on the first sign of intent (see `Assistant`) or, at the latest, on
+ * the first open. The module system caches it, so every later call resolves at
+ * once.
+ */
+const loadPanel = () => import("./assistant-panel");
+const AssistantPanel = lazy(() => loadPanel().then((m) => ({ default: m.AssistantPanel })));
 const ASSISTANT_LAUNCHER_ATTR = "data-assistant-launcher";
 const PANEL_ID = "assistant-panel-dialog";
 
@@ -58,8 +63,9 @@ function isEditable(el: Element | null): boolean {
 /**
  * Assistant — the "Ask this site" trigger and the owner of the conversation.
  * Mount it ONCE, in the persistent header: it renders the trigger and, only
- * once opened, lazy-loads the panel (keeping it off the initial bundle per the
- * ≤60KB assistant budget).
+ * once opened, renders the lazy panel (kept off the first load per the ≤60KB
+ * assistant budget; its chunk is warmed when a pointer or focus first reaches
+ * a launcher).
  *
  * It owns the conversation: the header stays mounted across page changes, so
  * closing the panel or opening a cited page keeps the transcript until the tab
@@ -176,6 +182,22 @@ export function Assistant({ className }: { className?: string }) {
       window.removeEventListener(LEGACY_OPEN_EVENT, onOpenRequest);
     };
   }, [launch]);
+
+  // Warm the panel's chunk the first time a pointer rests on, or focus
+  // reaches, a launcher, so the first open renders without a network wait. It
+  // stays off the first load, and a failed warm-up is left to the open itself
+  // to retry and report.
+  useEffect(() => {
+    const listening = new AbortController();
+    const warm = (event: Event) => {
+      if (!(event.target instanceof Element) || !event.target.closest(`[${ASSISTANT_LAUNCHER_ATTR}]`)) return;
+      listening.abort();
+      loadPanel().catch(() => undefined);
+    };
+    document.addEventListener("pointerover", warm, { passive: true, signal: listening.signal });
+    document.addEventListener("focusin", warm, { signal: listening.signal });
+    return () => listening.abort();
+  }, []);
 
   return (
     <>

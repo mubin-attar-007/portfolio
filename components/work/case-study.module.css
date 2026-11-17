@@ -57,9 +57,15 @@
 .heroActions {
   display: flex;
   flex-wrap: wrap;
+  align-items: center;
   justify-content: center;
   gap: 10px;
   margin-top: 30px;
+}
+/* A secondary caret link beside the buttons ("Try the validator") sits a
+   little apart from them, as a quieter third action. */
+.heroLink {
+  margin-inline: 10px;
 }
 .heroMeta {
   display: flex;
@@ -244,7 +250,11 @@ a.watchPill {
   overflow: hidden;
   background: var(--color-border-strong);
 }
-/* The pulse that travels the wire (the `wire` keyframes). */
+/* The pulse that travels the wire (the shared `wire` keyframes). A hover
+   moment, not an ambient loop (ADR-018 §5): it runs only while the steps are
+   engaged — the pointer over them or focus inside — and only on the media in
+   view, which StickySteps marks `data-active` (the frame's active pane; below
+   1000px, the active step's own media). At rest the wire is a plain hairline. */
 .flowWire::after {
   content: "";
   position: absolute;
@@ -252,8 +262,11 @@ a.watchPill {
   width: 10px;
   border-radius: 2px;
   background: var(--color-accent);
+  opacity: 0;
   --wire-distance: 28px;
-  animation: wire 1.8s var(--ease-std) infinite;
+}
+.steps:is(:hover, :focus-within) [data-active] .flowWire::after {
+  animation: var(--kf-wire) 1.8s var(--ease-std) infinite;
 }
 .flowFocus {
   display: grid;

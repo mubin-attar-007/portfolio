@@ -14,7 +14,11 @@ import styles from "./chrome.module.css";
  *
  * Props are plain strings from config/site.ts (STATUS, ASK_AI), so no config
  * module ships to the browser. Below 640px only the status shows; below 380px
- * its short form. A11y: the live dot is decorative; the words carry it.
+ * its short form.
+ *
+ * A11y: an `<aside>` named "Announcement", so its content sits in a landmark
+ * like the rest of the page (axe `region`) and a screen reader can skip it.
+ * The live dot is decorative; the words carry it.
  */
 export function AnnouncementBar({
   status,
@@ -26,7 +30,7 @@ export function AnnouncementBar({
   const pathname = usePathname();
   if (pathname !== "/" || !status.text) return null;
   return (
-    <div className={styles.bar} data-print="hide">
+    <aside aria-label="Announcement" className={styles.bar} data-print="hide">
       <Container className={styles.barInner}>
         <Link href={status.href} prefetch={false} className={styles.status}>
           <span className={styles.full}>{status.text}</span>
@@ -38,6 +42,6 @@ export function AnnouncementBar({
           <Caret />
         </button>
       </Container>
-    </div>
+    </aside>
   );
 }

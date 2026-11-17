@@ -75,7 +75,7 @@ so `--shadow-surface: var(--shadow-card)` on `:root` would otherwise stay light.
 | `--color-accent-soft` | `#efecff` | a tinted ground (violet text on it is 4.4:1, so use `accent-hover`) |
 | `--color-on-accent` | `#ffffff` | 5.2:1 on the violet |
 | `--color-positive` / `-warning` / `-negative` | `#15803d` / `#b45309` / `#dc2626` | status; each ≥ 4.5:1 on canvas |
-| `--color-ambient` | `#38bdf8` | glows and data visuals only, never text |
+| `--color-ambient` | `#38bdf8` | glows, data visuals and faint decorative lines only, never text |
 
 ### Plates
 
@@ -94,9 +94,9 @@ so `--shadow-surface: var(--shadow-card)` on `:root` would otherwise stay light.
 
 **One accent per surface.** Violet on light, lifted violet on dark. Cyan is the one
 non-accent hue with a job (live data on a plate); it never carries text on the light
-page. The ambient blue is for glows only. `npm run test:hue` fails on any computed
-colour outside the neutrals, the violet family, the plate cyan and the status
-colours.
+page. The ambient sky is for glows and faint decorative lines (the /hire construction
+lines) only. `npm run test:hue` fails on any computed colour outside the neutrals, the
+violet family, the plate cyan and the status colours.
 
 **Status pills** (`StatusPill`) use their own AA-checked ink, tint and ring tokens
 (`--pill-positive-*`, `--pill-caution-*`, `--pill-accent-*`, `--pill-neutral-*`), each
@@ -228,7 +228,8 @@ marked *client*.
   menu is an icon list. A mobile menu below the desktop breakpoint.
 - `WorkSubnav({ current })` — the switcher bar under the nav on `/work/[slug]` and
   `/work/field/[slug]`, rendered first; items from `WORK_ITEMS`.
-- The **announcement bar** (home only) with the availability line (`STATUS.text`).
+- The **announcement bar** (home only) with the availability line (`STATUS.text`): an
+  `<aside aria-label="Announcement">`, so its content sits in a landmark.
 - The **five-column footer** with the fading dotted texture (`--chrome-dots`).
 - The floating **"Ask AI" launcher** (*client*) — opens the assistant through
   `openAssistant()` (spec/AI_ASSISTANT.md §5).
@@ -237,6 +238,8 @@ marked *client*.
 
 - `StickySteps({ steps: { id?, title, body, media }[], label?, titleAs? })` (*client*)
   — numbered steps beside a sticky media frame; the active step's media crossfades in.
+  The active step and its frame pane carry `data-active`, the hook a media's hover
+  moment keys on; the frame itself is inert.
 - `Toc({ items: { id, label, items? }[], title })` (*client*) — a sticky table of
   contents with an active-section indicator.
 - `Timeline({ label? })` and `TimelineEntry({ date, dateTime, title?, titleAs?, tags?,
@@ -308,7 +311,11 @@ surfaces `--motion-base` 200ms · card elevation and illustration states
 2. **Illustrations that react to hover or focus-within.** Wires pulse and the hub lights
    cyan; halos spread; spinners spin; a timeline lights in sequence; checks pop; charts
    redraw (`stroke-dashoffset`); bars fill; replies rise. The reaction decorates
-   information that is already on screen at rest.
+   information that is already on screen at rest. A hover moment never loops unhovered,
+   even when it is a loop while it plays: the pulse on a field sketch's wires runs while
+   the element that holds the sketch is hovered or holds focus, and a case study's flow
+   wires while its steps are (StickySteps' frame is inert, so the moment keys on the
+   steps' root and the pane marked `data-active`). At rest the pulse is hidden.
 3. **A few ambient loops.** The marquee (paused on hover and focus-within), `Float`,
    the 12s pulse rings, the sheen sweep on a showcase change, and the assistant's
    "searching" shimmer and send spinner.
@@ -323,13 +330,37 @@ optional custom property for its travel (`--float`, `--ring-scale`, `--wire-dist
 `--draw-length`), so one keyframe serves every size. None may be used as a
 scroll-triggered reveal.
 
+**Reference a shared keyframe through its `--kf-*` name**, declared beside it on
+`:root`: `animation: var(--kf-marquee) 48s linear infinite`, never `animation: marquee
+…`. A CSS module renames every animation name it finds to a local one (`marquee`
+becomes `<hash>_marquee`), which matches no global keyframe, so a bare name is a dead
+animation in the production build; the transform leaves `var()` alone. A keyframe used
+by one module only may live in that module instead, under a bare name (the field
+sketch's `sketch-wire-*`, the assistant's `a-*`), since the transform renames the
+definition and its uses together. `npm run test:motion` fails on any animation name,
+bare or `--kf-*`, that resolves to no keyframe.
+
 **Only paint and compositor properties animate** — `opacity`, `transform`/`translate`,
 colour, background, border colour, box-shadow, plus a cheap mask or filter on small
 elements (the caret's mask, `rise`'s 2px blur). Never width, height, margin, padding or
-grid tracks. **One recorded exception:** the case-study walkthrough's stage disclosure
-(`components/case-studies/walkthrough.module.css`) transitions `grid-template-rows`,
-because animating to an unknown auto height otherwise needs JS measurement; the
-perceived motion is carried by opacity and translate on the contents.
+grid tracks. **Three recorded exceptions**, each instant under reduced motion:
+
+1. The case-study walkthrough's stage disclosure
+   (`components/case-studies/walkthrough.module.css`) transitions `grid-template-rows`,
+   because animating to an unknown auto height otherwise needs JS measurement; the
+   perceived motion is carried by opacity and translate on the contents. It is an
+   accordion, so like any disclosure it moves the content below it.
+2. The copy-prompt chip (`components/home/hero.module.css`) expands as Clerk's measured
+   chip does: the prompt's `max-width` and margin, the button's padding, the label's
+   `max-width` and the avatar stack's `margin-left` spring open. It is contained: the
+   chip is an inline pill in its own grid row, so only the chip itself grows, and the
+   row's height and every neighbour stay put.
+3. The showcase's tab pill (`components/home/showcase.module.css`) springs its `width`
+   and `height` with its `transform` when it lands on a tab of another size. It is
+   contained: absolutely positioned behind the tabs, so nothing reflows.
+
+A new exception must be as small and as contained as 2 and 3 — no layout shift outside
+the element — and is recorded here.
 
 ### Reduced motion
 
@@ -407,6 +438,10 @@ reduced-motion contract and the keyboard focus-trap contract.
   hover reaction repeats information already in text.
 - **Menus** are disclosure buttons with `aria-expanded`; Escape closes and returns focus
   to the trigger. Tabs use arrow keys with one tab stop.
+- **Every piece of content sits in a landmark** — the header, nav, main and footer, or a
+  named `<aside>` or region (the home announcement bar is `<aside
+  aria-label="Announcement">`), so landmark navigation reaches all of it. `test:a11y`
+  runs axe's `region` rule.
 - **Scrollable regions** (the sub-nav, wide tables, the assistant transcript) have a tab
   stop and a name.
 - **No horizontal document overflow** at any tested viewport.
@@ -481,9 +516,11 @@ them?* If not, simplify.
     `apple-icon.png`.
   - the print palette in `styles/globals.css`.
 - **Known deviations**, to be moved onto tokens: illustration colours written as hex in
-  the home bento art, hero and showcase modules, the about, hire, contact and misc
-  modules (the glass and obsidian marks, gradients in drawn art). `app/icon.svg` still
-  draws the pre-ADR-018 palette (`#fcfcfe`, `#7624f4`).
+  the home bento art, hero and showcase modules, and the about, contact and misc
+  modules (the obsidian mark, gradients in drawn art). The /hire hero reads tokens
+  (`--color-accent`, `--color-ambient`) except one stop: the handwritten accent's deep
+  cyan `#1597bd`, which carries its contrast on the canvas and has no token that dark.
+  `app/icon.svg` still draws the pre-ADR-018 palette (`#fcfcfe`, `#7624f4`).
 
 ### 11.2 Accent budget
 
@@ -527,7 +564,10 @@ two dark plates back to back.
 
 1. Gradient text and neon. Glows are allowed only as one soft ambient glow behind a
    surface (the contact aurora, the hero mark); blur only on the nav's translucent
-   backdrop and the showcase crossfade.
+   backdrop and the showcase crossfade. The one recorded exception to gradient text is
+   the /hire hero, from the approved prototype: the glass monogram (the accent family)
+   and the handwritten accent (deep cyan to the accent, ≥ 3:1 at every point for large
+   text).
 2. A theme toggle or a second theme. Dark is a surface (§2), never a mode.
 3. A second accent, or the accent as decoration.
 4. Uppercase headings or body text; letter-spaced all-caps buttons. The one exception is

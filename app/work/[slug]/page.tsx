@@ -108,8 +108,9 @@ function heroLead(summary: string, tagline: string): string {
  * Every figure is read from the registries (content/projects.ts,
  * content/evals.ts) or the diagram data; nothing on this page is retyped.
  * DBWhisper has no recording — it was withdrawn because its frames showed
- * retracted figures — so its frame holds the product capture and its hero
- * leads with the request walkthrough.
+ * retracted figures — so its frame holds the product capture, its hero leads
+ * with the request walkthrough, and a caret link jumps to the boundary
+ * inspector ("Try the validator").
  */
 export default async function CaseStudyPage({ params }: { params: Promise<{ slug: string }> }) {
   const { slug } = await params;
@@ -171,6 +172,11 @@ export default async function CaseStudyPage({ params }: { params: Promise<{ slug
               <Button href={p.links.repo} variant={p.links.live ? "light" : "dark"} size="lg" caret>
                 {copy.viewSource}
               </Button>
+            ) : null}
+            {isFlagship ? (
+              <CaretLink href={`#${copy.boundary.id}`} tone="muted" size="md" className={styles.heroLink}>
+                {copy.boundary.cta}
+              </CaretLink>
             ) : null}
           </div>
           <div className={styles.heroMeta}>
@@ -248,7 +254,7 @@ export default async function CaseStudyPage({ params }: { params: Promise<{ slug
 
       {/* ---- DBWhisper: try the boundary ---- */}
       {isFlagship ? (
-        <Section space="md" tone="subtle" id="try-the-boundary" ariaLabelledBy="boundary-heading">
+        <Section space="md" tone="subtle" id={copy.boundary.id} ariaLabelledBy="boundary-heading">
           <div className={styles.boundary}>
             <SectionHeader
               id="boundary-heading"

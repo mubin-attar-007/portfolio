@@ -1,9 +1,9 @@
 /* Ambient loops (prototype `.glass`, `.obsidian`, `.pulse-ring`), driven by
-   the global `float` and `hero-ring` keyframes. Reduced motion stops them
-   (globals.css) and hides the rings. */
+   the global `float` and `hero-ring` keyframes through their `--kf-*` names
+   (globals.css). Reduced motion stops them (globals.css) and hides the rings. */
 @layer components {
   .float {
-    animation: float var(--float-duration) ease-in-out infinite;
+    animation: var(--kf-float) var(--float-duration) ease-in-out infinite;
   }
 
   .rings {
@@ -21,7 +21,7 @@
     border: 1px solid var(--ring-color, color-mix(in srgb, var(--color-accent) 50%, transparent));
     border-radius: var(--ring-radius);
     opacity: 0;
-    animation: hero-ring var(--ring-period) var(--ease-out) var(--ring-delay) infinite;
+    animation: var(--kf-hero-ring) var(--ring-period) var(--ease-out) var(--ring-delay) infinite;
   }
 
   @media (prefers-reduced-motion: reduce) {

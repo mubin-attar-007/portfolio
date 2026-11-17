@@ -37,6 +37,11 @@ const ACTIVE_BAND = "-45% 0px -50% 0px";
  * at most. Focusing inside a step makes it active.
  * Motion: opacity and a short rise with a soft spring; instant under reduced
  * motion. Never a scroll reveal: every step's text is always visible.
+ *
+ * Styling hook: the active step's `<li>` and its frame pane carry
+ * `data-active`, so media can key a hover moment to the one in view
+ * (`.steps:hover [data-active] …`, as the case study's flow pane does). The
+ * frame is inert, so a hover moment keys on the root, never the frame.
  */
 export function StickySteps({
   steps,

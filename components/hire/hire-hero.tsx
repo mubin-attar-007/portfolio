@@ -31,7 +31,7 @@ function Guides() {
           <rect width="920" height="520" fill="url(#hire-guides-fade)" />
         </mask>
       </defs>
-      <g mask="url(#hire-guides-mask)" fill="none" stroke="rgb(59 130 246 / 0.28)" strokeWidth={1}>
+      <g mask="url(#hire-guides-mask)" className={styles.guideLines}>
         <line x1="0" y1="260" x2="920" y2="260" />
         <line x1="460" y1="0" x2="460" y2="520" />
         <line x1="200" y1="0" x2="720" y2="520" />

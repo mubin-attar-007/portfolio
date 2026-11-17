@@ -39,8 +39,9 @@ are listed in design-system.md §5.
 - Images: meaningful `alt`; diagrams get text alternatives (the narration list).
 - Forms/controls: labeled, error text linked via `aria-describedby`.
 - Automated gate: `npm run test:a11y` (Playwright + axe-core: the WCAG 2.0–2.2 A/AA
-  rules, plus the best-practice rules Lighthouse scores, such as `heading-order`, and
-  `landmark-unique`) on every route in its list — `/contact` and both `/work/field/*`
+  rules, plus the best-practice rules Lighthouse scores, such as `heading-order`,
+  `landmark-unique`, and `region`, which keeps all content inside landmarks) on every
+  route in its list — `/contact` and both `/work/field/*`
   reports included — at 1280/768/360px, plus the open Work and About menus, the open
   mobile menu, the open assistant panel, the reduced-motion contract, and keyboard
   focus traps → **zero violations**. The site is light-only (ADR-018), so there is one
@@ -64,17 +65,30 @@ the budget; changing a budget needs an ADR.
 | LCP | ≤ 2.5 s (raised from 2.0 s in 2026; the reason is recorded in ADR-018, "Carried forward") | fails the gate |
 | CLS | < 0.05 | fails the gate |
 | TBT (lab) | < 150 ms | fails the gate |
-| Route JS (gzip, first load) | ≤ 120 KB home · ≤ 90 KB content pages | printed, not failing; over budget (CI, 2026-11-13: home 174 KB, case study 175 KB, writing 167 KB) |
-| Assistant panel chunk | lazy, loaded on open; ≤ 60 KB | not yet measured |
+| Route JS (gzip, first load) | ≤ 120 KB home · ≤ 90 KB content pages | printed, not failing; over budget. CI, 2026-11-16 (before the redesign): home 164 KB, case study 164 KB, writing 157 KB. The redesign, measured the same way on 2026-11-17: home 160 KB, case study (`/work/dbwhisper`, which now holds the boundary inspector) 174 KB, writing 159 KB |
+| Assistant panel chunk | lazy: fetched when a pointer or focus first reaches a launcher, or on open; ≤ 60 KB | 7 KB gzip of JS (2026-11-17); its styles are in the shared stylesheet |
 | INP | < 200 ms | field metric; no lab gate and no field data yet |
 | Fonts | ≤ 130 KB woff2 in total, self-hosted by `next/font` | not yet measured |
 | Images | AVIF/WebP through `next/image`, explicit dimensions, lazy below the fold | review |
 
 The route-JS gate prints rather than fails because framework chunks shared by every
 route make up most of the transfer, so a hard limit would fail on that floor rather than
-on a regression (see the comment in `scripts/lighthouse-budget.mjs`). Whether the budget
-is reachable on this framework is open; meeting it or changing it through an ADR are
-the two ways to close the gap.
+on a regression (see the comment in `scripts/lighthouse-budget.mjs`). On the home page
+the framework is about 132 KB of the 150 KB of gzip bodies; the site's own code is the
+shared chrome chunk (9.5 KB), the home islands (3.3 KB) and the error boundaries
+(4.5 KB). Whether the budget is reachable on this framework is open; meeting it or
+changing it through an ADR are the two ways to close the gap.
+
+Measure route JS as a browser fetches it, which is what CI's Lighthouse number is: every
+script requested while the page loads and settles, gzip bodies plus headers. Two traps:
+
+- The prerendered HTML also lists Next's legacy-polyfill chunk as a `noModule` script
+  (about 39 KB gzip). No browser that runs modules downloads it, so summing every
+  script tag in the HTML overstates first-load JS by that much (it once read the
+  redesigned home as 193 KB).
+- A local proxy or antivirus can strip compression on the way to the browser, so a
+  local Lighthouse run may report uncompressed bytes (about 500 KB). Re-fetch each
+  script with `Accept-Encoding: gzip` to read the real transfer, or rely on CI.
 
 Heavy things are lazy by rule: the assistant panel, diagrams below the fold, demo videos
 (no video bytes until played), and below-fold images. Static generation for all content
@@ -127,7 +141,10 @@ warning about the unused CSS. ESLint fails a `<Link>` without a `prefetch` prop
   status green, amber and red; the boundary-inspector and walkthrough checks run on
   `/work/dbwhisper`, where the inspector now lives, instead of `/`; `test:motion`
   checks the arrow-swap caret, the menus, the tab pill and panel crossfade, the
-  marquee's hover pause, the copy chip and each reduced-motion alternative; the link
+  marquee's hover pause, the copy chip, the hover moments on `/work`, a case study and
+  a field report, and each reduced-motion alternative, and fails on an animation name
+  that resolves to no keyframe (bare or through a `--kf-*` name) or on any loop but an
+  ambient one running at rest on any route; `test:a11y` adds axe's `region`; the link
   and smoke gates include `/contact` and the field reports, which are `noindex` but
   linked and must resolve; and the dialog and trigger names come from
   `components/assistant/copy.ts` (AI_ASSISTANT.md §5).

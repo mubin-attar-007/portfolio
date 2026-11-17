@@ -53,7 +53,8 @@ Three things in the old system blocked that bar:
      (`scale(.97)`), the tab hover pill, menu entry, list-row and link colour shifts.
    - *Illustrations that react to hover or focus-within*: wires pulse, a hub lights up,
      charts redraw, bars fill, checks pop, replies rise. The reaction is decoration;
-     the information is already on screen at rest.
+     the information is already on screen at rest. A hover moment that loops while it
+     plays (a wire pulse, a halo) never loops at rest: it is not an ambient loop.
    - *A few ambient loops*: the marquee (paused on hover and focus), a slow float, the
      12s pulse rings, the sheen on a showcase change, the assistant's "searching"
      shimmer.
@@ -62,6 +63,13 @@ Three things in the old system blocked that bar:
    observer. Under `prefers-reduced-motion: reduce` every loop stops, every transition
    is instant, and the marquee is a static, centred row; one blanket rule in
    `styles/globals.css` enforces it so a new component cannot forget.
+   Only paint and compositor properties animate, with three recorded exceptions, each
+   instant under reduced motion: the walkthrough stage's `grid-template-rows`
+   disclosure (an accordion), and two small size changes contained in their own
+   element, so that nothing outside them moves — the copy-prompt chip's expansion
+   (`max-width`, margin and padding of its parts, as the measured Clerk chip widens)
+   and the showcase tab pill's `width` and `height` (it is absolutely positioned).
+   design-system.md §6 records each; a new one must be as small and as contained.
 6. **One pattern per page job.** Each page takes the pattern that fits what it is
    for (design-system.md §7.1 is the full map):
 
@@ -115,6 +123,11 @@ Three things in the old system blocked that bar:
 
 - One remap block replaces a second theme, so a dark plate costs nothing to add and
   cannot drift from a dark page.
+- The shared keyframes are global (`styles/globals.css`) and every CSS module names
+  them through a custom property, `animation: var(--kf-marquee) …`. The module
+  transform renames a bare animation name to a local one, so on 17 November 2026 the
+  marquee, float, pulse rings, sheen and every hover illustration were dead in the
+  production build until they moved onto `--kf-*` names (design-system.md §6).
 - The primitives in `components/ui`, `components/layout` and `components/motion`
   (design-system.md §5) carry the system; a page composes them and keeps only its own
   composition in a CSS module.
@@ -135,8 +148,13 @@ Three things in the old system blocked that bar:
 - The inspector and walkthrough checks (`test:interaction`, `walkthrough-input-audit`,
   `boundary-audit`) run on `/work/dbwhisper`.
 - `test:motion` checks the new contracts: the caret swap, the menus, the tab pill and
-  panel crossfade, the marquee's hover pause, the copy chip, and each reduced-motion
-  alternative.
+  panel crossfade, the marquee's hover pause, the copy chip, the hover moments on
+  `/work`, a case study and a field report, and each reduced-motion alternative. It
+  also fails on an animation name that resolves to no keyframe (bare or through a
+  `--kf-*` name) and on any loop other than an ambient one running at rest on any
+  route.
+- `test:a11y` also runs axe's `region` rule, so every piece of content sits in a
+  landmark (the home announcement bar is `<aside aria-label="Announcement">`).
 - `test:links` and `test:smoke` cover `/contact` and the field reports (noindex, but
   linked, so they must resolve). `test:print` checks the new résumé print styles.
 - `test/icons.test.mts` checks the browser-chrome colours against the light canvas and

@@ -3,8 +3,10 @@
 // The contracts are the motion law of ADR-018 and design-system.md §6: the
 // arrow-swap caret and the press, the menus, the showcase's tab pill and panel
 // crossfade, the marquee and its pauses, the copy-prompt chip, cards and their
-// illustrations, the boundary inspector on /work/dbwhisper, and each
-// reduced-motion alternative. The site has one theme, so there is one pass.
+// illustrations, the hover moments on /work, a case study and a field report,
+// the boundary inspector on /work/dbwhisper, that every animation resolves to
+// real keyframes and nothing but an ambient loop runs at rest on any route,
+// and each reduced-motion alternative. The site has one theme, so one pass.
 //
 //   BASE_URL=http://127.0.0.1:3200 node scripts/motion-audit.mjs
 import { chromium } from "playwright";
@@ -15,11 +17,16 @@ const apiRequests = [];
 const errors = [];
 const browser = await chromium.launch();
 
-/** Routes whose stylesheets are scanned for animations that name no @keyframes. */
+/**
+ * Routes whose stylesheets are scanned for animations that name no @keyframes,
+ * and where nothing but an ambient loop may run at rest. /work/tradepulse
+ * stands for the case studies whose "How it works" is StickySteps.
+ */
 const KEYFRAME_ROUTES = [
   "/",
   "/work",
   "/work/dbwhisper",
+  "/work/tradepulse",
   "/work/field/records-triage",
   "/hire",
   "/about",
@@ -940,7 +947,70 @@ const ringState = (page) => page.evaluate(() => Array.from(document.querySelecto
   .filter((element) => /(?:^|_)hero-ring$/.test(getComputedStyle(element).animationName))
   .map((element) => element.getClientRects().length > 0));
 
-/** Every animation a loaded stylesheet names, against the @keyframes the page defines. */
+/** Running infinite animations in a locator's subtree, pseudo-elements included, by name. */
+const loopsIn = (target) => target.evaluate((element) => element.getAnimations({ subtree: true })
+  .filter((animation) => animation.playState === "running" && animation.effect?.getComputedTiming().iterations === Infinity)
+  .map((animation) => `${animation.animationName ?? animation.transitionProperty ?? "script"}${animation.effect?.pseudoElement ?? ""}`));
+
+/** With nothing hovered or focused, the loops that are not ambient (ADR-018 §5): there must be none. */
+async function idleLoops(page) {
+  await page.mouse.move(0, 0);
+  await settle(page);
+  const names = await loopsIn(page.locator(":root"));
+  return names.filter((name) => !AMBIENT_LOOP.test(name.replace(/::.*$/, "")));
+}
+
+/**
+ * Hover moments beyond the home page (ADR-018 §5): each loops only while its
+ * card or frame is hovered, and stops when the pointer leaves. `area` is where
+ * the loop runs when it is not inside the hovered element: a case study's
+ * sticky frame is inert, so the steps are hovered and the frame beside them
+ * plays.
+ */
+const HOVER_MOMENTS = [
+  { name: "the field-card halo on /work", route: "/work", target: (page) => page.locator("#field article").first() },
+  {
+    name: "the flow wire in a case study's steps",
+    route: "/work/tradepulse",
+    target: (page) => page.locator("#how-it-works ol").first(),
+    area: (page) => page.locator("#how-it-works"),
+  },
+  { name: "the pulse on a field report's sketch", route: "/work/field/records-triage", target: (page) => page.locator("main figure").first() },
+];
+
+async function hoverMoments(page, reduced) {
+  const results = [];
+  for (const moment of HOVER_MOMENTS) {
+    await open(page, moment.route);
+    const target = moment.target(page);
+    const area = moment.area ? moment.area(page) : target;
+    await page.mouse.move(0, 0);
+    await bringToRest(page, target);
+    await settle(page);
+    const rest = await loopsIn(area);
+    await target.hover();
+    await page.waitForTimeout(250);
+    const hovered = await loopsIn(area);
+    await page.mouse.move(0, 0);
+    await page.waitForTimeout(250);
+    const left = await loopsIn(area);
+    results.push({ name: moment.name, rest, hovered, left });
+  }
+  const still = (result) => result.rest.length === 0 && result.left.length === 0;
+  check(reduced
+    ? "reduced: no hover moment loops, on /work, a case study or a field report"
+    : "hover moments loop only under the pointer: the /work field-card halo, a case study's flow wire, a field sketch's pulse",
+  results.every((result) => still(result) && (reduced ? result.hovered.length === 0 : result.hovered.length > 0)),
+  JSON.stringify(results));
+}
+
+/**
+ * Every animation a loaded stylesheet names, against the @keyframes the page
+ * defines. A `var()` is resolved against :root, where the shared keyframes are
+ * named (`--kf-*`, globals.css): a module must reference a global keyframe that
+ * way, because the CSS-module transform renames a bare name to a local one that
+ * matches nothing. An unset `--kf-*` is reported as it is written.
+ */
 async function undefinedKeyframes(page) {
   return page.evaluate(() => {
     const KEYWORDS = new Set(["none", "infinite", "linear", "ease", "ease-in", "ease-out", "ease-in-out", "step-start",
@@ -959,6 +1029,18 @@ async function undefinedKeyframes(page) {
       parts.push(part);
       return parts.map((p) => p.trim()).filter(Boolean);
     };
+    const rootStyle = getComputedStyle(document.documentElement);
+    /** The names a value could be animating: its idents, with each var() resolved against :root. */
+    const namesIn = (value, depth = 0) => split(value, " ").flatMap((token) => {
+      const reference = /^var\(\s*(--[\w-]+)\s*(?:,(.*))?\)$/s.exec(token);
+      if (reference) {
+        const resolved = rootStyle.getPropertyValue(reference[1]).trim() || (reference[2] ?? "").trim();
+        if (resolved && depth < 4) return namesIn(resolved, depth + 1);
+        // Any other custom property may be set on the element itself (a duration, a delay).
+        return reference[1].startsWith("--kf-") ? [token] : [];
+      }
+      return /^(?:-?[A-Za-z_][\w-]*|"[^"]*"|'[^']*')$/.test(token) && !KEYWORDS.has(token) ? [token] : [];
+    });
     const defined = new Set();
     const used = new Map();
     const note = (name, selector) => { if (!used.has(name)) used.set(name, selector); };
@@ -967,10 +1049,10 @@ async function undefinedKeyframes(page) {
         if (rule instanceof CSSKeyframesRule) defined.add(rule.name);
         if (rule.style) {
           const selector = rule.selectorText ?? "";
-          for (const layer of split(rule.style.getPropertyValue("animation-name"), ",")) if (!KEYWORDS.has(layer)) note(layer, selector);
-          for (const layer of split(rule.style.getPropertyValue("animation"), ",")) {
-            const names = split(layer, " ").filter((token) => /^-?[A-Za-z_][\w-]*$/.test(token) && !KEYWORDS.has(token));
-            for (const name of names) note(name, selector);
+          for (const property of ["animation-name", "animation"]) {
+            for (const layer of split(rule.style.getPropertyValue(property), ",")) {
+              for (const name of namesIn(layer)) note(name, selector);
+            }
           }
         }
         if (rule.cssRules) visit(rule.cssRules);
@@ -1016,12 +1098,17 @@ try {
 
   await withPage({}, async (page) => {
     const missing = [];
+    const restless = [];
     for (const route of KEYFRAME_ROUTES) {
       await page.goto(BASE + route, { waitUntil: "networkidle" });
       for (const entry of await undefinedKeyframes(page)) if (!missing.includes(entry)) missing.push(entry);
+      for (const name of await idleLoops(page)) restless.push(`${route}: ${name}`);
     }
     check("every animation a stylesheet names resolves to @keyframes the page defines", missing.length === 0,
       `${missing.length} unresolved: ${missing.join("; ")}`);
+    check("on every route, only the ambient loops run at rest (a hover moment never loops unhovered)", restless.length === 0,
+      restless.join("; "));
+    await hoverMoments(page, false);
 
     await open(page, "/hire");
     const hire = await loopsOn(page);
@@ -1061,6 +1148,7 @@ try {
     check("reduced: the pulse rings disappear and every loop stops on /hire and /about",
       rings.length === 3 && rings.every((shown) => !shown) && hire.length === 0 && about.length === 0,
       JSON.stringify({ hire, rings, about }));
+    await hoverMoments(page, true);
   });
 
   await withPage({ viewport: { width: 390, height: 844 }, reducedMotion: "reduce" }, async (page) => {

@@ -51,7 +51,7 @@
   --color-accent-hover: #5a37ef;     /* 6.1:1 canvas; the violet button's ring */
   --color-accent-soft: #efecff;      /* a tinted ground; violet TEXT on it is 4.4:1, so use accent-hover there */
   --color-on-accent: #ffffff;        /* 5.2:1 on the violet */
-  /* The one non-accent hue: ambient glows and data visuals only, never text. */
+  /* The one non-accent hue: ambient glows, data visuals and faint decorative lines; never text. */
   --color-ambient: #38bdf8;
 
   --color-positive: #15803d;         /* 4.7:1 canvas · 5.0:1 white */

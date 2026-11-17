@@ -22,9 +22,12 @@ const AXE = readFileSync(
 // wcag22a/wcag22aa the 2.2-only rules (e.g. target-size) never run.
 const TAGS = ["wcag2a", "wcag2aa", "wcag21a", "wcag21aa", "wcag22a", "wcag22aa"];
 // axe's best-practice rules that Lighthouse's accessibility score counts, plus
-// landmark-unique. Lighthouse audits three routes and must score 100; running
-// these on every route and state here finds a heading out of order (the home
-// showcase shipped an h3 straight after the h1) before that budget does.
+// landmark-unique and region. Lighthouse audits three routes and must score
+// 100; running these on every route and state here finds a heading out of
+// order (the home showcase shipped an h3 straight after the h1) before that
+// budget does. `region` keeps every piece of content inside a landmark, so a
+// screen reader's landmark navigation reaches it (the home announcement bar
+// once sat outside them all).
 const BEST_PRACTICE_RULES = [
   "accesskeys",
   "empty-heading",
@@ -33,6 +36,7 @@ const BEST_PRACTICE_RULES = [
   "image-redundant-alt",
   "landmark-one-main",
   "landmark-unique",
+  "region",
   "skip-link",
   "table-duplicate-name",
   "tabindex",

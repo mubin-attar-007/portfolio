@@ -228,14 +228,34 @@
 }
 
 /* ============================================================================
-   Shared keyframes. Use them from any module: `animation: marquee 48s linear
-   infinite`. Each reads an optional custom property for its travel, so one
-   keyframe serves every size:
+   Shared keyframes. Each reads an optional custom property for its travel, so
+   one keyframe serves every size:
      float      --float (default -10px)         hero-ring  --ring-scale (2.05)
      wire       --wire-distance (48px)          draw       --draw-length (460)
    Decorative loops must stop under reduced motion (see below), and none of
    these may be used as a scroll-triggered reveal (the motion law).
+
+   Reference them through their `--kf-*` name, never the bare name:
+     animation: var(--kf-marquee) 48s linear infinite;
+   A CSS module renames every animation name it sees to a local one (`marquee`
+   becomes `<hash>_marquee`), which matches no keyframe here, so a bare name in
+   a module is a dead animation in the production build. The transform leaves
+   `var()` alone, and the custom property resolves to the global name.
    ============================================================================ */
+:root {
+  --kf-marquee: marquee;
+  --kf-float: float;
+  --kf-hero-ring: hero-ring;
+  --kf-sheen: sheen;
+  --kf-pop: pop;
+  --kf-halo: halo;
+  --kf-wire: wire;
+  --kf-spin: spin;
+  --kf-draw: draw;
+  --kf-fill: fill;
+  --kf-rise: rise;
+  --kf-fadein: fadein;
+}
 @keyframes marquee {
   to { transform: translateX(-50%); }
 }

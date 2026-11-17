@@ -1,6 +1,7 @@
 /* Marquee (prototype `.chiprows.marquee`): the content twice in one track that
    slides by half its width, so the loop is seamless. Uses the global
-   `marquee` keyframe (globals.css). */
+   `marquee` keyframe through `--kf-marquee` (globals.css: a bare name here
+   would be renamed by the module transform and match nothing). */
 @layer components {
   .group {
     display: grid;
@@ -18,7 +19,7 @@
   .track {
     display: flex;
     width: max-content;
-    animation: marquee var(--marquee-duration) linear var(--marquee-delay) infinite;
+    animation: var(--kf-marquee) var(--marquee-duration) linear var(--marquee-delay) infinite;
   }
   .reverse {
     animation-direction: reverse;

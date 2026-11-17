@@ -67,7 +67,8 @@ const ART: Record<PublicCard["slug"], ReactNode> = {
  * PublicWork — the four public systems as light cards: a mini-UI that plays
  * its moment on hover, a one-line description, the one result each leads
  * with (read from the eval registry, with its method and a link to it), and
- * the case-study and source links.
+ * the case-study and source links — plus, where the case study has something
+ * to use (DBWhisper's validator), a link straight to it.
  */
 export function PublicWork() {
   return (
@@ -78,7 +79,7 @@ export function PublicWork() {
         </CaretLink>
       </SectionHeader>
       <Bento columns={2} className={cx("mt-16", art.scope)}>
-        {PUBLIC.cards.map((card) => {
+        {PUBLIC.cards.map((card: PublicCard) => {
           const project = projectBySlug(card.slug);
           if (!project) throw new Error(`home: no project "${card.slug}" in content/projects.ts`);
           return (
@@ -102,6 +103,12 @@ export function PublicWork() {
                     {PUBLIC.caseStudy}
                     <span className="sr-only">: {project.title}</span>
                   </CaretLink>
+                  {card.tryIt ? (
+                    <CaretLink href={card.tryIt.href}>
+                      {card.tryIt.label}
+                      <span className="sr-only">: {project.title}</span>
+                    </CaretLink>
+                  ) : null}
                   {project.links.repo ? (
                     <CaretLink href={project.links.repo}>
                       {PUBLIC.source}

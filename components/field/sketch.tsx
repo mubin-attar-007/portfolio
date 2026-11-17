@@ -17,8 +17,9 @@ import styles from "./sketch.module.css";
  *
  * A11y: a `<figure>` holding one ordered list in reading order — zone, the
  * crossing to the next zone ("Crosses the boundary: …"), zone. Arrows and the
- * moving pulse are decorative. Motion: the pulse on each wire is an ambient
- * loop (off under reduced motion); hovering a zone lifts its frame.
+ * moving pulse are decorative. Motion: a pulse travels each wire while the
+ * sketch's frame (the element that holds it) is hovered or holds focus, and is
+ * hidden at rest and under reduced motion; hovering a zone lifts its frame.
  */
 export function ArchitectureSketch({
   sketch,

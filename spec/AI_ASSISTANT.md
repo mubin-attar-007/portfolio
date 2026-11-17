@@ -207,7 +207,9 @@ in the same change. The trigger's name starts "Ask this site"; the dialog's name
   <kbd>Ctrl</kbd>+<kbd>K</kbd> in a text field keeps its system meaning. The `<kbd>`
   hint shows the device's own shortcut once hydrated, in a fixed width so it shifts
   nothing; `aria-keyshortcuts="Control+K Meta+K"`; the accessible name is the visible
-  label. The panel is lazy-loaded (`React.lazy`) on first open.
+  label. The panel is lazy-loaded (`React.lazy`): its chunk is fetched the first time a
+  pointer rests on, or focus reaches, a launcher (`data-assistant-launcher`), and at the
+  latest on first open, so the first open does not wait on the network.
 - **Opening from a page.** A page CTA calls `openAssistant(question?)`
   (`components/assistant/open-assistant.ts`), which dispatches the window event
   `assistant:open` (`ASSISTANT_OPEN_EVENT`) with an optional `{ question }`. The owner
@@ -317,5 +319,6 @@ clean with the panel open (`npm run test:a11y` audits that state and, with `/api
 mocked, that sending keeps focus in the field, that the field's description stays a
 short hint, and that closing keeps the conversation and Clear empties it) · rate-limited,
 budget-exhausted, not-covered and fallback states still answer honestly · the panel stays
-lazy, loaded only on open (the ≤ 60 KB chunk target in `components/features/assistant.tsx`
-is not measured by any gate).
+lazy, never part of a page's first load: fetched on the first hover or focus of a
+launcher, or on open (7 KB gzip of JS on 2026-11-17, against the ≤ 60 KB target in
+`components/features/assistant.tsx`; no gate measures it).

@@ -55,7 +55,7 @@
 .cardLinks {
   display: flex;
   flex-wrap: wrap;
-  gap: 18px;
+  gap: 8px 18px;
   margin-top: 16px;
 }
 

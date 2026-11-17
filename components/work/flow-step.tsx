@@ -41,7 +41,9 @@ function Side({ items, label, align }: { items: Neighbour[]; label: string; alig
  * FlowStep — the media pane for one "How it works" step: the part of the real
  * architecture in focus, with what it receives and what it hands on, read
  * straight from the diagram data. Dashed rows are fallback paths, as in the
- * full diagram. Decorative motion: the wires pulse while the pane is active.
+ * full diagram. Decorative motion: the wires pulse while the pane is the one in
+ * view and the steps are hovered or hold focus (`.steps` on the StickySteps
+ * root, case-study.module.css); still at rest and under reduced motion.
  */
 export function FlowStep({
   spec,

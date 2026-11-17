@@ -1,5 +1,6 @@
 import { SITE } from "@/config/site";
 import { CROWNWAGER_EVIDENCE, DBWHISPER_EVIDENCE, requireCompleteEval } from "@/content/evals";
+import { caseStudyPage } from "@/content/pages/work";
 
 /**
  * Home page copy (`/`). Every sentence the home sections show lives here, once.
@@ -105,11 +106,15 @@ export const FIELD = {
   },
 } as const;
 
-/** One public system's card: its copy, and the one result it leads with. */
+/**
+ * One public system's card: its copy, the one result it leads with, and —
+ * where the case study has something to use in the page — a link straight to it.
+ */
 export type PublicCard = {
   slug: "dbwhisper" | "tradepulse" | "crownwager" | "llm-studio";
   body: string;
   metric: { value: string; method: string; href: string };
+  tryIt?: { label: string; href: string };
 };
 
 export const PUBLIC = {
@@ -129,6 +134,10 @@ export const PUBLIC = {
         value: `${DBWHISPER_EVIDENCE.policy.ratio.replace("/", " of ")} unsafe runs denied`,
         method: "An adversarial policy corpus: a deterministic test, not model accuracy",
         href: DBWHISPER_EVIDENCE.policy.anchor,
+      },
+      tryIt: {
+        label: caseStudyPage.boundary.cta,
+        href: `/work/dbwhisper#${caseStudyPage.boundary.id}`,
       },
     },
     {
