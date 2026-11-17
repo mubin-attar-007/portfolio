@@ -1,0 +1,91 @@
+/* Footer (prototype `.footer`): brand column plus five link columns, a base
+   bar, and a dot texture fading at the bottom. Dark on dark pages through its
+   `[data-chrome]` scope. */
+@layer components {
+  .footer {
+    position: relative;
+    overflow: hidden;
+    padding-top: 88px;
+    color: var(--color-ink);
+  }
+  .footer::after {
+    content: "";
+    position: absolute;
+    right: 0;
+    bottom: 0;
+    left: 0;
+    height: 110px;
+    background-image: radial-gradient(var(--chrome-dots) 1px, transparent 1.3px);
+    background-size: 4px 4px;
+    -webkit-mask-image: linear-gradient(to top, rgb(0 0 0 / 0.7), transparent);
+    mask-image: linear-gradient(to top, rgb(0 0 0 / 0.7), transparent);
+    pointer-events: none;
+  }
+  .grid {
+    display: grid;
+    grid-template-columns: 1.7fr repeat(5, minmax(0, 1fr));
+    gap: 40px 24px;
+  }
+  .columns {
+    display: contents;
+  }
+  .positioning {
+    max-width: 240px;
+    margin-top: 14px;
+    font-size: var(--text-sm);
+    line-height: 1.5;
+    color: var(--color-ink-secondary);
+  }
+  .heading {
+    margin-bottom: 18px;
+    font-size: var(--text-sm);
+    font-weight: 500;
+    letter-spacing: normal;
+    color: var(--color-ink-tertiary);
+  }
+  .list {
+    display: grid;
+    gap: 12px;
+    list-style: none;
+    padding: 0;
+  }
+  .link {
+    font-size: var(--text-sm);
+    font-weight: 500;
+    transition: color var(--motion-fast) var(--ease-out);
+  }
+  .link:hover {
+    color: var(--chrome-link-hover);
+  }
+  .base {
+    position: relative;
+    z-index: 1;
+    display: flex;
+    justify-content: space-between;
+    gap: 16px;
+    margin-top: 56px;
+    padding: 24px 0 56px;
+    border-top: 1px solid var(--color-border);
+    font-size: var(--text-sm);
+    color: var(--color-ink-secondary);
+  }
+  .base a {
+    transition: color var(--motion-fast) var(--ease-out);
+  }
+  .base a:hover {
+    color: var(--color-ink);
+  }
+  @media (max-width: 1000px) {
+    .grid {
+      grid-template-columns: 1fr 1fr;
+    }
+    .brandCol {
+      grid-column: 1 / -1;
+    }
+  }
+  @media (max-width: 640px) {
+    .base {
+      flex-direction: column;
+    }
+  }
+}

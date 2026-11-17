@@ -1,0 +1,40 @@
+/* StatsRow (prototype `.stats`): label over a large figure, in equal columns. */
+@layer components {
+  .stats {
+    display: grid;
+    grid-template-columns: repeat(var(--stats-columns), minmax(0, 1fr));
+    gap: 36px 24px;
+  }
+  .center {
+    text-align: center;
+  }
+
+  .label {
+    font-size: 0.9375rem;
+    line-height: 1.5;
+    color: var(--color-ink-secondary);
+  }
+
+  .value {
+    margin-top: 6px;
+    font-size: clamp(2.25rem, 4vw, 3.25rem);
+    font-weight: 600;
+    line-height: 1.1;
+    letter-spacing: -0.045em;
+    font-variant-numeric: tabular-nums;
+    color: var(--color-ink);
+  }
+
+  .source {
+    display: block;
+    margin-top: 10px;
+    font-size: 0.8125rem;
+    letter-spacing: normal;
+  }
+
+  @media (max-width: 1000px) {
+    .stats {
+      grid-template-columns: repeat(2, minmax(0, 1fr));
+    }
+  }
+}

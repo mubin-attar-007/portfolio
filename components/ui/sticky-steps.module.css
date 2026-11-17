@@ -1,0 +1,122 @@
+/* StickySteps: numbered steps on a dashed rail; from 1000px a sticky media
+   frame beside them crossfades to the active step's media. Below 1000px each
+   step shows its media under its text and the frame is not rendered. */
+@layer components {
+  .root {
+    display: grid;
+    grid-template-columns: minmax(0, 1fr);
+    gap: 40px;
+  }
+
+  .list {
+    position: relative;
+    display: grid;
+    gap: 40px;
+    list-style: none;
+    padding: 0;
+  }
+  /* The rail through the numbers. */
+  .list::before {
+    content: "";
+    position: absolute;
+    top: 14px;
+    bottom: 14px;
+    left: 13.5px;
+    border-left: 1px dashed var(--color-dots);
+  }
+
+  .step {
+    position: relative;
+    display: grid;
+    grid-template-columns: 28px minmax(0, 1fr);
+    gap: 0 20px;
+  }
+
+  .number {
+    position: relative;
+    display: grid;
+    width: 28px;
+    height: 28px;
+    place-items: center;
+    border-radius: var(--radius-md);
+    font-size: 0.8125rem;
+    font-weight: 700;
+    color: var(--color-accent-hover);
+    background: color-mix(in srgb, var(--color-accent) 8%, var(--color-bg));
+    box-shadow: inset 0 0 0 1px color-mix(in srgb, var(--color-accent) 40%, transparent);
+    transition:
+      color var(--motion-base) var(--ease-out),
+      background-color var(--motion-base) var(--ease-out),
+      box-shadow var(--motion-base) var(--ease-out);
+  }
+  .step[data-active] .number {
+    color: var(--color-on-accent);
+    background: var(--color-accent);
+    box-shadow: 0 0 0 4px color-mix(in srgb, var(--color-accent) 16%, transparent);
+  }
+
+  .title {
+    font-size: var(--text-title);
+    font-weight: 700;
+    line-height: 1.35;
+    letter-spacing: -0.015em;
+    color: var(--color-ink);
+  }
+  .body {
+    margin-top: 8px;
+    font-size: 0.9375rem;
+    line-height: 1.6;
+    color: var(--color-ink-secondary);
+  }
+
+  .inlineMedia {
+    grid-column: 2;
+    margin-top: 20px;
+  }
+
+  .stage {
+    display: none;
+  }
+
+  @media (min-width: 1000px) {
+    .root {
+      grid-template-columns: minmax(0, 0.9fr) minmax(0, 1.1fr);
+      gap: 64px;
+      align-items: start;
+    }
+    /* Each step owns enough scroll for its media to be seen. */
+    .step {
+      min-height: clamp(220px, 36vh, 380px);
+    }
+    .inlineMedia {
+      display: none;
+    }
+    .stage {
+      position: sticky;
+      top: var(--sticky-top);
+      display: block;
+    }
+    .frame {
+      position: relative;
+      display: grid;
+      overflow: hidden;
+      border-radius: var(--radius-xl);
+      background: var(--color-surface);
+      box-shadow: var(--shadow-panel);
+    }
+    .pane {
+      grid-area: 1 / 1;
+      display: grid;
+      place-items: center;
+      opacity: 0;
+      transform: translateY(10px) scale(0.985);
+      transition:
+        opacity var(--motion-panel) var(--ease-out),
+        transform var(--motion-panel) var(--spring-soft);
+    }
+    .pane[data-active] {
+      opacity: 1;
+      transform: none;
+    }
+  }
+}

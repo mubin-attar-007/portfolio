@@ -1,0 +1,79 @@
+/* The header's assistant trigger, styled as a nav item: the sparkle alone on
+   narrow screens, the label from `lg`, the shortcut hint from `xl`.
+
+   Its text colour follows the nav it sits in (`inherit`), and its hover ground
+   is the nav's own token, so it holds on the light nav and on the dark pages'
+   nav without knowing which it is in. */
+
+.trigger {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.4375rem;
+  width: 2.25rem;
+  height: 2.25rem;
+  padding: 0;
+  border: 0;
+  border-radius: var(--radius-md);
+  background: transparent;
+  color: inherit;
+  font: 500 0.90625rem/1 var(--font-sans);
+  white-space: nowrap;
+  transition: background-color var(--motion-fast) var(--ease-out);
+}
+
+.trigger:hover,
+.trigger[aria-expanded="true"] {
+  background: var(--chrome-hover);
+}
+
+/* The sparkle turns under the pointer, as it does on the floating launcher. */
+.icon {
+  flex: none;
+  transition: transform var(--motion-panel) var(--spring);
+}
+
+.trigger:hover .icon,
+.trigger:focus-visible .icon {
+  transform: rotate(20deg) scale(1.1);
+}
+
+.label,
+.kbd {
+  display: none;
+}
+
+/* Fixed width: "⌘K" and "Ctrl K" take the same room, so the hint appearing
+   after hydration shifts nothing. */
+.kbd {
+  min-width: 3.25rem;
+  height: 1.25rem;
+  align-items: center;
+  justify-content: center;
+  margin-right: -0.25rem;
+  padding: 0 0.3125rem;
+  border-radius: 0.3125rem;
+  box-shadow: inset 0 0 0 1px color-mix(in srgb, currentColor 16%, transparent);
+  color: color-mix(in srgb, currentColor 64%, transparent);
+  font: 500 0.6875rem/1 var(--font-mono);
+}
+
+/* Tailwind's `lg` */
+@media (min-width: 64rem) {
+  .trigger {
+    width: auto;
+    height: 1.875rem;
+    padding: 0 0.625rem;
+  }
+
+  .label {
+    display: inline;
+  }
+}
+
+/* Tailwind's `xl` */
+@media (min-width: 80rem) {
+  .kbd {
+    display: inline-flex;
+  }
+}

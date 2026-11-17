@@ -1,90 +1,91 @@
 /* ============================================================================
-   Design tokens — the single source of truth (design-system.md; palette ADR-013).
+   Design tokens — the single source of truth.
 
-   Consumed by components ONLY through Tailwind utilities or var() inside a CSS
-   module. No raw hex / px / ms anywhere else in the codebase.
+   The visual reference is the approved redesign prototype (spec/prototype/
+   site.css), itself measured off clerk.com: a light canvas, near-monochrome ink,
+   ONE violet accent, and dark notched plates for emphasis. The site is
+   LIGHT-ONLY: there is no theme switch and no prefers-color-scheme. Dark
+   appears in three scopes, all fed by the one remap at the end of this file:
 
-   IDENTITY (design-system.md §1–§2): a light, near-monochrome paper with ONE
-   violet accent rationed to action, state and evidence. Dark is used two ways:
-   as a *band* inside the light page (.tone-invert) and as an explicit, remembered
-   full-page preference ([data-theme="dark"]). prefers-color-scheme is deliberately
-   NOT consulted — the light page is the brand, not a mode.
+   1. `.tone-invert`        a dark band or plate inside a light page.
+   2. `[data-surface=dark]` a dark page (/about, /evals, 404) — `<DarkSurface>`.
+   3. the chrome (`[data-chrome]`: nav, footer, launcher) of a page that contains
+      a dark surface, through `html:has([data-surface="dark"])`.
 
-   TOKEN NAMES ARE STABLE. The redesign changed the VALUES, not the vocabulary:
-   ~60 components already read `--color-ink` / `bg-bg` / `border-border`, and
-   renaming semantics that were already correct would have been churn with no
-   design payoff.
+   Consumption: Tailwind utilities (`text-ink-secondary`, `bg-surface`,
+   `border-border`, `rounded-lg`, `text-display`, `ease-spring` …) or `var()`
+   inside a CSS module. No raw hex, shadow or easing anywhere else.
+
+   Token names are stable: the existing `--color-*` vocabulary keeps its meaning,
+   so components written before the redesign render in the new palette.
+   Prototype name → token:
+     --canvas → --color-bg          --surface → --color-surface
+     --sunken → --color-bg-subtle   --ink-2/-3 → --color-ink-secondary/-tertiary
+     --border-2 → --color-border-strong   --violet(-soft) → --color-accent(-soft)
+     --ok → --color-positive        --plate-ink-2 → --color-plate-ink-secondary
+     --wrap → --width-content       --pad → --gutter      --mono → --font-mono
+
+   Every text colour below is checked against the ground it is used on (WCAG AA,
+   4.5:1 for body text); the ratios are in the comments.
    ============================================================================ */
 
-@theme {
-  /* ---- colour: the light page (the brand) --------------------------------
-     Adapted from openrouter.ai, measured live (ADR-013). Their architecture is
-     the part worth copying: ONE ink per theme (#03080a light / #fcfcfe dark),
-     with the entire neutral ramp expressed as alpha overlays of the OPPOSITE
-     colour. That is why their two themes read as one system rather than as a
-     palette and its inversion.
-
-     We resolve those overlays to flat hex rather than shipping alpha, for two
-     reasons: our tokens feed `color-mix()` and gradients that need a real
-     colour, and — measured — their tier-9/10 (44% alpha) lands at 3.1:1, which
-     is a placeholder tier, not the body-text tier our 12px mono microcopy
-     needs. Our tertiary is their ramp at ~60% instead, which clears AA.
-
-     Every ratio below is computed against the ground the token is used on, and
-     scripts/a11y.mjs re-checks them on every route in both themes. */
-  --color-bg: #fcfcfe;              /* page — their --slate-1 */
-  --color-bg-subtle: #f4f4f6;       /* their --slate-3, resolved */
-  --color-surface: #ffffff;         /* cards sit BRIGHTER than the page */
-  /* On this palette the page is already near-white, so there is no lighter step
-     above `surface`: a stacked panel is separated by shadow, not by fill. */
+/* `static`: emit every token, used or not. Tailwind otherwise drops variables
+   no utility references, and CSS modules (compiled separately) would read an
+   undefined `var()`. */
+@theme static {
+  /* ---- colour: the light page ------------------------------------------- */
+  --color-bg: #f7f7f8;               /* canvas */
+  --color-bg-subtle: #f5f5f7;        /* sunken: wells, menu-item hover */
+  --color-surface: #ffffff;          /* cards sit brighter than the canvas */
   --color-surface-raised: #ffffff;
-  --color-ink: #03080a;             /* their --slate-12 — 19.7:1 on bg */
-  --color-ink-secondary: #505456;   /* their ramp @69% — 7.5:1 on bg */
-  --color-ink-tertiary: #676a6c;    /* their ramp @60% — 5.3:1 on bg, 5.0:1 on bg-subtle */
-  --color-border: #e8e9eb;          /* their --slate-6, resolved */
-  --color-border-strong: #dddddf;   /* their --slate-7, resolved */
+  --color-ink: #131316;              /* 17.6:1 on canvas */
+  --color-ink-secondary: #5e5f6e;    /* 5.9:1 on canvas */
+  --color-ink-tertiary: #6e6f7e;     /* 4.6:1 canvas · 5.0:1 white · 4.55:1 sunken */
+  --color-border: #ebebee;
+  --color-border-strong: #dcdce1;
+  --color-rule: #e6e6ea;             /* blueprint frame lines and fading rules */
+  --color-dots: #cfd0d6;             /* dot bands, dashed list rules */
 
-  /* Their violet, adopted verbatim — and it is a genuine upgrade on ours:
-     6.2:1 as text on the page against our previous 4.9:1, while carrying the
-     near-white at the same 6.2:1 as a fill. One accent, rationed to action,
-     active state and measured evidence. */
-  --color-accent: #7624f4;
-  --color-accent-hover: #5f18cc;    /* 8.3:1 on bg */
-  --color-on-accent: #fcfcfe;       /* text on an accent fill (6.2:1) */
-  --color-accent-soft: #f1ebfd;     /* accent-tinted ground — never behind body text */
-  /* The one non-accent hue: their blue, used ONLY in ambient gradients and data
-     visuals — never as text, never as a control. */
-  --color-ambient: #035ade;
-  /* The display gradient — the one place the two hues meet. Reserved for the
-     hero accent line. Both endpoints clear 3:1 on the page (large-text AA):
-     #7624f4 at 6.2:1, #035ade at 5.8:1. */
-  --gradient-accent: linear-gradient(100deg, #6a1fdb 10%, #7624f4 55%, #035ade 100%);
-  /* Controls get a single-hue luminance ramp, never the two-hue sweep — a 44px
-     button whose corners are different brand colours reads broken, not rich. */
-  --gradient-accent-control: linear-gradient(180deg, #8a3df7, #7624f4);
-  /* Specimen frames sit one radius step above cards, per the reference. */
-  --radius-xl: 16px;
+  /* One accent, rationed to action, state and evidence. */
+  --color-accent: #6b4bff;           /* 4.8:1 canvas · 5.2:1 white */
+  --color-accent-hover: #5a37ef;     /* 6.1:1 canvas; the violet button's ring */
+  --color-accent-soft: #efecff;      /* a tinted ground; violet TEXT on it is 4.4:1, so use accent-hover there */
+  --color-on-accent: #ffffff;        /* 5.2:1 on the violet */
+  /* The one non-accent hue: ambient glows and data visuals only, never text. */
+  --color-ambient: #38bdf8;
 
-  /* 6.5:1 on surface, 5.9:1 on bg-subtle. The obvious #15803d measures 4.45:1
-     on bg-subtle, which is under AA for the 12px syntax tokens in the hero
-     stage — fixed here rather than at the call site, because every other use
-     (metric deltas, status text) sat on the same margin. */
-  --color-positive: #0f7a52;        /* emerald, matched to the dark ramp */
-  --color-negative: #b91c1c;        /* regressions / before-values */
-  --color-warning: #b45309;         /* caution callouts */
+  --color-positive: #15803d;         /* 4.7:1 canvas · 5.0:1 white */
+  --color-warning: #b45309;          /* 4.7:1 canvas */
+  --color-negative: #dc2626;         /* 4.5:1 canvas · 4.8:1 white */
 
-  /* ---- typography --------------------------------------------------------
-     Two families, one job each: Geist Sans for everything the reader reads,
-     Geist Mono for anything that is a value, a label, or code. The editorial
-     serif is loaded only for the long-form pull-quote (see app/layout.tsx). */
-  --font-sans: var(--font-geist-sans), "Inter", system-ui, sans-serif;
-  --font-mono: var(--font-geist-mono), "JetBrains Mono", ui-monospace, monospace;
-  --font-serif: var(--font-newsreader), Georgia, serif;
+  /* ---- colour: plates (dark sections and dark pages) --------------------- */
+  --color-plate: #131316;            /* a dark band or notched plate */
+  --color-plate-deep: #0f0f12;       /* a dark page's canvas */
+  --color-plate-card: #1b1b1f;       /* cards on a plate */
+  --color-plate-raised: #222227;     /* tiles and nodes on a plate card */
+  --color-plate-border: #2a2a30;
+  --color-plate-border-strong: #34343b;
+  --color-plate-ink: #f4f4f6;
+  --color-plate-ink-secondary: #9d9daa;  /* 6.9:1 plate · 7.1:1 deep · 6.4:1 card */
+  --color-plate-ink-tertiary: #8d8ea0;   /* 5.8:1 plate · 5.9:1 deep · 5.3:1 card */
+  --color-plate-violet: #9d8cff;     /* 6.7:1 plate */
+  --color-plate-cyan: #63d2ef;       /* 10.6:1 plate — dark grounds only */
+  --color-plate-positive: #4ade80;
+  --color-plate-warning: #fbbf24;
+  --color-plate-negative: #f87171;
 
-  /* Fixed steps — size / line-height / tracking. */
+  /* ---- typography ---------------------------------------------------------
+     Geist for everything read, Geist Mono for values, labels and code. The
+     serif is gone; `--font-serif` maps to the sans so older call sites keep
+     rendering in the brand face. */
+  --font-sans: var(--font-geist-sans), system-ui, -apple-system, "Segoe UI", sans-serif;
+  --font-mono: var(--font-geist-mono), ui-monospace, "SFMono-Regular", Consolas, monospace;
+  --font-serif: var(--font-sans);
+
+  /* Fixed steps. */
   --text-xs: 0.75rem;      --text-xs--line-height: 1.5;  --text-xs--letter-spacing: 0.04em;
   --text-sm: 0.875rem;     --text-sm--line-height: 1.6;
-  --text-base: 1rem;       --text-base--line-height: 1.7;
+  --text-base: 1rem;       --text-base--line-height: 1.6;
   --text-lg: 1.125rem;     --text-lg--line-height: 1.6;
   --text-xl: 1.25rem;      --text-xl--line-height: 1.45; --text-xl--letter-spacing: -0.011em;
   --text-2xl: 1.5rem;      --text-2xl--line-height: 1.35; --text-2xl--letter-spacing: -0.016em;
@@ -92,290 +93,303 @@
   --text-4xl: 2.25rem;     --text-4xl--line-height: 1.15; --text-4xl--letter-spacing: -0.024em;
   --text-5xl: 3rem;        --text-5xl--line-height: 1.08; --text-5xl--letter-spacing: -0.027em;
 
-  /* Fluid steps — the three sizes that must hit an exact figure at an exact
-     viewport, so each is solved as `intercept + slope*vw` rather than guessed
-     with a bare vw. The comments state the pinned widths.
-
-     display   360→40  768→57  1024→67  1440→84 (capped)
-     section   360→32  768→41  1440→52 (capped)
-     sub       360→24  768→28  1440→32 (capped)  */
-  --text-display: clamp(2.75rem, 1.7rem + 3.15vw, 4.75rem);
+  /* The redesign's named steps (prototype site.css):
+     display    page title, 40 → 64px, 700
+     section    section h2, 28 → 40px, 700
+     sub        small h2 (Careers-style), 26 → 32px, 600
+     title      card title 20px, 700 · title-sm the dense bento card, 15.5px, 650
+     page-lead  the lead under a page title, 17 → 20px
+     lead       the lead under a section title, 17px
+     kicker     the violet line above a title, 14px · label the mono caps tag, 11px */
+  --text-display: clamp(2.5rem, 5.2vw, 4rem);
   --text-display--line-height: 1.125;
-  --text-display--letter-spacing: -0.025em;
-  --text-section: clamp(1.75rem, 1.32rem + 1.8vw, 2.75rem);
+  --text-display--letter-spacing: -0.035em;
+  --text-display--font-weight: 700;
+  --text-section: clamp(1.75rem, 3.4vw, 2.5rem);
   --text-section--line-height: 1.15;
-  --text-section--letter-spacing: -0.025em;
-  --text-sub: clamp(1.5rem, 1.35rem + 0.66vw, 2rem);
-  --text-sub--line-height: 1.2;
-  --text-sub--letter-spacing: -0.019em;
+  --text-section--letter-spacing: -0.03em;
+  --text-section--font-weight: 700;
+  --text-sub: clamp(1.625rem, 2.6vw, 2rem);
+  --text-sub--line-height: 1.25;
+  --text-sub--letter-spacing: -0.02em;
+  --text-sub--font-weight: 600;
+  --text-title: 1.25rem;
+  --text-title--line-height: 1.4;
+  --text-title--letter-spacing: -0.015em;
+  --text-title--font-weight: 700;
+  --text-title-sm: 0.96875rem;
+  --text-title-sm--line-height: 1.45;
+  --text-title-sm--letter-spacing: -0.01em;
+  --text-title-sm--font-weight: 650;
+  --text-page-lead: clamp(1.0625rem, 1.45vw, 1.25rem);
+  --text-page-lead--line-height: 1.45;
+  --text-lead: 1.0625rem;
+  --text-lead--line-height: 1.6;
+  --text-kicker: 0.875rem;
+  --text-kicker--line-height: 1.4;
+  --text-kicker--font-weight: 500;
+  --text-label: 0.6875rem;
+  --text-label--line-height: 1.82;
+  --text-label--letter-spacing: 0.1em;
+  --text-label--font-weight: 500;
 
-  /* ---- spacing: section rhythm ------------------------------------------
-     Desktop bands run 104–144px, mobile 72–96px. The rhythm stays slightly
-     ASYMMETRIC (a touch more weight underneath) so a band reads as a finished
-     plate rather than as content floating between two equal voids — but the gap
-     is far smaller than the old 128/172 pair, which produced blank screens
-     between sections.
+  /* ---- radius ------------------------------------------------------------ */
+  --radius-xs: 4px;        /* tags, inline code */
+  --radius-sm: 6px;        /* small controls */
+  --radius-control: 7px;   /* buttons */
+  --radius-control-lg: 9px;
+  --radius-md: 8px;        /* nav items, menu rows, inputs */
+  --radius-lg: 12px;       /* the nav pill, menus, covers */
+  --radius-xl: 16px;       /* bento cards */
+  --radius-2xl: 18px;      /* the large product stage */
+  --radius-pill: 999px;    /* pills, chips, the launcher */
 
-     `xs` is deliberately half a seam: a page HEADER spends it below, and the
-     body band directly under it spends the other half, so the total header→
-     content gap is one reasoned number rather than two paddings that happen to
-     stack. */
-  --space-section-xs: clamp(2rem, 3.2vw, 2.75rem);      /* 32  → 44  */
-  --space-section-sm: clamp(3rem, 5vw, 4.5rem);         /* 48  → 72  */
-  --space-section-md: clamp(4.5rem, 6.6vw, 7rem);       /* 72  → 112 */
-  --space-section-md-end: clamp(5.25rem, 7.6vw, 8.5rem);/* 84  → 136 */
-  --space-section-lg: clamp(5.5rem, 7.6vw, 8rem);       /* 88  → 128 */
-  --space-section-lg-end: clamp(6.5rem, 9.6vw, 10.75rem);/* 104 → 172 */
+  /* ---- motion: curves (utilities `ease-out`, `ease-std`, `ease-spring` …) -- */
+  --ease-out: cubic-bezier(0.33, 1, 0.68, 1);      /* interaction feedback */
+  --ease-std: cubic-bezier(0.4, 0, 0.2, 1);        /* symmetric loops (the wire pulse) */
+  --ease-spring: var(--spring);
+  --ease-spring-soft: var(--spring-soft);
+  --ease-emphasized: cubic-bezier(0.33, 1, 0.68, 1);
+  --ease-enter: cubic-bezier(0.16, 1, 0.3, 1);     /* a long tail for an arriving panel */
 
-  /* measures */
-  --width-prose: 68ch;          /* long-form reading column */
-  --width-container: 1264px;    /* measured off clerk.com: their one content cap */
-  --width-hero: 56rem;          /* 896px — hero copy cap (headline, lede, actions) */
-  --width-stage: 1160px;        /* the hero product stage, wider than the copy */
-
-  /* ---- radius ------------------------------------------------------------
-     Small numbers on purpose. Large radii read as consumer-app chrome; tight
-     corners read as engineered. */
-  --radius-xs: 4px;     /* tags, inline code */
-  --radius-sm: 6px;     /* buttons, chips */
-  --radius-md: 8px;     /* cards, inputs, panels */
-  --radius-lg: 12px;    /* product stages, figures */
-  --radius-pill: 999px; /* status pills ONLY */
-
-  /* ---- borders ---- */
-  --stripe-width: 3px;  /* accent left-rule on callouts / pull-quotes */
-  /* The notched plate (.chamfer, globals.css) — measured off the reference's
-     dark sections: the LIGHT side intrudes as a centred tab, --chamfer deep,
-     with 45° shoulders set --chamfer-inset in from each edge; the dark keeps
-     full-height wings outside the shoulders. First build had this inverted
-     (corners cut off the plate) — the owner caught it against the reference. */
-  --chamfer: clamp(1.125rem, 3vw, 2.75rem);
-  --chamfer-inset: clamp(1.75rem, 8vw, 7.25rem);
-
-  /* ---- motion ------------------------------------------------------------
-     Six durations (120 · 130 · 200 · 300 · 450 · 560ms) and four curves:
-     --ease-out for interaction feedback, --ease-enter for entrances, and
-     --ease-emphasized / --ease-spring as measured references.
-     Tailwind reads --default-transition-* so every bare `transition` in the
-     codebase lands on --motion-base + --ease-out without per-element easing. */
-  --motion-instant: 120ms;   /* state flip: focus ring, tab select */
-  --motion-fast: 130ms;      /* micro-interaction: colour, icon nudge */
-  --motion-base: 200ms;      /* standard transition */
-  --motion-slow: 300ms;      /* the slower reach: elevation, disclosure */
-  --motion-reveal: 450ms;    /* component entrance */
-  --motion-section: 560ms;   /* section entrance — the slowest thing on the page */
-  --stagger-step: 60ms;      /* per-sibling delay in staggered groups */
-  --motion-reduced: 0.01ms;
-  --motion-nudge: 2px;
-  --motion-press: 1px;
-  --motion-enter-distance: 8px;
-  --ease-out: cubic-bezier(0.4, 0.36, 0, 1);         /* measured off clerk.com */
-  --ease-emphasized: cubic-bezier(0.33, 1, 0.68, 1); /* measured off clerk.com */
-  --ease-spring: cubic-bezier(0.175, 0.885, 0.32, 1.1); /* measured off clerk.com */
-  /* Entrance easing: a long decelerating tail, so a section arrives rather
-     than snaps. Distinct from --ease-out, which is tuned for 130-300ms
-     interaction feedback and reads abrupt over half a second. */
-  --ease-enter: cubic-bezier(0.16, 1, 0.3, 1);
-
-  --default-transition-duration: var(--motion-base);
-  --default-transition-timing-function: var(--ease-out);
+  /* Durations as utilities (`duration-fast` …) and the bare `transition` default. */
   --transition-duration-fast: var(--motion-fast);
   --transition-duration-base: var(--motion-base);
-
-  /* ---- elevation ---------------------------------------------------------
-     Layered and low-opacity: a hairline ring, a close contact shadow, a wide
-     ambient one. Never a single dramatic black drop. */
-  /* Measured off clerk.com card elements, adopted verbatim. */
-  --shadow-sm: 0 0 0 0.5px rgb(217 217 222), 0 1px 2px rgb(0 0 0 / 0.06), 0 0 2px rgb(0 0 0 / 0.08);
-  --shadow-md:
-    0 0 0 1px rgb(0 0 0 / 0.06),
-    0 5px 15px rgb(0 0 0 / 0.08),
-    0 15px 35px -5px rgb(47 48 55 / 0.2),
-    0 4px 6px rgb(34 42 53 / 0.04);
-  --shadow-lg:
-    0 0 0 0.5px rgb(3 8 10 / 0.07),
-    0 4px 8px rgb(3 8 10 / 0.05),
-    0 18px 40px -10px rgb(3 8 10 / 0.16);
-  --shadow-overlay: var(--shadow-lg);
-  /* The scrim behind a modal overlay. One value, because the assistant panel and
-     the mobile menu are the same kind of surface and dimming the page by
-     different amounts made them read as two systems. */
-  --scrim: rgb(3 8 10 / 0.2);
-
-  /* The one tactile control: an inset top highlight + a close drop, so the
-     primary button reads as a raised, pressable plane. */
-  --shadow-btn: inset 0 1px 0 rgb(255 255 255 / 0.22), 0 1px 2px rgb(3 8 10 / 0.24);
-
-  /* Product surfaces — the frames that stand for a real application. The inset
-     top highlight is what stops a white panel on a white-ish page from reading
-     as a flat rectangle. */
-  --shadow-surface:
-    inset 0 1px 0 rgb(255 255 255 / 0.9),
-    0 0 0 0.5px rgb(3 8 10 / 0.05),
-    0 1px 2px rgb(3 8 10 / 0.04),
-    0 6px 16px -6px rgb(3 8 10 / 0.07),
-    0 16px 36px -12px rgb(3 8 10 / 0.08);
-  --shadow-surface-hover:
-    inset 0 1px 0 rgb(255 255 255 / 0.9),
-    0 0 0 0.5px rgb(3 8 10 / 0.07),
-    0 2px 4px rgb(3 8 10 / 0.05),
-    0 12px 24px -8px rgb(3 8 10 / 0.09),
-    0 28px 56px -16px rgb(3 8 10 / 0.12);
-  /* The hero stage sits highest on the page and earns one step more depth. */
-  --shadow-stage:
-    inset 0 1px 0 rgb(255 255 255 / 0.9),
-    0 0 0 0.5px rgb(3 8 10 / 0.06),
-    0 2px 6px rgb(3 8 10 / 0.04),
-    0 18px 40px -14px rgb(3 8 10 / 0.12),
-    0 48px 88px -32px rgb(3 8 10 / 0.16);
-  /* A floating evidence card over the stage: reads as a layer ABOVE the product,
-     so it carries a tighter ring and a longer throw than the stage itself. */
-  --shadow-float:
-    0 0 0 0.5px rgb(3 8 10 / 0.07),
-    0 2px 6px rgb(3 8 10 / 0.06),
-    0 14px 30px -10px rgb(3 8 10 / 0.14);
-
-  /* ---- ambient light -----------------------------------------------------
-     Two soft radials, never a mesh: one violet (the accent's own light) and one
-     cool blue, both far below any text. They give the plane depth behind product
-     surfaces; they never touch contrast. */
-  --glow-accent: radial-gradient(
-    42% 46% at 76% 16%,
-    color-mix(in srgb, var(--color-accent) 7%, transparent),
-    transparent 68%
-  );
-  --glow-ambient: radial-gradient(
-    38% 44% at 16% 26%,
-    color-mix(in srgb, var(--color-ambient) 5%, transparent),
-    transparent 66%
-  );
-
-  /* Hairlines that dissolve instead of colliding with the container edge. */
-  --hairline-fade: linear-gradient(90deg, transparent, var(--color-border) 12%, var(--color-border) 88%, transparent);
+  --transition-duration-slow: var(--motion-slow);
+  --default-transition-duration: var(--motion-base);
+  --default-transition-timing-function: var(--ease-out);
 }
 
 /* ============================================================================
-   The DARK RAMP — one palette, two consumers.
+   Tokens that are not Tailwind namespaces (or must stay remappable).
 
-   Declared as plain custom properties (no selector applies them here) so the
-   dark BAND inside the light page (`.tone-invert`, globals.css) and the full-dark
-   THEME (`[data-theme="dark"]`, below) read from the same source. Two copies of a
-   dark palette is exactly how a band and a theme drift apart.
+   Shadows live here, not in @theme, on purpose: Tailwind inlines a theme shadow
+   into its `shadow-*` utility at build time, so a dark scope could not remap it.
+   Use `shadow-[var(--shadow-card)]` or `var()` in a module.
    ============================================================================ */
 :root {
-  /* The dark neutrals, from the same measured source: their near-black carries
-     a faint cyan cast (#03080a), and every step above it is that ink's opposite
-     at a low alpha, resolved here to flat hex. */
-  --dark-bg: #03080a;
-  --dark-bg-subtle: #060b0d;
-  --dark-surface: #080d0f;         /* their card ground */
-  --dark-surface-raised: #0d1214;
-  --dark-ink: #fcfcfe;             /* 19.7:1 on --dark-bg */
-  --dark-ink-secondary: #9fa1a3;   /* their ramp @63% — 7.8:1 on --dark-bg */
-  --dark-ink-tertiary: #808284;    /* their ramp @50% — 5.2:1 on bg, 5.1:1 on surface */
-  --dark-border: rgb(252 252 254 / 0.1);
-  --dark-border-strong: rgb(252 252 254 / 0.19);
+  /* ---- motion -------------------------------------------------------------
+     Springs are sampled curves (CSS linear()) that overshoot slightly and
+     settle. Durations: colour 150ms · hover surfaces 200–350ms · panels
+     350–520ms · menus 140ms opacity with a 240ms spring. */
+  --spring: linear(0, 0.3763 11.1%, 0.782 22.2%, 0.9614 33.3%, 1.0079 44.4%, 1.0098 55.6%, 1.0045 66.7%, 1.0012 77.8%, 1);
+  --spring-soft: linear(0, 0.1812 9.1%, 0.4669 18.2%, 0.6943 27.3%, 0.8403 36.4%, 0.9233 45.5%, 0.9664 54.5%, 0.9869 63.6%, 0.9958 72.7%, 0.9992 81.8%, 1);
+  --motion-fast: 150ms;          /* colour, background, border */
+  --motion-base: 200ms;          /* small surfaces */
+  --motion-slow: 350ms;          /* card elevation, illustration states */
+  --motion-panel: 520ms;         /* a panel or step media arriving */
+  --motion-menu: 140ms;          /* a menu's opacity */
+  --motion-menu-spring: 240ms;   /* a menu's transform */
+  --motion-caret: 400ms;         /* the arrow-swap caret */
+  --motion-press: 300ms;         /* the button's spring back after a press */
+  --motion-reveal: 450ms;
+  --motion-section: 560ms;
+  --motion-reduced: 0.01ms;      /* every duration under prefers-reduced-motion */
+  --motion-nudge: 2px;
+  --motion-enter-distance: 8px;
+  --press-scale: 0.97;
 
-  /* TWO dark accents, because the accent is a property of the THEME, not of the
-     surface.
+  /* ---- elevation (light page) ------------------------------------------- */
+  --shadow-card: 0 0 0 1px rgb(19 19 22 / 0.06), 0 1px 2px rgb(19 19 22 / 0.05), 0 8px 24px -10px rgb(19 19 22 / 0.1);
+  --shadow-card-hover: 0 0 0 1px rgb(19 19 22 / 0.08), 0 2px 4px rgb(19 19 22 / 0.05), 0 22px 44px -20px rgb(19 19 22 / 0.24);
+  --shadow-lift: 0 0 0 1px rgb(19 19 22 / 0.08), 0 2px 4px rgb(19 19 22 / 0.06), 0 16px 32px -12px rgb(19 19 22 / 0.18);
+  --shadow-panel: 0 0 0 1px rgb(19 19 22 / 0.06), 0 1px 1px rgb(19 19 22 / 0.04), 0 6px 16px -4px rgb(19 19 22 / 0.07), 0 24px 48px -16px rgb(19 19 22 / 0.1);
+  --shadow-menu: 0 0 0 1px rgb(19 19 22 / 0.07), 0 4px 8px -4px rgb(19 19 22 / 0.08), 0 18px 40px -12px rgb(19 19 22 / 0.2);
+  --shadow-nav: 0 1px 2px rgb(19 19 22 / 0.04), 0 4px 16px -8px rgb(19 19 22 / 0.1);
+  --shadow-tile: var(--shadow-card);
+  /* Older names, kept so components written before the redesign render in the
+     new depth language. */
+  --shadow-sm: 0 0 0 1px rgb(19 19 22 / 0.06), 0 1px 2px rgb(19 19 22 / 0.05);
+  --shadow-md: var(--shadow-card);
+  --shadow-lg: var(--shadow-menu);
+  --shadow-surface: var(--shadow-card);
+  --shadow-surface-hover: var(--shadow-card-hover);
+  --shadow-stage: var(--shadow-panel);
+  --shadow-float: var(--shadow-menu);
+  --shadow-overlay: var(--shadow-menu);
+  --shadow-btn: inset 0 1px 0 rgb(255 255 255 / 0.22), 0 1px 2px rgb(19 19 22 / 0.18);
+  /* The scrim behind a modal (the assistant panel). */
+  --scrim: rgb(19 19 22 / 0.24);
 
-     `band` is the lifted violet, used by a dark BAND sitting inside the light
-     page (.tone-invert). Those bands are part of the light theme's scroll, and
-     a lime button inside them under a violet button above them would read as
-     two brands on one page.
+  /* ---- controls --------------------------------------------------------------
+     Buttons (components/ui/button.tsx): a lit gradient, a 1px ring and a close
+     contact shadow, so each reads as a raised, pressable plane. They keep their
+     colours on dark plates, like the prototype's About page. White text clears
+     AA on every fill (violet 5.2:1 at mid-gradient). */
+  --btn-ink: #ffffff;              /* text on the violet, dark and grey fills */
+  --btn-violet-bg: linear-gradient(180deg, #7a5cff, #6444f4);
+  --btn-violet-shadow: 0 0 0 1px #5a37ef, inset 0 1px 0 rgb(255 255 255 / 0.22), 0 1px 2px rgb(19 19 22 / 0.18), 0 6px 14px -6px rgb(107 75 255 / 0.6);
+  --btn-dark-bg: linear-gradient(180deg, #3a3a42, #1d1d22);
+  --btn-dark-shadow: 0 0 0 1px #131316, inset 0 1px 0 rgb(255 255 255 / 0.14), 0 1px 2px rgb(0 0 0 / 0.25), 0 6px 14px -6px rgb(19 19 22 / 0.5);
+  --btn-grey-bg: linear-gradient(180deg, #4b4b55, #393941);
+  --btn-grey-shadow: 0 0 0 1px #26262b, inset 0 1px 0 rgb(255 255 255 / 0.14), 0 1px 2px rgb(0 0 0 / 0.3);
+  --btn-light-bg: #ffffff;
+  --btn-light-ink: #131316;
+  --btn-light-shadow: 0 0 0 1px rgb(19 19 22 / 0.06), 0 1px 2px rgb(19 19 22 / 0.05), 0 8px 24px -10px rgb(19 19 22 / 0.1);
+  --btn-hover-filter: brightness(1.07);
+  /* The floating "Ask AI" launcher. */
+  --launcher-bg: radial-gradient(circle at 30% 20%, #4a4a55, #131316 70%);
+  --launcher-ink: #ffffff;
+  --launcher-shadow: inset 0 0 0 1px rgb(255 255 255 / 0.1), 0 0 0 4px rgb(19 19 22 / 0.06), 0 10px 24px -8px rgb(19 19 22 / 0.6);
+  --launcher-shadow-hover: inset 0 0 0 1px rgb(255 255 255 / 0.14), 0 0 0 4px rgb(19 19 22 / 0.08), 0 16px 30px -10px rgb(19 19 22 / 0.65);
 
-     `theme` is their lime, used when the whole document is dark. It is what
-     gives this theme a personality instead of making it "violet, dimmer", and
-     it is the most legible colour on the page at 17:1. */
-  --dark-accent-band: #a99cff;     /* 8.5:1 on --dark-bg */
-  --dark-accent-band-hover: #c0b6ff;
-  --dark-on-accent-band: #1b1440;  /* 7.3:1 on the lifted-violet fill */
-  --dark-accent-band-soft: #241f4d;
+  /* ---- chrome and component grounds (remapped on dark) ------------------ */
+  --chrome-nav-bg: rgb(250 250 251 / 0.86);
+  --chrome-hover: rgb(19 19 22 / 0.05);        /* nav item hover and open state */
+  --chrome-menu-hover: var(--color-bg-subtle);
+  --chrome-tile-bg: var(--color-surface);      /* the icon tile in a rich menu row */
+  --chrome-ghost-bg: rgb(19 19 22 / 0.02);     /* the ghost pill: a faint fill … */
+  --chrome-ghost-ring: rgb(19 19 22 / 0.12);   /* … and a hairline inset ring */
+  --chrome-link-hover: var(--color-ink-secondary);
+  --chrome-dots: rgb(19 19 22 / 0.12);         /* the footer's fading dot texture */
+  --card-hover-bg: var(--color-surface);
+  --card-art-bg: linear-gradient(180deg, #fbfbfc, #ffffff);
+  --card-art-rule: var(--color-border);
+  --card-art-h: 230px;
+  --card-art-scale: 1.025;     /* the art leans in on hover (light cards only) */
+  --plate-grid-line: rgb(255 255 255 / 0.045);  /* the masked grid on a plate */
 
-  --dark-accent-theme: #c8ff00;    /* their lime — 17.0:1 on --dark-bg */
-  --dark-accent-theme-hover: #d9ff4d;
-  --dark-on-accent-theme: #03080a; /* 17.0:1 on the lime fill */
-  --dark-accent-theme-soft: #131b07;  /* deepened: tertiary clears 4.5:1 here */
+  /* ---- status pills (components/ui/status-pill.tsx), AA on their tint ---- */
+  --pill-positive-ink: #15803d;  --pill-positive-bg: #f0fdf4;  --pill-positive-ring: rgb(21 128 61 / 0.2);   /* 4.8:1 */
+  --pill-caution-ink: #b45309;   --pill-caution-bg: #fffbeb;   --pill-caution-ring: rgb(180 83 9 / 0.22);   /* 4.8:1 */
+  --pill-accent-ink: #5a37ef;    --pill-accent-bg: #f3f0ff;    --pill-accent-ring: rgb(107 75 255 / 0.24);  /* 5.8:1 */
+  --pill-neutral-ink: #5e5f6e;   --pill-neutral-bg: #f1f1f3;   --pill-neutral-ring: rgb(19 19 22 / 0.1);    /* 5.6:1 */
+  --pill-outline-ring: rgb(19 19 22 / 0.22);
 
-  --dark-positive: #34d399;        /* emerald — 10.5:1, and ~80° clear of the lime accent */
-  --dark-negative: #f87171;
-  --dark-warning: #fbbf24;
+  /* ---- layout --------------------------------------------------------------
+     Content is 1200px wide; at 1440 it starts at x=120. The floating nav is
+     1232px. `--nav-offset` is where the stuck nav ends: sticky things sit
+     below it (`--sticky-top` adds a breath for sidebars). */
+  --width-content: 1200px;
+  --gutter: clamp(1rem, 3vw, 1.5rem);
+  --width-container: calc(var(--width-content) + 2 * var(--gutter));
+  --width-nav: 1232px;
+  --width-frame: 1010px;
+  --width-frame-narrow: 592px;
+  --width-head: 640px;
+  --width-prose: 68ch;
+  --nav-top: 8px;
+  --nav-h: 44px;
+  --nav-offset: calc(var(--nav-top) + var(--nav-h));
+  --sticky-top: calc(var(--nav-offset) + 24px);
+  --subnav-h: 36px;
+  --subnav-tuck: 12px;
+  --notch: 44px;
 
-  /* ONE accent in dark, end to end — owner-directed after the split shipped
-     and read as leftover purple rather than as a second role.
+  /* Section rhythm (the `Section` primitive). `head` is a page header band. */
+  --space-section-xs: clamp(2rem, 3.2vw, 2.75rem);         /* 32 → 44  */
+  --space-section-sm: clamp(3rem, 5vw, 4.5rem);            /* 48 → 72  */
+  --space-section-md: clamp(5.5rem, 8.4vw, 7.5rem);        /* 88 → 120 */
+  --space-section-md-end: clamp(5.5rem, 8.4vw, 7.5rem);
+  --space-section-lg: clamp(6rem, 8.9vw, 8rem);            /* 96 → 128 */
+  --space-section-lg-end: clamp(6.5rem, 10vw, 9rem);       /* 104 → 144 */
+  --space-head-top: clamp(4rem, 6.7vw, 6rem);              /* 64 → 96  */
+  --space-head-bottom: clamp(3rem, 4.5vw, 4rem);           /* 48 → 64  */
 
-     The display line takes a gradient rather than the flat lime: at 84px a
-     single #c8ff00 slab vibrates, while a lime -> green sweep across the words
-     gives it depth and keeps the hue honest. All three stops clear AA on the
-     near-black (17.0 / 13.9 / 11.3:1). */
-  --dark-gradient-accent: linear-gradient(100deg, #c8ff00 8%, #b0f000 52%, #7fd900 100%);
-  --dark-gradient-accent-control: linear-gradient(180deg, #d4ff33, #c8ff00);
-
-  --dark-shadow-sm: 0 0 0 0.5px rgb(255 255 255 / 0.07), 0 1px 2px rgb(0 0 0 / 0.5);
-  --dark-shadow-md: 0 0 0 0.5px rgb(255 255 255 / 0.08), 0 8px 20px -6px rgb(0 0 0 / 0.55);
-  --dark-shadow-lg: 0 0 0 0.5px rgb(255 255 255 / 0.09), 0 16px 38px -10px rgb(0 0 0 / 0.65);
-  --dark-shadow-surface:
-    inset 0 1px 0 rgb(255 255 255 / 0.06),
-    0 0 0 0.5px rgb(255 255 255 / 0.08),
-    0 2px 4px rgb(0 0 0 / 0.45),
-    0 14px 34px -10px rgb(0 0 0 / 0.6);
-  --dark-shadow-surface-hover:
-    inset 0 1px 0 rgb(255 255 255 / 0.09),
-    0 0 0 0.5px rgb(255 255 255 / 0.12),
-    0 4px 8px rgb(0 0 0 / 0.5),
-    0 22px 50px -12px rgb(0 0 0 / 0.66);
-  --dark-shadow-stage:
-    inset 0 1px 0 rgb(255 255 255 / 0.08),
-    0 0 0 0.5px rgb(255 255 255 / 0.1),
-    0 4px 10px rgb(0 0 0 / 0.5),
-    0 40px 80px -28px rgb(0 0 0 / 0.72);
-  --dark-shadow-float:
-    0 0 0 0.5px rgb(255 255 255 / 0.12),
-    0 2px 6px rgb(0 0 0 / 0.5),
-    0 16px 34px -10px rgb(0 0 0 / 0.6);
+  /* ---- devices -------------------------------------------------------------- */
+  --stripe-width: 3px;     /* the accent rule on callouts and pull quotes */
+  /* One triangle of the arrow-swap caret (.caret-swap, globals.css). */
+  --caret-tri: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 5 8'%3E%3Cpath d='M0 0l5 4-5 4z'/%3E%3C/svg%3E");
 }
 
-/* ---- full-dark: an explicit, remembered preference (never the OS default) --- */
-:root[data-theme="dark"] {
-  --color-bg: var(--dark-bg);
-  --color-bg-subtle: var(--dark-bg-subtle);
-  --color-surface: var(--dark-surface);
-  --color-surface-raised: var(--dark-surface-raised);
-  --color-ink: var(--dark-ink);
-  --color-ink-secondary: var(--dark-ink-secondary);
-  --color-ink-tertiary: var(--dark-ink-tertiary);
-  --color-border: var(--dark-border);
-  --color-border-strong: var(--dark-border-strong);
-  --color-accent: var(--dark-accent-theme);
-  --color-accent-hover: var(--dark-accent-theme-hover);
-  --color-on-accent: var(--dark-on-accent-theme);
-  --color-accent-soft: var(--dark-accent-theme-soft);
-  --gradient-accent: var(--dark-gradient-accent);
-  --gradient-accent-control: var(--dark-gradient-accent-control);
-  /* The ambient light stays COOL in dark: the lime is a control colour, and a
-     lime wash behind a lime button is muddy. Halved, and blue-only. */
-  --glow-accent: radial-gradient(
-    50% 55% at 70% 22%,
-    color-mix(in srgb, var(--color-ambient) 12%, transparent),
-    transparent 70%
-  );
-  --glow-ambient: radial-gradient(
-    46% 52% at 22% 34%,
-    color-mix(in srgb, var(--color-ambient) 8%, transparent),
-    transparent 68%
-  );
-  --color-positive: var(--dark-positive);
-  --color-negative: var(--dark-negative);
-  --color-warning: var(--dark-warning);
+/* Where linear() is unsupported, a spring falls back to a near-equivalent
+   cubic curve instead of invalidating every transition that names it. */
+@supports not (transition-timing-function: linear(0, 1)) {
+  :root {
+    --spring: cubic-bezier(0.34, 1.4, 0.64, 1);
+    --spring-soft: cubic-bezier(0.22, 1, 0.36, 1);
+  }
+}
 
-  --shadow-sm: var(--dark-shadow-sm);
-  --shadow-md: var(--dark-shadow-md);
-  --shadow-lg: var(--dark-shadow-lg);
-  --shadow-overlay: var(--dark-shadow-lg);
-  --scrim: rgb(0 0 0 / 0.5);
-  --shadow-surface: var(--dark-shadow-surface);
-  --shadow-surface-hover: var(--dark-shadow-surface-hover);
-  --shadow-stage: var(--dark-shadow-stage);
-  --shadow-float: var(--dark-shadow-float);
-  --shadow-btn: inset 0 1px 0 rgb(255 255 255 / 0.16), 0 1px 2px rgb(0 0 0 / 0.5);
+@media (max-width: 640px) {
+  :root {
+    --notch: 26px;
+  }
+}
+
+/* ============================================================================
+   The dark remap — one palette, three scopes (see the header).
+
+   Custom properties inherit their COMPUTED value, so an alias declared on :root
+   (`--shadow-surface: var(--shadow-card)`) is frozen to the light value. Every
+   token a dark scope needs is therefore re-declared here, aliases included.
+
+   In `@layer base`, so a utility or a module can still restyle a scope's own
+   ground without fighting this file.
+   ============================================================================ */
+@layer base {
+  :is(.tone-invert, [data-surface="dark"], html:has([data-surface="dark"]) [data-chrome]) {
+    --color-bg: var(--color-plate);
+    --color-bg-subtle: #17171b;
+    --color-surface: var(--color-plate-card);
+    --color-surface-raised: var(--color-plate-raised);
+    --color-ink: var(--color-plate-ink);
+    --color-ink-secondary: var(--color-plate-ink-secondary);
+    --color-ink-tertiary: var(--color-plate-ink-tertiary);
+    --color-border: var(--color-plate-border);
+    --color-border-strong: var(--color-plate-border-strong);
+    --color-rule: var(--color-plate-border);
+    --color-dots: #3a3a42;
+    --color-accent: var(--color-plate-violet);
+    --color-accent-hover: #b8abff;
+    --color-accent-soft: #241f3d;
+    --color-on-accent: var(--color-plate);
+    --color-positive: var(--color-plate-positive);
+    --color-warning: var(--color-plate-warning);
+    --color-negative: var(--color-plate-negative);
+
+    --shadow-card: inset 0 0 0 1px var(--color-plate-border), inset 0 1px 0 rgb(255 255 255 / 0.04);
+    --shadow-card-hover: inset 0 0 0 1px #3a3a44, inset 0 1px 0 rgb(255 255 255 / 0.06);
+    --shadow-lift: 0 0 0 1px var(--color-plate-border-strong), 0 16px 32px -12px rgb(0 0 0 / 0.6);
+    --shadow-panel: 0 0 0 1px var(--color-plate-border), 0 24px 48px -16px rgb(0 0 0 / 0.6);
+    --shadow-menu: 0 0 0 1px var(--color-plate-border), 0 18px 40px -12px rgb(0 0 0 / 0.7);
+    --shadow-nav: 0 1px 2px rgb(0 0 0 / 0.3), 0 8px 24px -12px rgb(0 0 0 / 0.6);
+    --shadow-tile: inset 0 0 0 1px var(--color-plate-border-strong);
+    --shadow-sm: 0 0 0 1px var(--color-plate-border), 0 1px 2px rgb(0 0 0 / 0.5);
+    --shadow-md: var(--shadow-card);
+    --shadow-lg: var(--shadow-menu);
+    --shadow-surface: var(--shadow-card);
+    --shadow-surface-hover: var(--shadow-card-hover);
+    --shadow-stage: var(--shadow-panel);
+    --shadow-float: var(--shadow-menu);
+    --shadow-overlay: var(--shadow-menu);
+    --shadow-btn: inset 0 1px 0 rgb(255 255 255 / 0.16), 0 1px 2px rgb(0 0 0 / 0.5);
+
+    --chrome-nav-bg: rgb(24 24 27 / 0.82);
+    --chrome-hover: rgb(255 255 255 / 0.08);
+    --chrome-menu-hover: rgb(255 255 255 / 0.06);
+    --chrome-tile-bg: var(--color-plate-raised);
+    --chrome-ghost-bg: rgb(255 255 255 / 0.04);
+    --chrome-ghost-ring: rgb(255 255 255 / 0.18);
+    --chrome-link-hover: #ffffff;
+    --chrome-dots: rgb(255 255 255 / 0.08);
+    --card-hover-bg: #1e1e23;
+    --card-art-bg: transparent;
+    --card-art-rule: transparent;
+    --card-art-h: 210px;
+    --card-art-scale: 1;
+    --launcher-shadow: inset 0 0 0 1px rgb(255 255 255 / 0.16), 0 0 0 4px rgb(255 255 255 / 0.04), 0 10px 24px -8px rgb(0 0 0 / 0.8);
+    --launcher-shadow-hover: inset 0 0 0 1px rgb(255 255 255 / 0.22), 0 0 0 4px rgb(255 255 255 / 0.06), 0 16px 30px -10px rgb(0 0 0 / 0.85);
+
+    --pill-positive-ink: var(--color-plate-positive);  --pill-positive-bg: rgb(74 222 128 / 0.08);   --pill-positive-ring: rgb(74 222 128 / 0.28);
+    --pill-caution-ink: var(--color-plate-warning);    --pill-caution-bg: rgb(251 191 36 / 0.08);   --pill-caution-ring: rgb(251 191 36 / 0.28);
+    --pill-accent-ink: var(--color-plate-violet);      --pill-accent-bg: rgb(157 140 255 / 0.1);    --pill-accent-ring: rgb(157 140 255 / 0.32);
+    --pill-neutral-ink: var(--color-plate-ink-secondary); --pill-neutral-bg: rgb(255 255 255 / 0.04); --pill-neutral-ring: var(--color-plate-border);
+    --pill-outline-ring: var(--color-plate-border-strong);
+
+    color-scheme: dark;
+    color: var(--color-ink);
+  }
+
+  /* A dark band or plate, and a dark page, paint their own ground. The chrome
+     never does: the nav pill carries --chrome-nav-bg, and a sticky header with a
+     solid ground would cover the page it floats over. */
+  :is(.tone-invert, [data-surface="dark"]) {
+    background-color: var(--color-bg);
+  }
+
+  /* A dark PAGE sits one step deeper than a plate, and so does its chrome. */
+  :is([data-surface="dark"], html:has([data-surface="dark"]) [data-chrome]) {
+    --color-bg: var(--color-plate-deep);
+  }
 }

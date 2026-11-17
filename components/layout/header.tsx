@@ -1,66 +1,184 @@
-import Link from "next/link";
-import { HeaderShell } from "./header-shell";
-import { LogoLink } from "./logo-link";
-import { NavLinks } from "./nav-links";
-import { MobileNav } from "./mobile-nav";
-import { ThemeToggle } from "@/components/features/theme-toggle";
 import { Assistant } from "@/components/features/assistant";
-import { buttonVariants } from "@/components/ui/button";
-import { PRIMARY_CTA } from "@/config/nav";
+import { Caret } from "@/components/ui/caret-link";
+import { cx } from "@/components/ui/cx";
+import { Label } from "@/components/ui/label";
+import { ASK_AI } from "@/config/site";
+import {
+  ABOUT_MENU,
+  MENU_BUTTON,
+  MENU_SECTIONS,
+  MOBILE_NAV,
+  NAV_ACTIONS,
+  NAV_LINKS,
+  WORK_MENU,
+  type NavLink as NavItem,
+} from "@/config/nav";
+import { Brand } from "./brand";
+import { MobileMenu, MobileMenuAsk } from "./mobile-menu";
+import { NavIcon } from "./nav-icon";
+import { NavLink } from "./nav-link";
+import { NavMenu, NavMenus } from "./nav-menu";
+import styles from "./nav.module.css";
+
+/** The Work menu: field work and public systems as rich rows, then "All work". */
+function WorkPanel() {
+  return (
+    <>
+      {WORK_MENU.groups.map((group, g) => {
+        const labelId = `nav-work-group-${g}`;
+        return (
+          <div key={group.label} className={styles.rich}>
+            <Label as="p" tone="tertiary" id={labelId} className={styles.menuLabel}>
+              {group.label}
+            </Label>
+            <ul className={styles.menuList} aria-labelledby={labelId}>
+              {group.items.map((item) => (
+                <li key={item.href}>
+                  <NavLink href={item.href} className={styles.menuLink}>
+                    <span className={styles.tile}>
+                      <NavIcon name={item.icon} className={styles.menuIcon} />
+                    </span>
+                    <span>
+                      <span className={styles.richTitle}>{item.label}</span>
+                      <span className={styles.richText}>{item.description}</span>
+                    </span>
+                  </NavLink>
+                </li>
+              ))}
+            </ul>
+          </div>
+        );
+      })}
+      <p className={styles.menuFoot}>
+        <NavLink href={WORK_MENU.footer.href} className={styles.menuLink}>
+          {WORK_MENU.footer.label}
+          <Caret />
+        </NavLink>
+      </p>
+    </>
+  );
+}
+
+/** The About menu: one labelled icon list. */
+function AboutPanel() {
+  return (
+    <>
+      <Label as="p" tone="tertiary" id="nav-about-label" className={styles.menuLabel}>
+        {ABOUT_MENU.heading}
+      </Label>
+      <ul className={styles.menuList} aria-labelledby="nav-about-label">
+        {ABOUT_MENU.items.map((item) => (
+          <li key={item.href}>
+            <NavLink href={item.href} className={styles.menuLink}>
+              <NavIcon name={item.icon} className={styles.menuIcon} />
+              {item.label}
+            </NavLink>
+          </li>
+        ))}
+      </ul>
+    </>
+  );
+}
+
+function MobileItem({ item }: { item: NavItem }) {
+  return (
+    <li>
+      <NavLink href={item.href} className={styles.mobileLink}>
+        {item.icon ? <NavIcon name={item.icon} className={styles.menuIcon} /> : null}
+        {item.label}
+      </NavLink>
+    </li>
+  );
+}
+
+/** The mobile panel: Work, About me and Connect, with the assistant last. */
+function MobilePanel() {
+  return (
+    <>
+      {MOBILE_NAV.map((group, g) => {
+        const labelId = `nav-mobile-group-${g}`;
+        const isLast = g === MOBILE_NAV.length - 1;
+        return (
+          <div key={group.label}>
+            <Label as="p" tone="tertiary" id={labelId} className={styles.mobileLabel}>
+              {group.label}
+            </Label>
+            <ul className={styles.mobileList} aria-labelledby={labelId}>
+              {group.items.map((item) => (
+                <MobileItem key={item.href} item={item} />
+              ))}
+              {isLast ? (
+                <li>
+                  <MobileMenuAsk className={styles.mobileLink}>
+                    <NavIcon name="sparkles" className={styles.menuIcon} />
+                    {ASK_AI.label}
+                  </MobileMenuAsk>
+                </li>
+              ) : null}
+            </ul>
+          </div>
+        );
+      })}
+    </>
+  );
+}
 
 /**
- * Header — wordmark left, four links centre-right, one primary action right.
+ * Header — the floating pill nav (prototype `.navwrap`): the brand, then Work ▾,
+ * Evals, Writing, About ▾ and the assistant, and the Contact | Hire me ghost
+ * pills on the right. Below 1000px: the brand, the pills and a menu button
+ * with the grouped panel.
  *
- * Composition rules this header follows and the previous one did not:
+ * Sticky with the pill 8px from the top (`--nav-top`), 1232px wide, blurred
+ * glass with a hairline and a soft shadow. On a page with a `DarkSurface` it is
+ * the dark pill (its `[data-chrome]` scope, tokens.css).
  *
- * 1. ONE action. Contact left the link list and became the button; a link and a
- *    button pointing at the same route is two calls to action wearing different
- *    clothes.
- * 2. The utilities (assistant, theme) are quiet icons in their own group,
- *    separated from the action by a hairline. They are tools, not destinations,
- *    and grouping them says so without a label.
- * 3. No capsule, no floating pill, no elevation. The chrome earns a background
- *    only once the page is scrolled — that state lives in `HeaderShell`.
- * 4. The primary action survives to `sm`. On a phone it moves into the menu,
- *    where it is the first thing under the links rather than a fifth row.
+ * The assistant (components/features/assistant.tsx) is mounted here as the
+ * persistent first action (visible at every width, an icon on phones) so it persists across navigation and keeps its transcript; its
+ * trigger is its own.
  *
- * The assistant shows its label and the shortcut hint (⌘K on Apple devices,
- * Ctrl K elsewhere) only from `xl`, where there is room for it beside the
- * action. Below that it is the icon, with the same accessible name and the same
- * single shortcut. There is no bare "/" shortcut (WCAG 2.1.4).
+ * A11y: a `<header>` landmark holding one `<nav aria-label="Primary">`; the
+ * menus are disclosure buttons; every list is labelled by its group title.
+ * Performance: a server component — only the menus, links and the mobile
+ * button hydrate.
  */
 export function Header() {
   return (
-    <HeaderShell>
-      <LogoLink />
-
-      <div className="flex items-center gap-0.5 lg:gap-5">
-        <NavLinks />
-
-        <div className="flex items-center gap-0.5">
-          <Assistant />
-          <ThemeToggle />
+    <header className={styles.wrap} data-chrome="">
+      <nav className={styles.nav} aria-label="Primary">
+        <Brand className={styles.brand} />
+        <NavMenus className={styles.links}>
+          <NavMenu id="nav-work" label={WORK_MENU.label} wide sections={MENU_SECTIONS.work}>
+            <WorkPanel />
+          </NavMenu>
+          {NAV_LINKS.map((link) => (
+            <li key={link.href}>
+              <NavLink href={link.href} className={styles.item}>
+                {link.label}
+              </NavLink>
+            </li>
+          ))}
+          <NavMenu id="nav-about" label={ABOUT_MENU.label} sections={MENU_SECTIONS.about}>
+            <AboutPanel />
+          </NavMenu>
+        </NavMenus>
+        <div className={styles.actions}>
+          <span className={styles.askSlot}>
+            <Assistant />
+          </span>
+          {NAV_ACTIONS.map((action, i) => (
+            <span key={action.href} className="contents">
+              {i > 0 ? <span className={styles.divider} aria-hidden="true" /> : null}
+              <NavLink href={action.href} className={cx(styles.ghost, i === 0 && styles.contact)}>
+                {action.label}
+              </NavLink>
+            </span>
+          ))}
         </div>
-
-        {/* The divider and the action share ONE wrapper that owns the
-            breakpoint. Putting `hidden` on the Link itself would collide with
-            the `inline-flex` that `buttonVariants` already sets: two display
-            utilities at equal specificity, where the winner is decided by
-            stylesheet order rather than by the order they are written in — which
-            is how the button stayed visible at 360px and pushed the header 16px
-            past the viewport. */}
-        <div className="hidden items-center pl-1.5 sm:flex">
-          <Link
-            href={PRIMARY_CTA.href}
-            prefetch={false}
-            className={buttonVariants("primary", "sm")}
-          >
-            {PRIMARY_CTA.label}
-          </Link>
-        </div>
-
-        <MobileNav />
-      </div>
-    </HeaderShell>
+        <MobileMenu labels={MENU_BUTTON}>
+          <MobilePanel />
+        </MobileMenu>
+      </nav>
+    </header>
   );
 }

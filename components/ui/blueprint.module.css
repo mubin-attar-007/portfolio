@@ -1,0 +1,32 @@
+/* Blueprint devices (prototype `.frame`, `.dotband`; `.rule-x` is the global
+   `.rule-fade`). Rules and dots read --color-rule / --color-dots, so they dim
+   correctly on dark grounds. */
+@layer components {
+  .dotband {
+    height: 24px;
+    background-image: radial-gradient(var(--color-dots) 1px, transparent 1.3px);
+    background-size: 4px 4px;
+  }
+
+  .frame {
+    position: relative;
+    max-width: var(--width-frame);
+    margin-inline: auto;
+    border-inline: 1px solid var(--color-rule);
+  }
+  .narrow {
+    max-width: var(--width-frame-narrow);
+  }
+  .padded {
+    padding-inline: 32px;
+  }
+
+  @media (max-width: 640px) {
+    .frame {
+      margin-inline: var(--gutter);
+    }
+    .padded {
+      padding-inline: 20px;
+    }
+  }
+}

@@ -1,0 +1,746 @@
+/* The assistant panel: a bottom sheet on phones, an inset drawer from `sm`.
+
+   Every colour, shadow, radius, duration and curve is a token from
+   styles/tokens.css; the few values below are this panel's own geometry.
+   The panel is portalled to <body>, outside every dark scope, so it is the
+   same light surface on the light and the dark pages.
+
+   Motion law: the panel and scrim arrive once (spring travel and a fade),
+   messages rise once as they are added, controls answer hover and press, and
+   the only loops — the "searching" shimmer and the send spinner — exist only
+   while an answer is pending. Under reduced motion nothing travels or loops,
+   and the global rule in styles/globals.css makes every change instant. */
+
+/* ---- geometry ------------------------------------------------------------- */
+.scrim,
+.dialog {
+  --a-width: 27.5rem; /* 440px drawer */
+  --a-inset: 0.5rem; /* the drawer floats 8px from every edge */
+  --a-sheet-height: 88dvh; /* the phone sheet leaves the top of the page in view */
+  --a-travel: 1.5rem; /* how far the drawer slides in */
+  --a-gutter: 1rem;
+  /* The chips' chevron, drawn as a mask so it is never part of a button's text. */
+  --a-chevron: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 6 10'%3E%3Cpath d='M1 1l4 4-4 4' fill='none' stroke='%23000' stroke-width='1.6' stroke-linecap='round' stroke-linejoin='round'/%3E%3C/svg%3E");
+}
+
+@media (min-width: 40rem) {
+  .scrim,
+  .dialog {
+    --a-gutter: 1.25rem;
+  }
+}
+
+/* ---- scrim ---------------------------------------------------------------- */
+.scrim {
+  position: fixed;
+  inset: 0;
+  z-index: 50;
+  background: var(--scrim);
+  animation: a-fade-in var(--motion-base) var(--ease-out) backwards;
+}
+
+/* ---- dialog --------------------------------------------------------------- */
+.dialog {
+  position: fixed;
+  z-index: 50;
+  inset: auto 0 0;
+  display: flex;
+  flex-direction: column;
+  height: var(--a-sheet-height);
+  overflow: hidden;
+  border-radius: var(--radius-xl) var(--radius-xl) 0 0;
+  background: var(--color-surface);
+  color: var(--color-ink);
+  box-shadow: var(--shadow-overlay);
+  animation: a-sheet-in var(--motion-panel) var(--spring-soft) backwards;
+}
+
+@media (min-width: 40rem) {
+  .dialog {
+    inset: var(--a-inset) var(--a-inset) var(--a-inset) auto;
+    width: min(var(--a-width), calc(100vw - 2 * var(--a-inset)));
+    height: auto;
+    border-radius: var(--radius-xl);
+    animation:
+      a-fade-in var(--motion-base) var(--ease-out) backwards,
+      a-drawer-in var(--motion-panel) var(--spring) backwards;
+  }
+}
+
+/* ---- header --------------------------------------------------------------- */
+.header {
+  flex: none;
+  display: flex;
+  align-items: flex-start;
+  gap: 0.75rem;
+  padding: 0.75rem 0.75rem 0.75rem var(--a-gutter);
+  border-bottom: 1px solid var(--color-border);
+}
+
+/* The sparkle mark wears the floating launcher's dark ground, so the panel
+   reads as the thing the launcher opened. */
+.mark {
+  flex: none;
+  display: grid;
+  place-items: center;
+  width: 2.25rem;
+  height: 2.25rem;
+  border-radius: 0.625rem;
+  background: var(--launcher-bg);
+  color: var(--launcher-ink);
+  box-shadow:
+    inset 0 0 0 1px rgb(255 255 255 / 0.1),
+    0 1px 2px rgb(19 19 22 / 0.2);
+}
+
+.titles {
+  flex: 1;
+  min-width: 0;
+  padding-top: 0.0625rem;
+}
+
+.title {
+  margin: 0;
+  font-size: var(--text-title-sm);
+  line-height: 1.25rem;
+  font-weight: var(--text-title-sm--font-weight);
+  letter-spacing: var(--text-title-sm--letter-spacing);
+  color: var(--color-ink);
+}
+
+.subtitle {
+  margin: 0.125rem 0 0;
+  font-size: 0.8125rem;
+  line-height: 1.125rem;
+  color: var(--color-ink-secondary);
+  text-wrap: pretty;
+}
+
+.actions {
+  flex: none;
+  display: flex;
+  align-items: center;
+  gap: 0.25rem;
+}
+
+/* Ghost pill: a faint fill and a hairline appear under the pointer. The
+   pseudo-element grows the hit area to 44px without growing the pill. */
+.ghost {
+  position: relative;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.375rem;
+  height: 2.25rem;
+  min-width: 2.25rem;
+  padding: 0 0.75rem;
+  border: 0;
+  border-radius: var(--radius-md);
+  background: transparent;
+  color: var(--color-ink-secondary);
+  font: 500 0.8125rem/1 var(--font-sans);
+  box-shadow: inset 0 0 0 1px transparent;
+  transition:
+    color var(--motion-fast) var(--ease-out),
+    background-color var(--motion-fast) var(--ease-out),
+    box-shadow var(--motion-fast) var(--ease-out),
+    transform var(--motion-press) var(--spring);
+}
+
+.ghost::after {
+  content: "";
+  position: absolute;
+  inset: -0.25rem 0;
+}
+
+.ghost:hover {
+  color: var(--color-ink);
+  background: var(--chrome-ghost-bg);
+  box-shadow: inset 0 0 0 1px var(--chrome-ghost-ring);
+}
+
+.ghost:active {
+  transform: scale(0.97);
+}
+
+.close {
+  padding: 0;
+}
+
+.close::after {
+  inset: -0.25rem;
+}
+
+/* ---- transcript scroller --------------------------------------------------- */
+.log {
+  flex: 1 1 auto;
+  min-height: 0;
+  overflow-y: auto;
+  overscroll-behavior: contain;
+  padding: 1.25rem var(--a-gutter) 1.5rem;
+  scrollbar-width: thin;
+}
+
+/* The scroller is a tab stop so a keyboard reader can scroll a long answer;
+   its ring sits inside the panel's clipped edge. */
+.log:focus-visible {
+  outline-offset: -2px;
+}
+
+/* ---- empty state ------------------------------------------------------------ */
+.intro {
+  margin: 0;
+  font-size: var(--text-sm);
+  line-height: 1.6;
+  color: var(--color-ink-secondary);
+  text-wrap: pretty;
+}
+
+.label {
+  margin: 1.5rem 0 0.75rem;
+  font: var(--text-label--font-weight) var(--text-label) / 1rem var(--font-mono);
+  letter-spacing: var(--text-label--letter-spacing);
+  text-transform: uppercase;
+  color: var(--color-ink-tertiary);
+}
+
+.chips {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.5rem;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.chips > li {
+  max-width: 100%;
+}
+
+/* The prompt chip from the home page's agent section, held still and wrapping.
+   A long question wraps to two lines, so the corner is a fixed radius that
+   still reads as a pill on one line. */
+.chip {
+  display: inline-flex;
+  align-items: flex-start;
+  gap: 0.625rem;
+  max-width: 100%;
+  padding: 0.5625rem 0.9375rem 0.5625rem 0.8125rem;
+  border: 0;
+  border-radius: 1.25rem;
+  background: var(--color-surface);
+  box-shadow: var(--shadow-card);
+  color: var(--color-ink-secondary);
+  font: 400 0.8125rem/1.25rem var(--font-mono);
+  text-align: left;
+  transition:
+    color var(--motion-fast) var(--ease-out),
+    box-shadow var(--motion-slow) var(--ease-out),
+    transform var(--motion-press) var(--spring);
+}
+
+.chip::before {
+  content: "";
+  flex: none;
+  width: 0.375rem;
+  height: 0.625rem;
+  margin-top: 0.3125rem;
+  background-color: currentColor;
+  opacity: 0.55;
+  mask: var(--a-chevron) center / contain no-repeat;
+  transition:
+    transform var(--motion-slow) var(--spring),
+    opacity var(--motion-fast) var(--ease-out);
+}
+
+.chip:hover {
+  color: var(--color-ink);
+  box-shadow: var(--shadow-card-hover);
+}
+
+.chip:hover::before,
+.chip:focus-visible::before {
+  opacity: 1;
+  transform: translateX(var(--motion-nudge));
+}
+
+.chip:active {
+  transform: scale(0.98);
+}
+
+/* ---- transcript ------------------------------------------------------------- */
+.transcript {
+  display: flex;
+  flex-direction: column;
+  gap: 0.625rem;
+}
+
+.userTurn {
+  display: flex;
+  justify-content: flex-end;
+}
+
+.userTurn:not(:first-child) {
+  margin-top: 1rem;
+}
+
+.userBubble {
+  max-width: 85%;
+  margin: 0;
+  padding: 0.5625rem 0.875rem;
+  border: 1px solid transparent;
+  border-radius: 1rem 1rem 0.25rem 1rem;
+  background: var(--color-ink);
+  color: var(--color-surface);
+  font-size: var(--text-sm);
+  line-height: 1.5;
+  white-space: pre-wrap;
+  overflow-wrap: anywhere;
+}
+
+.assistantTurn {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 0.4375rem;
+}
+
+/* A short, honest label for anything that is not a complete live answer, in
+   the status-pill style: a dot, the words, a tinted ground and a ring. */
+.note {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.375rem;
+  margin: 0;
+  padding: 0.125rem 0.5625rem 0.125rem 0.5rem;
+  border-radius: var(--radius-pill);
+  background: var(--pill-neutral-bg);
+  box-shadow: inset 0 0 0 1px var(--pill-neutral-ring);
+  color: var(--pill-neutral-ink);
+  font-size: 0.75rem;
+  font-weight: 550;
+  line-height: 1.125rem;
+}
+
+.note[data-tone="caution"] {
+  background: var(--pill-caution-bg);
+  box-shadow: inset 0 0 0 1px var(--pill-caution-ring);
+  color: var(--pill-caution-ink);
+}
+
+.note::before {
+  content: "";
+  flex: none;
+  width: 0.375rem;
+  height: 0.375rem;
+  border-radius: 50%;
+  background: currentColor;
+}
+
+.bubble {
+  width: 100%;
+  padding: 0.6875rem 0.875rem 0.75rem;
+  border: 1px solid transparent;
+  border-radius: 1rem 1rem 1rem 0.25rem;
+  background: var(--color-bg-subtle);
+  color: var(--color-ink);
+  font-size: var(--text-sm);
+  line-height: 1.6;
+  overflow-wrap: anywhere;
+}
+
+/* A failure is a calm card, not an alarm: surface, hairline, one quiet icon. */
+.bubble[data-tone="error"] {
+  display: grid;
+  grid-template-columns: auto minmax(0, 1fr);
+  column-gap: 0.625rem;
+  background: var(--color-surface);
+  border-color: var(--color-border-strong);
+}
+
+.errorIcon {
+  margin-top: 0.1875rem;
+  color: var(--color-ink-tertiary);
+}
+
+.retry {
+  margin-top: 0.625rem;
+  height: 2rem;
+  padding: 0 0.75rem;
+  box-shadow: inset 0 0 0 1px var(--chrome-ghost-ring);
+  color: var(--color-ink);
+}
+
+.retry::after {
+  inset: -0.375rem 0;
+}
+
+.retry:hover {
+  box-shadow: inset 0 0 0 1px var(--pill-outline-ring);
+}
+
+/* Answer text: the parsed markdown subset, sized for a bubble. */
+.para,
+.answerHeading,
+.list,
+.codeBlock {
+  margin: 0.5rem 0 0;
+}
+
+.answerHeading {
+  margin-top: 0.75rem;
+  font-weight: 600;
+}
+
+.para:first-child,
+.answerHeading:first-child,
+.list:first-child,
+.codeBlock:first-child {
+  margin-top: 0;
+}
+
+.list {
+  padding-left: 1.125rem;
+}
+
+.bulleted {
+  list-style-type: disc;
+}
+
+.numbered {
+  list-style-type: decimal;
+}
+
+.list > li {
+  padding-left: 0.25rem;
+}
+
+.list > li + li {
+  margin-top: 0.25rem;
+}
+
+.list > li::marker {
+  color: var(--color-ink-tertiary);
+}
+
+.strong {
+  font-weight: 600;
+}
+
+.inlineCode {
+  padding: 0.0625rem 0.3125rem;
+  border-radius: var(--radius-xs);
+  background: var(--color-surface);
+  box-shadow: inset 0 0 0 1px var(--color-border);
+  font: 0.86em/1 var(--font-mono);
+}
+
+/* Wrapped, not scrolled: a nested horizontal scroller inside a chat bubble is
+   a tab stop nobody expects. */
+.codeBlock {
+  padding: 0.5rem 0.625rem;
+  border-radius: var(--radius-md);
+  background: var(--color-surface);
+  box-shadow: inset 0 0 0 1px var(--color-border);
+  font: 0.75rem/1.6 var(--font-mono);
+  white-space: pre-wrap;
+  overflow-wrap: anywhere;
+}
+
+/* Waiting for the first token: what is happening, with a light band sweeping
+   across it. The real answer replaces it as it streams; nothing is typed out. */
+.searching {
+  display: inline-block;
+  color: var(--color-ink-secondary);
+  font-size: 0.8125rem;
+  mask-image: linear-gradient(100deg, #000 38%, rgb(0 0 0 / 0.3) 50%, #000 62%);
+  mask-size: 250% 100%;
+  mask-position: 100% 0;
+  animation: a-shimmer 1.6s linear infinite;
+}
+
+.sources {
+  margin-top: 0.75rem;
+  padding-top: 0.625rem;
+  border-top: 1px solid var(--color-border);
+}
+
+.sourceList {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.375rem;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+/* A cited page: a pill link with the arrow-swap caret (`<Caret />`). */
+.sourceChip {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.375rem;
+  min-height: 1.75rem;
+  padding: 0.1875rem 0.5rem 0.1875rem 0.6875rem;
+  border-radius: var(--radius-pill);
+  background: var(--color-surface);
+  box-shadow: inset 0 0 0 1px var(--color-border-strong);
+  color: var(--color-ink);
+  font-size: 0.78125rem;
+  font-weight: 500;
+  line-height: 1.125rem;
+  text-decoration: none;
+  transition: box-shadow var(--motion-fast) var(--ease-out);
+}
+
+.sourceChip:hover {
+  box-shadow: inset 0 0 0 1px var(--pill-outline-ring);
+}
+
+.sourceNames {
+  margin: 0.5rem 0 0;
+  font-size: 0.75rem;
+  line-height: 1.5;
+  color: var(--color-ink-secondary);
+}
+
+@media (pointer: coarse) {
+  .sourceChip {
+    min-height: 2rem;
+  }
+}
+
+/* Added turns rise into place once; a reopened panel shows its history still. */
+.rise {
+  animation: a-rise var(--motion-reveal) var(--spring-soft) backwards;
+}
+
+/* ---- footer: stop, composer, privacy ------------------------------------------- */
+.footer {
+  flex: none;
+  padding: 0 var(--a-gutter);
+}
+
+.stopRow {
+  display: flex;
+  justify-content: center;
+  padding-top: 0.75rem;
+}
+
+.stop {
+  height: 2rem;
+  border-radius: var(--radius-pill);
+  background: var(--color-surface);
+  box-shadow: var(--shadow-card);
+  font-size: 0.78125rem;
+}
+
+.stop:hover {
+  background: var(--color-surface);
+  box-shadow: var(--shadow-card-hover);
+}
+
+.composer {
+  padding-top: 0.75rem;
+}
+
+.field {
+  display: flex;
+  align-items: flex-end;
+  gap: 0.5rem;
+  padding: 0.3125rem 0.3125rem 0.3125rem 0.875rem;
+  border-radius: 0.875rem;
+  background: var(--color-surface);
+  box-shadow:
+    inset 0 0 0 1px var(--color-border-strong),
+    0 1px 2px rgb(19 19 22 / 0.04);
+  cursor: text;
+  transition: box-shadow var(--motion-fast) var(--ease-out);
+}
+
+.field:hover {
+  box-shadow:
+    inset 0 0 0 1px var(--pill-outline-ring),
+    0 1px 2px rgb(19 19 22 / 0.04);
+}
+
+/* The field, not the bare textarea, carries the 2px violet ring. Only typing
+   focus lights it: the send button has its own ring. */
+.field:has(.textarea:focus-visible) {
+  box-shadow:
+    inset 0 0 0 2px var(--color-accent),
+    0 0 0 4px color-mix(in srgb, var(--color-accent) 12%, transparent);
+}
+
+.textarea {
+  flex: 1;
+  min-width: 0;
+  /* MAX_FIELD_HEIGHT_PX in composer.tsx: the tallest the field grows. */
+  max-height: 7rem;
+  padding: 0.5rem 0;
+  border: 0;
+  background: transparent;
+  color: var(--color-ink);
+  /* 16px on phones, so iOS does not zoom the page when the field is focused. */
+  font: 400 1rem/1.375rem var(--font-sans);
+  resize: none;
+  overflow-y: auto;
+}
+
+.textarea::placeholder {
+  color: var(--color-ink-tertiary);
+}
+
+.textarea:focus-visible {
+  outline: none;
+}
+
+.send {
+  position: relative;
+  flex: none;
+  display: grid;
+  place-items: center;
+  width: 2.25rem;
+  height: 2.25rem;
+  border: 0;
+  border-radius: 0.625rem;
+  background: var(--btn-dark-bg);
+  box-shadow: var(--btn-dark-shadow);
+  color: var(--btn-ink);
+  transition:
+    filter var(--motion-fast) var(--ease-out),
+    transform var(--motion-press) var(--spring);
+}
+
+.send:not([aria-disabled="true"]):hover {
+  filter: var(--btn-hover-filter);
+}
+
+.send:not([aria-disabled="true"]):active {
+  transform: scale(0.94);
+}
+
+.send[aria-disabled="true"]:not([data-state="busy"]) {
+  background: var(--chrome-hover);
+  box-shadow: none;
+  color: var(--color-ink-tertiary);
+}
+
+/* Arrow and spinner share the button and swap with a blur-scale crossfade. */
+.sendIcon {
+  grid-area: 1 / 1;
+  display: grid;
+  place-items: center;
+  transition:
+    opacity var(--motion-base) var(--ease-out),
+    transform var(--motion-press) var(--spring),
+    filter var(--motion-base) var(--ease-out);
+}
+
+.send[data-state="busy"] .arrow,
+.send:not([data-state="busy"]) .spinner {
+  opacity: 0;
+  transform: scale(0.6);
+  filter: blur(2px);
+}
+
+.send[data-state="busy"] .spinner > svg {
+  animation: a-spin 0.8s linear infinite;
+}
+
+.counter {
+  margin: 0.375rem 0.125rem 0;
+  text-align: right;
+  font: 500 0.6875rem/1rem var(--font-mono);
+  font-variant-numeric: tabular-nums;
+  color: var(--color-ink-tertiary);
+}
+
+.privacy {
+  margin: 0;
+  padding: 0.625rem 0 max(0.875rem, env(safe-area-inset-bottom));
+  text-align: center;
+  font-size: 0.75rem;
+  line-height: 1rem;
+  color: var(--color-ink-tertiary);
+  text-wrap: balance;
+}
+
+@media (min-width: 40rem) {
+  .textarea {
+    font-size: 0.90625rem;
+  }
+
+  .privacy {
+    padding-bottom: 0.875rem;
+  }
+}
+
+/* ---- motion ----------------------------------------------------------------- */
+@keyframes a-fade-in {
+  from {
+    opacity: 0;
+  }
+}
+
+@keyframes a-sheet-in {
+  from {
+    transform: translateY(100%);
+  }
+}
+
+@keyframes a-drawer-in {
+  from {
+    transform: translateX(var(--a-travel));
+  }
+}
+
+@keyframes a-rise {
+  from {
+    opacity: 0;
+    transform: translateY(var(--motion-enter-distance));
+  }
+}
+
+@keyframes a-shimmer {
+  to {
+    mask-position: 0% 0;
+  }
+}
+
+@keyframes a-spin {
+  to {
+    transform: rotate(1turn);
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  /* Fade only: nothing travels, nothing loops. */
+  .dialog {
+    animation: a-fade-in var(--motion-base) var(--ease-out) backwards;
+  }
+
+  .rise,
+  .send[data-state="busy"] .spinner > svg {
+    animation: none;
+  }
+
+  .searching {
+    animation: none;
+    mask-image: none;
+  }
+}
+
+/* Windows high contrast: keep every surface's edge and the field's focus. */
+@media (forced-colors: active) {
+  .dialog,
+  .chip,
+  .sourceChip,
+  .field,
+  .send {
+    border: 1px solid CanvasText;
+  }
+
+  .field:has(.textarea:focus-visible) {
+    outline: 2px solid Highlight;
+  }
+}

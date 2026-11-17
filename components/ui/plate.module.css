@@ -1,0 +1,59 @@
+/* Plate (prototype `.plate`): a dark section whose top and bottom edges carry
+   a centred notch — the light page intrudes as a tab, with 45° shoulders set in
+   to the content edge. The dark ground and the token remap come from the global
+   `.tone-invert` scope (tokens.css). */
+@layer components {
+  .plate {
+    --edge: max(12px, calc((100% - var(--width-content)) / 2));
+    position: relative;
+    padding-block: calc(var(--notch) + 104px);
+  }
+
+  .notched {
+    clip-path: polygon(
+      0 0,
+      var(--edge) 0,
+      calc(var(--edge) + var(--notch)) var(--notch),
+      calc(100% - var(--edge) - var(--notch)) var(--notch),
+      calc(100% - var(--edge)) 0,
+      100% 0,
+      100% 100%,
+      calc(100% - var(--edge)) 100%,
+      calc(100% - var(--edge) - var(--notch)) calc(100% - var(--notch)),
+      calc(var(--edge) + var(--notch)) calc(100% - var(--notch)),
+      var(--edge) 100%,
+      0 100%
+    );
+  }
+
+  .flat {
+    padding-block: 104px;
+  }
+
+  /* A faint 56px grid, masked to a soft ellipse under the section's header. */
+  .grid::before {
+    content: "";
+    position: absolute;
+    inset: 0;
+    background-image:
+      linear-gradient(var(--plate-grid-line) 1px, transparent 1px),
+      linear-gradient(90deg, var(--plate-grid-line) 1px, transparent 1px);
+    background-size: 56px 56px;
+    -webkit-mask-image: radial-gradient(70% 45% at 50% 18%, #000 20%, transparent 75%);
+    mask-image: radial-gradient(70% 45% at 50% 18%, #000 20%, transparent 75%);
+    pointer-events: none;
+  }
+
+  .inner {
+    position: relative;
+  }
+
+  @media (max-width: 640px) {
+    .plate {
+      padding-block: calc(var(--notch) + 72px);
+    }
+    .flat {
+      padding-block: 72px;
+    }
+  }
+}

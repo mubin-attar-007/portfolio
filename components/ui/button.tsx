@@ -1,58 +1,110 @@
+import type { AnchorHTMLAttributes, ButtonHTMLAttributes, ReactNode } from "react";
+import { Caret } from "./caret-link";
+import { cx } from "./cx";
+import { SmartLink } from "./smart-link";
+import styles from "./button.module.css";
+
+export type ButtonVariant = "violet" | "dark" | "grey" | "light" | "ghost";
+export type ButtonSize = "sm" | "md" | "lg";
+
 /**
- * buttonVariants — the site's four control treatments, as a class string.
- *
- * - `primary`   accent fill, an inset top highlight and a close contact shadow.
- *               ONE per viewport. The highlight is what makes a flat fill read
- *               as a raised, pressable plane rather than a coloured rectangle.
- * - `secondary` white surface, hairline ring, faint elevation. The companion
- *               action — it must be clearly subordinate at a glance and still
- *               look like a real control, which an outline alone does not.
- * - `subtle`    a filled neutral chip for tertiary actions on a busy surface
- *               (toolbars, card footers) where a ring would add a third line.
- * - `ghost`     text with an underline that resolves on hover.
- *
- * Sizes are the site's control heights: 32 / 38 / 44px. `lg` is the 44px touch
- * minimum, so a primary action rendered at `lg` is always tappable.
- *
- * Spread it onto the element the action actually is: a `next/link` or `<a>`
- * for navigation, a native `<button type="button">` for an action. There is no
- * wrapper component, so the element — and its semantics — stays visible at the
- * call site.
- *
- * A11y: the global `:focus-visible` accent ring; `disabled:` styles a disabled
- * native button. Enabled controls share arrow feedback for hover and keyboard
- * focus, one sheen sweep, and a small press response. Movement is opt-in through
- * prefers-reduced-motion; static colour and focus feedback remain available.
+ * The class string of a button, for an element `Button` cannot render itself
+ * (a `<label>`, a third-party control). Prefer `<Button>`.
  */
-type Variant = "primary" | "secondary" | "subtle" | "ghost";
-type Size = "sm" | "md" | "lg";
+export function buttonClassName(variant: ButtonVariant = "dark", size: ButtonSize = "md"): string {
+  return cx(styles.button, styles[variant], styles[size]);
+}
 
-const SIZES: Record<Size, string> = {
-  sm: "h-8 gap-1.5 px-3 text-[0.8125rem]",
-  md: "h-[2.375rem] gap-2 px-4 text-sm",
-  lg: "h-11 gap-2 px-5 text-[0.9375rem]",
+type Common = {
+  /** `violet` the one primary per view · `dark` the default action · `grey` secondary on dark plates · `light` white on any ground · `ghost` text that gains the pill on hover. */
+  variant?: ButtonVariant;
+  /** 28 · 32 · 40px tall. */
+  size?: ButtonSize;
+  /** Appends the arrow-swap caret (the "go" affordance). */
+  caret?: boolean;
+  className?: string;
+  children: ReactNode;
 };
 
-const VARIANTS: Record<Variant, string> = {
-  primary:
-    // The accent gradient under white text, with the sheen sweep on hover. The
-    // flat `bg-accent` stays as the paint-order fallback beneath the image, so
-    // an engine that drops the gradient still renders a filled control.
-    "btn-sheen bg-accent bg-[image:var(--gradient-accent-control)] text-on-accent shadow-[var(--shadow-btn)] hover:brightness-[1.06] focus-visible:brightness-[1.06]",
-  secondary:
-    "border border-border-strong bg-surface text-ink shadow-[var(--shadow-sm)] hover:border-ink/25 hover:bg-surface-raised focus-visible:border-ink/25 focus-visible:bg-surface-raised",
-  subtle:
-    "bg-bg-subtle text-ink hover:bg-border focus-visible:bg-border",
-  ghost:
-    "text-ink underline decoration-transparent underline-offset-[5px] hover:decoration-current focus-visible:decoration-current",
+type AsLink = Common &
+  Omit<AnchorHTMLAttributes<HTMLAnchorElement>, "href" | "className" | "children"> & {
+    /** Renders a link: a route (`next/link`, no prefetch), a file, or another site. */
+    href: string;
+    /** Opens in a new tab (announced). */
+    newTab?: boolean;
+  };
+
+type AsButton = Common &
+  Omit<ButtonHTMLAttributes<HTMLButtonElement>, "className" | "children"> & {
+    href?: undefined;
+  };
+
+export type ButtonProps = AsLink | AsButton;
+
+/**
+ * Button — the site's controls (prototype `.btn`): a lit gradient with a 1px
+ * ring for `violet`, `dark` and `grey`, a white card for `light`, and the ghost
+ * pill. A link when given `href`, otherwise a native `<button type="button">`.
+ *
+ * Variants: `violet` · `dark` · `grey` · `light` · `ghost`. Sizes: `sm` 28 ·
+ * `md` 32 · `lg` 40px. `caret` appends the arrow-swap caret, which plays when
+ * the button is hovered or focused.
+ *
+ * Motion: brightens on hover, squashes to 0.97 on press and springs back.
+ * Reduced motion keeps the colour change and drops the travel.
+ *
+ * A11y: the native element's semantics; the global 2px violet focus ring; the
+ * caret is decorative. A disabled `<button>` is dimmed and inert. White text
+ * clears AA on every filled variant.
+ * Performance: server-safe, no client JS.
+ */
+export function Button({ variant = "dark", size = "md", caret = false, className, children, ...element }: ButtonProps) {
+  const classes = cx(buttonClassName(variant, size), className);
+  const body = (
+    <>
+      {children}
+      {caret ? <Caret /> : null}
+    </>
+  );
+
+  if (isLink(element)) {
+    const { href, newTab, ...anchor } = element;
+    return (
+      <SmartLink href={href} newTab={newTab} className={classes} {...anchor}>
+        {body}
+      </SmartLink>
+    );
+  }
+
+  const { type = "button", ...button } = element;
+  return (
+    <button type={type} className={classes} {...button}>
+      {body}
+    </button>
+  );
+}
+
+type ElementProps<T> = Omit<T, keyof Common>;
+
+function isLink(props: ElementProps<AsLink> | ElementProps<AsButton>): props is ElementProps<AsLink> {
+  return props.href !== undefined;
+}
+
+/** The four control treatments of the previous design system. */
+type LegacyVariant = "primary" | "secondary" | "subtle" | "ghost";
+
+const LEGACY: Record<LegacyVariant, ButtonVariant> = {
+  primary: "violet",
+  secondary: "light",
+  subtle: "light",
+  ghost: "ghost",
 };
 
-export function buttonVariants(variant: Variant = "primary", size: Size = "md"): string {
-  return [
-    "button-control inline-flex shrink-0 items-center justify-center whitespace-nowrap rounded-[var(--radius-sm)] font-medium",
-    "transition-[color,background-color,border-color,box-shadow,opacity] duration-fast ease-[var(--ease-out)]",
-    "disabled:pointer-events-none disabled:opacity-50",
-    SIZES[size],
-    VARIANTS[variant],
-  ].join(" ");
+/**
+ * @deprecated Use `<Button variant size>` (or `buttonClassName`). Kept so pages
+ * written before the redesign render the new controls until they are rebuilt:
+ * primary → violet, secondary and subtle → light, ghost → ghost.
+ */
+export function buttonVariants(variant: LegacyVariant = "primary", size: ButtonSize = "md"): string {
+  return buttonClassName(LEGACY[variant], size);
 }

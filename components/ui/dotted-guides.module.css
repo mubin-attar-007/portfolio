@@ -1,0 +1,34 @@
+/* DottedGuides (prototype `.contact-lines`, `.contact-hline`): blueprint
+   guides drawn in the ink at 14–16%, so they read on light and dark grounds. */
+@layer components {
+  .columns {
+    --guide: linear-gradient(color-mix(in srgb, var(--color-ink) 14%, transparent) 50%, transparent 0);
+    position: absolute;
+    z-index: 0;
+    inset: -140px var(--gutter) 24px;
+    pointer-events: none;
+    background:
+      var(--guide) 0 0 / 1px 4px repeat-y,
+      var(--guide) 25% 0 / 1px 4px repeat-y,
+      var(--guide) 50% 0 / 1px 4px repeat-y,
+      var(--guide) 75% 0 / 1px 4px repeat-y,
+      var(--guide) 100% 0 / 1px 4px repeat-y;
+    -webkit-mask-image: linear-gradient(180deg, transparent, #000 22%, #000 78%, transparent);
+    mask-image: linear-gradient(180deg, transparent, #000 22%, #000 78%, transparent);
+  }
+
+  .rule {
+    position: absolute;
+    z-index: 0;
+    top: 0;
+    left: -50vw;
+    right: -50vw;
+    height: 1px;
+    pointer-events: none;
+    background: repeating-linear-gradient(
+      90deg,
+      color-mix(in srgb, var(--color-ink) 16%, transparent) 0 2px,
+      transparent 2px 5px
+    );
+  }
+}

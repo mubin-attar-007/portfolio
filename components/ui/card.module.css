@@ -1,0 +1,82 @@
+/* Card and Bento (prototype `.card`, `.bento`). One style for both grounds:
+   on the light page a white card with the card shadow; inside a plate or a
+   dark page the same tokens become the plate card with an inset hairline. */
+@layer components {
+  .bento {
+    display: grid;
+    gap: 10px;
+  }
+  .cols2 {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+  .cols3 {
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+  }
+
+  .card {
+    position: relative;
+    display: flex;
+    flex-direction: column;
+    overflow: hidden;
+    border-radius: var(--radius-xl);
+    background: var(--color-surface);
+    box-shadow: var(--shadow-card);
+    transition:
+      box-shadow var(--motion-slow) var(--ease-out),
+      background-color var(--motion-slow) var(--ease-out);
+  }
+  .span2 {
+    grid-column: span 2;
+  }
+
+  /* Hover (and keyboard focus inside): a deeper shadow on light, a lifted ground
+     on dark, and the illustration leans in. */
+  .hover:is(:hover, :focus-within) {
+    background: var(--card-hover-bg);
+    box-shadow: var(--shadow-card-hover);
+  }
+
+  .art {
+    position: relative;
+    display: grid;
+    height: var(--card-art-h);
+    place-items: center;
+    overflow: hidden;
+    background: var(--card-art-bg);
+    border-bottom: 1px solid var(--card-art-rule);
+  }
+  .art > * {
+    transition: transform 1s var(--ease-out);
+  }
+  .hover:is(:hover, :focus-within) .art > * {
+    transform: scale(var(--card-art-scale));
+  }
+
+  .body {
+    margin-top: auto;
+    padding: 22px 24px 24px;
+  }
+  .body :where(h2, h3) {
+    font-size: var(--text-title-sm);
+    font-weight: 650;
+    line-height: 1.45;
+    letter-spacing: -0.01em;
+    color: var(--color-ink);
+  }
+  .body :where(p) {
+    margin-top: 8px;
+    font-size: 0.90625rem;
+    line-height: 1.55;
+    color: var(--color-ink-secondary);
+  }
+
+  @media (max-width: 1000px) {
+    .cols2,
+    .cols3 {
+      grid-template-columns: minmax(0, 1fr);
+    }
+    .span2 {
+      grid-column: auto;
+    }
+  }
+}

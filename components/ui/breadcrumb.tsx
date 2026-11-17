@@ -2,27 +2,20 @@ import Link from "next/link";
 import { ArrowLeft } from "lucide-react";
 
 /**
- * Breadcrumb — the visible trail on a detail route.
+ * Breadcrumb — the visible trail on a detail route (the Clerk blog's back link).
  *
- * It exists because all three detail templates (`/work/[slug]`,
- * `/writing/[slug]`, `/notes/[slug]`) emit `BreadcrumbJsonLd`, but only the case
- * study rendered a trail a human could see. Structured data that describes
- * navigation the page does not actually have is a claim to a crawler that the
- * reader cannot verify — the same defect as an unbacked metric, in a different
- * medium. The fix is to add the trail, never to drop the JSON-LD.
- *
- * The parent link carries a back arrow rather than a separator glyph, because
- * the useful action here is "go up a level", not "observe where you are". The
- * current page is plain text, not a link to itself.
- *
- * A11y: a `<nav aria-label="Breadcrumb">` landmark containing an ordered list —
- * the shape assistive technology expects. The current item is marked
- * `aria-current="page"`, and the "/" separators are `aria-hidden` so the trail
- * is announced as "Work, DBWhisper" rather than "Work slash DBWhisper".
+ * All three detail templates (`/work/[slug]`, `/writing/[slug]`,
+ * `/notes/[slug]`) emit `BreadcrumbJsonLd`; this is the trail a person can see,
+ * so the structured data never describes navigation the page does not have.
+ * The parent link carries a back arrow, because the useful action is "go up a
+ * level"; the current page is plain text.
  *
  * @param parent  the index route this document belongs to.
- * @param current the document's own title. Truncates rather than wrapping — a
- *                breadcrumb that runs to two lines has stopped being chrome.
+ * @param current the document's own title. Truncates rather than wrapping.
+ *
+ * A11y: a `<nav aria-label="Breadcrumb">` with an ordered list; the current item
+ * is `aria-current="page"`; the "/" separator is hidden from screen readers.
+ * Motion: the arrow nudges left on hover (instant under reduced motion).
  */
 export function Breadcrumb({
   parent,
@@ -32,28 +25,25 @@ export function Breadcrumb({
   current: string;
 }) {
   return (
-    <nav
-      aria-label="Breadcrumb"
-      className="relative z-10 mb-8 font-mono text-xs text-ink-tertiary"
-    >
-      <ol className="flex items-center gap-2">
-        <li>
+    <nav aria-label="Breadcrumb" className="relative z-10 mb-8 text-sm text-ink-tertiary">
+      <ol className="flex min-w-0 items-center gap-2">
+        <li className="shrink-0">
           <Link
             href={parent.href}
             prefetch={false}
-            className="group/crumb inline-flex items-center gap-1.5 transition-colors duration-fast ease-[var(--ease-out)] hover:text-ink"
+            className="group/crumb inline-flex min-h-6 items-center gap-1.5 font-medium text-ink-secondary transition-colors duration-fast hover:text-ink"
           >
             <ArrowLeft
-              size={13}
+              size={14}
               strokeWidth={2}
               aria-hidden
-              className="transition-transform duration-fast ease-[var(--ease-out)] group-hover/crumb:-translate-x-0.5"
+              className="transition-transform duration-fast group-hover/crumb:-translate-x-0.5"
             />
             {parent.label}
           </Link>
         </li>
         <li aria-hidden>/</li>
-        <li className="min-w-0 truncate text-ink-secondary" aria-current="page">
+        <li className="min-w-0 truncate" aria-current="page">
           {current}
         </li>
       </ol>

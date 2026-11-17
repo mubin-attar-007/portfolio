@@ -1,0 +1,81 @@
+/* Toc: a sticky "Jump to" list on a hairline rail, with a violet indicator
+   that springs to the active entry (the Clerk legal and blog sidebars). */
+@layer components {
+  .toc {
+    position: sticky;
+    top: var(--sticky-top);
+    max-height: calc(100vh - var(--sticky-top) - 24px);
+    overflow-y: auto;
+    overscroll-behavior: contain;
+  }
+
+  .title {
+    margin-bottom: 12px;
+    font-size: 0.8125rem;
+    font-weight: 600;
+    color: var(--color-ink);
+  }
+
+  .rail {
+    position: relative;
+    padding-left: 14px;
+  }
+  .rail::before {
+    content: "";
+    position: absolute;
+    top: 0;
+    bottom: 0;
+    left: 0;
+    width: 1px;
+    background: var(--color-border);
+  }
+
+  /* A 1px bar scaled to the active link's height: transform only. */
+  .indicator {
+    position: absolute;
+    top: 0;
+    left: -0.5px;
+    width: 2px;
+    height: 1px;
+    background: var(--color-accent);
+    opacity: 0;
+    transform: translateY(var(--toc-y, 0px)) scaleY(var(--toc-h, 0));
+    transform-origin: top;
+    transition:
+      transform var(--motion-slow) var(--spring-soft),
+      opacity var(--motion-fast) var(--ease-out);
+  }
+  .indicator[data-visible] {
+    opacity: 1;
+  }
+
+  .list {
+    display: grid;
+    gap: 2px;
+    list-style: none;
+    padding: 0;
+  }
+  .list .list {
+    margin-top: 2px;
+    padding-left: 12px;
+  }
+
+  .link {
+    display: block;
+    padding-block: 5px;
+    font-size: var(--text-sm);
+    line-height: 1.45;
+    color: var(--color-ink-secondary);
+    transition: color var(--motion-fast) var(--ease-out);
+  }
+  .link:hover {
+    color: var(--color-ink);
+  }
+  .link[aria-current] {
+    font-weight: 500;
+    color: var(--color-ink);
+  }
+  .sub {
+    font-size: 0.84375rem;
+  }
+}

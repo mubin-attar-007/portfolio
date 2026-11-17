@@ -21,6 +21,8 @@ export const SITE = {
   description:
     "Mubin Attar designs and ships production AI systems: agents, retrieval, deterministic guardrails, and task-level evaluations published with their method.",
   url: SITE_URL,
+  /** The brand mark's letters: the nav, the footer and the article covers. */
+  monogram: "MA",
   email: "sk.mubinattar@gmail.com",
   location: "Ahmedabad, India",
   socials: {
@@ -49,29 +51,59 @@ export const INTEGRATIONS = {
 } as const;
 
 /**
- * Availability chrome (evergreen, not an announcement). `href` points at /hire
- * — the single funnel for contact intent. The literal email address stays a
- * mailto wherever it's shown verbatim (footer, /hire, homepage contact).
+ * Availability (evergreen, not an announcement): the home announcement bar, /now,
+ * /hire and the assistant read it. `href` is the contact funnel. The literal
+ * email address stays a mailto wherever it's shown verbatim (footer, /contact).
  */
 export const STATUS = {
-  text: "Open to senior AI engineering and applied AI roles — remote or Ahmedabad, India",
+  text: "Open to Forward Deployed Engineer roles",
   /**
    * The phone form of the same sentence. Not a different claim — the same one,
    * short enough to fit 360px without an ellipsis. A status line that truncates
    * mid-word reads as a layout bug rather than as availability.
    */
-  short: "Open to AI engineering roles",
+  short: "Open to FDE roles",
   cta: "Get in touch",
-  href: "/hire",
+  href: "/contact",
 } as const;
 
 /**
  * Footer copy — the identity column, in the owner's voice. `positioning` is the
- * one-line statement of what he does (the same claim the hero makes, said
- * plainly); `invite` is the human line under it. Neither asserts a number, so
- * neither needs a linked method.
+ * one-line statement of what he does (the hero's claim, said plainly); `invite`
+ * is the human line the assistant quotes. Neither asserts a number, so neither
+ * needs a linked method.
  */
 export const FOOTER = {
-  positioning: "Production AI systems — designed, shipped, constrained, and measured.",
+  positioning: "Applied AI Engineer. I ship AI and software inside the customer's rules.",
   invite: "I answer every email myself.",
 } as const;
+
+/**
+ * The assistant's entry points in the chrome: the nav item, the floating
+ * launcher and the mobile menu share `label`; the home announcement bar uses
+ * `announcement`. The assistant panel's own copy lives with the panel.
+ */
+export const ASK_AI = {
+  label: "Ask AI",
+  /** The floating launcher's accessible name: the trigger's label first, then the visible text (WCAG 2.5.3). */
+  launcherName: "Ask this site — Ask AI",
+  announcement: "Ask my AI assistant",
+} as const;
+
+/**
+ * The status vocabulary rendered by `StatusPill` (components/ui/status-pill.tsx).
+ * One closed set, so a result is never "Retired" on one page and "Withdrawn" on
+ * another. Each status also fixes the pill's colour (its meaning), never only
+ * its label.
+ */
+export const STATUS_PILL = {
+  verified: "Verified",
+  retired: "Retired",
+  draft: "Draft",
+  "not-claimed": "Not claimed",
+  "in-use": "In use",
+  pilot: "Pilot",
+  "deployed-demo": "Deployed demo",
+} as const;
+
+export type PillStatus = keyof typeof STATUS_PILL;

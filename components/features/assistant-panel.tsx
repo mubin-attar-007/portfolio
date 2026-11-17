@@ -1,39 +1,36 @@
 "use client";
 
 import {
-  Fragment,
-  memo,
   useCallback,
   useEffect,
   useId,
-  useMemo,
   useRef,
   useState,
   type Dispatch,
-  type ReactNode,
   type SetStateAction,
 } from "react";
 import { createPortal } from "react-dom";
-import Link from "next/link";
-import { Square, X } from "lucide-react";
-import { PROSE } from "@/components/mdx/prose";
-import { parseAnswer, type Inline } from "@/lib/ai/answer-format";
+import { Sparkles, Square, X } from "lucide-react";
+import { Composer } from "@/components/assistant/composer";
+import { ASSISTANT_COPY } from "@/components/assistant/copy";
+import { EmptyState } from "@/components/assistant/empty-state";
+import { Turn } from "@/components/assistant/turn";
+import { isFailedTurn } from "@/components/assistant/turn-status";
+import styles from "@/components/assistant/assistant.module.css";
 import {
   historyForRequest,
-  MAX_MESSAGE_CHARS,
   type AnswerMode,
   type AnswerNote,
   type ChatTurn,
 } from "@/lib/ai/chat-contract";
 import { readCitations } from "@/lib/ai/citation-links";
-import { STARTERS } from "@/lib/ai/starters";
 import { useInertBackground } from "@/lib/use-inert-background";
 
 /**
  * AssistantPanel — a grounded, cited assistant over this site's content
- * (AI_ASSISTANT.md §5). Calm slide-over (desktop) / bottom sheet (mobile), the
- * one place a shadow is allowed. Streams from /api/chat over SSE and renders
- * the answer's small markdown subset as React elements (never as HTML).
+ * (AI_ASSISTANT.md §5). A bottom sheet on phones and an inset drawer from `sm`,
+ * the one place a large shadow is allowed. Streams from /api/chat over SSE and
+ * renders the answer's small markdown subset as React elements (never as HTML).
  *
  * The conversation itself belongs to the launcher (`Assistant`), which stays
  * mounted in the header across page changes: closing the panel, or opening a
@@ -42,13 +39,21 @@ import { useInertBackground } from "@/lib/use-inert-background";
  * A11y: modal dialog with a focus trap, Escape to close, focus restore (owned
  * by the launcher), a polite log for answers. Focus never drops to <body>:
  * sending moves it to the question field, and a control that disappears (a
- * starter, Stop, Clear) hands it back to the field first.
+ * starter, Stop, Clear, a retry) hands it back to the field first. The
+ * transcript is a tab stop, so a long answer can be scrolled from the keyboard.
  */
+
+/** A question handed to the panel by an `assistant:open` request. */
+export type SeedQuestion = { id: number; question: string };
 
 type Props = {
   turns: ChatTurn[];
   setTurns: Dispatch<SetStateAction<ChatTurn[]>>;
   onClose: () => void;
+  /** A question to send as soon as the panel is open, or null. */
+  seed: SeedQuestion | null;
+  /** Called when the panel takes the seed, so it is sent once. */
+  onSeedTaken: (id: number) => void;
 };
 
 /** HTTP status /api/chat answers with when the per-client window is exhausted. */
@@ -57,39 +62,9 @@ const RATE_LIMITED = 429;
 /** Longer than the route's own 20 s answer timeout, so the server's fallback normally wins. */
 const CLIENT_TIMEOUT_MS = 30_000;
 
-/** The character counter appears once a question is this long. */
-const COUNTER_FROM = Math.floor(MAX_MESSAGE_CHARS * 0.8);
-
-/** Tallest the question field grows before it scrolls. */
-const MAX_FIELD_HEIGHT_PX = 112;
-
 const UNAVAILABLE =
   "The assistant is unavailable right now. You can still explore the case studies and résumé.";
 const TIMED_OUT = "That answer took too long, so I stopped waiting. Try again in a moment.";
-
-/**
- * A short, honest label for a turn that is not a complete live answer — so the
- * UI never dresses a rate-limit notice, a stopped answer or site search up as
- * a live answer. Notes whose text already says it all carry no label.
- */
-const NOTE_LABEL: Partial<Record<AnswerNote, string>> = {
-  "injection-screened": "declined — out of scope",
-  "live-unavailable": "live answers unavailable — site search only",
-  "daily-budget-reached": "live answers paused for today — site search only",
-  "client-allowance-reached": "live answers paused for today — site search only",
-  "rate-limited": "rate limited",
-  stopped: "stopped",
-  "timed-out": "timed out",
-};
-
-function turnLabel(turn: ChatTurn): string | null {
-  const byNote = turn.note ? NOTE_LABEL[turn.note] : undefined;
-  if (byNote) return byNote;
-  if (turn.mode === "refusal") return "declined — out of scope";
-  if (turn.incomplete) return "cut short";
-  if (turn.mode === "fallback" && turn.sources && turn.sources.length > 0) return "from site search";
-  return null;
-}
 
 const MODES: readonly AnswerMode[] = ["live", "fallback", "refusal"];
 const NOTES: readonly AnswerNote[] = [
@@ -156,148 +131,6 @@ function newId(): string {
     : `${Date.now().toString(36)}-${Math.random().toString(36).slice(2)}`;
 }
 
-// ---- Answer text -------------------------------------------------------------
-
-/** Text with its single line breaks kept. */
-function withBreaks(text: string): ReactNode {
-  const lines = text.split("\n");
-  return lines.map((line, i) => (
-    <Fragment key={i}>
-      {i > 0 ? <br /> : null}
-      {line}
-    </Fragment>
-  ));
-}
-
-function InlineText({ inlines }: { inlines: Inline[] }) {
-  return inlines.map((inline, i) => {
-    switch (inline.kind) {
-      case "text":
-        return <Fragment key={i}>{withBreaks(inline.text)}</Fragment>;
-      case "code":
-        return (
-          <code key={i} className={PROSE.code}>
-            {inline.text}
-          </code>
-        );
-      case "strong":
-        return (
-          <strong key={i} className={PROSE.strong}>
-            <InlineText inlines={inline.children} />
-          </strong>
-        );
-      case "em":
-        return (
-          <em key={i}>
-            <InlineText inlines={inline.children} />
-          </em>
-        );
-    }
-  });
-}
-
-/**
- * An answer, rendered from the parsed markdown subset. Every string reaches
- * the DOM as a React text node, so model output can never become markup.
- */
-function AnswerText({ text }: { text: string }) {
-  const blocks = useMemo(() => parseAnswer(text), [text]);
-  return blocks.map((block, i) => {
-    switch (block.kind) {
-      case "paragraph":
-        return (
-          <p key={i} className="mt-2 first:mt-0">
-            <InlineText inlines={block.inlines} />
-          </p>
-        );
-      case "heading":
-        return (
-          <p key={i} className="mt-3 font-medium text-ink first:mt-0">
-            <InlineText inlines={block.inlines} />
-          </p>
-        );
-      case "list": {
-        const List = block.ordered ? "ol" : "ul";
-        return (
-          <List
-            key={i}
-            className={`mt-2 space-y-1 pl-5 marker:text-ink-tertiary first:mt-0 ${block.ordered ? "list-decimal" : "list-disc"}`}
-          >
-            {block.items.map((item, j) => (
-              <li key={j} className="pl-1">
-                <InlineText inlines={item} />
-              </li>
-            ))}
-          </List>
-        );
-      }
-      case "code":
-        return (
-          <pre
-            key={i}
-            className="mt-2 overflow-x-auto rounded-[var(--radius-sm)] bg-bg-subtle px-3 py-2 font-mono text-xs leading-relaxed text-ink first:mt-0"
-          >
-            <code>{block.text}</code>
-          </pre>
-        );
-    }
-  });
-}
-
-/** One turn of the transcript. Memoized: only the streaming turn re-renders per frame. */
-const Turn = memo(function Turn({ turn, onNavigate }: { turn: ChatTurn; onNavigate: () => void }) {
-  if (turn.role === "user") {
-    return (
-      <p className="self-end whitespace-pre-wrap break-words rounded-[var(--radius-md)] bg-bg-subtle px-3 py-2 text-sm text-ink">
-        {turn.content}
-      </p>
-    );
-  }
-  const label = turnLabel(turn);
-  const sources = turn.sources ?? [];
-  return (
-    <div>
-      {label ? <p className="mb-1 font-mono text-xs text-ink-tertiary">{label}</p> : null}
-      <div className="break-words text-sm leading-relaxed text-ink-secondary" aria-busy={turn.streaming || undefined}>
-        {turn.content ? <AnswerText text={turn.content} /> : null}
-        {turn.streaming && !turn.content ? (
-          <span className="font-mono text-xs text-ink-tertiary">
-            searching<span className="motion-safe:animate-pulse">…</span>
-          </span>
-        ) : null}
-      </div>
-      {sources.length > 0 ? (
-        <div className="mt-3 flex flex-col gap-2" aria-label="Answer sources">
-          {sources.map((citation, i) => (
-            <div key={i} className="text-xs">
-              <p className="break-words leading-relaxed text-ink-tertiary">{citation.source}</p>
-              {citation.links.length > 0 ? (
-                <div className="mt-1 flex flex-wrap gap-x-3 gap-y-1">
-                  {citation.links.map((link) => (
-                    <Link
-                      key={link.href}
-                      href={link.href}
-                      prefetch={false}
-                      onNavigate={onNavigate}
-                      className="inline-flex min-h-6 items-center gap-1 text-ink underline decoration-border-strong underline-offset-4 hover:decoration-ink"
-                    >
-                      {link.label}
-                      {/* → : a page of this site, same tab. ↗ is reserved for a new tab or mail (design-system §11.5). */}
-                      <span aria-hidden>→</span>
-                    </Link>
-                  ))}
-                </div>
-              ) : null}
-            </div>
-          ))}
-        </div>
-      ) : null}
-    </div>
-  );
-});
-
-// ---- Panel -------------------------------------------------------------------
-
 type ActiveRequest = {
   id: string;
   controller: AbortController;
@@ -305,9 +138,12 @@ type ActiveRequest = {
   reason: "stopped" | "timed-out" | null;
 };
 
-export function AssistantPanel({ turns, setTurns, onClose }: Props) {
+export function AssistantPanel({ turns, setTurns, onClose, seed, onSeedTaken }: Props) {
   const [draft, setDraft] = useState("");
   const [busy, setBusy] = useState(false);
+  // Turns already in the transcript when the panel opened stay still; only
+  // turns added while it is open rise into place.
+  const [initialTurnIds] = useState(() => new Set(turns.map((turn) => turn.id)));
   const panelRef = useRef<HTMLDivElement>(null);
   const inputRef = useRef<HTMLTextAreaElement>(null);
   const stopRef = useRef<HTMLButtonElement>(null);
@@ -319,8 +155,6 @@ export function AssistantPanel({ turns, setTurns, onClose }: Props) {
   const followTranscriptRef = useRef(true);
   const dialogTitleId = useId();
   const dialogDescId = useId();
-  const hintId = useId();
-  const counterId = useId();
 
   // The panel only exists while it is open, so the boundary is unconditional:
   // everything behind it is inert for exactly as long as this component lives.
@@ -397,11 +231,6 @@ export function AssistantPanel({ turns, setTurns, onClose }: Props) {
     const el = logRef.current;
     if (el && turns.length > 0 && followTranscriptRef.current) el.scrollTop = el.scrollHeight;
   }, [turns]);
-
-  // Collapse the field back to one line once it's cleared (after send).
-  useEffect(() => {
-    if (draft === "" && inputRef.current) inputRef.current.style.height = "auto";
-  }, [draft]);
 
   const ask = useCallback(
     async (question: string) => {
@@ -534,9 +363,31 @@ export function AssistantPanel({ turns, setTurns, onClose }: Props) {
     focusField();
   }, [focusField, setTurns, stop]);
 
+  /** Ask the latest question again after it failed. */
+  const retry = useCallback(() => {
+    const question = turnsRef.current.at(-2);
+    if (question?.role === "user") void ask(question.content);
+  }, [ask]);
+
+  const submitDraft = useCallback(() => void ask(draft), [ask, draft]);
+
+  // A question handed over by an `assistant:open` request is sent as if typed.
+  // Deferred a frame, like the focus above, so a remount cancels it rather
+  // than sending it twice. While an answer streams it waits in the field.
+  useEffect(() => {
+    if (!seed) return;
+    const frame = requestAnimationFrame(() => {
+      onSeedTaken(seed.id);
+      if (activeRef.current) setDraft(seed.question);
+      else void ask(seed.question);
+    });
+    return () => cancelAnimationFrame(frame);
+  }, [seed, ask, onSeedTaken]);
+
   const empty = turns.length === 0;
   const canSend = !busy && draft.trim().length > 0;
-  const showCounter = draft.length >= COUNTER_FROM;
+  const lastTurn = turns.at(-1);
+  const retryable = lastTurn !== undefined && isFailedTurn(lastTurn);
   const statusText = busy
     ? "Searching the site and generating a cited answer."
     : "Ready to search this site.";
@@ -545,12 +396,7 @@ export function AssistantPanel({ turns, setTurns, onClose }: Props) {
   // make it the containing block for this fixed panel and mis-anchor it.
   return createPortal(
     <>
-      <div
-        data-modal-root
-        className="fixed inset-0 z-50 bg-[var(--scrim)]"
-        onClick={onClose}
-        aria-hidden="true"
-      />
+      <div data-modal-root className={styles.scrim} onClick={onClose} aria-hidden="true" />
       <div
         data-modal-root
         id="assistant-panel-dialog"
@@ -559,158 +405,106 @@ export function AssistantPanel({ turns, setTurns, onClose }: Props) {
         aria-modal="true"
         aria-labelledby={dialogTitleId}
         aria-describedby={dialogDescId}
-        className="fixed inset-x-0 bottom-0 z-50 flex h-[85dvh] flex-col overflow-hidden rounded-t-[var(--radius-lg)] border border-border bg-surface shadow-[var(--shadow-overlay)] sm:inset-x-auto sm:bottom-6 sm:right-6 sm:h-[min(38rem,calc(100dvh-6rem))] sm:w-[408px] sm:rounded-[var(--radius-lg)]"
+        className={styles.dialog}
       >
-        <header className="flex items-center justify-between gap-2 border-b border-border px-5 py-3">
-          <div className="min-w-0">
-            <p id={dialogTitleId} className="text-sm font-medium text-ink">
-              Ask about my work
-            </p>
-            <p className="font-mono text-xs text-ink-tertiary">
-              Projects, experience, and the decisions behind them
-            </p>
+        {/* A div, not <header>: under <body> a header is a second banner landmark. */}
+        <div className={styles.header}>
+          <span className={styles.mark} aria-hidden>
+            <Sparkles size={17} strokeWidth={1.75} />
+          </span>
+          <div className={styles.titles}>
+            <h2 id={dialogTitleId} className={styles.title}>
+              {ASSISTANT_COPY.title}
+            </h2>
+            <p className={styles.subtitle}>{ASSISTANT_COPY.subtitle}</p>
             <p id={dialogDescId} className="sr-only">
-              Ask about Mubin&apos;s projects, experience and writing. Answers link the pages they
-              come from. Press Escape to close.
+              {ASSISTANT_COPY.description}
             </p>
           </div>
-          <div className="flex shrink-0 items-center">
+          <div className={styles.actions}>
             {empty ? null : (
               <button
                 type="button"
                 onClick={clear}
-                aria-label="Clear conversation"
-                className="inline-flex h-11 items-center rounded-[var(--radius-md)] px-3 text-xs text-ink-secondary hover:text-ink"
+                aria-label={ASSISTANT_COPY.clearLabel}
+                className={styles.ghost}
               >
-                Clear
+                {ASSISTANT_COPY.clear}
               </button>
             )}
             <button
               type="button"
               onClick={onClose}
-              aria-label="Close"
-              className="inline-flex h-11 w-11 items-center justify-center rounded-[var(--radius-md)] text-ink-secondary hover:text-ink"
+              aria-label={ASSISTANT_COPY.close}
+              className={`${styles.ghost} ${styles.close}`}
             >
-              <X size={18} strokeWidth={1.5} aria-hidden />
+              <X size={18} strokeWidth={1.75} aria-hidden />
             </button>
           </div>
-        </header>
+        </div>
 
         <div
           ref={logRef}
-          className="min-h-0 flex-1 overflow-y-auto overscroll-contain px-5 py-4"
+          className={styles.log}
           onScroll={(event) => {
             const el = event.currentTarget;
             followTranscriptRef.current = el.scrollHeight - el.scrollTop - el.clientHeight < 48;
           }}
           role="log"
+          aria-label={ASSISTANT_COPY.conversation}
           aria-live="polite"
           aria-relevant="additions text"
           aria-atomic="false"
           aria-busy={busy}
+          tabIndex={0}
         >
           {empty ? (
-            <div>
-              <p className="text-sm leading-relaxed text-ink-secondary">
-                Ask about Mubin&apos;s projects, experience and writing. Answers come from the
-                site&apos;s case studies, essays, notes, evaluations and résumé, and link the page
-                each one comes from.
-              </p>
-              <p className="mt-5 font-mono text-xs uppercase tracking-wide text-ink-tertiary">
-                Try one, or ask your own
-              </p>
-              <ul className="mt-4 flex flex-col gap-2">
-                {STARTERS.map((s) => (
-                  <li key={s}>
-                    <button
-                      type="button"
-                      onClick={() => void ask(s)}
-                      className="min-h-11 w-full rounded-[var(--radius-md)] border border-border bg-bg-subtle px-3 py-2 text-left text-sm text-ink transition-colors hover:border-border-strong"
-                    >
-                      {s}
-                    </button>
-                  </li>
-                ))}
-              </ul>
-            </div>
+            <EmptyState onAsk={(question) => void ask(question)} />
           ) : (
-            <div className="flex flex-col gap-5">
+            <div className={styles.transcript}>
               {turns.map((turn) => (
-                <Turn key={turn.id} turn={turn} onNavigate={onClose} />
+                <Turn
+                  key={turn.id}
+                  turn={turn}
+                  onNavigate={onClose}
+                  animate={!initialTurnIds.has(turn.id)}
+                  onRetry={retryable && turn === lastTurn ? retry : undefined}
+                />
               ))}
             </div>
           )}
         </div>
 
-        {busy ? (
-          <div className="flex justify-center border-t border-border px-5 py-2">
-            <button
-              ref={stopRef}
-              type="button"
-              onClick={() => {
-                stop("stopped");
-                focusField();
-              }}
-              className="inline-flex h-9 items-center gap-1.5 rounded-[var(--radius-sm)] border border-border px-3 text-xs text-ink-secondary transition-colors hover:border-border-strong hover:text-ink"
-            >
-              <Square size={10} strokeWidth={2} aria-hidden />
-              Stop answering
-            </button>
-          </div>
-        ) : null}
-
-        <form
-          onSubmit={(e) => {
-            e.preventDefault();
-            void ask(draft);
-          }}
-          aria-label="Ask this site a question"
-          className="flex items-end gap-2 border-t border-border px-5 py-3"
-        >
-          <textarea
-            ref={inputRef}
-            rows={1}
-            value={draft}
-            maxLength={MAX_MESSAGE_CHARS}
-            onChange={(e) => {
-              setDraft(e.target.value);
-              e.target.style.height = "auto";
-              e.target.style.height = `${Math.min(e.target.scrollHeight, MAX_FIELD_HEIGHT_PX)}px`;
-            }}
-            onKeyDown={(e) => {
-              if (e.key === "Enter" && !e.shiftKey && !e.nativeEvent.isComposing) {
-                e.preventDefault();
-                void ask(draft);
-              }
-            }}
-            placeholder="Ask about a project or a decision…"
-            aria-describedby={showCounter ? `${hintId} ${counterId}` : hintId}
-            aria-label="Your question"
-            className="max-h-28 flex-1 resize-none overflow-y-auto rounded-[var(--radius-md)] border border-border bg-bg px-3 py-2 text-sm text-ink focus-visible:border-border-strong"
+        <div className={styles.footer}>
+          {busy ? (
+            <div className={styles.stopRow}>
+              <button
+                ref={stopRef}
+                type="button"
+                onClick={() => {
+                  stop("stopped");
+                  focusField();
+                }}
+                className={`${styles.ghost} ${styles.stop}`}
+              >
+                <Square size={9} strokeWidth={0} fill="currentColor" aria-hidden />
+                {ASSISTANT_COPY.stop}
+              </button>
+            </div>
+          ) : null}
+          <Composer
+            inputRef={inputRef}
+            draft={draft}
+            onDraftChange={setDraft}
+            onSubmit={submitDraft}
+            busy={busy}
+            canSend={canSend}
           />
-          {/* aria-disabled, not disabled: a focused button that becomes
-              disabled drops focus to <body>. The submit handler ignores it. */}
-          <button
-            type="submit"
-            aria-disabled={!canSend || undefined}
-            className="inline-flex h-11 items-center rounded-[var(--radius-md)] bg-accent px-3 text-sm font-medium text-on-accent transition-colors hover:bg-accent-hover aria-disabled:cursor-not-allowed aria-disabled:opacity-50 aria-disabled:hover:bg-accent"
-          >
-            Ask
-          </button>
-        </form>
-        <p id={hintId} className="sr-only">
-          Enter to send, Shift+Enter for a new line. Up to {MAX_MESSAGE_CHARS.toLocaleString("en")}{" "}
-          characters.
-        </p>
-        {showCounter ? (
-          <p id={counterId} className="px-5 font-mono text-xs tabular-nums text-ink-tertiary">
-            {draft.length.toLocaleString("en")} / {MAX_MESSAGE_CHARS.toLocaleString("en")} characters
-          </p>
-        ) : null}
+          <p className={styles.privacy}>{ASSISTANT_COPY.privacy}</p>
+        </div>
         <span className="sr-only" role="status" aria-live="polite" aria-atomic="true">
           {statusText}
         </span>
-        <p className="px-5 pb-3 font-mono text-xs text-ink-tertiary">Cited · may be imperfect · not stored.</p>
       </div>
     </>,
     document.body,

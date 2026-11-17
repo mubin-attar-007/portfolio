@@ -1,61 +1,217 @@
+import { projects } from "@/content/projects";
+import { SITE } from "@/config/site";
+
 /**
- * Primary navigation — four destinations, plain labels. Clever labels tax
- * comprehension (ADR-007), and a fifth link would put the header in competition
- * with its own call to action.
+ * Navigation — every link map on the site, in one place: the header with its
+ * Work and About menus, the mobile menu, the footer, and the work sub-nav.
  *
- * Contact is deliberately ABSENT here: it is the header's primary button
- * (`PRIMARY_CTA`), not a peer of Work and Writing. One dominant action per
- * viewport is the rule the whole redesign is built on, and a nav link plus a
- * button pointing at the same route is the most common way sites break it.
+ * Server-side only. It reads the project registry (content/projects.ts), so a
+ * client component must receive these items as props, never import this file —
+ * that would ship the content schemas to the browser.
+ *
+ * Icons are names, resolved by `NavIcon` (components/layout/nav-icon.tsx), so
+ * this file stays data.
  */
-export const NAV = [
+
+export type NavIconName =
+  | "folder-search"
+  | "nfc"
+  | "database"
+  | "chart"
+  | "trophy"
+  | "messages"
+  | "users"
+  | "file"
+  | "clock"
+  | "laptop"
+  | "shield"
+  | "bars"
+  | "pen"
+  | "chat"
+  | "briefcase"
+  | "sparkles";
+
+/**
+ * One destination. The element it renders as (a route, a file, another site) is
+ * read from `href` by `linkKind` (components/ui/smart-link.tsx).
+ */
+export type NavLink = {
+  label: string;
+  href: string;
+  icon?: NavIconName;
+  /** The one-line description of a rich menu row. */
+  description?: string;
+};
+
+/**
+ * The menu line for each public system, keyed by its slug in
+ * content/projects.ts (test/navigation.test.mts keeps the two in step).
+ */
+const PUBLIC_WORK_COPY = {
+  dbwhisper: { description: "Plain-English questions, validated SQL", icon: "database" },
+  tradepulse: { description: "Backtests that can only read closed bars", icon: "chart" },
+  crownwager: { description: "NBA picks graded against final scores", icon: "trophy" },
+  "llm-studio": { description: "Multi-user chat, six model providers", icon: "messages" },
+} as const satisfies Record<string, { description: string; icon: NavIconName }>;
+
+export type PublicWorkSlug = keyof typeof PUBLIC_WORK_COPY;
+export type FieldWorkSlug = "records-triage" | "nfc-room-rounds";
+/** Every work page: the four public case studies and the two field reports. */
+export type WorkSlug = PublicWorkSlug | FieldWorkSlug;
+
+export type WorkItem = NavLink & { slug: WorkSlug; icon: NavIconName; description: string };
+
+const isPublicWorkSlug = (slug: string): slug is PublicWorkSlug => slug in PUBLIC_WORK_COPY;
+
+/** The field reports (anonymous: no employer, product or client is named). */
+export const FIELD_WORK: readonly WorkItem[] = [
+  {
+    slug: "records-triage",
+    label: "Records triage",
+    href: "/work/field/records-triage",
+    description: "Finds the records a case needs, without documents leaving the PC",
+    icon: "folder-search",
+  },
+  {
+    slug: "nfc-room-rounds",
+    label: "NFC room rounds",
+    href: "/work/field/nfc-room-rounds",
+    description: "Care staff record each round with a tap at the door",
+    icon: "nfc",
+  },
+];
+
+/** The public systems, in the registry's order, titled by the registry. */
+export const PUBLIC_WORK: readonly WorkItem[] = [...projects]
+  .sort((a, b) => a.order - b.order)
+  .flatMap((project) =>
+    isPublicWorkSlug(project.slug)
+      ? [{ slug: project.slug, label: project.title, href: `/work/${project.slug}`, ...PUBLIC_WORK_COPY[project.slug] }]
+      : [],
+  );
+
+/** The work sub-nav's order: the public systems, then the field reports. */
+export const WORK_ITEMS: readonly WorkItem[] = [...PUBLIC_WORK, ...FIELD_WORK];
+
+export const ALL_WORK: NavLink = { label: "All work", href: "/work" };
+
+/** The header's Work menu: two rich columns and a footer link. */
+export const WORK_MENU = {
+  label: "Work",
+  groups: [
+    { label: "Field work", items: FIELD_WORK },
+    { label: "Public systems", items: PUBLIC_WORK },
+  ],
+  footer: ALL_WORK,
+} as const;
+
+/** The plain links between the two menus. */
+export const NAV_LINKS: readonly NavLink[] = [
+  { label: "Evals", href: "/evals", icon: "bars" },
+  { label: "Writing", href: "/writing", icon: "pen" },
+];
+
+/** The header's About menu: a simple icon list under its own heading. */
+export const ABOUT_MENU = {
+  label: "About",
+  heading: "About me",
+  items: [
+    { label: "About", href: "/about", icon: "users" },
+    { label: "Résumé", href: "/resume", icon: "file" },
+    { label: "Now", href: "/now", icon: "clock" },
+    { label: "Uses", href: "/uses", icon: "laptop" },
+    { label: "Trust", href: "/trust", icon: "shield" },
+  ],
+} as const satisfies { label: string; heading: string; items: readonly NavLink[] };
+
+/** The routes whose pages sit inside each menu, so its trigger can show the section is current. */
+export const MENU_SECTIONS = {
+  work: ["/work"],
+  about: ABOUT_MENU.items.map((item) => item.href),
+} as const;
+
+/** The two ghost pills at the right of the header. */
+export const NAV_ACTIONS: readonly NavLink[] = [
+  { label: "Contact", href: "/contact", icon: "chat" },
+  { label: "Hire me", href: "/hire", icon: "briefcase" },
+];
+
+/** The mobile menu's accessible names. */
+export const MENU_BUTTON = { open: "Open menu", close: "Close menu" } as const;
+
+/** The mobile menu: the whole header, grouped. The assistant item is appended to Connect. */
+export const MOBILE_NAV = [
+  {
+    label: "Work",
+    items: [
+      { label: "Field work", href: "/work#field", icon: "folder-search" },
+      { label: "Public systems", href: "/work#public", icon: "database" },
+      ...NAV_LINKS,
+    ],
+  },
+  { label: ABOUT_MENU.heading, items: ABOUT_MENU.items },
+  { label: "Connect", items: NAV_ACTIONS },
+] as const satisfies readonly { label: string; items: readonly NavLink[] }[];
+
+/**
+ * The primary destinations, one per section: the 404's way back in, and the
+ * shape the navigation test checks.
+ */
+export const NAV: readonly NavLink[] = [
   { label: "Work", href: "/work" },
-  { label: "Evals", href: "/evals" },
-  { label: "Writing", href: "/writing" },
+  ...NAV_LINKS,
   { label: "About", href: "/about" },
-] as const;
+];
 
 /**
- * The header's one action. Lives here rather than in the component so the label
- * and the destination are edited in the same place as the links beside it.
- */
-export const PRIMARY_CTA = { label: "Let's talk", href: "/hire" } as const;
-
-/**
- * Footer navigation — a deliberate shortlist, not a second sitemap (asserted at
- * ≤8 links by test/navigation.test.mts).
- *
- * Skills and Uses stay out of BOTH maps: they are reference routes reached from
- * the pages that need them, and promoting them globally creates three competing
- * versions of the same profile story.
+ * The footer: five columns beside the brand. A curated map of the site, not a
+ * sitemap (test/navigation.test.mts caps it).
  */
 export const FOOTER_NAV = [
   {
+    heading: "Work",
+    links: [
+      { label: "Field work", href: "/work#field" },
+      { label: "Public systems", href: "/work#public" },
+      { label: "Evaluations", href: "/evals" },
+      { label: "All work", href: "/work" },
+    ],
+  },
+  {
+    heading: "Writing",
+    links: [
+      { label: "Essays", href: "/writing?type=essay" },
+      { label: "Guides", href: "/writing?type=guide" },
+      { label: "Notes", href: "/notes" },
+      { label: "RSS feed", href: "/rss.xml" },
+    ],
+  },
+  {
+    heading: "About",
+    links: [
+      { label: "About", href: "/about" },
+      { label: "Résumé", href: "/resume" },
+      { label: "Now", href: "/now" },
+      { label: "Uses", href: "/uses" },
+      { label: "Skills", href: "/skills" },
+    ],
+  },
+  {
+    heading: "Connect",
+    links: [
+      { label: "Hire me", href: "/hire" },
+      { label: "Contact", href: "/contact" },
+      { label: "GitHub", href: SITE.socials.github },
+      { label: "LinkedIn", href: SITE.socials.linkedin },
+      { label: "Hugging Face", href: SITE.socials.huggingface },
+    ],
+  },
+  {
     heading: "Site",
     links: [
-      { label: "Work", href: "/work" },
-      { label: "Evals", href: "/evals" },
-      { label: "Writing", href: "/writing" },
-      { label: "About", href: "/about" },
-      { label: "Contact", href: "/hire" },
-    ],
-  },
-  {
-    heading: "Projects",
-    links: [
-      { label: "DBWhisper", href: "/work/dbwhisper" },
-      { label: "TradePulse", href: "/work/tradepulse" },
-      { label: "CrownWager", href: "/work/crownwager" },
-      { label: "LLM Studio", href: "/work/llm-studio" },
-    ],
-  },
-  {
-    heading: "More",
-    links: [
-      { label: "Résumé", href: "/resume" },
-      { label: "Notes", href: "/notes" },
-      { label: "Now", href: "/now" },
       { label: "Trust", href: "/trust" },
+      { label: "Privacy", href: "/privacy" },
+      { label: "llms.txt", href: "/llms.txt" },
     ],
   },
-] as const;
+] as const satisfies readonly { heading: string; links: readonly NavLink[] }[];

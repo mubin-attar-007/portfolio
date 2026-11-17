@@ -1,42 +1,19 @@
 import type { ReactNode } from "react";
-import { TextLink } from "./text-link";
+import { CaretLink } from "./caret-link";
+import { SectionHeader } from "./section-header";
 
 /**
- * SectionHeading — the full band header: mono kicker → heading → optional sub →
- * optional forward link.
+ * @deprecated Use `SectionHeader`. This keeps the previous API working while
+ * the pages that use it are rebuilt: `sub` becomes the lead, `size="compact"`
+ * the small h2, and `link` a `CaretLink`.
  *
- * The `align` alternation is the point. Light prose bands are left-aligned and
- * dark bands are centred, so the page alternates axis as well as tone — that
- * contrast is what makes a dark band read as a deliberate plate rather than the
- * same section with its colours flipped. Centring every heading (or none) flattens
- * the rhythm the light/dark bands are there to create.
- *
- * The kicker is quiet metadata, not decorative accent. Links and the one
- * primary action own the accent budget.
- *
- * Props:
- * - `kicker` — short mono label above the heading.
- * - `as` — `h2` (default) or `h3`; pick by document outline, not by size.
- * - `id` — anchor target on the heading itself.
- * - `align` — `start` (default) or `center`. Use `center` on dark bands.
- * - `size` — `display` (default) or `compact`. Compact drops an h2 one step
- *   (3xl→4xl instead of 4xl→5xl) and its sub to body size. Use it when two
- *   headers share one band (the Now+Writing two-up) or when the band is a
- *   closing group (the FAQ): half-column headings measure ~36px, and two
- *   display headings side by side read as competition, not rhythm.
- * - `sub` — one muted supporting sentence. Left-aligned subs cap near 60ch;
- *   centred (band) subs drop to body size and cap near 48ch — a measured
- *   ~490px band-sub column — so they break into two balanced lines.
- * - `link` — the band's forward affordance, rendered as the shared `TextLink`.
- * - `children` — the heading text.
- *
- * A11y: renders a real heading element at the level the caller asks for; the
- * kicker is decorative text above it (not a heading), so it never pollutes the
- * outline. The a11y gate audits contrast on every route in both themes.
+ * Props: `kicker`, `as`, `id`, `align`, `size` (`display` | `compact`), `sub`,
+ * `link` ({ href, label, external }), `children` (the heading text).
+ * A11y: as `SectionHeader` — a real heading; external links are announced.
  */
 export function SectionHeading({
   kicker,
-  as: Tag = "h2",
+  as = "h2",
   id,
   align = "start",
   size = "display",
@@ -53,51 +30,21 @@ export function SectionHeading({
   link?: { href: string; label: string; external?: boolean };
   children: ReactNode;
 }) {
-  const centered = align === "center";
-  // `size` only retunes an h2 — an h3 is already the compact scale, and pushing
-  // it lower would collapse the outline's visual hierarchy entirely.
-  // A CENTRED h2 (the dark-band header) takes its own scale before `size` is
-  // consulted: the centred band h2 measures 40px/700 where page h2s
-  // reach 48px/600 — smaller but heavier is what makes the band header read as
-  // dense and finished rather than merely shrunk (--text-band-title).
-  const headingScale =
-    Tag === "h2"
-      ? centered
-        ? "text-4xl font-semibold text-ink sm:text-[length:var(--text-section)] sm:leading-[1.08] sm:tracking-[-0.026em]"
-        : size === "compact"
-          ? "text-3xl text-ink sm:text-4xl"
-          : "text-[length:var(--text-section)] leading-[1.08] tracking-[-0.026em] text-ink"
-      : "text-[length:var(--text-sub)] leading-[1.2] tracking-[-0.019em] text-ink";
   return (
-    <div className={centered ? "flex flex-col items-center text-center" : "flex flex-col"}>
-      {kicker ? (
-        <p className="font-mono text-xs uppercase text-ink-tertiary">
-          {kicker}
-        </p>
-      ) : null}
-      <Tag
-        id={id}
-        className={`${kicker ? "mt-4" : ""} ${headingScale} ${centered ? "max-w-[24ch]" : ""}`}
-      >
-        {children}
-      </Tag>
-      {sub ? (
-        // Centred subs drop to text-base and hold a measured ~490px
-        // column (two balanced lines): a centred paragraph at 60ch/lg read as
-        // a slab rather than a caption.
-        <p
-          className={`mt-4 ${size === "compact" || centered ? "text-base" : "text-lg"} text-ink-secondary ${
-            centered ? "max-w-[48ch]" : "max-w-[62ch]"
-          }`}
-        >
-          {sub}
-        </p>
-      ) : null}
+    <SectionHeader
+      kicker={kicker}
+      as={as}
+      id={id}
+      align={align}
+      size={size === "compact" || as === "h3" ? "sm" : "lg"}
+      lead={sub}
+      title={children}
+    >
       {link ? (
-        <TextLink href={link.href} external={link.external} className="mt-6">
+        <CaretLink href={link.href} size="md" newTab={link.external}>
           {link.label}
-        </TextLink>
+        </CaretLink>
       ) : null}
-    </div>
+    </SectionHeader>
   );
 }

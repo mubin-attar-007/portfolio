@@ -1,15 +1,15 @@
-import { renderOg, OG_SIZE, OG_CONTENT_TYPE, formatOgEyebrow } from "@/lib/og";
+import { renderOg, ogAlt, OG_SIZE, OG_CONTENT_TYPE, type OgCard } from "@/lib/og";
 
-export const alt = "Privacy Policy — Mubin Attar";
+const CARD = {
+  kicker: "Privacy",
+  title: "Privacy policy",
+  description: "What this site collects, the services it uses, and why.",
+} satisfies OgCard;
+
+export const alt = ogAlt(CARD);
 export const size = OG_SIZE;
 export const contentType = OG_CONTENT_TYPE;
 
-export default function OG() {
-  return renderOg({
-    eyebrow: formatOgEyebrow("Privacy"),
-    title: "Privacy by design.",
-    subtitle:
-      "Minimal telemetry, explicit data boundaries, and documented external service usage.",
-    footerRight: "/privacy",
-  });
+export default function Image() {
+  return renderOg(CARD);
 }

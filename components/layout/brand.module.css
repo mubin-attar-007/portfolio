@@ -1,0 +1,28 @@
+/* Brand (prototype `.brand`, `.mono-mark`): the monogram tile and the name. The
+   tile is ink on light and turns light-on-dark inside a dark scope. */
+@layer components {
+  .brand {
+    display: inline-flex;
+    align-items: center;
+    gap: 9px;
+    font-size: 1.0625rem;
+    font-weight: 700;
+    letter-spacing: -0.02em;
+    white-space: nowrap;
+    color: inherit;
+  }
+
+  .mark {
+    display: grid;
+    flex: none;
+    width: 22px;
+    height: 22px;
+    place-items: center;
+    border-radius: var(--radius-control);
+    background: var(--color-ink);
+    color: var(--color-surface);
+    font-size: 0.6875rem;
+    font-weight: 800;
+    letter-spacing: -0.04em;
+  }
+}

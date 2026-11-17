@@ -1,0 +1,94 @@
+/* Timeline (the Clerk changelog): a date rail, a dot on a vertical line, and
+   the entry. From 760px the date sits in its own column and sticks while its
+   entry scrolls past. */
+@layer components {
+  .timeline {
+    position: relative;
+    display: grid;
+    gap: 56px;
+    list-style: none;
+    padding: 0;
+  }
+  /* The line, through the dots' column. */
+  .timeline::before {
+    content: "";
+    position: absolute;
+    top: 6px;
+    bottom: 0;
+    left: 4px;
+    width: 1px;
+    background: linear-gradient(180deg, var(--color-border-strong) 80%, transparent);
+  }
+
+  .entry {
+    position: relative;
+    display: grid;
+    grid-template-columns: minmax(0, 1fr);
+    gap: 10px;
+    padding-left: 32px;
+  }
+
+  .dot {
+    position: absolute;
+    top: 6px;
+    left: 0;
+    width: 9px;
+    height: 9px;
+    border-radius: 50%;
+    background: var(--color-surface);
+    box-shadow:
+      inset 0 0 0 2px var(--color-accent),
+      0 0 0 4px var(--color-bg);
+  }
+
+  .date {
+    font-size: var(--text-sm);
+    font-weight: 500;
+    line-height: 1.5;
+    color: var(--color-ink-secondary);
+    font-variant-numeric: tabular-nums;
+  }
+
+  .content {
+    min-width: 0;
+  }
+  .title {
+    font-size: var(--text-title);
+    font-weight: 700;
+    line-height: 1.35;
+    letter-spacing: -0.015em;
+    color: var(--color-ink);
+  }
+  .tags {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 6px;
+    margin-top: 10px;
+  }
+  .body {
+    margin-top: 12px;
+    font-size: 0.9375rem;
+    line-height: 1.6;
+    color: var(--color-ink-secondary);
+  }
+
+  @media (min-width: 760px) {
+    .timeline::before {
+      left: 176px;
+    }
+    .entry {
+      grid-template-columns: 148px minmax(0, 1fr);
+      gap: 0 56px;
+      padding-left: 0;
+    }
+    .dot {
+      left: 172px;
+    }
+    .date {
+      position: sticky;
+      top: var(--sticky-top);
+      align-self: start;
+      text-align: right;
+    }
+  }
+}

@@ -1,57 +1,21 @@
 import type { ReactNode } from "react";
-import Link from "next/link";
-import { ArrowUpRight, ChevronRight } from "lucide-react";
+import { CaretLink } from "./caret-link";
 
 /**
- * TextLink — the site's ONE "read more" affordance: a small bold label with a
- * tight directional arrow that responds to hover and keyboard focus.
+ * @deprecated Use `CaretLink`. TextLink keeps its previous API so pages written
+ * before the redesign render the new "go" link while they are rebuilt:
+ * `tone="accent"` → CaretLink `ink`, `tone="quiet"` → `muted`, and `external`
+ * opens a new tab (announced).
  *
- * Why it exists: the same `group inline-flex … ArrowRight … group-hover:translate-x-0.5`
- * block had been retyped in nine places, which meant nine chances for the size,
- * the stroke weight, the gap and the nudge distance to drift apart. One component
- * makes the affordance recognisable — a visitor learns it once and reads it
- * everywhere — and makes retuning it a one-file change.
- *
- * Props:
- * - `href` — destination (a route, or an absolute URL when `external`).
- * - `tone` — `accent` (default) for the primary continue-reading link, `quiet`
- *   for a secondary link that must not spend the band's accent budget (design-system.md
- *   §11.2 caps accent at two elements per viewport, and a section kicker on a dark band
- *   already claims one).
- * - `external` — renders a plain `<a target="_blank">` with an outward arrow
- *   instead of the forward chevron, because the destination leaves the site.
- * - `className` — layout only (margins); never colour or type.
- *
- * The glyph is a fact about the destination, site-wide: ↗ (ArrowUpRight) only on
- * a link that opens a new tab or a mail client; a page of this site gets the
- * chevron here, or → elsewhere — even when it is another section's anchor.
- *
- * A11y: a real link with its label as the accessible name; the glyph is
- * decorative (`aria-hidden`) so it is never announced. Colour is not the only
- * signal — the chevron and the bolder weight distinguish it from body copy, and
- * focus uses the global focus ring. External links carry `rel="noopener
- * noreferrer"` and the arrow glyph is the conventional "opens a new tab" cue.
- *
- * Performance: no prefetch (`prefetch={false}`), the rule for every link
- * outside the primary nav, which prefetches on intent. A viewport prefetch
- * downloads the destination's payload and preloads its stylesheet, and Chrome
- * warns when that stylesheet goes unused for a few seconds — and the site ships
- * with zero console warnings (spec/ENGINEERING.md §2).
- *
- * Motion: directional icons share the control rules in globals.css. Movement
- * only exists when reduced motion is not requested; underline and focus feedback
- * remain visible in the still presentation.
+ * Props: `href`, `tone` (`accent` | `quiet`), `external`, `className`
+ * (layout only), `children`.
+ * A11y: a real link whose label is its name; the caret is decorative.
  */
-const TONE: Record<"accent" | "quiet", string> = {
-  accent: "text-accent hover:text-accent-hover focus-visible:text-accent-hover",
-  quiet: "text-ink-secondary hover:text-ink focus-visible:text-ink",
-};
-
 export function TextLink({
   href,
   tone = "accent",
   external = false,
-  className = "",
+  className,
   children,
 }: {
   href: string;
@@ -60,33 +24,9 @@ export function TextLink({
   className?: string;
   children: ReactNode;
 }) {
-  // `w-fit` is load-bearing, not decoration. A flex item is blockified, so
-  // `inline-flex` computes to `flex` and the default `align-items: stretch`
-  // makes the link fill the cross axis — inside a COLUMN flex parent
-  // (SectionHeading's left-aligned stack, the measured strip below `sm`) the hit
-  // area silently spanned the whole 62ch column. `w-fit` pins it to its content
-  // and is a no-op in row-flex and block contexts, where the link already
-  // shrink-wraps.
-  const classes = `text-link-control inline-flex min-h-11 w-fit items-center gap-1 text-sm font-medium transition-colors duration-fast ease-[var(--ease-out)] ${TONE[tone]} ${className}`;
-  const Glyph = external ? ArrowUpRight : ChevronRight;
-  const body = (
-    <>
-      <span className="link-underline">{children}</span>
-      <Glyph
-        size={14}
-        strokeWidth={2.25}
-        aria-hidden
-      />
-    </>
-  );
-
-  return external ? (
-    <a href={href} target="_blank" rel="noopener noreferrer" className={classes}>
-      {body}
-    </a>
-  ) : (
-    <Link href={href} prefetch={false} className={classes}>
-      {body}
-    </Link>
+  return (
+    <CaretLink href={href} tone={tone === "accent" ? "ink" : "muted"} newTab={external} className={className}>
+      {children}
+    </CaretLink>
   );
 }

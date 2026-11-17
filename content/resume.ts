@@ -136,7 +136,7 @@ export const resume = {
     method: "method",
   },
   summary:
-    "Applied AI Engineer with 3+ years in software engineering and a production-AI focus since 2024. I build LLM applications, agentic and RAG systems, predictive ML, and healthcare automation across FastAPI, Next.js, PostgreSQL, and Docker. Four public AI projects document my work in authentication, CI/CD, validation, and task-level evaluation.",
+    "Applied AI Engineer with 3.5+ years in software engineering and a production-AI focus since 2024. I build LLM applications, agentic and RAG systems, predictive ML, and healthcare automation across FastAPI, Next.js, PostgreSQL, and Docker. Four public AI projects document my work in authentication, CI/CD, validation, and task-level evaluation.",
   skills: [
     { group: "Languages", items: "Python, JavaScript / TypeScript, SQL" },
     { group: "GenAI / LLM", items: "LangChain, LangGraph, RAG, pgvector, prompt engineering, agents, multi-provider routing (Gemini, GPT, Claude, Groq)" },
