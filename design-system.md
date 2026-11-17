@@ -245,8 +245,8 @@ marked *client*.
   does not scroll, under a light scrim (`--scrim`) that also dims the launcher, and
   the pill turns solid. Focus moves to the first link and Tab cycles within the
   dialog; Escape or a tap on the scrim closes it, with focus back on the button.
-- `WorkSubnav({ current })` — the switcher bar under the nav on every `/work/[slug]`
-  case study, flagship and public, rendered first; items from `WORK_ITEMS`.
+- `WorkSubnav({ current })` — the switcher bar under the nav on every case study,
+  flagship and public, rendered first; items from `WORK_ITEMS`.
 - The **announcement bar** (home only) with the availability line (`STATUS.text`): an
   `<aside aria-label="Announcement">`, so its content sits in a landmark.
 - The **five-column footer** with the fading dotted texture (`--chrome-dots`). Its

@@ -1,14 +1,10 @@
 import { notFound } from "next/navigation";
 import { renderOg, OG_SIZE, OG_CONTENT_TYPE } from "@/lib/og";
-import { SITE } from "@/config/site";
-import { flagshipBySlug, flagships } from "@/content/flagship";
+import { CASE_STUDY_CARD_ALT } from "@/components/work/case-study-card";
 import { projects, projectBySlug } from "@/content/projects";
 import { PROJECT_STATUS_LABEL } from "@/content/article";
 
-// One alt for every case-study card: `alt` is a static export, and a per-page
-// alt (generateImageMetadata) would move each card to …/opengraph-image/<id>.
-// So it describes what every card prints rather than naming one project.
-export const alt = `Case study card from ${SITE.name}'s portfolio: the product's name, what kind of case study it is, and what it is in one line`;
+export const alt = CASE_STUDY_CARD_ALT;
 export const size = OG_SIZE;
 export const contentType = OG_CONTENT_TYPE;
 
@@ -18,23 +14,13 @@ export const contentType = OG_CONTENT_TYPE;
  */
 export const dynamicParams = false;
 
-/** One OG image per case study, flagship and public (static, at build time). */
+/** One OG image per public case study (static, at build time); the flagships draw their own. */
 export function generateStaticParams() {
-  return [...flagships.map((f) => ({ slug: f.slug })), ...projects.map((p) => ({ slug: p.slug }))];
+  return projects.map((p) => ({ slug: p.slug }));
 }
 
 export default async function Image({ params }: { params: Promise<{ slug: string }> }) {
   const { slug } = await params;
-  // A flagship's card names the product and where it was built; its line is
-  // the product's one-line definition, the same one its card on / and /work shows.
-  const flagship = flagshipBySlug(slug);
-  if (flagship) {
-    return renderOg({
-      kicker: "Flagship case study · Sevina Technologies",
-      title: flagship.name,
-      description: flagship.definition,
-    });
-  }
   const p = projectBySlug(slug);
   // Checked here as well as by `dynamicParams`, which metadata image routes have
   // ignored before (webpack builds below 16.3.8, GHSA-f87g-xv8r-7p7x).

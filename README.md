@@ -134,7 +134,7 @@ quotes a figure that disagrees with `content/evals.ts`.
 | Route | Page |
 | --- | --- |
 | `/` | Home |
-| `/work`, `/work/[slug]` | The work overview, the two flagship case studies (`/work/bench-discovery`, `/work/careltc`) and the four public case studies (DBWhisper, TradePulse, CrownWager, LLM Studio). The old field-report URLs, `/work/field/records-triage` and `/work/field/nfc-room-rounds`, redirect (308) to the flagships |
+| `/work`, `/work/bench-discovery`, `/work/careltc`, `/work/[slug]` | The work overview, the two flagship case studies (static routes of their own) and the four public case studies (DBWhisper, TradePulse, CrownWager, LLM Studio; `/work/[slug]`). The old field-report URLs, `/work/field/records-triage` and `/work/field/nfc-room-rounds`, redirect (308) to the flagships |
 | `/evals` | The evaluation registry |
 | `/writing`, `/writing/[slug]`, `/notes`, `/notes/[slug]` | Essays, guides and notes; `/notes` is the writing index with Notes selected |
 | `/about`, `/hire`, `/contact` | About, the careers-style hire page, and the contact funnel |

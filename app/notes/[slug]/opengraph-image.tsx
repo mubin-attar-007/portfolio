@@ -4,7 +4,7 @@ import { SITE } from "@/config/site";
 import { ARTICLE_KICKER } from "@/content/article";
 import { routableNoteSlugs, loadNote } from "@/lib/notes";
 
-// One alt for every note card (see app/work/[slug]/opengraph-image.tsx).
+// One alt for every note card (see CASE_STUDY_CARD_ALT, components/work/case-study-card.tsx).
 export const alt = `Note card from ${SITE.name}'s portfolio: the note's title, month and reading time`;
 export const size = OG_SIZE;
 export const contentType = OG_CONTENT_TYPE;

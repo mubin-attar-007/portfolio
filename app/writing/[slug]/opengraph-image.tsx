@@ -4,7 +4,7 @@ import { SITE } from "@/config/site";
 import { ARTICLE_KICKER } from "@/content/article";
 import { routableWritingSlugs, loadWriting } from "@/lib/writing";
 
-// One alt for every writing card (see app/work/[slug]/opengraph-image.tsx).
+// One alt for every writing card (see CASE_STUDY_CARD_ALT, components/work/case-study-card.tsx).
 export const alt = `Writing card from ${SITE.name}'s portfolio: the article's kind, title, month and reading time`;
 export const size = OG_SIZE;
 export const contentType = OG_CONTENT_TYPE;
