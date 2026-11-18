@@ -59,6 +59,8 @@ export function WallMotion({ labels, children }: { labels: { pause: string; play
       <div
         ref={wall}
         className={styles.wall}
+        // Phones and reduced motion show two cards a column; the rest are under "All writing".
+        data-curtailed=""
         data-paused={paused ? "" : undefined}
         onPointerEnter={() => setHovered(true)}
         onPointerLeave={() => setHovered(false)}

@@ -179,12 +179,15 @@ const running = (locator, subtree = false) => locator.evaluate((element, deep) =
  * Text in <main> that is not visible at rest. Not waiting for an observer: a
  * tab's inactive panel (one click away), and the facts strip's resting fact
  * (`data-shown="false"`), the other half of a swap, read by assistive tech
- * all along and shown in turn, and at once under reduced motion.
+ * all along and shown in turn, and at once under reduced motion. Nor a
+ * loop's `aria-hidden` duplicate set, nor the cards a curtailed list leaves
+ * out on a phone (`data-curtailed`: the writing wall's two a column, the
+ * rest a tap away under "All writing"): those are not shown, not waiting.
  */
 async function hiddenText(page) {
   return page.evaluate(() => Array.from(document.querySelector("main")
     .querySelectorAll("h1,h2,h3,h4,p,pre,figcaption,blockquote,li,dt,dd"))
-    .filter((element) => !element.closest(".sr-only, [role='tabpanel'][hidden], [data-shown='false']"))
+    .filter((element) => !element.closest(".sr-only, [role='tabpanel'][hidden], [data-shown='false'], [aria-hidden='true'], [data-curtailed] li"))
     .filter((element) => {
       for (let node = element; node && node !== document.body; node = node.parentElement) {
         const style = getComputedStyle(node);
