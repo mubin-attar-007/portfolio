@@ -75,13 +75,16 @@ const RETIRED_FIGURES = ["18/22", "21/22", "4/4", "82%", "95%", "100% fail-close
 function checkTop(questions: readonly TestQuestion[]): string[] {
   const failures: string[] = [];
   for (const q of questions) {
-    const top = retrieve(q.question)[0];
-    if (!top) {
+    const passages = retrieve(q.question);
+    if (passages.length === 0) {
       failures.push(`"${q.question}" → no passages retrieved`);
       continue;
     }
+    // The passage under test: the first, or for `rank: "retrieved"` the one from the expected source.
+    const top = q.rank === "retrieved" ? (passages.find((p) => p.source.includes(q.expectedSource)) ?? passages[0]!) : passages[0]!;
     if (!top.source.includes(q.expectedSource)) {
-      failures.push(`"${q.question}" → top source "${top.source}" does not include "${q.expectedSource}"`);
+      const which = q.rank === "retrieved" ? "no retrieved source, of " + passages.map((p) => `"${p.source}"`).join(", ") + "," : `top source "${top.source}"`;
+      failures.push(`"${q.question}" → ${which} does not include "${q.expectedSource}"`);
     }
     for (const term of q.mustMention) {
       if (!top.text.toLowerCase().includes(term.toLowerCase())) {

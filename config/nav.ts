@@ -64,7 +64,7 @@ const PUBLIC_WORK_COPY = {
 const FLAGSHIP_COPY = {
   "bench-discovery": { description: "Document review and verified redaction, web and desktop", icon: "folder-search" },
   careltc: { description: "NFC room rounds for long-term care, iOS and Android", icon: "nfc" },
-  signflow: { description: "E-signatures: single-use links, PKI-signed PDFs", icon: "signature" },
+  signflow: { description: "E-signatures: signing order, PAdES-sealed PDFs", icon: "signature" },
 } as const satisfies Record<FlagshipSlug, { description: string; icon: NavIconName }>;
 
 export type PublicWorkSlug = keyof typeof PUBLIC_WORK_COPY;

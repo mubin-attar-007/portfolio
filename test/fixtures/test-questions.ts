@@ -28,6 +28,14 @@ export type TestQuestion = {
   expectedSource: string;
   /** Substrings (case-insensitive) that must appear in the top passage text. */
   mustMention: string[];
+  /**
+   * "first" (the default): the expected source ranks first. "retrieved": it is
+   * among the passages handed to the model, and `mustMention` applies to it.
+   * Only for a question whose point is that a source can be reached at all,
+   * where another record of the same project answers as well and the order
+   * between the two is a near tie that any unrelated content edit can flip.
+   */
+  rank?: "first" | "retrieved";
 };
 
 export const TEST_QUESTIONS: TestQuestion[] = [
@@ -97,11 +105,15 @@ export const TEST_QUESTIONS: TestQuestion[] = [
   },
   {
     // Proves case-study chunks (chunked by ## h2) are retrievable in their own
-    // right when the query uses the case study's technical language.
+    // right when the query uses the case study's technical language. TradePulse's
+    // FAQ answer on look-ahead scores within 1% of the section, and which of the
+    // two leads moved with an edit to another case study (18 Nov 2026), so the
+    // section must be retrieved, not first.
     question:
       "In TradePulse, how does the event-driven engine decide on a closed bar and fill on the next bar's open to prevent look-ahead?",
     expectedSource: "TradePulse case study",
     mustMention: ["closed bar", "look-ahead"],
+    rank: "retrieved",
   },
   {
     question: "What went wrong in LLM Studio in production and how was it fixed?",

@@ -188,7 +188,11 @@ and the `card` line for `/` and `/work`. The section anchors are
   each); recordings as WebM (≤ 7.5 MB) with a poster and a WebVTT track whose cues
   match the page's scene list, its text alternative. The test checks that every file
   exists at the pixel size its record declares and that every cue matches its scene;
-  the byte budgets are held by review (ADR-019).
+  the byte budgets are held by review (ADR-019). A capture never shows a claim the
+  site does not make: text an app prints about itself, such as the compliance
+  frameworks SignFlow's compliance page names, is covered in the still as a key or a
+  QR code is, its alt text says so, and a recording ends before such a page rather
+  than show it (`.local/tools/cover-subtitles.mjs` re-covers SignFlow's stills).
 - **Stack.** `stack.groups` (technology by layer) and `stack.aws` (typed `AwsService`
   names, spelled once in `AWS`) feed the Deployment section, the assistant's index and
   the "Used in" evidence on `/skills` and `/uses` (§5). The cards and the `/work`

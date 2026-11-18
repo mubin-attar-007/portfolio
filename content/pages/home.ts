@@ -294,7 +294,7 @@ export const FLAGSHIP = {
     },
     signflow: {
       title: "SignFlow",
-      body: "Documents go out through single-use signing links, and every signed copy is a PDF signed with a PKI certificate and timestamped. I led its design and build.",
+      body: "Documents go out through single-use links in signing order and come back as one PDF, sealed with a PAdES signature and timestamped. I led its design and build.",
       usage: USAGE.signflow.sentence,
       badge: "✓ Signature valid · timestamp valid",
     },

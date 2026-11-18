@@ -12,7 +12,11 @@ platform, joins under every rule below: the approved usage figure word for word
 ("50+ users"), the owner's credit sentence, captures and a recording of the real app on
 dummy data (run locally from a private copy), curated code excerpts, no production
 repository, URL or client name. Its record tells no incident, because none is on
-record, and the page shows no "What broke" section rather than invent one.
+record, and the page shows no "What broke" section rather than invent one. Its claims
+are what two local runs of the private copy verified after the repository's fixes of
+the same day, each written test-first (the live product carries the same fixes, the
+owner reports): PAdES B-T seals, signing order, one sealed final document, the audit
+chain, the integrity check and retention by document type.
 
 ## Context
 
