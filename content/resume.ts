@@ -198,7 +198,8 @@ export const resume = {
         "Built the web platform's RAG assistant (Claude, pgvector): grounded answers cite the page, row or paragraph and every quote is verified; a person confirms each action; a spend cap gates every call.",
         `Lead engineer for CareLTC (${USAGE.careltc.short}), NFC room rounds for long-term care: iOS and Android apps (React Native), a NestJS API on AWS and an admin portal, working directly with care staff and admins.`,
         "Made check-ins require a physical NFC tap, built the alerting pipeline (grouped push, reminders, escalation) and shipped App Store and Google Play releases, keeping older builds working.",
-        "Built clinical-data pipelines into SQL Server, AI decision support for CMS MDS assessments (HIPPS/PDPM), LLM document assistants with RAG and model routing, and a FastAPI eligibility service.",
+        "Lead the AI team: EHR automation (45 Playwright tasks on AWS Lambda; I built its Word clinical reports) and an in-house e-signature platform with PAdES-signed PDFs and a hash-chained audit log.",
+        "Built SQL Server clinical pipelines, MDS decision support (HIPPS/PDPM) and LLM document tools.",
       ],
     },
     {
@@ -207,7 +208,7 @@ export const resume = {
       period: "2022 – 2024",
       place: "Pune",
       points: [
-        "Delivered a hospital management system and e-commerce platforms in Python, Django and DRF: REST APIs, third-party integrations and Bootstrap frontends, with cross-functional requirements, design and testing.",
+        "Built a hospital management system and e-commerce platforms in Python, Django and DRF REST APIs.",
       ],
     },
   ],
