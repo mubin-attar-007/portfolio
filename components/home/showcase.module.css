@@ -12,7 +12,7 @@
 .tabs {
   position: relative;
   display: grid;
-  grid-template-columns: repeat(4, minmax(0, 1fr));
+  grid-template-columns: repeat(5, minmax(0, 1fr));
   gap: 4px;
   padding: 4px;
   border-bottom: 1px solid var(--color-border);
@@ -184,20 +184,6 @@
   font-size: 0.8125rem;
   color: var(--color-ink-secondary);
 }
-.mockButton {
-  display: block;
-  margin-top: 16px;
-  padding: 10px;
-  border-radius: 9px;
-  text-align: center;
-  font-size: 0.875rem;
-  font-weight: 600;
-  color: #fff;
-  background: linear-gradient(#3a3a42, #232328);
-  box-shadow:
-    inset 0 1px 0 rgba(255, 255, 255, 0.12),
-    0 1px 2px rgba(0, 0, 0, 0.2);
-}
 .focusFoot {
   padding: 12px;
   border-top: 1px solid var(--color-border);
@@ -221,21 +207,45 @@
   background: var(--color-bg);
   white-space: pre-wrap;
   font-family: var(--font-mono);
-  font-size: 0.78125rem;
+  font-size: 0.75rem;
   line-height: 1.6;
   color: var(--color-ink);
 }
+/* The validator's checks, in the order they run: the state is in words, and
+   the icon's colour only repeats it. */
 .checks li {
   display: flex;
   align-items: center;
   gap: 8px;
-  padding: 6px 0;
-  font-size: 0.84375rem;
+  padding: 5px 0;
+  font-size: 0.8125rem;
+  color: var(--color-ink);
 }
-.checks li::before {
-  content: "✓";
-  font-weight: 700;
+.checks li + li {
+  border-top: 1px solid var(--color-border);
+}
+.checks svg {
+  flex: none;
   color: var(--color-positive);
+}
+.checks [data-state="fail"] svg {
+  color: var(--color-negative);
+}
+.checks [data-state="unknown"],
+.checks [data-state="unknown"] svg {
+  color: var(--color-ink-tertiary);
+}
+.checkResult {
+  margin-left: auto;
+  font-size: 0.75rem;
+  color: var(--color-ink-secondary);
+}
+.checks [data-state="fail"] .checkResult {
+  font-weight: 600;
+  color: var(--color-ink);
+}
+.checks [data-state="unknown"] .checkResult {
+  color: inherit;
 }
 .chatQ {
   width: fit-content;
@@ -287,24 +297,25 @@
 .stageShot {
   position: absolute;
 }
-.bdWeb {
+/* Where a capture sits on the stage, by role: a product's screens reuse them. */
+.mainRight {
   left: 37%;
   top: 56px;
   width: 58%;
 }
-.bdDesktop {
+.sideLeft {
   left: 5%;
   top: 124px;
   width: 52%;
   border-radius: var(--radius-md);
 }
-.careltcPortal {
+.mainLeft {
   left: 6%;
   top: 52px;
   width: 68%;
   border-radius: var(--radius-lg);
 }
-.careltcPhone {
+.phoneRight {
   left: 70%;
   top: 92px;
   width: 21%;
@@ -344,17 +355,17 @@
   .ghost {
     display: none;
   }
-  .bdWeb {
+  .mainRight {
     left: 30%;
     width: 66%;
   }
-  .bdDesktop {
+  .sideLeft {
     width: 60%;
   }
-  .careltcPortal {
+  .mainLeft {
     width: 72%;
   }
-  .careltcPhone {
+  .phoneRight {
     left: 66%;
     width: 28%;
   }
@@ -363,6 +374,10 @@
   .tabs {
     grid-template-columns: repeat(2, minmax(0, 1fr));
   }
+  /* Five products: the last spans the row instead of sitting alone. */
+  .tab:last-child:nth-child(odd) {
+    grid-column: 1 / -1;
+  }
   .tab {
     justify-content: flex-start;
     font-size: 0.875rem;
@@ -370,30 +385,267 @@
   .stage {
     height: 500px;
   }
-  .bdWeb {
+  .mainRight {
     left: 16%;
     top: 40px;
     width: 82%;
   }
-  .bdDesktop {
+  .sideLeft {
     left: 4%;
     top: 170px;
     width: 76%;
   }
-  .careltcPortal {
+  .mainLeft {
     left: 4%;
     top: 40px;
     width: 88%;
   }
-  .careltcPhone {
+  .phoneRight {
     left: 56%;
     top: 130px;
     width: 40%;
   }
+  /* A card a visitor can try fits the phone stage whichever case is chosen:
+     a tighter card, a smaller hint, and no pictured input box. */
   .focus {
-    top: 24px;
+    top: 16px;
   }
   .focusBody {
-    padding: 22px 20px 18px;
+    padding: 18px 18px 16px;
   }
+  .hint {
+    margin-bottom: 14px;
+    font-size: 0.75rem;
+  }
+  .askInput {
+    display: none;
+  }
+}
+
+/* ---- The screens of a product: pills under the stage (the Clerk component
+   switcher). A dot carries the selection along with weight and a raised
+   ground, never colour alone. The row arrives with its product. ---- */
+.pillBar {
+  display: flex;
+  min-height: 64px;
+  align-items: center;
+  justify-content: center;
+  padding: 14px 16px;
+  border-top: 1px solid var(--color-border);
+}
+.pills {
+  display: inline-flex;
+  flex-wrap: wrap;
+  justify-content: center;
+  gap: 2px;
+  padding: 3px;
+  border-radius: var(--radius-pill);
+  background: var(--color-bg);
+  box-shadow: inset 0 0 0 1px var(--color-border);
+  animation: pills-in var(--motion-slow) var(--spring-soft) both;
+}
+@keyframes pills-in {
+  from {
+    opacity: 0;
+    transform: translateY(4px);
+  }
+}
+.pill {
+  display: inline-flex;
+  height: 30px;
+  align-items: center;
+  gap: 8px;
+  padding: 0 13px;
+  border-radius: var(--radius-pill);
+  font-size: 0.8125rem;
+  font-weight: 500;
+  white-space: nowrap;
+  color: var(--color-ink-secondary);
+  cursor: pointer;
+  transition:
+    color var(--motion-fast) var(--ease-out),
+    background-color var(--motion-base) var(--ease-out),
+    box-shadow var(--motion-base) var(--ease-out);
+}
+.pill::before {
+  content: "";
+  flex: none;
+  width: 6px;
+  height: 6px;
+  border-radius: 50%;
+  border: 1.5px solid var(--color-border-strong);
+  transition:
+    border-color var(--motion-base) var(--ease-out),
+    background-color var(--motion-base) var(--ease-out),
+    transform var(--motion-slow) var(--spring);
+}
+.pill:hover {
+  color: var(--color-ink);
+}
+.pill[aria-selected="true"] {
+  font-weight: 600;
+  color: var(--color-ink);
+  background: var(--color-surface);
+  box-shadow:
+    0 0 0 1px rgba(19, 19, 22, 0.06),
+    0 1px 3px rgba(19, 19, 22, 0.1);
+}
+.pill[aria-selected="true"]::before {
+  border-color: var(--color-accent);
+  background: var(--color-accent);
+  transform: scale(1.15);
+}
+
+/* ---- The illustrated screens you can try: choose a case, the card answers.
+   The cases are native radio buttons (the arrow keys move and check); the
+   checked one takes the accent ground, with accent-hover text for contrast. ---- */
+.choices {
+  display: flex;
+  min-width: 0;
+  flex-wrap: wrap;
+  justify-content: center;
+  gap: 6px;
+  margin: -6px 0 14px;
+  padding: 0;
+  border: 0;
+}
+.choice {
+  position: relative;
+  cursor: pointer;
+}
+.choice input {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  overflow: hidden;
+  clip-path: inset(50%);
+  white-space: nowrap;
+}
+.choice span {
+  display: block;
+  padding: 4px 10px;
+  border: 1px solid var(--color-border-strong);
+  border-radius: var(--radius-pill);
+  background: var(--color-surface);
+  font-size: 0.75rem;
+  font-weight: 500;
+  color: var(--color-ink-secondary);
+  transition:
+    color var(--motion-fast) var(--ease-out),
+    border-color var(--motion-fast) var(--ease-out),
+    background-color var(--motion-fast) var(--ease-out);
+}
+.choice:hover span {
+  border-color: var(--color-ink-tertiary);
+  color: var(--color-ink);
+}
+.choice input:checked + span {
+  border-color: var(--color-accent);
+  background: var(--color-accent-soft);
+  color: var(--color-accent-hover);
+}
+.choice input:focus-visible + span {
+  outline: 2px solid var(--color-accent);
+  outline-offset: 2px;
+}
+/* Three cases share one row down to 360px (after the rules above, so it wins). */
+@media (max-width: 640px) {
+  .choices {
+    gap: 4px;
+  }
+  .choice span {
+    padding: 4px 7px;
+  }
+}
+/* After a choice, what it changed re-draws as a short rise (never on load, so
+   a card arriving with its screen moves once). */
+.answer[data-changed],
+.sql[data-changed] {
+  animation: answer-in var(--motion-slow) var(--spring-soft) both;
+}
+@keyframes answer-in {
+  from {
+    opacity: 0;
+    transform: translateY(6px);
+  }
+}
+.context {
+  margin: 0 0 6px;
+  font-size: 0.75rem;
+  line-height: 1.5;
+  color: var(--color-ink-secondary);
+}
+/* The verdict: the words carry it; the icon's colour repeats it. */
+.verdict {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin-top: 8px;
+  padding: 8px 12px;
+  border-radius: 9px;
+  background: var(--color-bg);
+  font-size: 0.8125rem;
+  font-weight: 600;
+  color: var(--color-ink);
+}
+.verdict svg {
+  flex: none;
+}
+.verdict[data-outcome="eligible"] {
+  box-shadow: inset 0 0 0 1px color-mix(in srgb, var(--color-positive) 28%, transparent);
+}
+.verdict[data-outcome="eligible"] svg {
+  color: var(--color-positive);
+}
+.verdict[data-outcome="refused"] {
+  box-shadow: inset 0 0 0 1px color-mix(in srgb, var(--color-negative) 28%, transparent);
+}
+.verdict[data-outcome="refused"] svg {
+  color: var(--color-negative);
+}
+.tableNote {
+  margin-top: 8px;
+  text-align: right;
+  font-size: 0.75rem;
+  color: var(--color-ink-secondary);
+}
+.resultTable {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 0.8125rem;
+}
+.resultTable th,
+.resultTable td {
+  padding: 6px 8px;
+  border-bottom: 1px solid var(--color-border);
+  text-align: left;
+}
+.resultTable th {
+  font-weight: 600;
+  color: var(--color-ink-secondary);
+}
+.resultTable td:last-child,
+.resultTable th:last-child {
+  text-align: right;
+  font-variant-numeric: tabular-nums;
+}
+.mockLinks {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  margin-top: 10px;
+}
+.mockLinks span {
+  padding: 4px 10px;
+  white-space: nowrap;
+  border-radius: var(--radius-pill);
+  background: var(--color-ink);
+  font-size: 0.75rem;
+  font-weight: 600;
+  color: #fff;
+}
+.mockLinks span + span {
+  background: var(--color-surface);
+  color: var(--color-ink);
+  box-shadow: inset 0 0 0 1px var(--color-border-strong);
 }

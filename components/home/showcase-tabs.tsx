@@ -3,7 +3,13 @@
 import { useCallback, useEffect, useLayoutEffect, useRef, useState, type KeyboardEvent, type ReactNode } from "react";
 import styles from "./showcase.module.css";
 
-export type ShowcaseItem = { id: string; label: string; panel: ReactNode };
+/** One screen of a product: a pill under the stage names it. */
+export type ShowcaseView = { id: string; label: string; panel: ReactNode };
+/**
+ * One product: a tab above the stage, its screens (one or more), and an
+ * optional backdrop that stays put behind them while its screens change.
+ */
+export type ShowcaseItem = { id: string; label: string; views: readonly ShowcaseView[]; backdrop?: ReactNode };
 
 /** Arriving panel: rises out of a short blur on the soft spring. */
 const ENTER: Keyframe[] = [
@@ -33,20 +39,43 @@ function sweep(panel: HTMLElement | null) {
   card.classList.add(styles.sheen!);
 }
 
+/** Roving-tabindex keys: ←/→ (and Home/End) move and select, wrapping. */
+function nextIndex(key: string, index: number, count: number): number | null {
+  const last = count - 1;
+  if (key === "ArrowRight") return index === last ? 0 : index + 1;
+  if (key === "ArrowLeft") return index === 0 ? last : index - 1;
+  if (key === "Home") return 0;
+  if (key === "End") return last;
+  return null;
+}
+
 /**
- * ShowcaseTabs — ARIA tabs over a fixed-height stage (no layout shift). One
- * pill springs between the tabs; panels crossfade through a short blur and a
- * sheen crosses the arriving card. Roving tabindex: Tab enters the selected
- * tab, ←/→ (and Home/End) move and select. Reduced motion: instant.
+ * ShowcaseTabs — ARIA tabs over a fixed-height stage (no layout shift), two
+ * levels deep as on the Clerk home page: a tab per product above the stage,
+ * and under it a row of pills, one per screen of the selected product. One
+ * pill springs between the product tabs; screens crossfade through a short
+ * blur and a sheen crosses the arriving card, whichever level changed. Roving
+ * tabindex in each row: Tab enters the selected tab, ←/→ (and Home/End) move
+ * and select. Each product remembers the screen it was left on. Reduced
+ * motion: instant.
  */
 export function ShowcaseTabs({ label, items }: { label: string; items: readonly ShowcaseItem[] }) {
   const [selected, setSelected] = useState(0);
-  const [leaving, setLeaving] = useState<number | null>(null);
+  const [views, setViews] = useState<Record<string, number>>({});
+  const [leaving, setLeaving] = useState<string | null>(null);
   const tabRefs = useRef<(HTMLButtonElement | null)[]>([]);
-  const panelRefs = useRef<(HTMLDivElement | null)[]>([]);
+  const pillRefs = useRef<(HTMLButtonElement | null)[]>([]);
+  /** Each product's panel, by product id; each screen's panel, by "product:screen". */
+  const itemRefs = useRef<Record<string, HTMLDivElement | null>>({});
+  const panelRefs = useRef<Record<string, HTMLDivElement | null>>({});
   const indicator = useRef<HTMLSpanElement>(null);
   const tablist = useRef<HTMLDivElement>(null);
+
+  const item = items[selected]!;
+  const viewIndex = Math.min(views[item.id] ?? 0, item.views.length - 1);
+  const shownKey = `${item.id}:${item.views[viewIndex]!.id}`;
   const previous = useRef(selected);
+  const previousKey = useRef(shownKey);
 
   const place = useCallback((index: number, animate: boolean) => {
     const tab = tabRefs.current[index];
@@ -65,29 +94,37 @@ export function ShowcaseTabs({ label, items }: { label: string; items: readonly 
     const onResize = () => place(previous.current, false);
     window.addEventListener("resize", onResize);
     void document.fonts?.ready.then(onResize);
-    const first = window.setTimeout(() => sweep(panelRefs.current[0] ?? null), FIRST_SHEEN_MS);
+    const first = window.setTimeout(() => sweep(panelRefs.current[previousKey.current] ?? null), FIRST_SHEEN_MS);
     return () => {
       window.removeEventListener("resize", onResize);
       window.clearTimeout(first);
     };
-    // Mount only: later moves are animated by the selection effect below.
+    // Mount only: later moves are animated by the effects below.
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [place]);
 
-  // Animate a change of selection.
+  // The product tab's pill follows the selection.
   useEffect(() => {
-    const from = previous.current;
-    if (from === selected) return;
+    if (previous.current === selected) return;
     previous.current = selected;
-    const still = reducedMotion();
-    place(selected, !still);
-    const inn = panelRefs.current[selected];
-    const out = panelRefs.current[from];
-    if (still || !inn?.animate) return;
+    place(selected, !reducedMotion());
+  }, [selected, place]);
+
+  // Animate a change of screen: a new product moves its whole panel, a new
+  // screen of the same product moves only the screen.
+  useEffect(() => {
+    const from = previousKey.current;
+    if (from === shownKey) return;
+    previousKey.current = shownKey;
+    const fromItem = from.split(":")[0]!;
+    const toItem = shownKey.split(":")[0]!;
+    const sameItem = fromItem === toItem;
+    const inn = sameItem ? panelRefs.current[shownKey] : itemRefs.current[toItem];
+    const out = sameItem ? panelRefs.current[from] : itemRefs.current[fromItem];
+    if (reducedMotion() || !inn?.animate) return;
     inn.getAnimations().forEach((a) => a.cancel());
-    const spring = cssVar(inn, "--spring-soft") || "ease";
-    inn.animate(ENTER, { duration: ENTER_MS, delay: ENTER_DELAY_MS, easing: spring, fill: "backwards" });
-    sweep(inn);
+    inn.animate(ENTER, { duration: ENTER_MS, delay: ENTER_DELAY_MS, easing: cssVar(inn, "--spring-soft") || "ease", fill: "backwards" });
+    sweep(panelRefs.current[shownKey] ?? null);
     if (!out) return;
     out.getAnimations().forEach((a) => a.cancel());
     const leave = out.animate(LEAVE, { duration: LEAVE_MS, easing: cssVar(out, "--ease-out") || "ease-out", fill: "forwards" });
@@ -96,72 +133,136 @@ export function ShowcaseTabs({ label, items }: { label: string; items: readonly 
         setLeaving((current) => (current === from ? null : current));
         leave.cancel();
       })
-      .catch(() => {}); // cancelled: the panel was selected again
-  }, [selected, place]);
+      .catch(() => {}); // cancelled: the screen was selected again
+  }, [shownKey]);
 
-  const select = (index: number, focus = false) => {
-    if (focus) tabRefs.current[index]?.focus();
-    if (index === selected) return;
-    // Keep the old panel on stage while it animates out (never under reduced motion).
-    setLeaving(reducedMotion() ? null : selected);
-    setSelected(index);
+  /** Show a screen: keep the old one on stage while it animates out (never under reduced motion). */
+  const show = (nextSelected: number, nextView: number) => {
+    const nextItem = items[nextSelected]!;
+    const key = `${nextItem.id}:${nextItem.views[nextView]!.id}`;
+    if (key === shownKey) return;
+    setLeaving(reducedMotion() ? null : shownKey);
+    setSelected(nextSelected);
+    setViews((current) => ({ ...current, [nextItem.id]: nextView }));
   };
 
-  const onKeyDown = (event: KeyboardEvent<HTMLButtonElement>, index: number) => {
-    const last = items.length - 1;
-    const next =
-      event.key === "ArrowRight" ? (index === last ? 0 : index + 1)
-      : event.key === "ArrowLeft" ? (index === 0 ? last : index - 1)
-      : event.key === "Home" ? 0
-      : event.key === "End" ? last
-      : null;
+  const selectTab = (index: number, focus = false) => {
+    if (focus) tabRefs.current[index]?.focus();
+    if (index === selected) return;
+    show(index, Math.min(views[items[index]!.id] ?? 0, items[index]!.views.length - 1));
+  };
+  const selectView = (index: number, focus = false) => {
+    if (focus) pillRefs.current[index]?.focus();
+    show(selected, index);
+  };
+
+  const onTabKey = (event: KeyboardEvent<HTMLButtonElement>, index: number) => {
+    const next = nextIndex(event.key, index, items.length);
     if (next === null) return;
     event.preventDefault();
-    select(next, true);
+    selectTab(next, true);
+  };
+  const onPillKey = (event: KeyboardEvent<HTMLButtonElement>, index: number) => {
+    const next = nextIndex(event.key, index, item.views.length);
+    if (next === null) return;
+    event.preventDefault();
+    selectView(next, true);
   };
 
   return (
     <div className={styles.show}>
       <div ref={tablist} className={styles.tabs} role="tablist" aria-label={label}>
         <span ref={indicator} className={styles.indicator} aria-hidden="true" />
-        {items.map((item, i) => (
+        {items.map((entry, i) => (
           <button
-            key={item.id}
+            key={entry.id}
             ref={(el) => {
               tabRefs.current[i] = el;
             }}
             type="button"
             role="tab"
-            id={`showcase-tab-${item.id}`}
+            id={`showcase-tab-${entry.id}`}
             aria-selected={i === selected}
-            aria-controls={`showcase-panel-${item.id}`}
+            aria-controls={`showcase-panel-${entry.id}`}
             tabIndex={i === selected ? 0 : -1}
             className={styles.tab}
-            onClick={() => select(i)}
-            onKeyDown={(e) => onKeyDown(e, i)}
+            onClick={() => selectTab(i)}
+            onKeyDown={(e) => onTabKey(e, i)}
           >
-            {item.label}
+            {entry.label}
           </button>
         ))}
       </div>
       <div className={styles.stage}>
-        {items.map((item, i) => (
-          <div
-            key={item.id}
-            ref={(el) => {
-              panelRefs.current[i] = el;
-            }}
-            id={`showcase-panel-${item.id}`}
-            role="tabpanel"
-            aria-labelledby={`showcase-tab-${item.id}`}
-            tabIndex={0}
-            hidden={i !== selected && i !== leaving}
-            inert={i !== selected}
-            className={styles.panel}
-          >
-            {item.panel}
+        {items.map((entry, i) => {
+          const entryView = Math.min(views[entry.id] ?? 0, entry.views.length - 1);
+          const many = entry.views.length > 1;
+          const entryOnStage = i === selected || leaving?.startsWith(`${entry.id}:`);
+          return (
+            <div
+              key={entry.id}
+              ref={(el) => {
+                itemRefs.current[entry.id] = el;
+              }}
+              id={`showcase-panel-${entry.id}`}
+              role="tabpanel"
+              aria-labelledby={`showcase-tab-${entry.id}`}
+              tabIndex={many ? undefined : 0}
+              hidden={!entryOnStage}
+              inert={i !== selected}
+              className={styles.panel}
+            >
+              {entry.backdrop}
+              {entry.views.map((view, v) => {
+                const key = `${entry.id}:${view.id}`;
+                const current = i === selected && v === entryView;
+                return (
+                  <div
+                    key={view.id}
+                    ref={(el) => {
+                      panelRefs.current[key] = el;
+                    }}
+                    id={many ? `showcase-view-${entry.id}-${view.id}` : undefined}
+                    role={many ? "tabpanel" : undefined}
+                    aria-labelledby={many ? `showcase-pill-${entry.id}-${view.id}` : undefined}
+                    tabIndex={many ? 0 : undefined}
+                    hidden={!(current || key === leaving)}
+                    inert={!current}
+                    className={styles.panel}
+                  >
+                    {view.panel}
+                  </div>
+                );
+              })}
+            </div>
+          );
+        })}
+      </div>
+      {/* The selected product's screens, as Clerk's pills under its stage. */}
+      <div className={styles.pillBar}>
+        {item.views.length > 1 ? (
+          <div key={item.id} className={styles.pills} role="tablist" aria-label={`${item.label}: screens`}>
+            {item.views.map((view, v) => (
+              <button
+                key={view.id}
+                ref={(el) => {
+                  pillRefs.current[v] = el;
+                }}
+                type="button"
+                role="tab"
+                id={`showcase-pill-${item.id}-${view.id}`}
+                aria-selected={v === viewIndex}
+                aria-controls={`showcase-view-${item.id}-${view.id}`}
+                tabIndex={v === viewIndex ? 0 : -1}
+                className={styles.pill}
+                onClick={() => selectView(v)}
+                onKeyDown={(e) => onPillKey(e, v)}
+              >
+                {view.label}
+              </button>
+            ))}
           </div>
-        ))}
+        ) : null}
       </div>
     </div>
   );

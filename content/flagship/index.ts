@@ -1,7 +1,7 @@
 import { benchDiscovery } from "./bench-discovery";
 import { careltc } from "./careltc";
 import { signflow } from "./signflow";
-import type { Flagship, FlagshipSlug } from "./types";
+import type { Flagship, FlagshipSlug, Screenshot } from "./types";
 
 export type { Flagship, FlagshipSlug } from "./types";
 
@@ -19,6 +19,19 @@ export const isFlagshipSlug = (slug: string): slug is FlagshipSlug => flagships.
 
 /** A flagship's page. */
 export const flagshipHref = (slug: FlagshipSlug): string => `/work/${slug}`;
+
+/**
+ * One of a flagship's captures by its file's name ("web-review"), from its hero
+ * pair or its gallery: the home page's showcase places captures by name.
+ * Throws on a name the flagship does not have, so a renamed capture fails the
+ * build instead of leaving a hole on the stage.
+ */
+export function flagshipCapture(flagship: Flagship, name: string): Screenshot {
+  const shots = [flagship.hero.primary, flagship.hero.secondary, ...flagship.gallery.flatMap((tab) => tab.shots)];
+  const shot = shots.find((s) => s.src.endsWith(`/${name}.webp`));
+  if (!shot) throw new Error(`${flagship.slug}: no capture named "${name}"`);
+  return shot;
+}
 
 /** The case study before and after this one, in the site's order of work. */
 export function flagshipNeighbours(slug: FlagshipSlug): { previous: Flagship | null; next: Flagship | null } {

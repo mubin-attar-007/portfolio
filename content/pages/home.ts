@@ -1,8 +1,11 @@
-import { SITE } from "@/config/site";
+import { INTEGRATIONS, SITE } from "@/config/site";
+import { boundaryCases } from "@/content/dbwhisper-boundary";
 import { CROWNWAGER_EVIDENCE, DBWHISPER_EVIDENCE, requireCompleteEval } from "@/content/evals";
 import { flagshipHref } from "@/content/flagship";
-import { EMPLOYER, REAL_APP, USAGE } from "@/content/flagship/shared";
+import { EMPLOYER, USAGE } from "@/content/flagship/shared";
 import { caseStudyPage } from "@/content/pages/work";
+import { ACTION_LABELS } from "@/lib/ai/chat-contract";
+import { GAP_OPENING } from "@/lib/ai/hiring-gaps";
 
 /**
  * Home page copy (`/`). Every sentence the home sections show lives here, once.
@@ -15,6 +18,10 @@ import { caseStudyPage } from "@/content/pages/work";
 const host = SITE.url.replace(/^https?:\/\//, "");
 
 const TRADEPULSE = requireCompleteEval("TradePulse", "Look-ahead canary + parity suite");
+
+/** The boundary case the validator lets through: a generated read query meets the same checks. */
+const ELIGIBLE = boundaryCases.find((c) => c.outcome === "eligible");
+if (!ELIGIBLE) throw new Error("content/dbwhisper-boundary.ts: no eligible case");
 
 /** The flagship case studies (content/flagship). */
 export const FLAGSHIP_PAGES = {
@@ -39,28 +46,201 @@ export const HERO = {
   sub: `Applied AI Engineer. At ${EMPLOYER} I built Bench Discovery (${USAGE["bench-discovery"].sentence}) and lead CareLTC (${USAGE.careltc.short}).`,
 } as const;
 
+/**
+ * The tabbed showcase under the hero (components/home/showcase.tsx): a tab per
+ * product, and under the stage a pill per screen of the chosen product. A
+ * flagship's screens are real captures, named by file, back then front; the
+ * caption says what they show (it names the figure). DBWhisper's and the
+ * assistant's screens are illustrated, and a visitor can try them: every case
+ * is fixed in advance and labelled so, and nothing is sent anywhere.
+ */
 export const SHOWCASE = {
   label: "Showcase",
-  /** The assistant panel's illustrated exchange: a question it is built to answer, and the shape of its answer. */
-  assistant: {
-    question: `What has Mubin built at ${EMPLOYER}?`,
-    answer:
-      "Three products in use: Bench Discovery, document review with cited answers on the web and verified redaction on the PC; CareLTC, NFC room rounds for long-term care; and SignFlow, e-signatures with PKI-signed PDFs.",
-    cites: ["Bench Discovery case study", "CareLTC case study", "SignFlow case study"],
-  },
   sample: "Illustrative sample · synthetic data",
   noQuery: "Illustrative case · no query is sent",
-  realApp: REAL_APP,
+  /** The assistant screens' input, pictured under the answer. */
+  askInput: "Ask a question…",
   tabs: {
     benchDiscovery: "Bench Discovery",
     careltc: "CareLTC",
+    signflow: "SignFlow",
     dbwhisper: "DBWhisper",
     assistant: "Ask my assistant",
   },
-  /** What each flagship panel shows, for the panel's caption. */
-  captions: {
-    benchDiscovery: "The web platform's review queue, and the desktop app after a run",
-    careltc: "The admin portal's live floor status, and a floor phone",
+  views: {
+    benchDiscovery: [
+      {
+        id: "review",
+        label: "Review",
+        caption: "The web platform's review queue, and the desktop app after a run",
+        captures: ["web-review", "desk-run-complete"],
+      },
+      {
+        id: "answers",
+        label: "Citations",
+        caption: "An answer that cites the page it came from, and a Matter's documents with what was read",
+        captures: ["web-ask-citations", "web-documents"],
+      },
+      {
+        id: "desktop",
+        label: "Desktop app",
+        caption: "The desktop app's results with every flag explained, and redactions checked after they were written",
+        captures: ["desk-results", "desk-verified-redaction"],
+      },
+    ],
+    careltc: [
+      {
+        id: "floor",
+        label: "Live floor",
+        caption: "The admin portal's live floor status, and a floor phone's home screen",
+        captures: ["portal-live-status", "mobile-floor-home"],
+      },
+      {
+        id: "missed",
+        label: "Missed",
+        caption: "Missed rounds and their alerts in the portal, and the rounds due now on a floor phone",
+        captures: ["portal-missed-alerts", "mobile-rounds-due"],
+      },
+      {
+        id: "reports",
+        label: "Reports",
+        caption: "Compliance computed on the server, and skipped rounds kept on record on the phone",
+        captures: ["portal-reports", "mobile-skipped-rounds"],
+      },
+    ],
+    signflow: [
+      {
+        id: "envelopes",
+        label: "Envelopes",
+        caption: "The sender's dashboard, and the signer's page opened from an emailed link",
+        captures: ["dashboard", "signing"],
+      },
+      {
+        id: "fields",
+        label: "Fields",
+        caption: "Fields placed on the page for each signer, and an envelope's recipients, each with a role",
+        captures: ["field-placement", "wizard-recipients"],
+      },
+      {
+        id: "signed",
+        label: "Signed PDF",
+        caption: "The signed copies beside the audit trail, and a signed PDF with its audit-trail certificate page",
+        captures: ["audit-trail", "signed-document"],
+      },
+    ],
+    dbwhisper: [
+      { id: "generate", label: "Generate" },
+      { id: "validate", label: "Validate" },
+      { id: "answer", label: "Answer" },
+    ],
+    assistant: [
+      { id: "ask", label: "Ask" },
+      { id: "hiring", label: "Hiring questions" },
+    ],
+  },
+  dbwhisper: {
+    /** Faded context behind every DBWhisper screen (hidden on phones). */
+    backdrop: [
+      { title: "Schema retrieval", rows: [["Dialect", "PostgreSQL"], ["Tables", "Retrieved per question"]] },
+      { title: "Execution", rows: [["Database user", "Read-only"], ["Timeout, row cap", "On"]] },
+    ],
+    generate: {
+      title: "Ask your database",
+      hint: "Pick a question to see its read-only SQL",
+      label: "Questions",
+      cases: [
+        {
+          id: "revenue",
+          label: "Revenue",
+          sql: "SELECT date_trunc('month', created_at) AS month,\n  SUM(amount) AS revenue\nFROM orders GROUP BY 1 ORDER BY 1;",
+        },
+        {
+          id: "customers",
+          label: "Top customers",
+          sql: "SELECT c.name, COUNT(*) AS orders\nFROM customers c JOIN orders o ON o.customer_id = c.id\nGROUP BY c.name ORDER BY orders DESC LIMIT 5;",
+        },
+        {
+          id: "unpaid",
+          label: "Unpaid",
+          sql: "SELECT id, total FROM orders\nWHERE status = 'unpaid'\n  AND created_at >= date_trunc('week', now());",
+        },
+      ],
+      /** What a generated read query meets: the checks of the case study's eligible case, word for word. */
+      checks: ELIGIBLE.checks,
+      verdict: ELIGIBLE.title,
+    },
+    /** The case study's boundary cases (content/dbwhisper-boundary.ts), one passed and two refused. */
+    validate: {
+      title: "The validator decides",
+      hint: "Pick a case: checked before anything runs",
+      label: "Cases",
+      cases: boundaryCases,
+    },
+    answer: {
+      title: "The answer",
+      hint: "“Revenue by month, January to April 2024”",
+      columns: ["Month", "Revenue"],
+      rows: [
+        ["Jan 2024", "$12,480"],
+        ["Feb 2024", "$13,120"],
+        ["Mar 2024", "$15,960"],
+        ["Apr 2024", "$14,210"],
+      ],
+      note: "4 rows · read-only connection",
+    },
+  },
+  /**
+   * The assistant's first screen: questions it is built to answer, and the
+   * shape of its answers. A citation is named as the assistant names it: a case
+   * study by its product, a page by its title (lib/ai/corpus.ts).
+   */
+  ask: {
+    title: "Ask about my work",
+    hint: "Answers from this site, citing their pages",
+    label: "Questions",
+    questions: [
+      {
+        id: "built",
+        label: "What he built",
+        question: `What has Mubin built at ${EMPLOYER}?`,
+        answer:
+          "Three products in use: Bench Discovery, document review with cited answers on the web and verified redaction on the PC; CareLTC, NFC room rounds for long-term care; and SignFlow, e-signatures with PKI-signed PDFs.",
+        cites: ["Bench Discovery", "CareLTC", "SignFlow"],
+      },
+      {
+        id: "roles",
+        label: "Roles",
+        question: "Which roles is he open to?",
+        answer:
+          "Applied AI Engineer roles, full-time, and freelance AI projects: remote, or hybrid and on-site in India, with travel to customer sites.",
+        cites: ["Hiring", "Contact"],
+      },
+      {
+        id: "safe-sql",
+        label: "Safe SQL",
+        question: "How does DBWhisper keep generated SQL safe?",
+        answer:
+          "Every query passes a SELECT-only, single-statement validator against the enrolled tables, then runs on a least-privilege read-only connection.",
+        cites: ["DBWhisper"],
+      },
+    ],
+  },
+  /**
+   * The assistant's second screen: hiring terms the site does not publish. Each
+   * reply is the assistant's own, word for word (lib/ai/hiring-gaps.ts), for the
+   * gap it reads in the question (test/home-showcase.test.mts holds both).
+   */
+  hiring: {
+    title: "Hiring questions",
+    hint: "What the site doesn't say, it never guesses",
+    label: "Questions",
+    questions: [
+      { id: "start", label: "Start date", question: "When could he start?", gap: "start-date", answer: GAP_OPENING["start-date"] },
+      { id: "salary", label: "Salary", question: "What salary does he expect?", gap: "compensation", answer: GAP_OPENING.compensation },
+      { id: "visa", label: "Visa", question: "Would he need visa sponsorship?", gap: "visa", answer: GAP_OPENING.visa },
+    ],
+    /** The actions the assistant offers under a hiring answer (lib/ai/actions.ts). */
+    actions: [ACTION_LABELS.email, ...(INTEGRATIONS.calUrl ? [ACTION_LABELS.book] : []), ACTION_LABELS.contact],
   },
 } as const;
 

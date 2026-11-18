@@ -10,7 +10,7 @@
 // -----------------------------------------------------------------------------
 
 import { INTEGRATIONS, SITE } from "@/config/site";
-import { MAX_ACTIONS, type ActionKind, type AssistantAction, type CitationLink } from "./chat-contract";
+import { ACTION_LABELS, MAX_ACTIONS, type ActionKind, type AssistantAction, type CitationLink } from "./chat-contract";
 import { pagePath } from "./citation-links";
 import type { Intent } from "./intent";
 
@@ -23,11 +23,11 @@ export const RESUME_PDF = "/Mubin_Attar_Resume.pdf";
 
 /** The fixed actions, by kind. A booking link exists only while the site has one. */
 const FIXED: Partial<Record<Exclude<ActionKind, "case-study">, AssistantAction>> = {
-  email: { kind: "email", label: "Email Mubin", href: `mailto:${SITE.email}` },
-  ...(INTEGRATIONS.calUrl ? { book: { kind: "book" as const, label: "Book a call", href: INTEGRATIONS.calUrl } } : {}),
-  contact: { kind: "contact", label: "Contact page", href: "/contact" },
-  "resume-pdf": { kind: "resume-pdf", label: "Download résumé (PDF)", href: RESUME_PDF },
-  resume: { kind: "resume", label: "View résumé", href: "/resume" },
+  email: { kind: "email", label: ACTION_LABELS.email, href: `mailto:${SITE.email}` },
+  ...(INTEGRATIONS.calUrl ? { book: { kind: "book" as const, label: ACTION_LABELS.book, href: INTEGRATIONS.calUrl } } : {}),
+  contact: { kind: "contact", label: ACTION_LABELS.contact, href: "/contact" },
+  "resume-pdf": { kind: "resume-pdf", label: ACTION_LABELS["resume-pdf"], href: RESUME_PDF },
+  resume: { kind: "resume", label: ACTION_LABELS.resume, href: "/resume" },
 };
 
 /** A case study's page: "/work/careltc". */

@@ -392,7 +392,8 @@ async function showcaseContracts(page, label, width) {
     JSON.stringify({ stageBefore, samples }));
   if (width === 1440) {
     // Tab 1 is CareLTC; its panel's front frame carries the sheen ([data-focus]).
-    const sheen = await page.locator("#showcase-panel-careltc [data-focus]").evaluate((card) => ({
+    // The visible screen only: each of CareLTC's screens has a front frame.
+    const sheen = await page.locator("#showcase-panel-careltc [data-focus]:visible").evaluate((card) => ({
       declared: getComputedStyle(card, "::after").animationName,
       running: card.getAnimations({ subtree: true }).filter((x) => x.playState === "running" && x.effect?.pseudoElement === "::after").length,
     }));

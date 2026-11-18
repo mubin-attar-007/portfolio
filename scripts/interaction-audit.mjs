@@ -957,13 +957,15 @@ for (const route of ["/work/bench-discovery", "/work/careltc", "/work/signflow",
 // / and /work) the picture carries at least one.
 const REAL_APP = "Real app · dummy data";
 /**
- * For each capture rendered inside `root`: whether its frame carries the
- * label, and whether that label can be seen (rendered, inside every clipping
- * ancestor, and the first thing that paints at its centre). Transparent layers
- * above it, such as a card's stretched link, do not cover it; a frame, an
- * image or anything with a background does.
+ * Whether labels inside `root` can be seen: rendered, inside every clipping
+ * ancestor, and the first thing that paints at their centre. Transparent
+ * layers above one, such as a card's stretched link, do not cover it; a frame,
+ * an image or anything with a background does. `{ label }`: for each capture
+ * rendered inside `root`, whether its frame carries that label, and whether it
+ * is seen. `{ selector }`: for each rendered element that matches, whether it
+ * is seen.
  */
-const labelState = (root, label) => {
+const labelState = (root, { label, selector }) => {
   const clipped = (box, element) => {
     for (let node = element.parentElement; node && node !== document.body; node = node.parentElement) {
       const style = getComputedStyle(node);
@@ -986,14 +988,25 @@ const labelState = (root, label) => {
     }
     return false;
   };
+  const seen = (tag) => {
+    // Into the viewport by scrolling the page alone: scrollIntoView would also
+    // scroll a clipping box (overflow: hidden still scrolls from script) and
+    // bring out a label no visitor can see.
+    window.scrollBy({ top: tag.getBoundingClientRect().top - window.innerHeight / 2, behavior: "instant" });
+    const box = tag.getBoundingClientRect();
+    return box.width > 0 && !clipped(box, tag) && firstPainted(box, tag);
+  };
+  if (selector) {
+    return Array.from(root.querySelectorAll(selector))
+      .filter((tag) => tag.getClientRects().length > 0)
+      .map((tag) => ({ labelled: true, seen: seen(tag) }));
+  }
   return Array.from(root.querySelectorAll('img[src*="/showcase/"], img[srcset*="%2Fshowcase%2F"]'))
     .filter((img) => img.getClientRects().length > 0 && !img.closest("video, [data-poster]") && !img.hasAttribute("data-poster"))
     .map((img) => {
       const tag = Array.from(img.parentElement?.children ?? []).find((el) => el !== img && el.textContent?.trim() === label);
       if (!tag || tag.getClientRects().length === 0) return { labelled: false, seen: false };
-      tag.scrollIntoView({ block: "center", behavior: "instant" });
-      const box = tag.getBoundingClientRect();
-      return { labelled: true, seen: box.width > 0 && !clipped(box, tag) && firstPainted(box, tag) };
+      return { labelled: true, seen: seen(tag) };
     });
 };
 for (const width of [1440, 390]) {
@@ -1010,7 +1023,7 @@ for (const width of [1440, 390]) {
         for (let i = 0; i < Math.max(1, await items.count()); i++) {
           if (await items.count() > 0) await items.nth(i).click();
           await page.waitForTimeout(400); // the arriving screen's rise
-          const shots = await tour.evaluate(labelState, REAL_APP);
+          const shots = await tour.evaluate(labelState, { label: REAL_APP });
           screens += 1;
           if (shots.length === 0 || shots.some((shot) => !shot.labelled || !shot.seen)) {
             problems.push({ surface: s, screen: i, shots });
@@ -1022,7 +1035,7 @@ for (const width of [1440, 390]) {
     }
 
     const groups = [
-      { route: "/", within: '[role="tabpanel"]', name: "the home showcase's flagship panels", tabs: ["bench-discovery", "careltc"] },
+      { route: "/", within: '[role="tabpanel"]', name: "the home showcase's flagship screens", tabs: ["bench-discovery", "careltc", "signflow"] },
       { route: "/", within: "#flagship article", name: "the home flagship cards" },
       { route: "/work", within: "#flagship article", name: "the /work flagship cards" },
     ];
@@ -1033,18 +1046,54 @@ for (const width of [1440, 390]) {
         for (const id of group.tabs) {
           await page.locator(`#showcase-tab-${id}`).click();
           await page.waitForTimeout(700); // the crossfade
-          const shots = await page.locator(`#showcase-panel-${id}`).evaluate(labelState, REAL_APP);
-          results.push({ id, shots: shots.length, seen: shots.filter((shot) => shot.seen).length });
+          // Each of the product's screens, chosen by its pill under the stage.
+          const pills = page.locator(`[id^="showcase-pill-${id}-"]`);
+          const screens = Math.max(1, await pills.count());
+          for (let screen = 0; screen < screens; screen++) {
+            if (await pills.count() > 0) {
+              await pills.nth(screen).click();
+              await page.waitForTimeout(700);
+            }
+            const shots = await page.locator(`#showcase-panel-${id}`).evaluate(labelState, { label: REAL_APP });
+            results.push({ id, screen, shots: shots.length, seen: shots.filter((shot) => shot.seen).length });
+          }
         }
       } else {
         for (const card of await page.locator(group.within).all()) {
-          const shots = await card.evaluate(labelState, REAL_APP);
+          const shots = await card.evaluate(labelState, { label: REAL_APP });
           if (shots.length > 0) results.push({ shots: shots.length, seen: shots.filter((shot) => shot.seen).length });
         }
       }
       check(`${group.route} ${width}px: each picture in ${group.name} shows "${REAL_APP}" at least once, unclipped and uncovered`,
         results.length >= 2 && results.every((result) => result.seen >= 1), JSON.stringify(results));
     }
+
+    // The illustrated screens a visitor can try: whichever case is chosen, the
+    // card's foot (it says the screen is illustrative) stays on the stage.
+    await page.goto(`${BASE}/`, { waitUntil: "networkidle" });
+    const cards = [];
+    for (const id of ["dbwhisper", "assistant"]) {
+      await page.locator(`#showcase-tab-${id}`).click();
+      await page.waitForTimeout(700); // the crossfade
+      const pills = page.locator(`[id^="showcase-pill-${id}-"]`);
+      for (let screen = 0; screen < await pills.count(); screen++) {
+        await pills.nth(screen).click();
+        await page.waitForTimeout(700);
+        const view = page.locator(`#showcase-panel-${id} [role="tabpanel"]:not([hidden])`);
+        // A case is chosen as a visitor does: by its visible label (the radio is hidden).
+        const cases = view.locator("fieldset label");
+        for (let index = 0; index < Math.max(1, await cases.count()); index++) {
+          if (await cases.count() > 0) {
+            await cases.nth(index).click();
+            await page.waitForTimeout(450); // the answer's rise
+          }
+          const feet = await view.evaluate(labelState, { selector: "[data-illustrative]" });
+          cards.push({ id, screen, case: index, feet: feet.length, seen: feet.filter((foot) => foot.seen).length });
+        }
+      }
+    }
+    check(`/ ${width}px: every illustrated showcase screen keeps its "illustrative" foot in view, whichever case is chosen`,
+      cards.length >= 5 && cards.every((card) => card.feet === 1 && card.seen === 1), JSON.stringify(cards.filter((card) => card.seen !== 1)));
   });
 }
 

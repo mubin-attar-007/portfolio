@@ -60,6 +60,18 @@ export type CitationLink = { label: string; href: string };
 export type ActionKind = "email" | "book" | "contact" | "resume-pdf" | "resume" | "case-study";
 
 /**
+ * The fixed actions' labels, by kind (a case study's action is named by its
+ * page). lib/ai/actions.ts offers them; the home page's showcase shows them.
+ */
+export const ACTION_LABELS = {
+  email: "Email Mubin",
+  book: "Book a call",
+  contact: "Contact page",
+  "resume-pdf": "Download résumé (PDF)",
+  resume: "View résumé",
+} as const satisfies Record<Exclude<ActionKind, "case-study">, string>;
+
+/**
  * A next step offered under an answer ("Email Mubin", "Open the case study").
  * Chosen by the route from the question's intent and the cited pages, never
  * from model text, and checked again by the panel (lib/ai/actions.ts).

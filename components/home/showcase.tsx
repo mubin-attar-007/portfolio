@@ -1,184 +1,153 @@
 import type { ReactNode } from "react";
 import { ShotFrame } from "@/components/flagship/shot-frame";
+import { cx } from "@/components/ui/cx";
+import { flagshipCapture, type Flagship } from "@/content/flagship";
 import { benchDiscovery } from "@/content/flagship/bench-discovery";
 import { careltc } from "@/content/flagship/careltc";
-import type { Screenshot } from "@/content/flagship/types";
+import { signflow } from "@/content/flagship/signflow";
 import { SHOWCASE } from "@/content/pages/home";
-import { cx } from "@/components/ui/cx";
-import { ShowcaseTabs } from "./showcase-tabs";
+import { AssistantDemo, DbWhisperGenerate, DbWhisperValidate } from "./showcase-demos";
+import { Focus, Ghost } from "./showcase-parts";
+import { ShowcaseTabs, type ShowcaseItem } from "./showcase-tabs";
 import styles from "./showcase.module.css";
 
 /*
- * The first two panels show the flagship products as they really are: real
- * captures of the apps running on dummy data, each frame labelled so. The
- * other two are illustrations of a system's main screen; every value in them
- * is synthetic, and each frame says so in its footer. All render on the
- * server; only the tab switching ships to the browser.
+ * The showcase under the hero. First the three flagships as they really are:
+ * real captures of the apps running on dummy data, two to a screen, each
+ * screen labelled so. Then two systems a visitor can try on illustrated
+ * screens: every case is fixed in advance, and each card says so in its foot.
+ * The captures and the illustrations render on the server; only the switching
+ * and the cases a visitor picks ship to the browser.
  */
 
 /**
- * A capture placed on the stage. `focus` marks the frame the sheen sweeps when
- * the panel arrives (a browser or window frame); `priority` the one capture
- * that is above the fold at load (eager, high priority; the rest are lazy, and
- * a hidden panel loads nothing); `labelAt` moves "Real app · dummy data" to
- * the top of a frame whose foot the stage crops.
+ * One capture's place on a screen. `focus` marks the frame the sheen crosses
+ * when the screen arrives; `label: false` leaves "Real app · dummy data" to
+ * the screen's other frame (exactly one carries it); `labelAt: "top"` lifts it
+ * off a frame whose foot the stage crops.
  */
-function StageShot({
-  shot,
-  product,
-  sizes,
-  className,
-  focus = false,
-  priority = false,
-  label = true,
-  labelAt = "bottom",
-}: {
-  shot: Screenshot;
-  product: string;
-  sizes: string;
-  className?: string;
-  focus?: boolean;
-  priority?: boolean;
-  label?: boolean;
-  labelAt?: "bottom" | "top";
-}) {
-  return (
-    <div className={cx(styles.stageShot, focus && styles.shotFocus, className)} data-focus={focus ? "" : undefined}>
-      <ShotFrame shot={shot} product={product} sizes={sizes} priority={priority} label={label} labelAt={labelAt} />
-    </div>
-  );
+type Layer = { className?: string; sizes: string; focus?: boolean; label?: boolean; labelAt?: "top" | "bottom" };
+/** A screen's two captures, back then front. */
+type Layout = readonly [back: Layer, front: Layer];
+
+/**
+ * A web app's main screen on the right, and a second screen in front of it on
+ * the left. A browser frame in front runs past the stage's foot at some widths,
+ * so its label sits at the top, in the same place on every screen.
+ */
+const OVERLAP: Layout = [
+  { className: styles.mainRight, sizes: "(min-width: 1240px) 700px, 82vw", label: false },
+  { className: styles.sideLeft, sizes: "(min-width: 1240px) 600px, 72vw", focus: true, labelAt: "top" },
+];
+/** The admin portal on the left, and a floor phone in front of it on the right. */
+const PORTAL_AND_PHONE: Layout = [
+  { className: styles.mainLeft, sizes: "(min-width: 1240px) 800px, 88vw", focus: true, labelAt: "top" },
+  { className: styles.phoneRight, sizes: "(min-width: 1240px) 250px, 38vw", label: false },
+];
+
+type CaptureView = { id: string; label: string; caption: string; captures: readonly [back: string, front: string] };
+
+/**
+ * A flagship's tab: a screen per view, its two captures layered on the stage
+ * and the screen named by its caption. `atLoad` marks the tab shown first: the
+ * back capture of its first screen is above the fold (eager, high priority).
+ * Every other capture is lazy, and a hidden screen loads nothing.
+ */
+function flagshipItem(flagship: Flagship, label: string, views: readonly CaptureView[], layout: Layout, atLoad = false): ShowcaseItem {
+  return {
+    id: flagship.slug,
+    label,
+    views: views.map((view, v) => ({
+      id: view.id,
+      label: view.label,
+      panel: (
+        <figure className={styles.realPanel} aria-label={view.caption}>
+          {layout.map((layer, i) => (
+            <div
+              key={view.captures[i]}
+              className={cx(styles.stageShot, layer.focus && styles.shotFocus, layer.className)}
+              data-focus={layer.focus ? "" : undefined}
+            >
+              <ShotFrame
+                shot={flagshipCapture(flagship, view.captures[i]!)}
+                product={flagship.name}
+                sizes={layer.sizes}
+                priority={atLoad && v === 0 && i === 0}
+                label={layer.label ?? true}
+                labelAt={layer.labelAt}
+              />
+            </div>
+          ))}
+        </figure>
+      ),
+    })),
+  };
 }
 
-const BenchDiscoveryPanel = (
-  <figure className={styles.realPanel} aria-label={SHOWCASE.captions.benchDiscovery}>
-    <StageShot
-      shot={benchDiscovery.hero.primary}
-      product={benchDiscovery.name}
-      sizes="(min-width: 1240px) 700px, 82vw"
-      className={styles.bdWeb}
-      priority
-      label={false}
-    />
-    <StageShot
-      shot={benchDiscovery.hero.secondary}
-      product={benchDiscovery.name}
-      sizes="(min-width: 1240px) 600px, 72vw"
-      className={styles.bdDesktop}
-      focus
-    />
-  </figure>
-);
+type ViewId<K extends keyof typeof SHOWCASE.views> = (typeof SHOWCASE.views)[K][number]["id"];
 
-const CareLtcPanel = (
-  <figure className={styles.realPanel} aria-label={SHOWCASE.captions.careltc}>
-    <StageShot
-      shot={careltc.hero.primary}
-      product={careltc.name}
-      sizes="(min-width: 1240px) 800px, 88vw"
-      className={styles.careltcPortal}
-      focus
-      labelAt="top"
-    />
-    <StageShot
-      shot={careltc.hero.secondary}
-      product={careltc.name}
-      sizes="(min-width: 1240px) 250px, 38vw"
-      className={styles.careltcPhone}
-      label={false}
-    />
-  </figure>
-);
+const DB = SHOWCASE.dbwhisper;
 
-type GhostRow = readonly [label: string, value: string];
-
-function Ghost({ title, rows, className }: { title: string; rows: readonly GhostRow[]; className?: string }) {
-  return (
-    <div className={cx(styles.ghost, className)} aria-hidden="true">
-      <b>{title}</b>
-      {rows.map(([label, value]) => (
-        <div key={label} className={styles.ghostRow}>
-          <span>{label}</span>
-          <span>{value}</span>
-        </div>
-      ))}
-    </div>
-  );
-}
-
-function Focus({ title, hint, foot, wide, children }: { title: string; hint: string; foot?: string; wide?: boolean; children: ReactNode }) {
-  return (
-    <div className={cx(styles.focus, wide && styles.wide)} data-focus>
-      <div className={styles.focusBody}>
-        {/* The mock screen's own title: part of the illustration, not a heading
-            of the page (its tab panel is already named by its tab). */}
-        <p className={styles.focusTitle}>{title}</p>
-        <p className={styles.hint}>{hint}</p>
-        {children}
-      </div>
-      {foot ? (
-        <div className={styles.focusFoot}>
-          <span className={styles.sample}>{foot}</span>
-        </div>
-      ) : null}
-    </div>
-  );
-}
-
-/** A non-interactive picture of the panel's primary action. */
-function MockButton({ children }: { children: ReactNode }) {
-  return (
-    <span className={styles.mockButton} aria-hidden="true">
-      {children}
-    </span>
-  );
-}
-
-const DbWhisperPanel = (
-  <>
-    <Ghost title="Schema retrieval" rows={[["Tables matched", "2"], ["Dialect", "Postgres"]]} className={styles.ghostLeft} />
-    <Ghost title="Policy" rows={[["Writes", "denied"], ["Multiple statements", "denied"]]} className={styles.ghostRight} />
-    <Focus title="Ask your database" hint="“Revenue by month, January to April 2024”" foot={SHOWCASE.noQuery}>
-      <pre className={styles.sql}>
-        {"SELECT date_trunc('month', created_at) AS month,\n  SUM(amount) AS revenue\nFROM orders GROUP BY 1 ORDER BY 1;"}
-      </pre>
-      <ul className={styles.checks}>
-        <li>Single statement</li>
-        <li>Read-only</li>
-        <li>Enrolled schema</li>
-      </ul>
-      <MockButton>Run read-only</MockButton>
+/** DBWhisper's screens: the query the agent writes, what the validator decides, and the answer. */
+const DBWHISPER_SCREENS: Record<ViewId<"dbwhisper">, ReactNode> = {
+  generate: <DbWhisperGenerate copy={DB.generate} foot={SHOWCASE.noQuery} />,
+  validate: <DbWhisperValidate copy={DB.validate} foot={SHOWCASE.noQuery} />,
+  answer: (
+    <Focus title={DB.answer.title} hint={DB.answer.hint} foot={SHOWCASE.noQuery} wide>
+      <table className={styles.resultTable}>
+        <thead>
+          <tr>
+            {DB.answer.columns.map((column) => (
+              <th key={column} scope="col">
+                {column}
+              </th>
+            ))}
+          </tr>
+        </thead>
+        <tbody>
+          {DB.answer.rows.map(([month, revenue]) => (
+            <tr key={month}>
+              <td>{month}</td>
+              <td>{revenue}</td>
+            </tr>
+          ))}
+        </tbody>
+      </table>
+      <p className={styles.tableNote}>{DB.answer.note}</p>
     </Focus>
-  </>
-);
+  ),
+};
 
-const AssistantPanel = (
-  <Focus title="Ask about my work" hint="Answers come from this site and cite the page they used" foot={SHOWCASE.sample} wide>
-    <p className={styles.chatQ}>{SHOWCASE.assistant.question}</p>
-    <div className={styles.chatA}>
-      {SHOWCASE.assistant.answer}
-      <div className={styles.cite}>
-        {SHOWCASE.assistant.cites.map((cite) => (
-          <span key={cite}>{cite}</span>
-        ))}
-      </div>
-    </div>
-    <p className={styles.askInput} aria-hidden="true">
-      Ask a question…
-    </p>
-  </Focus>
-);
+/** The assistant's screens: questions it answers from the site, and hiring terms it does not guess. */
+const ASSISTANT_SCREENS: Record<ViewId<"assistant">, ReactNode> = {
+  ask: <AssistantDemo copy={SHOWCASE.ask} placeholder={SHOWCASE.askInput} foot={SHOWCASE.sample} />,
+  hiring: <AssistantDemo copy={SHOWCASE.hiring} placeholder={SHOWCASE.askInput} foot={SHOWCASE.sample} />,
+};
 
-/** The tabbed showcase under the hero: the two flagship products as they really run, then two illustrated screens. */
+const ITEMS: readonly ShowcaseItem[] = [
+  flagshipItem(benchDiscovery, SHOWCASE.tabs.benchDiscovery, SHOWCASE.views.benchDiscovery, OVERLAP, true),
+  flagshipItem(careltc, SHOWCASE.tabs.careltc, SHOWCASE.views.careltc, PORTAL_AND_PHONE),
+  flagshipItem(signflow, SHOWCASE.tabs.signflow, SHOWCASE.views.signflow, OVERLAP),
+  {
+    id: "dbwhisper",
+    label: SHOWCASE.tabs.dbwhisper,
+    // The context stays behind the card while its screens change.
+    backdrop: (
+      <>
+        <Ghost title={DB.backdrop[0].title} rows={DB.backdrop[0].rows} className={styles.ghostLeft} />
+        <Ghost title={DB.backdrop[1].title} rows={DB.backdrop[1].rows} className={styles.ghostRight} />
+      </>
+    ),
+    views: SHOWCASE.views.dbwhisper.map((view) => ({ ...view, panel: DBWHISPER_SCREENS[view.id] })),
+  },
+  {
+    id: "assistant",
+    label: SHOWCASE.tabs.assistant,
+    views: SHOWCASE.views.assistant.map((view) => ({ ...view, panel: ASSISTANT_SCREENS[view.id] })),
+  },
+];
+
+/** The tabbed showcase under the hero: a tab per product, and a pill per screen of the chosen one. */
 export function Showcase() {
-  return (
-    <ShowcaseTabs
-      label={SHOWCASE.label}
-      items={[
-        { id: "bench-discovery", label: SHOWCASE.tabs.benchDiscovery, panel: BenchDiscoveryPanel },
-        { id: "careltc", label: SHOWCASE.tabs.careltc, panel: CareLtcPanel },
-        { id: "dbwhisper", label: SHOWCASE.tabs.dbwhisper, panel: DbWhisperPanel },
-        { id: "assistant", label: SHOWCASE.tabs.assistant, panel: AssistantPanel },
-      ]}
-    />
-  );
+  return <ShowcaseTabs label={SHOWCASE.label} items={ITEMS} />;
 }

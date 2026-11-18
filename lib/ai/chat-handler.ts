@@ -35,7 +35,6 @@
 // export only handlers and segment config.
 // -----------------------------------------------------------------------------
 
-import { STATUS } from "@/config/site";
 import { GEMINI_MODEL } from "@/lib/env";
 import { chooseActions } from "./actions";
 import type { ActionKind, AnswerMode, AnswerNote, AssistantAction, CitationLink, StreamEvent } from "./chat-contract";
@@ -52,7 +51,8 @@ import {
   type StreamOutcome,
 } from "./gemini";
 import { INJECTION_REFUSAL, sanitizeMessages, screenConversation, screenRequest, type ChatMessage } from "./guard";
-import { readIntent, type HiringGap, type Intent } from "./intent";
+import { GAP_OPENING } from "./hiring-gaps";
+import { readIntent, type Intent } from "./intent";
 import { checkRateLimit, clientKeyFromHeaders, reserveLiveAnswer } from "./rate-limit";
 import { backgroundProfile, chooseFallback, passagesById, searchSite, tokenize, type RetrievedPassage } from "./retrieval";
 import { ROUTER_TIMEOUT_MS, routeWithGemini, type RouteResult, type Router } from "./router";
@@ -99,18 +99,6 @@ const TOO_LONG = "That message is a bit long for me — could you trim it to the
 const NOT_COVERED =
   "I couldn't find that on Mubin's site. I answer only from its pages — his case studies, writing, " +
   "evaluations, résumé and hiring details — and link the page each answer comes from.";
-
-/**
- * How a hiring question the site does not cover is answered: what is missing,
- * then what the site says. A start date is not published, but his notice
- * period is, so that answer leads with it.
- */
-const GAP_OPENING: Readonly<Record<HiringGap, string>> = {
-  compensation: "Salary and rates aren't on the site, so ask Mubin directly.",
-  relocation: "Relocation isn't covered on the site, so ask Mubin directly.",
-  "start-date": `His notice period is ${STATUS.noticePeriod}; for a specific start date, ask Mubin directly.`,
-  visa: "Visa and sponsorship details aren't on the site, so ask Mubin directly.",
-};
 
 /** A contact or hiring question the site has no page for. */
 const CONTACT_GAP = "That isn't on the site — ask Mubin directly.";

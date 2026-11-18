@@ -139,8 +139,9 @@ recordings under `public/showcase/<slug>/`; its menu line in `config/nav.ts`
   `lib/use-inert-background.ts`, and the openers `components/contact/assistant-opener.tsx`,
   `components/home/agent-actions.tsx` and `components/writing/ask-assistant-button.tsx`.
 - Primitives: `components/ui/sticky-steps.tsx`, `components/ui/toc.tsx`.
-- Homepage: `components/home/showcase-tabs.tsx`, `components/home/prompt-chip.tsx`,
-  `components/home/use-copy-prompt.ts`.
+- Homepage: `components/home/showcase-tabs.tsx`, `components/home/showcase-demos.tsx`
+  (the illustrated screens a visitor can try; their copy arrives as props),
+  `components/home/prompt-chip.tsx`, `components/home/use-copy-prompt.ts`.
 - Case studies: `components/case-studies/boundary-inspector.tsx`,
   `components/case-studies/walkthrough.tsx`, `components/case-studies/reading-outline.tsx`,
   `components/diagrams/system-diagram.tsx`, `components/work/demo-player.tsx`,
