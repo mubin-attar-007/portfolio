@@ -16,6 +16,7 @@ import { MAX_FOLLOW_UPS } from "./chat-contract";
 export type FollowUpTopic =
   | "bench-discovery"
   | "careltc"
+  | "signflow"
   | "dbwhisper"
   | "tradepulse"
   | "crownwager"
@@ -40,6 +41,12 @@ export const FOLLOW_UPS: Readonly<Record<FollowUpTopic, readonly string[]>> = {
     "What broke in CareLTC, and what changed?",
     "How many people use CareLTC?",
     "Which AWS services does CareLTC run on?",
+  ],
+  signflow: [
+    "How does SignFlow prove a signed PDF was not changed?",
+    "How do SignFlow's signing links work?",
+    "How many people use SignFlow?",
+    "How does SignFlow keep patient details encrypted?",
   ],
   dbwhisper: [
     "How does DBWhisper keep generated SQL safe?",

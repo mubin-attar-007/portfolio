@@ -1,7 +1,7 @@
 /**
  * The flagship template's generic labels: section titles, column heads and
  * actions. No product facts live here (those are in the product modules), so
- * the two case studies share one template and one vocabulary.
+ * the three case studies share one template and one vocabulary.
  */
 export const FLAGSHIP_LABELS = {
   kicker: "Flagship case study",

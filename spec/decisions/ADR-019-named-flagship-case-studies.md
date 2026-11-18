@@ -6,6 +6,14 @@ decision 7), as its dated amendment records. `spec/CONTENT_MODEL.md` §1.5 speci
 the content model this record chooses; design-system.md §7.1 the page and §7.2 the
 content law.
 
+**Amended 18 November 2026: a third flagship, SignFlow.** The owner reports the
+employer's permission for "all things", and SignFlow, Sevina's in-house e-signature
+platform, joins under every rule below: the approved usage figure word for word
+("50+ users"), the owner's credit sentence, captures and a recording of the real app on
+dummy data (run locally from a private copy), curated code excerpts, no production
+repository, URL or client name. Its record tells no incident, because none is on
+record, and the page shows no "What broke" section rather than invent one.
+
 ## Context
 
 Bench Discovery and CareLTC are the strongest production work on the site: two

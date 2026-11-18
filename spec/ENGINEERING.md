@@ -42,7 +42,7 @@ are listed in design-system.md §5.
   rules, plus the best-practice rules Lighthouse scores, such as `heading-order`,
   `landmark-unique`, and `region`, which keeps all content inside landmarks) on every
   route in its list — `/contact`, `/skills` and both flagship case studies included — at
-  1280/768/360px, and at 360px both flagships again with every phone disclosure
+  1280/768/360px, and at 360px all three flagships again with every phone disclosure
   (`ShowMore`) open; plus the open Work and About menus, the open mobile menu (the modal
   sheet), the assistant panel opened from the header and from a case study's "Ask AI
   about …" and an essay's ask button (each on its page's starters), a mocked assistant

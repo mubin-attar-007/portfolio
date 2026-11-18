@@ -466,6 +466,19 @@ function flagshipPassages(flagship: Flagship): Passage[] {
         flagship.stack.aws.length > 0 ? `${L.architecture.aws}: ${flagship.stack.aws.join(", ")}.` : null,
       ),
     ),
+    // A product with no incident on record says so, cited at its decisions:
+    // asked "what broke?" on its page, the answer is "nothing is recorded",
+    // never another product's incident.
+    ...(flagship.incidents.length === 0
+      ? [
+          section(
+            "what-broke-none",
+            `${L.broke.kicker}: nothing on record for ${flagship.name}`,
+            ids.decisions,
+            `What broke in ${flagship.name}: no incident is on record, so its case study tells none rather than invent one. What changed, and why, is in its key decisions and their tradeoffs.`,
+          ),
+        ]
+      : []),
     ...flagship.incidents.map((incident) =>
       section(
         `what-broke-${incident.id}`,

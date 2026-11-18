@@ -17,6 +17,7 @@ import { SITE } from "@/config/site";
 
 export type NavIconName =
   | "folder-search"
+  | "signature"
   | "nfc"
   | "database"
   | "chart"
@@ -61,13 +62,14 @@ const PUBLIC_WORK_COPY = {
  * content/flagship (its name and page come from the registry).
  */
 const FLAGSHIP_COPY = {
-  "bench-discovery": { description: "Document triage and verified redaction, desktop and web", icon: "folder-search" },
+  "bench-discovery": { description: "Document review and verified redaction, web and desktop", icon: "folder-search" },
   careltc: { description: "NFC room rounds for long-term care, iOS and Android", icon: "nfc" },
+  signflow: { description: "E-signatures: single-use links, PKI-signed PDFs", icon: "signature" },
 } as const satisfies Record<FlagshipSlug, { description: string; icon: NavIconName }>;
 
 export type PublicWorkSlug = keyof typeof PUBLIC_WORK_COPY;
 export type { FlagshipSlug };
-/** Every work page: the two flagship case studies and the four public ones. */
+/** Every work page: the three flagship case studies and the four public ones. */
 export type WorkSlug = FlagshipSlug | PublicWorkSlug;
 
 export type WorkItem = NavLink & { slug: WorkSlug; icon: NavIconName; description: string };

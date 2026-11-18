@@ -1,14 +1,15 @@
 import { benchDiscovery } from "./bench-discovery";
 import { careltc } from "./careltc";
+import { signflow } from "./signflow";
 import type { Flagship, FlagshipSlug } from "./types";
 
 export type { Flagship, FlagshipSlug } from "./types";
 
 /**
  * The flagship case studies, in the order the site shows them: the Work menu,
- * the work sub-nav, /work, the home page and the sitemap. Both are published.
+ * the work sub-nav, /work, the home page and the sitemap. All three are published.
  */
-export const flagships: readonly Flagship[] = [benchDiscovery, careltc];
+export const flagships: readonly Flagship[] = [benchDiscovery, careltc, signflow];
 
 /** A lookup by `find`, so an object key like "constructor" is never a product. */
 export const flagshipBySlug = (slug: string): Flagship | undefined => flagships.find((f) => f.slug === slug);

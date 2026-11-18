@@ -8,7 +8,7 @@ guardrails and its evaluation are part of the portfolio's evidence.
 
 The rules live in the system prompt (`lib/ai/system-prompt.ts`).
 
-CAN: explain the flagship products (Bench Discovery, CareLTC) and the public projects —
+CAN: explain the flagship products (Bench Discovery, CareLTC, SignFlow) and the public projects —
 what they do, who uses them, his role, the architecture, decisions, what broke and how it is
 verified; answer résumé, skills, experience, hiring, contact and availability questions;
 report published evaluation results with their scope, and say when a result was retired;
@@ -40,7 +40,7 @@ changes in the index with it. Nothing is written for the assistant except the FA
 - **Work index** — what he has shipped, flagships first with their usage in the approved
   wording (`USAGE`), then the public projects; found by what it is ("what has he
   shipped/built"), not by the names it lists.
-- **Flagships** (`content/flagship/*`, Bench Discovery and CareLTC), cited at the section's
+- **Flagships** (`content/flagship/*`, Bench Discovery, CareLTC and SignFlow), cited at the section's
   anchor on `/work/<slug>`:
   - an overview: definition, summary, "Built at Sevina Technologies", who it is for, the
     usage figure and the approval line, his credit **verbatim** ("His role, in his words:

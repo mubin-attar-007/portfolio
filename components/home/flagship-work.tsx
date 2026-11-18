@@ -6,6 +6,7 @@ import { SectionHeader } from "@/components/ui/section-header";
 import { cx } from "@/components/ui/cx";
 import { benchDiscovery } from "@/content/flagship/bench-discovery";
 import { careltc } from "@/content/flagship/careltc";
+import { signflow } from "@/content/flagship/signflow";
 import type { Flagship } from "@/content/flagship/types";
 import { FLAGSHIP, FLAGSHIP_PAGES } from "@/content/pages/home";
 import art from "./bento-art.module.css";
@@ -44,8 +45,8 @@ function ProductArt({ flagship, badge }: { flagship: Flagship; badge: string }) 
 }
 
 /**
- * FlagshipWork — the dark plate of the two flagship products built at Sevina
- * Technologies: a bento whose two wide cards show each product as it really
+ * FlagshipWork — the dark plate of the three flagship products built at Sevina
+ * Technologies: a bento whose three wide cards show each product as it really
  * runs (captures on dummy data, labelled so) with its approved usage figure and
  * a link to its case study, between cards on the engineering behind them. Every
  * illustration comes alive on hover or focus (the halos spread, the spinner
@@ -85,16 +86,16 @@ export function FlagshipWork() {
             <div className={art.stack}>
               <span className={art.term}>
                 <span className={art.spin} />
-                scanning compiled assemblies…
+                SET LOCAL app.organization_id…
               </span>
               <span className={art.term}>
-                <span className={art.okText}>✓</span>no network types in document handling
+                <span className={art.okText}>✓</span>no tenant context, no rows
               </span>
             </div>
           </CardArt>
           <CardBody>
-            <h3>{cards.offline.title}</h3>
-            <p>{cards.offline.body}</p>
+            <h3>{cards.tenancy.title}</h3>
+            <p>{cards.tenancy.body}</p>
           </CardBody>
         </Card>
 
@@ -131,6 +132,43 @@ export function FlagshipWork() {
               {FLAGSHIP.caseStudy}
               <span className="sr-only">: {cards.careltc.title}</span>
             </CaretLink>
+          </CardBody>
+        </Card>
+
+        <Card span={2} className={art.productCard}>
+          <CardArt>
+            <ProductArt flagship={signflow} badge={cards.signflow.badge} />
+          </CardArt>
+          <CardBody>
+            <h3>{cards.signflow.title}</h3>
+            <p>{cards.signflow.body}</p>
+            <p className={art.usage}>{cards.signflow.usage}</p>
+            <p className={art.tech}>{signflow.card.tech}</p>
+            <div className={art.chips}>
+              <StateChip>{FLAGSHIP.inUse}</StateChip>
+            </div>
+            <CaretLink href={FLAGSHIP_PAGES.signflow} className="mt-4">
+              {FLAGSHIP.caseStudy}
+              <span className="sr-only">: {cards.signflow.title}</span>
+            </CaretLink>
+          </CardBody>
+        </Card>
+
+        <Card>
+          <CardArt>
+            <div className={art.stack}>
+              <span className={art.term}>
+                <span className={art.spin} />
+                opening the signing link again…
+              </span>
+              <span className={art.term}>
+                <span className={art.okText}>✓</span>refused · token already used
+              </span>
+            </div>
+          </CardArt>
+          <CardBody>
+            <h3>{cards.singleUse.title}</h3>
+            <p>{cards.singleUse.body}</p>
           </CardBody>
         </Card>
 

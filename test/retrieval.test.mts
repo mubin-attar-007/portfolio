@@ -624,6 +624,7 @@ test("every follow-up grounds on its topic's pages", () => {
   const TOPIC_PAGES: Record<FollowUpTopic, readonly string[]> = {
     "bench-discovery": ["/work/bench-discovery"],
     careltc: ["/work/careltc"],
+    signflow: ["/work/signflow"],
     dbwhisper: ["/work/dbwhisper", "/evals"],
     tradepulse: ["/work/tradepulse"],
     crownwager: ["/work/crownwager", "/evals"],

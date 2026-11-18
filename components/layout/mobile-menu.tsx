@@ -78,6 +78,20 @@ export function MobileMenu({
   }, [open]);
   useInertBackground(open);
 
+  // The sheet ends inside the viewport wherever the nav sits: the home page's
+  // announcement bar pushes it down by its own height, which a fixed offset
+  // missed. Its top is measured on open (and on resize), and the CSS caps the
+  // sheet's height from there; past that it scrolls itself (WCAG 1.4.10).
+  useLayoutEffect(() => {
+    if (!open) return;
+    const panel = panelRef.current;
+    if (!panel) return;
+    const place = () => panel.style.setProperty("--sheet-top", `${Math.max(0, Math.round(panel.getBoundingClientRect().top))}px`);
+    place();
+    window.addEventListener("resize", place);
+    return () => window.removeEventListener("resize", place);
+  }, [open]);
+
   useEffect(() => {
     if (!open) return;
     const root = rootRef.current;

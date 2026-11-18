@@ -72,6 +72,7 @@ const ROUTES = [
   // the recordings and, below 760px, the phone disclosures (ShowMore).
   "/work/bench-discovery",
   "/work/careltc",
+  "/work/signflow",
   "/route-that-does-not-exist",
   "/dev/components",
 ];
@@ -721,7 +722,7 @@ try {
     // route pass above never saw them on a phone. Open every one, by its
     // summary as a visitor would, and audit the page again.
     if (pass.viewport.width < PHONE_DISCLOSURE_MAX) {
-      for (const route of ["/work/bench-discovery", "/work/careltc"]) {
+      for (const route of ["/work/bench-discovery", "/work/careltc", "/work/signflow"]) {
         await open(page, route, THEME);
         const opened = await page.evaluate(() => {
           const closed = Array.from(document.querySelectorAll("main details:not([open]) > summary"));

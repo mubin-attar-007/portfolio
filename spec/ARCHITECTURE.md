@@ -56,7 +56,7 @@ Each page's visual pattern is in design-system.md §7.1.
 |---|---|---|
 | `/` | `content/pages/home.ts` and the registries | |
 | `/work` | `content/pages/work.ts`, `content/flagship/`, `content/projects.ts` | The flagship products on a dark plate (`#flagship`), then the public systems (`#public`), then one line of technology per system |
-| `/work/bench-discovery`, `/work/careltc` | `content/flagship/*.ts`, rendered by `components/flagship/` through `flagship-route.tsx` | The two flagship case studies, each a static route of its own (page and social card) under the work sub-nav |
+| `/work/bench-discovery`, `/work/careltc`, `/work/signflow` | `content/flagship/*.ts`, rendered by `components/flagship/` through `flagship-route.tsx` | The three flagship case studies, each a static route of its own (page and social card) under the work sub-nav |
 | `/work/[slug]` | `content/projects.ts`, bodies in `components/case-studies/<slug>.tsx` | The four public case studies, under the work sub-nav; `generateStaticParams` lists only them (`dynamicParams = false`). Kept apart from the flagships so neither template's CSS or JavaScript loads on the other's pages. The DBWhisper boundary inspector lives on `/work/dbwhisper` |
 | `/writing`, `/writing/[slug]` | `content/writing/*.mdx`, `content/pages/writing.ts` | The index has filter chips; `?type=essay`, `guide` or `note` preselects one |
 | `/notes`, `/notes/[slug]` | `content/notes/*.mdx` | `/notes` renders the same writing index with Notes preselected. It is not a redirect, so it keeps its own title, description and social card. `/notes/[slug]` is unchanged |

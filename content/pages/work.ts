@@ -9,17 +9,17 @@ export const workIndexPage = {
   meta: {
     title: "Work",
     description:
-      "Bench Discovery and CareLTC, two products in use built at Sevina Technologies, and four public AI systems with source, recordings and methods.",
+      "Bench Discovery, CareLTC and SignFlow, three products in use built at Sevina Technologies, and four public AI systems with source, recordings and methods.",
   },
   hero: {
     kicker: "Work",
     title: "Systems I've shipped",
-    lede: "Two products in use, built at Sevina Technologies, and four public AI systems you can inspect today: source, recordings and the method behind every result.",
+    lede: "Three products in use, built at Sevina Technologies, and four public AI systems you can inspect today: source, recordings and the method behind every result.",
   },
   flagship: {
     kicker: "Flagship work",
-    title: "Two products in use, built at Sevina Technologies",
-    lead: "The real apps, shown on dummy data. Each case study covers the problem, the architecture on AWS, the code, what broke and what changed. The repositories stay private.",
+    title: "Three products in use, built at Sevina Technologies",
+    lead: "The real apps, shown on dummy data. Each case study covers the problem, the architecture on AWS, the code and the decisions behind it. The repositories stay private.",
     cta: { label: "Request a walkthrough", href: "/contact" },
     readCaseStudy: "Read the case study",
     employer: "Built at Sevina Technologies",
@@ -41,7 +41,7 @@ export const workIndexPage = {
   },
   cta: {
     title: "Want the walkthrough?",
-    body: "I'll take you through any of these systems on a call, including Bench Discovery and CareLTC, whose code stays private.",
+    body: "I'll take you through any of these systems on a call, including Bench Discovery, CareLTC and SignFlow, whose code stays private.",
     primary: { label: "Get in touch", href: "/contact" },
     secondary: { label: "Read the résumé", href: "/resume" },
   },

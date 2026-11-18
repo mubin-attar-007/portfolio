@@ -921,7 +921,7 @@ await withPage({ permissions: ["clipboard-read", "clipboard-write"] }, async (pa
 // is preload="none", never autoplays, carries a captions track and shows its
 // poster as an overlay image (a poster attribute would be fetched at once),
 // and no video bytes are requested while the page loads and is read through.
-for (const route of ["/work/bench-discovery", "/work/careltc", "/work/tradepulse"]) {
+for (const route of ["/work/bench-discovery", "/work/careltc", "/work/signflow", "/work/tradepulse"]) {
   await withPage({}, async (page) => {
     const media = [];
     page.on("request", (request) => {
@@ -998,7 +998,7 @@ const labelState = (root, label) => {
 };
 for (const width of [1440, 390]) {
   await withPage({ viewport: { width, height: 900 } }, async (page) => {
-    for (const route of ["/work/bench-discovery", "/work/careltc"]) {
+    for (const route of ["/work/bench-discovery", "/work/careltc", "/work/signflow"]) {
       await page.goto(`${BASE}${route}`, { waitUntil: "networkidle" });
       const tour = page.locator("#tour");
       const surfaces = tour.locator('[role="tablist"]:not([aria-orientation="vertical"]) [role="tab"]');

@@ -13,7 +13,7 @@ validates.
 
 ## 1. Projects and case studies (the heart of the site)
 
-Six case studies: the two flagship products (§1.5) and four public projects (§1.1–§1.3).
+Seven case studies: the three flagship products (§1.5) and four public projects (§1.1–§1.3).
 
 ### 1.1 Project record — `content/projects.ts` (`ProjectSchema`)
 
@@ -124,9 +124,9 @@ in doubt: describe the mechanism, omit the number.
 
 ### 1.5 Flagship case studies — `content/flagship/` (`Flagship`)
 
-Bench Discovery and CareLTC, the two products built at Sevina Technologies that the
-company approved for publication by name (17 Nov 2026), rendered at
-`/work/bench-discovery` and `/work/careltc` by the flagship template
+Bench Discovery, CareLTC and SignFlow, the three products built at Sevina Technologies that the
+company approved for publication by name (17 Nov 2026; SignFlow 18 Nov 2026), rendered at
+`/work/bench-discovery`, `/work/careltc` and `/work/signflow` by the flagship template
 (`components/flagship/`). The old anonymous report URLs `/work/field/records-triage`
 and `/work/field/nfc-room-rounds` redirect to them (308). The type is
 `content/flagship/types.ts`; the registry `flagships` (`content/flagship/index.ts`)
@@ -335,7 +335,7 @@ feeds, the sitemap, and generated routes in production, and keeps it previewable
   assistant's chrome labels (`ASK_AI`) and the status-pill vocabulary (`STATUS_PILL`).
 - `config/nav.ts` — the header (the Work and About menus, the plain links, the
   Contact and Hire me pills), the mobile menu, the footer map, and `WORK_ITEMS`, the
-  work sub-nav's order (the two flagship case studies from `content/flagship`, then
+  work sub-nav's order (the three flagship case studies from `content/flagship`, then
   the four public systems from the registry). The Work menu shows the same two groups,
   flagships first.
 - `content/pages/<page>.ts` — **one module per page for the copy that page alone

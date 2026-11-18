@@ -92,7 +92,7 @@ export const EVIDENCE: readonly EvidenceRow[] = [
   },
   {
     area: "Flagship work",
-    claim: "No accuracy, outcome or customer result is claimed for the two private products. Their usage counts are the employer's figures, stated on each case study with what was not measured.",
+    claim: "No accuracy, outcome or customer result is claimed for the three private products. Their usage counts are the employer's figures, stated on each case study with what was not measured.",
     status: "not-claimed",
   },
   { area: "Compliance", claim: "No compliance certification is claimed.", status: "not-claimed" },

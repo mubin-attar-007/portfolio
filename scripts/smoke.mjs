@@ -58,6 +58,7 @@ const ROUTES = [
   // The flagship case studies, linked from the homepage, /work and the nav.
   { path: "/work/bench-discovery", must: /Bench Discovery/, name: "Bench Discovery case study" },
   { path: "/work/careltc", must: /CareLTC/, name: "CareLTC case study" },
+  { path: "/work/signflow", must: /SignFlow/, name: "SignFlow case study" },
   { path: "/resume", must: /Experience|Résumé|Resume/i, name: "resume" },
 ];
 

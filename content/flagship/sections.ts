@@ -29,10 +29,14 @@ function sketchText(sketch: Sketch): string {
   );
 }
 
-/** Every section of one flagship case study, in page order, as plain text. */
+/**
+ * Every section of one flagship case study, in page order, as plain text. A
+ * section the product has nothing for (SignFlow has no incident on record) is
+ * left out, as the page leaves it out.
+ */
 export function flagshipSections(flagship: Flagship): FlagshipTextSection[] {
   const usage = USAGE[flagship.slug].sentence;
-  return [
+  const sections: FlagshipTextSection[] = [
     {
       anchor: "",
       title: `${flagship.name}: ${flagship.headline}`,
@@ -160,4 +164,5 @@ export function flagshipSections(flagship: Flagship): FlagshipTextSection[] {
       ),
     },
   ];
+  return sections.filter((section) => section.text.length > 0);
 }

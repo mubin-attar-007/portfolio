@@ -23,7 +23,7 @@ export const metadata: Metadata = pageMetadata({
 });
 
 /**
- * /work — the product overview: the two flagship products built at Sevina
+ * /work — the product overview: the three flagship products built at Sevina
  * Technologies on a dark plate (the real app in frames, the approved usage
  * figure, a link to each case study), the four public systems with their
  * real captures and one method-linked figure each, what each system runs on,

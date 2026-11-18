@@ -72,6 +72,7 @@ test("the credit is the owner's own sentence, and no one else is credited", () =
   const approved: Record<string, string> = {
     "bench-discovery": "I designed, built and maintain both the web platform and the desktop app.",
     careltc: "I lead CareLTC and did the main engineering work, and I still maintain it and ship new features.",
+    signflow: "I lead Sevina's AI team and led SignFlow's design and build.",
   };
   for (const flagship of flagships) {
     assert.equal(flagship.credit.role, approved[flagship.slug], `${flagship.slug}: the approved credit, word for word`);

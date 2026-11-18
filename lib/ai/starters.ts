@@ -33,6 +33,12 @@ export const CASE_STUDY_STARTERS: Readonly<Record<string, readonly string[]>> = 
     "What broke in CareLTC, and what changed?",
     "Which AWS services does CareLTC run on?",
   ],
+  signflow: [
+    "What does SignFlow do?",
+    "How does SignFlow prove a signed PDF was not changed?",
+    "How do SignFlow's signing links work?",
+    "How does SignFlow keep patient details encrypted?",
+  ],
   dbwhisper: [
     "What does DBWhisper do?",
     "How does DBWhisper keep generated SQL safe?",

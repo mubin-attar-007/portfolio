@@ -4,6 +4,7 @@ import {
   ChartNoAxesColumn,
   Clock,
   Database,
+  FileSignature,
   FileText,
   FolderSearch,
   Laptop,
@@ -21,6 +22,7 @@ import type { NavIconName } from "@/config/nav";
 
 const ICONS: Record<NavIconName, LucideIcon> = {
   "folder-search": FolderSearch,
+  signature: FileSignature,
   nfc: Nfc,
   database: Database,
   chart: ChartLine,

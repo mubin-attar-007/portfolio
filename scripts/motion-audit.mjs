@@ -30,6 +30,7 @@ const KEYFRAME_ROUTES = [
   "/work/tradepulse",
   "/work/bench-discovery",
   "/work/careltc",
+  "/work/signflow",
   "/hire",
   "/about",
   "/contact",

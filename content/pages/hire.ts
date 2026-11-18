@@ -3,8 +3,9 @@ import { flagships } from "@/content/flagship";
 import { EMPLOYER } from "@/content/flagship/shared";
 import { projects } from "@/content/projects";
 
-/** "Bench Discovery and CareLTC", from the flagship registry. */
-const FLAGSHIP_NAMES = flagships.map((flagship) => flagship.name).join(" and ");
+/** "Bench Discovery, CareLTC and SignFlow", from the flagship registry. */
+const names = flagships.map((flagship) => flagship.name);
+const FLAGSHIP_NAMES = names.length > 1 ? `${names.slice(0, -1).join(", ")} and ${names.at(-1)}` : (names[0] ?? "");
 
 /** The full-time roles' notice term, from the one availability source. */
 const NOTICE_TERM = `Notice period: ${STATUS.noticePeriod}`;
@@ -47,7 +48,7 @@ export const hirePage = {
   glance: {
     label: "At a glance",
     title: "Production work, in the field and in public",
-    body: `${FLAGSHIP_NAMES}, two products I built at ${EMPLOYER}, are in use. Four public AI systems come with source, recordings and the method behind every result.`,
+    body: `${FLAGSHIP_NAMES}, three products from my work at ${EMPLOYER}, are in use. Four public AI systems come with source, recordings and the method behind every result.`,
     stats: [
       { label: "In software engineering", value: "3.5+ yrs", source: { label: "Résumé", href: "/resume" } },
       { label: "Products in use", value: String(flagships.length), source: { label: "The products", href: "/work#flagship" } },
@@ -67,7 +68,7 @@ export const hirePage = {
       { icon: "bars", title: "Figures with methods", body: "Every number links to its method. A result that fails its own audit is retired in public." },
       { icon: "file", title: "Written handover", body: "Decision records, incident write-ups and guides your team can keep working from." },
     ],
-    caption: "Both products' code stays private. I'll walk you through either one on a call.",
+    caption: "All three products' code stays private. I'll walk you through any of them on a call.",
   },
   roles: {
     label: "Open to",

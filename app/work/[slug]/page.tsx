@@ -51,7 +51,7 @@ export const dynamicParams = false;
 
 /**
  * The public case studies. The flagships have static routes of their own
- * (app/work/bench-discovery, app/work/careltc), so this page never loads the
+ * (app/work/bench-discovery, careltc, signflow), so this page never loads the
  * flagship template, and any other slug is a 404.
  */
 export function generateStaticParams() {

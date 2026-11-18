@@ -338,7 +338,9 @@
       right: 0;
       left: 0;
       display: block;
-      max-height: calc(100dvh - var(--nav-offset) - 24px);
+      /* From where the sheet opens (`--sheet-top`, set by MobileMenu), so it
+         ends inside the viewport even below the home announcement bar. */
+      max-height: calc(100dvh - var(--sheet-top, calc(var(--nav-offset) + 8px)) - 16px);
       overflow: auto;
       overscroll-behavior: contain;
       padding: 10px;

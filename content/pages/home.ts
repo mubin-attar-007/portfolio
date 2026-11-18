@@ -16,10 +16,11 @@ const host = SITE.url.replace(/^https?:\/\//, "");
 
 const TRADEPULSE = requireCompleteEval("TradePulse", "Look-ahead canary + parity suite");
 
-/** The two flagship case studies (content/flagship). */
+/** The flagship case studies (content/flagship). */
 export const FLAGSHIP_PAGES = {
   benchDiscovery: flagshipHref("bench-discovery"),
   careltc: flagshipHref("careltc"),
+  signflow: flagshipHref("signflow"),
 } as const;
 
 /** The prompt a visitor pastes into their own AI: it points at llms.txt. */
@@ -44,8 +45,8 @@ export const SHOWCASE = {
   assistant: {
     question: `What has Mubin built at ${EMPLOYER}?`,
     answer:
-      "Two products in use: Bench Discovery, document review with cited answers on the web and verified redaction on the PC, and CareLTC, NFC room rounds for long-term care.",
-    cites: ["Bench Discovery case study", "CareLTC case study"],
+      "Three products in use: Bench Discovery, document review with cited answers on the web and verified redaction on the PC; CareLTC, NFC room rounds for long-term care; and SignFlow, e-signatures with PKI-signed PDFs.",
+    cites: ["Bench Discovery case study", "CareLTC case study", "SignFlow case study"],
   },
   sample: "Illustrative sample · synthetic data",
   noQuery: "Illustrative case · no query is sent",
@@ -76,17 +77,17 @@ export const FACTS = {
 
 export const FLAGSHIP = {
   kicker: "Flagship work",
-  title: `Two products in use, built at ${EMPLOYER}`,
-  lead: "The real apps, shown on dummy data. Each case study covers the problem, the architecture on AWS, the code, what broke and what changed.",
+  title: `Three products in use, built at ${EMPLOYER}`,
+  lead: "The real apps, shown on dummy data. Each case study covers the problem, the architecture on AWS, the code and the decisions behind it.",
   more: { label: "Request a walkthrough", href: "/contact" },
   caseStudy: "Read the case study",
   inUse: "In use",
   cards: {
     benchDiscovery: {
       title: "Bench Discovery",
-      body: "Document triage and verified redaction on the PC, and team review with answers that cite the page on the web. I designed, built and maintain both.",
+      body: "Team review with answers that cite the page on the web, and document triage and verified redaction on the PC. I designed, built and maintain both.",
       usage: USAGE["bench-discovery"].sentence,
-      badge: "Documents stay on this computer",
+      badge: "✓ Answer cites page 2",
     },
     careltc: {
       title: "CareLTC",
@@ -94,9 +95,9 @@ export const FLAGSHIP = {
       usage: USAGE.careltc.sentence,
       badge: "✓ Round recorded · tap at the door",
     },
-    offline: {
-      title: "Documents never leave the PC",
-      body: "Tests over the compiled code fail the build on any network type in document handling. Only the licence check goes online.",
+    tenancy: {
+      title: "Tenancy in the database",
+      body: "Every query carries the tenant from the verified session, and row-level security fails closed: no context, no rows.",
     },
     stores: {
       title: "Shipped through store review",
@@ -110,6 +111,16 @@ export const FLAGSHIP = {
         "Cause: app inactive under the scan sheet",
         "Change: stop only in background, then retry",
       ],
+    },
+    signflow: {
+      title: "SignFlow",
+      body: "Documents go out through single-use signing links, and every signed copy is a PDF signed with a PKI certificate and timestamped. I led its design and build.",
+      usage: USAGE.signflow.sentence,
+      badge: "✓ Signature valid · timestamp valid",
+    },
+    singleUse: {
+      title: "A signing link works once",
+      body: "Each signer's link carries a single-use token with an expiry. Open it a second time and it is refused.",
     },
     agents: {
       title: "I direct AI coding agents",

@@ -54,7 +54,7 @@ export function FlagshipCard({
         <ShotFrame
           shot={primary}
           product={flagship.name}
-          sizes="(min-width: 1000px) 520px, 86vw"
+          sizes="(min-width: 1000px) 400px, 92vw"
           labelAt="top"
           className={styles.flagshipMain}
         />
@@ -62,7 +62,7 @@ export function FlagshipCard({
           <ShotFrame
             shot={secondary}
             product={flagship.name}
-            sizes={secondary.frame === "phone" ? "(min-width: 1000px) 130px, 26vw" : "(min-width: 1000px) 270px, 48vw"}
+            sizes={secondary.frame === "phone" ? "(min-width: 1000px) 100px, 26vw" : "(min-width: 1000px) 210px, 48vw"}
             label={false}
           />
         </div>

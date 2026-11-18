@@ -1,0 +1,28 @@
+WEBVTT
+
+00:00.000 --> 00:03.590
+Sign in to the local SignFlow test stack as Jordan Sample, the sender. Every person and document in this video is invented.
+
+00:03.590 --> 00:10.020
+The dashboard shows envelopes in draft, sent and completed states. A new envelope gets a subject, then the admission consent PDF is uploaded.
+
+00:10.020 --> 00:15.400
+Add the two signers: Riley Placeholder and Casey Example.
+
+00:15.400 --> 00:22.150
+Place fields for each signer: signature and date for Riley, signature and printed name for Casey. Then save.
+
+00:22.150 --> 00:27.300
+Review, preview the emails and send. Each signer gets a single-use signing link by email.
+
+00:27.300 --> 00:32.520
+Riley opens the emailed link, draws a signature and adds the date.
+
+00:32.520 --> 00:39.240
+On submit, the server renders the signed PDF and signs it with a demo certificate and an RFC 3161 timestamp.
+
+00:39.240 --> 00:50.570
+Casey signs from a separate link and adds a printed name. With both signatures in, the envelope is complete.
+
+00:50.570 --> 00:58.120
+Back as the sender: status Completed, the original's SHA-256, the signed copies, and an audit trail of every event with its time and, for signer actions, the IP.

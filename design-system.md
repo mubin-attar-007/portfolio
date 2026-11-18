@@ -303,7 +303,7 @@ marked *client*.
 
 ### Case-study parts (`components/flagship/`, `components/work/`)
 
-The two flagship case studies share one template (`FlagshipPage`, fed by
+The three flagship case studies share one template (`FlagshipPage`, fed by
 `content/flagship/`); these are its reusable parts, plus the pieces every case study
 uses.
 
@@ -484,7 +484,7 @@ in `content/pages/<page>.ts` (spec/CONTENT_MODEL.md §5).
 
 | Route | Pattern | Sections |
 |---|---|---|
-| `/` | Product home | announcement bar · hero (the h1; a sub line naming both flagship products with their usage figures; the copy-prompt chip) · tabbed showcase (Bench Discovery, CareLTC, DBWhisper, the assistant: sliding pill, blurred crossfade, sheen; the flagship tabs show real captures labelled "Real app · dummy data") · the "At a glance" facts strip · the "Flagship work" plate (`#flagship`: a bento whose two wide cards show each product's real captures, its approved usage figure and a link to its case study, between cards on the engineering behind them) · public-systems bento with real metrics and method links · agent section (drifting sample questions; ask on this site, copy the prompt that points an AI at `public/llms.txt`, privacy) · the "How I work" plate · writing · CTA |
+| `/` | Product home | announcement bar · hero (the h1; a sub line naming Bench Discovery and CareLTC with their usage figures; the copy-prompt chip) · tabbed showcase (Bench Discovery, CareLTC, DBWhisper, the assistant: sliding pill, blurred crossfade, sheen; the flagship tabs show real captures labelled "Real app · dummy data") · the "At a glance" facts strip · the "Flagship work" plate (`#flagship`: a bento whose two wide cards show each product's real captures, its approved usage figure and a link to its case study, between cards on the engineering behind them) · public-systems bento with real metrics and method links · agent section (drifting sample questions; ask on this site, copy the prompt that points an AI at `public/llms.txt`, privacy) · the "How I work" plate · writing · CTA |
 | `/work` | Product overview | hero with jumps to both groups · the "Flagship work" plate (`#flagship`: a card per product with its real captures, its approved usage figure and its case study) · public systems (`#public`: four cards, each with a real capture and one metric with its method) · "What these systems run on": one technology line per system, flagships first · CTA |
 | `/work/bench-discovery`, `/work/careltc` | Product page, flagship ([ADR-019](./spec/decisions/ADR-019-named-flagship-case-studies.md)) | work sub-nav · hero: the "Built at Sevina Technologies", "In use" and private-repository pills, the product statement, "Request a walkthrough", "Watch the demo" and "Ask AI about <product>", the "My role" and "How I build" lines, the figures row (the approved usage figure, then test counts linked to Verification), and the real app in its frames · product tour (`MediaGallery`: Desktop \| Web, or Portal \| Mobile) · the problem, its users and what I built · recordings, each beside its scene list · how it works (`StickySteps` over the `ArchitectureSketch`) · engineering highlights (a bento on the dark plate) · architecture (the sketches and the boundary table) · code excerpts (Shiki, each with its story) · constraints · what broke · decisions · verification and "Not measured" · deployment, with the stack and its AWS services · outcome ("Proves" / "Doesn't show") · the walkthrough card with the "Ask AI" question chips · prev/next. Below 760px `ShowMore` holds back the rest of the highlights, constraints, incidents and decisions. The old `/work/field/*` URLs answer 308 |
 | `/work/[slug]` (public) | Product page | work sub-nav · hero: a "Watch the recording" pill (DBWhisper: "Walk through a request"), the product statement, "Try the demo" while a demo is up, "View source" and "Ask AI about <product>", the "Deployed demo" pill only while a demo is linked, then a `BrowserFrame` playing the captioned recording (click to play, `preload="none"`; DBWhisper shows its capture) · numbered "How it works" `StickySteps` (DBWhisper: its request walkthrough, then the boundary inspector) · the decision bento on a dark plate · results with methods (retired shown as Retired) · the shipping log · the full write-up beside its reading outline · stack · prev/next and the CTA with the "Ask AI" question chips |
@@ -516,7 +516,7 @@ in `content/pages/<page>.ts` (spec/CONTENT_MODEL.md §5).
 - **Retired, not deleted.** A published result that turns out not to hold keeps its
   registry row, muted, with the reason; its figures come down everywhere else.
 - **The flagship case studies publish only what was approved** (spec/CONTENT_MODEL.md
-  §1.5): the names Sevina Technologies, Bench Discovery and CareLTC, the usage figures
+  §1.5): the names Sevina Technologies, Bench Discovery, CareLTC and SignFlow, the usage figures
   word for word, and captures of the real apps on dummy data. Every capture carries
   "Real app · dummy data" inside its frame — at the frame's top where a stage crops its
   foot (`ShotFrame labelAt="top"`). No production URL, repository, client or facility

@@ -1,7 +1,8 @@
 import test from "node:test";
 import assert from "node:assert/strict";
 
-import { ABOUT_MENU, FOOTER_NAV, NAV, NAV_ACTIONS, NAV_LINKS, PUBLIC_WORK, WORK_ITEMS, WORK_MENU } from "../config/nav.ts";
+import { ABOUT_MENU, FLAGSHIP_WORK, FOOTER_NAV, NAV, NAV_ACTIONS, NAV_LINKS, PUBLIC_WORK, WORK_ITEMS, WORK_MENU } from "../config/nav.ts";
+import { flagships } from "../content/flagship/index.ts";
 import { projects } from "../content/projects.ts";
 import { ARTICLE_KICKER } from "../content/article.ts";
 
@@ -32,7 +33,8 @@ test("the Work menu and sub-nav list every public project, from the registry", (
     assert.equal(item.label, projects.find((p) => p.slug === item.slug)?.title);
     assert.equal(item.href, `/work/${item.slug}`);
   }
-  assert.equal(WORK_ITEMS.length, PUBLIC_WORK.length + 2, "the sub-nav adds the two field reports");
+  assert.equal(FLAGSHIP_WORK.length, flagships.length, "every flagship case study has a Work menu line");
+  assert.equal(WORK_ITEMS.length, PUBLIC_WORK.length + flagships.length, "the sub-nav adds the flagship case studies");
 });
 
 test("one-minute writing is labelled as brief", () => {

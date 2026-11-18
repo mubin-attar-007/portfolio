@@ -10,6 +10,7 @@ import type { CitationLink } from "./chat-contract";
 const PROJECTS = [
   { name: "Bench Discovery", slug: "bench-discovery" },
   { name: "CareLTC", slug: "careltc" },
+  { name: "SignFlow", slug: "signflow" },
   { name: "DBWhisper", slug: "dbwhisper" },
   { name: "LLM Studio", slug: "llm-studio" },
   { name: "TradePulse", slug: "tradepulse" },

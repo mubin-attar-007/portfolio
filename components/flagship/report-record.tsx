@@ -105,9 +105,11 @@ function IncidentItem({ incident }: { incident: Incident }) {
 /**
  * What broke: a rail of incidents, each broke → cause → change → guard. A
  * phone shows the first two and holds the rest behind ShowMore; the rail runs
- * past the control to the last incident.
+ * past the control to the last incident. A product with no incident on record
+ * shows no section (none is ever made up to fill it).
  */
 export function IncidentsSection({ flagship }: { flagship: Flagship }) {
+  if (flagship.incidents.length === 0) return null;
   const shown = flagship.incidents.slice(0, PHONE_INCIDENTS);
   const rest = flagship.incidents.slice(PHONE_INCIDENTS);
   return (

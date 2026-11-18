@@ -8,7 +8,7 @@ import type { Neighbour } from "./neighbour-cards";
  * work: the flagships, then the public case studies. The last flagship leads on
  * to the first public one and the first public one back to the last flagship,
  * so the chain runs through every case study both ways. Shared by the flagship
- * routes (app/work/bench-discovery, app/work/careltc) and /work/[slug].
+ * routes (app/work/bench-discovery, careltc, signflow) and /work/[slug].
  */
 
 /** A public case study as a previous/next card. */

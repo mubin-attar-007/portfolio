@@ -5,7 +5,7 @@ import { pageMetadata } from "@/lib/seo";
 import { FlagshipPage } from "./flagship-page";
 
 /**
- * A flagship case study's route: app/work/bench-discovery and app/work/careltc
+ * A flagship case study's route: app/work/bench-discovery, app/work/careltc, app/work/signflow
  * are each a static page that renders this. They are static routes rather than
  * slugs of /work/[slug] so that a public case study loads only its own
  * template's CSS and JavaScript, and a flagship only its own.

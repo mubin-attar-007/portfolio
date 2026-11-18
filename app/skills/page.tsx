@@ -23,7 +23,7 @@ export const metadata: Metadata = pageMetadata({
     "Technology stack, LLM practices, and engineering disciplines I use to ship production AI/ML systems.",
   social: {
     description:
-      "Technology stack, LLM practices and engineering disciplines, and where each shows up across six case studies: two flagship products and four public projects.",
+      "Technology stack, LLM practices and engineering disciplines, and where each shows up across seven case studies: three flagship products and four public projects.",
   },
 });
 
@@ -75,7 +75,7 @@ const ROW_RULE = "border-b border-border";
 /**
  * /skills — a capability map, not a self-rating. Each group from
  * content/resume.ts is a card of skills; a comparison table then marks which
- * case study (the two flagship products, then the four public systems) lists a
+ * case study (the three flagship products, then the four public systems) lists a
  * tool from that group in its own stack. A mark is drawn only from that
  * evidence (components/misc/stack-evidence.ts); a group the case studies do not
  * show points to the résumé instead.

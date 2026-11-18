@@ -61,7 +61,7 @@ and Hire me (`/hire`) (`config/nav.ts`).
 
 | Pillar     | What it holds                                          | Surfaced as        |
 |------------|--------------------------------------------------------|--------------------|
-| Build      | Deep case studies: the two flagship products (Bench Discovery, CareLTC; ADR-019) and four public projects | **Work** (nav) — `/work`, `/work/[slug]` |
+| Build      | Deep case studies: the three flagship products (Bench Discovery, CareLTC, SignFlow; ADR-019) and four public projects | **Work** (nav) — `/work`, `/work/[slug]` |
 | Think      | Principles, trade-off essays, decisions inside case studies | **Writing** (nav) — essays; key decisions inline in case studies |
 | Learn      | Short notes on AI/ML, systems, papers                  | **Notes** — `/notes` (footer) |
 | Write      | Technical articles and implementation guides           | **Writing** (nav) — guides |

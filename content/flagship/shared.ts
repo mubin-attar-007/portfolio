@@ -23,6 +23,11 @@ export const USAGE = {
     /** The short form, where no split is needed. */
     short: "200+ users",
   },
+  signflow: {
+    figure: "50+",
+    label: "users",
+    sentence: "50+ users",
+  },
 } as const;
 
 /** The approved line on how the work is built. */

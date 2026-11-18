@@ -17,9 +17,11 @@
   gap: 10px;
   margin-top: 56px;
 }
-@media (min-width: 900px) {
+/* One card per flagship: stacked on phones and tablets, a row of three from
+   1000px (a two-column grid left the third card alone on its row). */
+@media (min-width: 1000px) {
   .flagshipGrid {
-    grid-template-columns: repeat(2, minmax(0, 1fr));
+    grid-template-columns: repeat(3, minmax(0, 1fr));
   }
 }
 .flagship {
@@ -63,7 +65,7 @@
   right: 20px;
   bottom: -18px;
 }
-.flagshipSide[data-kind="window"] {
+.flagshipSide:is([data-kind="window"], [data-kind="browser"]) {
   width: 48%;
 }
 .flagshipSide[data-kind="phone"] {

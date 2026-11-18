@@ -10,7 +10,7 @@ const page = await browser.newPage();
 // The flagship case studies (content/flagship): in the sitemap, and linked from
 // the homepage, /work and the nav. The anonymous field-report addresses they
 // replaced redirect to them (next.config.ts), so old links still land.
-const FLAGSHIPS = ["/work/bench-discovery", "/work/careltc"];
+const FLAGSHIPS = ["/work/bench-discovery", "/work/careltc", "/work/signflow"];
 const RETIRED_FIELD_REPORTS = ["/work/field/records-triage", "/work/field/nfc-room-rounds"];
 // The sitemap seeds the crawl; these are pages it does not list but a visitor
 // can still reach: the component preview and the old paths that redirect.

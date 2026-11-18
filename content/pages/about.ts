@@ -25,7 +25,7 @@ export const aboutPage = {
     body: "From web apps for a hospital system to AI and automation for healthcare operations.",
     /** One summary line per role, keyed by the org in content/resume.ts. */
     summaries: {
-      "Sevina Technologies": "Healthcare automation, and two products in use, each written up as a case study:",
+      "Sevina Technologies": "Healthcare automation, and three products in use, each written up as a case study:",
       "Linescripts Software Pvt Ltd": "Web applications including a hospital management system, REST APIs and integrations.",
     } as Record<string, string>,
     /** Names the list of flagship case studies in the employer's cell. */

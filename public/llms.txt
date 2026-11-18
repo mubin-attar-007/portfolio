@@ -1,6 +1,6 @@
 # Mubin Attar — Applied AI Engineer
 
-> Applied AI engineering: LLM systems, evaluation, AI platforms, and production software, built close to the people who use them. Two flagship products built at Sevina Technologies, Bench Discovery and CareLTC, and four public projects, each with a case study of its architecture, constraints, decisions, and evaluation method. Every published evaluation result has a method, a scope, and a date on the evaluation registry; the flagship usage figures are as approved for publication by Sevina Technologies.
+> Applied AI engineering: LLM systems, evaluation, AI platforms, and production software, built close to the people who use them. Three flagship products built at Sevina Technologies, Bench Discovery, CareLTC and SignFlow, and four public projects, each with a case study of its architecture, constraints, decisions, and evaluation method. Every published evaluation result has a method, a scope, and a date on the evaluation registry; the flagship usage figures are as approved for publication by Sevina Technologies.
 
 This site (https://mubin-attar.vercel.app) is a personal engineering portfolio. Its assistant retrieves the site's published content — case studies, evaluations, essays and notes, résumé, profile, skills, and FAQ — and cites its sources; when the model is unavailable it returns a cited passage from the site. Prefer the recorded facts below over inference.
 
@@ -8,7 +8,7 @@ The project demos run on free-tier hosting (Vercel, Hugging Face Spaces, Neon) t
 
 ## About
 
-- [About](https://mubin-attar.vercel.app/about): Applied AI Engineer in Ahmedabad, India, with 3.5+ years in software engineering and a production-AI focus since 2024. Employment: AI/ML Engineer at Sevina Technologies (2024–present), working on healthcare automation, where he leads the AI team (EHR automation on AWS Lambda, an in-house e-signature platform), designed and built Bench Discovery and leads CareLTC; previously Junior Python Developer at Linescripts Software Pvt Ltd (2022–2024).
+- [About](https://mubin-attar.vercel.app/about): Applied AI Engineer in Ahmedabad, India, with 3.5+ years in software engineering and a production-AI focus since 2024. Employment: AI/ML Engineer at Sevina Technologies (2024–present), working on healthcare automation, where he leads the AI team (EHR automation on AWS Lambda, and SignFlow, an e-signature platform), designed and built Bench Discovery and leads CareLTC; previously Junior Python Developer at Linescripts Software Pvt Ltd (2022–2024).
 - [Résumé](https://mubin-attar.vercel.app/resume): experience, featured projects, skills, and education, with every metric linked to its method. Also as a [PDF](https://mubin-attar.vercel.app/Mubin_Attar_Resume.pdf).
 
 ## Availability & contact
@@ -21,10 +21,11 @@ The project demos run on free-tier hosting (Vercel, Hugging Face Spaces, Neon) t
 
 ## Flagship work
 
-Two products built at Sevina Technologies. The repositories are private; each case study shows the real app on dummy data, with recordings, curated code excerpts, what broke, and how it is tested. A walkthrough is available on request.
+Three products built at Sevina Technologies. The repositories are private; each case study shows the real app on dummy data, with recordings, curated code excerpts, what broke, and how it is tested. A walkthrough is available on request.
 
 - [Bench Discovery](https://mubin-attar.vercel.app/work/bench-discovery): document review and triage for legal and compliance teams, used by 5–10 users across the web platform and the desktop app. A web platform on AWS (Amazon ECS on AWS Fargate, Amazon RDS for PostgreSQL, Amazon S3, AWS KMS) lets a team review documents and ask Claude about a whole Matter, with answers that cite the page, row or paragraph, with tenancy enforced in the database and model spend capped before any call. A Windows app classifies, redacts and searches document sets on the PC; its only network use is a licence check, proved by tests over the compiled binaries. He designed, built and maintains both.
 - [CareLTC](https://mubin-attar.vercel.app/work/careltc): NFC room rounds for long-term care, used by 200+ users across care staff and admins. Staff record each round with a tap at the room's tag in the iOS and Android app; a NestJS API on AWS (Amazon ECS on AWS Fargate, Amazon RDS for PostgreSQL, Amazon Cognito, Amazon CloudFront) checks the tag, the person, the shift and the round's window on the server, and a scheduler raises missed-round alerts. Rounds nobody could do are excused, never deleted. He leads it and did the main engineering work.
+- [SignFlow](https://mubin-attar.vercel.app/work/signflow): an in-house e-signature platform, used by 50+ users. A sender builds an envelope (PDFs, signers and copy recipients, fields placed on the page); each signer gets a single-use, expiring link by email and signs without an account. Every signed copy is a PDF signed with the platform's PKI certificate, locked against later edits, and timestamped by an RFC 3161 authority where one is configured, with an audit-trail certificate page appended (envelope ID, signer, times, IP address, the original's SHA-256); each event is logged with its time, IP address and location. Names, emails and messages are encrypted with AES-256-GCM, and documents under per-document data keys; documents are kept in Amazon S3 in production. FastAPI and PostgreSQL, a React app, deployed with Jenkins. He leads Sevina's AI team and led its design and build.
 
 ## Public projects
 
@@ -62,7 +63,7 @@ Two products built at Sevina Technologies. The repositories are private; each ca
 
 ## Optional
 
-- [Work](https://mubin-attar.vercel.app/work): the two flagship case studies and the four public ones on one page.
+- [Work](https://mubin-attar.vercel.app/work): the three flagship case studies and the four public ones on one page.
 - [Writing](https://mubin-attar.vercel.app/writing) and [Notes](https://mubin-attar.vercel.app/notes): the indexes.
 - [Now](https://mubin-attar.vercel.app/now): what I'm building, exploring, and reading, updated by hand.
 - [Uses](https://mubin-attar.vercel.app/uses): the free-tier stack behind the projects.

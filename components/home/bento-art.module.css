@@ -34,7 +34,7 @@
   top: 78px;
   right: 6%;
 }
-.productSide[data-kind="window"] {
+.productSide:is([data-kind="window"], [data-kind="browser"]) {
   width: 46%;
 }
 .productSide[data-kind="phone"] {
@@ -430,7 +430,7 @@
 @media (max-width: 640px) {
   /* On a narrow card the window would cover the end of the main capture's
      "Real app · dummy data" label; it starts just below it instead. */
-  .productSide[data-kind="window"] {
+  .productSide:is([data-kind="window"], [data-kind="browser"]) {
     top: 108px;
   }
   .sat:nth-of-type(1),
@@ -450,7 +450,7 @@
   .productMain {
     width: 74%;
   }
-  .productSide[data-kind="window"] {
+  .productSide:is([data-kind="window"], [data-kind="browser"]) {
     width: 52%;
   }
   .productSide[data-kind="phone"] {

@@ -1,18 +1,18 @@
 /**
- * The flagship case-study model: Bench Discovery and CareLTC, the two products
- * built at Sevina Technologies that the company approved for publication by
- * name (owner, 17 Nov 2026). Every string here renders on a page, in the
+ * The flagship case-study model: Bench Discovery, CareLTC and SignFlow, the
+ * three products built at Sevina Technologies that the company approved for
+ * publication by name (owner, 17 Nov 2026; SignFlow 18 Nov 2026). Every string here renders on a page, in the
  * assistant's index or in llms.txt, so the disclosure scan covers this folder.
  *
- * Approved for publication: the names Sevina Technologies, Bench Discovery and
- * CareLTC; the usage figures (exact wording, `USAGE` in ./shared.ts);
+ * Approved for publication: the names Sevina Technologies, Bench Discovery,
+ * CareLTC and SignFlow; the usage figures (exact wording, `USAGE` in ./shared.ts);
  * screenshots and recordings of the real apps running with dummy data; curated
  * code excerpts; the AWS services the products run on. Never published:
  * production repositories, URLs, hostnames, account or resource identifiers,
  * regions, and real client or facility names.
  */
 
-export type FlagshipSlug = "bench-discovery" | "careltc";
+export type FlagshipSlug = "bench-discovery" | "careltc" | "signflow";
 
 // ---------------------------------------------------------------------------
 // The architecture sketch (an original boundary diagram, drawn in HTML)
