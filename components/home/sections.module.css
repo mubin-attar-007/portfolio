@@ -10,13 +10,108 @@
   gap: 16px;
   text-align: center;
 }
-.facts li {
+/* Two facts share a slot's one grid cell, so a swap never changes its height
+   (facts-ticker.tsx). The resting fact is transparent, never hidden: a screen
+   reader reads both. */
+.ticker {
+  position: relative;
+}
+.slot {
+  display: grid;
+  overflow: hidden;
+}
+.fact {
+  grid-area: 1 / 1;
   font-size: 1.125rem;
   font-weight: 650;
   letter-spacing: -0.02em;
   color: #2c2c33;
 }
-.facts small {
+.fact[data-shown="false"] {
+  opacity: 0;
+}
+/* The wave: slot by slot from the left, the leaving fact lifts away into a
+   short blur, then the arriving one rises out of it. */
+.ticker[data-started] .fact {
+  animation: fact-out 480ms var(--ease-out) calc(var(--i) * 90ms) both;
+}
+.ticker[data-started] .fact[data-shown="true"] {
+  animation: fact-in 760ms var(--spring-soft) calc(var(--i) * 90ms + 140ms) both;
+}
+@keyframes fact-out {
+  from {
+    opacity: 1;
+    transform: none;
+    filter: blur(0);
+  }
+  to {
+    opacity: 0;
+    transform: translateY(-60%);
+    filter: blur(3px);
+  }
+}
+@keyframes fact-in {
+  from {
+    opacity: 0;
+    transform: translateY(60%);
+    filter: blur(3px);
+  }
+  to {
+    opacity: 1;
+    transform: none;
+    filter: blur(0);
+  }
+}
+/* Pause and play for a band that moves on its own (WCAG 2.2.2): the facts
+   strip's and the writing wall's. */
+.factsControl,
+.wallControl {
+  display: grid;
+  width: 28px;
+  height: 28px;
+  place-items: center;
+  border: 1px solid var(--color-border);
+  border-radius: 50%;
+  background: var(--color-surface);
+  color: var(--color-ink-tertiary);
+  cursor: pointer;
+  transition:
+    color var(--motion-fast) var(--ease-out),
+    border-color var(--motion-fast) var(--ease-out);
+}
+.factsControl:hover,
+.wallControl:hover {
+  border-color: var(--color-border-strong);
+  color: var(--color-ink);
+}
+.factsControl:focus-visible,
+.wallControl:focus-visible {
+  outline: 2px solid var(--color-accent);
+  outline-offset: 2px;
+}
+/* The strip's sits in its bottom padding, so it moves nothing. */
+.factsControl {
+  position: absolute;
+  top: calc(100% + 20px);
+  right: 0;
+}
+/* Reduced motion: both sets, still, each in its own row across the slots. */
+@media (prefers-reduced-motion: reduce) {
+  .slot {
+    grid-row: span 2;
+    grid-template-rows: subgrid;
+  }
+  .fact {
+    grid-area: auto;
+  }
+  .fact[data-shown="false"] {
+    opacity: 1;
+  }
+  .factsControl {
+    display: none;
+  }
+}
+.fact small {
   display: block;
   margin-top: 2px;
   font-size: 0.84375rem;
@@ -181,10 +276,79 @@
   font-size: 0.875rem;
   color: var(--color-ink-secondary);
 }
-.wcards {
+/* The writing wall (writing-wall.tsx): two columns drift in opposite
+   directions under a fade, each loop two copies of its column, so it never
+   jumps. WallMotion holds it under the pointer, with keyboard focus inside
+   (a card focused out of view is brought in by seeking the drift) and when
+   paused; these rules hold it under the pointer without JavaScript. A column
+   clips (it never scrolls), so focus cannot shift it. */
+.wallWrap {
   display: grid;
+  justify-items: end;
+  gap: 12px;
+}
+.wall {
+  display: grid;
+  width: 100%;
+  height: 560px;
   grid-template-columns: repeat(2, minmax(0, 1fr));
   gap: 12px;
+  mask-image: linear-gradient(to bottom, transparent, #000 12%, #000 88%, transparent);
+}
+.wallCol {
+  min-height: 0;
+  overflow: clip;
+}
+/* Positioned, so a card's offsetTop is measured from the track (WallMotion's seek). */
+.wallTrack {
+  position: relative;
+  animation: wall-drift var(--wall-seconds) linear infinite;
+}
+.wallReverse {
+  animation-direction: reverse;
+}
+.wallSet {
+  display: grid;
+  gap: 12px;
+  padding-bottom: 12px;
+}
+.wallSet .wcard p:not(.meta) {
+  display: -webkit-box;
+  overflow: hidden;
+  -webkit-box-orient: vertical;
+  -webkit-line-clamp: 3;
+}
+.wall:hover .wallTrack,
+.wall[data-paused] .wallTrack {
+  animation-play-state: paused;
+}
+.wall:focus-within {
+  mask-image: none;
+}
+@keyframes wall-drift {
+  to {
+    transform: translateY(-50%);
+  }
+}
+/* Reduced motion, and phones: still, the first two cards of each column. */
+@media (prefers-reduced-motion: reduce), (max-width: 640px) {
+  .wall {
+    height: auto;
+    mask-image: none;
+  }
+  .wallTrack {
+    animation: none;
+  }
+  .wallClone,
+  .wallControl,
+  .wallSet > :nth-child(n + 3) {
+    display: none;
+  }
+}
+@media (max-width: 640px) {
+  .wall {
+    grid-template-columns: minmax(0, 1fr);
+  }
 }
 .wcard {
   position: relative;
@@ -259,8 +423,5 @@
 @media (max-width: 640px) {
   .strip {
     padding: 48px 0 72px;
-  }
-  .wcards {
-    grid-template-columns: minmax(0, 1fr);
   }
 }

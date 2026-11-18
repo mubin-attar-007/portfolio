@@ -141,6 +141,8 @@ recordings under `public/showcase/<slug>/`; its menu line in `config/nav.ts`
 - Primitives: `components/ui/sticky-steps.tsx`, `components/ui/toc.tsx`.
 - Homepage: `components/home/showcase-tabs.tsx`, `components/home/showcase-demos.tsx`
   (the illustrated screens a visitor can try; their copy arrives as props),
+  `components/home/facts-ticker.tsx` (the facts strip's swap and its pause button),
+  `components/home/wall-motion.tsx` (the writing wall's pause, hover and focus holds; its cards render on the server),
   `components/home/prompt-chip.tsx`, `components/home/use-copy-prompt.ts`.
 - Case studies: `components/case-studies/boundary-inspector.tsx`,
   `components/case-studies/walkthrough.tsx`, `components/case-studies/reading-outline.tsx`,

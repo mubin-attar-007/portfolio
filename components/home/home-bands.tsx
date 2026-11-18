@@ -5,23 +5,17 @@ import { CaretLink } from "@/components/ui/caret-link";
 import { Kicker } from "@/components/ui/kicker";
 import { Plate } from "@/components/ui/plate";
 import { SectionHeader } from "@/components/ui/section-header";
-import { SmartLink } from "@/components/ui/smart-link";
 import { CTA, FACTS, HOW, WRITING } from "@/content/pages/home";
+import { FactsTicker } from "./facts-ticker";
+import { WritingWall } from "./writing-wall";
 import styles from "./sections.module.css";
 
-/** The facts strip under the hero, in place of a logo wall. */
+/** The facts strip under the hero, in place of a logo wall: two sets that swap slot by slot. */
 export function FactsStrip() {
   return (
     <section className={styles.strip} aria-label={FACTS.label}>
       <Container>
-        <ul className={styles.facts}>
-          {FACTS.items.map((fact) => (
-            <li key={fact.value}>
-              {fact.value}
-              <small>{fact.note}</small>
-            </li>
-          ))}
-        </ul>
+        <FactsTicker sets={FACTS.sets} labels={{ pause: FACTS.pause, play: FACTS.play }} />
       </Container>
     </section>
   );
@@ -52,7 +46,7 @@ export function HowIWork() {
 
 export type WritingCard = { href: string; title: string; summary: string; category: keyof typeof WRITING.categories };
 
-/** Writing: the featured quote with its essay, and the latest pieces. */
+/** Writing: the featured quote with its essay, and every other piece drifting past on the wall. */
 export function WritingBand({ quoteEssay, cards }: { quoteEssay: { href: string; title: string }; cards: readonly WritingCard[] }) {
   return (
     <Section space="md" ariaLabelledBy="writing-title">
@@ -78,19 +72,10 @@ export function WritingBand({ quoteEssay, cards }: { quoteEssay: { href: string;
             {WRITING.more.label}
           </CaretLink>
         </div>
-        <ul className={styles.wcards}>
-          {cards.map((card) => (
-            <li key={card.href} className={styles.wcard}>
-              <h3>
-                <SmartLink href={card.href} className={styles.wcardLink}>
-                  {card.title}
-                </SmartLink>
-              </h3>
-              <p>{card.summary}</p>
-              <p className={styles.meta}>{WRITING.categories[card.category]}</p>
-            </li>
-          ))}
-        </ul>
+        <WritingWall
+          cards={cards.map((card) => ({ href: card.href, title: card.title, summary: card.summary, meta: WRITING.categories[card.category] }))}
+          labels={{ pause: WRITING.pause, play: WRITING.play }}
+        />
       </div>
     </Section>
   );

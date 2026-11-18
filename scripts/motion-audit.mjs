@@ -47,7 +47,9 @@ const KEYFRAME_ROUTES = [
   "/route-that-does-not-exist",
 ];
 /** The ambient loops the motion law allows to run at rest (ADR-018 §5). CSS-module names carry a hash prefix. */
-const AMBIENT_LOOP = /(?:^|_)(?:marquee|float|hero-ring)$/;
+const AMBIENT_LOOP = /(?:^|_)(?:marquee|float|hero-ring|wall-drift)$/;
+/** The facts strip's swap: finite animations, but they recur every few seconds while the strip is watched. */
+const AMBIENT_SWAP = /(?:^|_)fact-(?:in|out)$/;
 /** The only properties a menu may transition: paint and compositor work, never layout (design-system.md §6). */
 const MENU_PROPERTIES = new Set(["opacity", "transform", "visibility"]);
 const CARET_REST = "2px 0px, -8px 0px";
@@ -172,11 +174,16 @@ const running = (locator, subtree = false) => locator.evaluate((element, deep) =
 // Readable content, no scroll reveals, and only the allowed loops at rest
 // ---------------------------------------------------------------------------
 
-/** Text in <main> that is not visible at rest. A tab's inactive panel is one click away, not waiting for an observer. */
+/**
+ * Text in <main> that is not visible at rest. Not waiting for an observer: a
+ * tab's inactive panel (one click away), and the facts strip's resting fact
+ * (`data-shown="false"`), the other half of a swap, read by assistive tech
+ * all along and shown in turn, and at once under reduced motion.
+ */
 async function hiddenText(page) {
   return page.evaluate(() => Array.from(document.querySelector("main")
     .querySelectorAll("h1,h2,h3,h4,p,pre,figcaption,blockquote,li,dt,dd"))
-    .filter((element) => !element.closest(".sr-only, [role='tabpanel'][hidden]"))
+    .filter((element) => !element.closest(".sr-only, [role='tabpanel'][hidden], [data-shown='false']"))
     .filter((element) => {
       for (let node = element; node && node !== document.body; node = node.parentElement) {
         const style = getComputedStyle(node);
@@ -225,7 +232,8 @@ async function restContracts(page, label) {
       iterations: animation.effect?.getComputedTiming().iterations,
     })));
   check(`${label}: at rest only the ambient loops run; every finite animation has settled`,
-    loops.every((loop) => loop.iterations === Infinity && AMBIENT_LOOP.test(loop.name)), JSON.stringify(loops));
+    loops.every((loop) => (loop.iterations === Infinity && AMBIENT_LOOP.test(loop.name)) || AMBIENT_SWAP.test(loop.name)),
+    JSON.stringify(loops));
 }
 
 // ---------------------------------------------------------------------------
@@ -843,9 +851,25 @@ async function illustrationFeedback(page) {
     JSON.stringify({ atRest, hovered, focused, declaredOnHover: hoverDeclared }));
 }
 
-/** A home writing card: the title link covers the card, so the whole card is one target. */
+/** The writing band, its wall's real cards (the loop's duplicate set is aria-hidden) and their tracks. */
+const writingBand = (page) => page.locator('section[aria-labelledby="writing-title"]');
+const wallLinks = (page) => writingBand(page).locator("[data-wall-column] ul:not([aria-hidden]) a");
+const wallTracks = (page) => writingBand(page).locator("[data-wall-column] > *");
+
+/**
+ * A home writing card: the title link covers the card, so the whole card is
+ * one target. The wall drifts, so it is held with its own button first, and
+ * the card measured is one wholly in view, which focus need not bring in.
+ */
 async function writingFeedback(page) {
-  const link = page.locator('section[aria-labelledby="writing-title"] li a').first();
+  await bringToRest(page, writingBand(page));
+  await writingBand(page).getByRole("button", { name: "Pause the cards", exact: true }).click();
+  const index = await wallLinks(page).evaluateAll((links) => links.findIndex((a) => {
+    const frame = a.closest("[data-wall-column]").getBoundingClientRect();
+    const box = a.closest("li").getBoundingClientRect();
+    return box.top >= frame.top + 80 && box.bottom <= frame.bottom - 80;
+  }));
+  const link = wallLinks(page).nth(Math.max(0, index));
   const item = link.locator("xpath=ancestor::li[1]");
   const summary = item.locator("p").first();
   await neutral(page, link);
@@ -865,6 +889,129 @@ async function writingFeedback(page) {
   check("writing card: the title, summary and category stay fixed and the focused link stays usable",
     samePlace(rest.text, focused.text) && samePlace(rest.link, focused.link)
     && await link.evaluate((element) => document.activeElement === element && /^\/(writing|notes)\//.test(element.pathname)));
+  await writingBand(page).getByRole("button", { name: "Play the cards", exact: true }).click();
+}
+
+// ---------------------------------------------------------------------------
+// The writing wall and the facts strip: ambient motion with its own pause
+// ---------------------------------------------------------------------------
+
+/** Each wall track: its offset in its column (immune to the page scrolling), its drift's state, its duplicate set. */
+const trackMotion = (page) => wallTracks(page).evaluateAll((tracks) => tracks.map((track) => {
+  const [set, clone] = track.children;
+  return {
+    y: track.getBoundingClientRect().y - track.parentElement.getBoundingClientRect().y,
+    states: track.getAnimations().map((animation) => animation.playState),
+    clone: clone?.getAttribute("aria-hidden") === "true" && clone.inert && clone.textContent === set.textContent,
+  };
+}));
+const held = (a, b) => a.length === 2 && a.every((track, i) => track.states.length > 0
+  && track.states.every((state) => state === "paused") && Math.abs(b[i].y - track.y) < 0.5);
+const drifting = (tracks) => tracks.length === 2 && tracks.every((track) => track.states.includes("running"));
+
+async function wallContracts(page) {
+  await page.mouse.move(0, 0);
+  await bringToRest(page, writingBand(page));
+  const first = await trackMotion(page);
+  await page.waitForTimeout(800);
+  const later = await trackMotion(page);
+  check("writing wall: both columns drift at rest, in opposite directions, and each duplicate set is aria-hidden and inert so it is read once",
+    drifting(first) && first.every((track, i) => track.clone && Math.abs(later[i].y - track.y) >= 1)
+    && Math.sign(later[0].y - first[0].y) !== Math.sign(later[1].y - first[1].y), JSON.stringify({ first, later }));
+
+  const wall = wallTracks(page).first().locator("xpath=../..");
+  const box = await wall.boundingBox();
+  await page.mouse.move(box.x + box.width / 2, box.y + box.height / 2);
+  await page.waitForTimeout(150);
+  const hovered = await trackMotion(page);
+  await page.waitForTimeout(300);
+  const hoveredLater = await trackMotion(page);
+  await page.mouse.move(0, 0);
+  await page.waitForTimeout(150);
+  const resumed = await trackMotion(page);
+  check("writing wall: the drift holds under the pointer and resumes when it leaves",
+    held(hovered, hoveredLater) && drifting(resumed), JSON.stringify({ hovered, resumed }));
+
+  const seen = [];
+  for (let i = 0; i < await wallLinks(page).count(); i++) {
+    await wallLinks(page).nth(i).focus();
+    seen.push(await wallLinks(page).nth(i).evaluate((a) => {
+      const column = a.closest("[data-wall-column]");
+      const frame = column.getBoundingClientRect();
+      const card = a.closest("li").getBoundingClientRect();
+      return card.top >= frame.top - 0.5 && card.bottom <= frame.bottom + 0.5 && column.scrollTop === 0;
+    }));
+  }
+  const focused = await trackMotion(page);
+  await page.evaluate(() => document.activeElement?.blur());
+  check("writing wall: each card focused from the keyboard is brought wholly into view without scrolling, and the drift holds while focus is inside",
+    seen.length > 4 && seen.every(Boolean) && focused.every((track) => track.states.every((state) => state === "paused")),
+    JSON.stringify({ seen, focused }));
+
+  await writingBand(page).getByRole("button", { name: "Pause the cards", exact: true }).click();
+  await page.evaluate(() => document.activeElement?.blur());
+  await page.waitForTimeout(150);
+  const pausedNow = await trackMotion(page);
+  await page.waitForTimeout(300);
+  const pausedLater = await trackMotion(page);
+  const play = writingBand(page).getByRole("button", { name: "Play the cards", exact: true });
+  const labelled = await play.count();
+  await play.click();
+  await page.evaluate(() => document.activeElement?.blur());
+  await page.waitForTimeout(150);
+  check("writing wall: its button pauses the drift and plays it again (WCAG 2.2.2), and says which it will do",
+    held(pausedNow, pausedLater) && labelled === 1 && drifting(await trackMotion(page)), JSON.stringify({ pausedNow, labelled }));
+}
+
+async function reducedWall(page) {
+  const columns = await wallTracks(page).evaluateAll((tracks) => tracks.map((track) => ({
+    name: getComputedStyle(track).animationName,
+    clone: getComputedStyle(track.children[1]).display,
+    shown: Array.from(track.children[0].children).filter((card) => getComputedStyle(card).display !== "none").length,
+  })));
+  const button = await writingBand(page).getByRole("button", { name: "Pause the cards", exact: true }).count();
+  check("reduced: the writing wall stands still: no drift, no duplicate, two cards a column and no pause button",
+    columns.length === 2 && columns.every((column) => column.name === "none" && column.clone === "none" && column.shown === 2) && button === 0,
+    JSON.stringify({ columns, button }));
+}
+
+const factsStrip = (page) => page.locator('section[aria-label="At a glance"]');
+/** For each slot of the facts strip, which of its two facts is shown (0 or 1). */
+const shownFacts = (page) => factsStrip(page).locator("li").evaluateAll((slots) =>
+  slots.map((slot) => Array.from(slot.children).findIndex((fact) => fact.getAttribute("data-shown") === "true")));
+
+async function tickerContracts(page) {
+  await page.mouse.move(0, 0);
+  await bringToRest(page, factsStrip(page));
+  const before = await shownFacts(page);
+  await page.waitForFunction((was) => {
+    const slots = document.querySelectorAll('section[aria-label="At a glance"] li');
+    return Array.from(slots).some((slot, i) => Array.from(slot.children).findIndex((fact) => fact.getAttribute("data-shown") === "true") !== was[i]);
+  }, before, { timeout: 6000 }).catch(() => {});
+  const after = await shownFacts(page);
+  const readable = await factsStrip(page).locator("li").evaluateAll((slots) => slots.every((slot) =>
+    slot.children.length === 2 && Array.from(slot.children).every((fact) => !fact.closest("[aria-hidden='true']"))));
+  check("facts strip: while watched it swaps every slot to its other fact, and both facts of a slot stay readable to a screen reader",
+    before.length === 5 && new Set(before).size === 1 && after.every((shown, i) => shown === 1 - before[i]) && readable,
+    JSON.stringify({ before, after, readable }));
+
+  await factsStrip(page).getByRole("button", { name: "Pause the facts", exact: true }).click();
+  await page.mouse.move(0, 0);
+  await page.evaluate(() => document.activeElement?.blur());
+  const paused = await shownFacts(page);
+  await page.waitForTimeout(4600);
+  const stillPaused = await shownFacts(page);
+  await factsStrip(page).getByRole("button", { name: "Play the facts", exact: true }).click();
+  await page.evaluate(() => document.activeElement?.blur());
+  check("facts strip: its button pauses the swap and plays it again (WCAG 2.2.2)",
+    JSON.stringify(paused) === JSON.stringify(stillPaused), JSON.stringify({ paused, stillPaused }));
+}
+
+async function reducedTicker(page) {
+  const opacity = await factsStrip(page).locator("li > p").evaluateAll((facts) => facts.map((fact) => Number(getComputedStyle(fact).opacity)));
+  const button = await factsStrip(page).getByRole("button", { name: "Pause the facts", exact: true }).count();
+  check("reduced: the facts strip shows both sets, still, with no pause button",
+    opacity.length === 10 && opacity.every((value) => value === 1) && button === 0, JSON.stringify({ opacity, button }));
 }
 
 // ---------------------------------------------------------------------------
@@ -1090,6 +1237,8 @@ try {
         await cardFeedback(page, false);
         await illustrationFeedback(page);
         await writingFeedback(page);
+        await wallContracts(page);
+        await tickerContracts(page);
         await navigationFeedback(page);
       }
       if (width === 390) await mobileMenuContracts(page);
@@ -1136,6 +1285,8 @@ try {
     const homeLoops = await loopsOn(page);
     check("reduced: nothing loops on the home page", homeLoops.length === 0, JSON.stringify(homeLoops));
     await reducedMarquee(page);
+    await reducedWall(page);
+    await reducedTicker(page);
     await reducedShowcase(page);
     await reducedMenus(page, false);
     await reducedCaret(page, page.getByRole("link", { name: "Get in touch", exact: true }));

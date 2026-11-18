@@ -23,9 +23,10 @@ export const metadata: Metadata = pageMetadata({
   },
 });
 
-/** Essays and guides shown beside the quote; the rest of the four cards are notes. */
-const WRITING_CARDS = 3;
-const TOTAL_CARDS = 4;
+/** Two lists, one item from each in turn, so both of the wall's columns mix essays and notes. */
+function interleave<T>(a: readonly T[], b: readonly T[]): T[] {
+  return Array.from({ length: Math.max(a.length, b.length) }, (_, i) => [a[i], b[i]]).flat().filter((x): x is T => x !== undefined);
+}
 
 /** The home page: a short route through the work; depth lives on the flagship and public case studies. */
 export default async function Home() {
@@ -34,13 +35,11 @@ export default async function Home() {
   const quoted = writing.find((w) => w.slug === WRITING.quoteSlug);
   if (!quoted) throw new Error(`home: the quoted essay "${WRITING.quoteSlug}" is not published`);
 
+  // Every published essay and guide but the quoted one, and every note: the wall shows them all.
   const essays: WritingCard[] = writing
     .filter((w) => w.slug !== quoted.slug)
-    .slice(0, WRITING_CARDS)
     .map((w) => ({ href: `/writing/${w.slug}`, title: w.title, summary: w.summary, category: w.category }));
-  const latestNotes: WritingCard[] = notes
-    .slice(0, TOTAL_CARDS - essays.length)
-    .map((n) => ({ href: `/notes/${n.slug}`, title: n.title, summary: noteDescription(n), category: "note" }));
+  const allNotesCards: WritingCard[] = notes.map((n) => ({ href: `/notes/${n.slug}`, title: n.title, summary: noteDescription(n), category: "note" }));
 
   return (
     <>
@@ -50,7 +49,7 @@ export default async function Home() {
       <PublicWork />
       <AgentSection />
       <HowIWork />
-      <WritingBand quoteEssay={{ href: `/writing/${quoted.slug}`, title: quoted.title }} cards={[...essays, ...latestNotes]} />
+      <WritingBand quoteEssay={{ href: `/writing/${quoted.slug}`, title: quoted.title }} cards={interleave(essays, allNotesCards)} />
       <HomeCta />
     </>
   );

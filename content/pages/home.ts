@@ -2,6 +2,7 @@ import { INTEGRATIONS, SITE } from "@/config/site";
 import { boundaryCases } from "@/content/dbwhisper-boundary";
 import { CROWNWAGER_EVIDENCE, DBWHISPER_EVIDENCE, requireCompleteEval } from "@/content/evals";
 import { flagshipHref } from "@/content/flagship";
+import { benchDiscovery } from "@/content/flagship/bench-discovery";
 import { EMPLOYER, USAGE } from "@/content/flagship/shared";
 import { caseStudyPage } from "@/content/pages/work";
 import { ACTION_LABELS } from "@/lib/ai/chat-contract";
@@ -244,14 +245,34 @@ export const SHOWCASE = {
   },
 } as const;
 
+/** Bench Discovery's web test count, read from its record (the hero's verification figure). */
+const BD_WEB_TESTS = benchDiscovery.figures.find((f) => f.source === "verification" && f.label.startsWith("web tests"));
+if (!BD_WEB_TESTS) throw new Error("content/flagship/bench-discovery.ts: no web test figure");
+
+/**
+ * The facts strip under the hero, in place of a logo wall: two sets of five
+ * that it swaps slot by slot (slot i shows sets[0][i], then sets[1][i]), each
+ * pair on one subject. Figures are read from their records.
+ */
 export const FACTS = {
   label: "At a glance",
-  items: [
-    { value: "3.5+ years", note: "in software engineering" },
-    { value: `${USAGE.careltc.figure} users`, note: `CareLTC, ${USAGE.careltc.label.replace(/^users /, "")}` },
-    { value: `${USAGE["bench-discovery"].figure} users`, note: `Bench Discovery, ${USAGE["bench-discovery"].label.replace(/^users /, "")}` },
-    { value: "iOS and Android", note: "shipped through store review" },
-    { value: "4 public systems", note: "with source and methods" },
+  pause: "Pause the facts",
+  play: "Play the facts",
+  sets: [
+    [
+      { value: "3.5+ years", note: "in software engineering" },
+      { value: `${USAGE.careltc.figure} users`, note: `CareLTC, ${USAGE.careltc.label.replace(/^users /, "")}` },
+      { value: `${USAGE["bench-discovery"].figure} users`, note: `Bench Discovery, ${USAGE["bench-discovery"].label.replace(/^users /, "")}` },
+      { value: "iOS and Android", note: "shipped through store review" },
+      { value: "4 public systems", note: "with source and methods" },
+    ],
+    [
+      { value: "3 products", note: `in use, built at ${EMPLOYER}` },
+      { value: `${USAGE.signflow.figure} users`, note: "SignFlow, in-house e-signatures" },
+      { value: `${BD_WEB_TESTS.value} tests`, note: "Bench Discovery's web platform, last full run" },
+      { value: "PAdES B-T", note: "SignFlow's sealed PDFs, checked with pyHanko" },
+      { value: DBWHISPER_EVIDENCE.policy.ratio.replace("/", " of "), note: "unsafe SQL runs denied by DBWhisper's policy" },
+    ],
   ],
 } as const;
 
@@ -278,10 +299,22 @@ export const FLAGSHIP = {
     tenancy: {
       title: "Tenancy in the database",
       body: "Every query carries the tenant from the verified session, and row-level security fails closed: no context, no rows.",
+      /** The art: the session sets its tenant, and only its rows come back. */
+      statement: "SET LOCAL app.organization_id = 'A'",
+      rows: [
+        { label: "round · room 101", tenant: "A" },
+        { label: "round · room 205", tenant: "B" },
+        { label: "round · room 118", tenant: "A" },
+      ],
+      tenantLabel: "tenant",
     },
     stores: {
       title: "Shipped through store review",
       body: "CareLTC's iOS and Android releases passed both stores' review in 2026, and older builds keep working while new ones wait.",
+      /** The art: each review, waiting, then passed. */
+      reviews: ["App Store review", "Google Play review"],
+      waiting: "in review",
+      passed: "passed",
     },
     broke: {
       title: "What broke, and what changed",
@@ -301,6 +334,11 @@ export const FLAGSHIP = {
     singleUse: {
       title: "A signing link works once",
       body: "Each signer's link carries a single-use token with an expiry. Open it a second time and it is refused.",
+      /** The art: the same link opened twice. */
+      attempts: [
+        { label: "first open", result: "signs", outcome: "ok" },
+        { label: "second open", result: "401 · refused", outcome: "refused" },
+      ],
     },
     agents: {
       title: "I direct AI coding agents",
@@ -440,6 +478,9 @@ export const WRITING = {
   from: "From the essay",
   more: { label: "All writing", href: "/writing" },
   categories: { essay: "Essay", guide: "Guide", note: "Note" },
+  /** The wall's pause and play button (WCAG 2.2.2). */
+  pause: "Pause the cards",
+  play: "Play the cards",
 } as const;
 
 export const CTA = {
