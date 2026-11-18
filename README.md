@@ -139,6 +139,7 @@ quotes a figure that disagrees with `content/evals.ts`.
 | `/writing`, `/writing/[slug]`, `/notes`, `/notes/[slug]` | Essays, guides and notes; `/notes` is the writing index with Notes selected |
 | `/about`, `/hire`, `/contact` | About, the careers-style hire page, and the contact funnel |
 | `/resume`, `/now`, `/uses`, `/skills`, `/trust`, `/privacy` | Résumé, now, stack, capability map, evidence, privacy |
+| `/evaluate` | Evaluate the work with your own AI: the prompt to copy, prompts to try, what the AI reads |
 | `/rss.xml`, `/writing/feed.xml`, `/sitemap.xml`, `/llms.txt` | Feeds and machine-readable indexes |
 
 Details, redirects and rendering: [spec/ARCHITECTURE.md §3](spec/ARCHITECTURE.md#3-routes-and-rendering).

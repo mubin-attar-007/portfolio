@@ -7,8 +7,9 @@ Supersedes the theme and homepage decisions of ADR-015 (decisions 1, 2, 4 and 5)
 keeps its role, scoped-proof and canonical-data decisions. Keeps ADR-014 §2–§4.
 `design-system.md` is the specification of the system this record chooses; where the two
 disagree, `styles/tokens.css` wins, then `design-system.md`. Amended twice on 17 November
-2026 (both at the end): the mobile menu is a modal sheet, and the anonymous field reports
-became the named flagship case studies (ADR-019).
+2026 and once on 18 November 2026 (all at the end): the mobile menu is a modal sheet, the
+anonymous field reports became the named flagship case studies (ADR-019), and more of
+Clerk's effects were adopted across the pages.
 
 ## Context
 
@@ -239,3 +240,41 @@ New coverage came with the pages: the a11y gate audits both with every phone dis
 open and the assistant opened from a case study's "Ask AI about …"; the interaction gate
 holds the product tour's tabs, the recordings and the "Real app · dummy data" label on
 every capture (spec/ENGINEERING.md §6).
+
+## Amended 18 November 2026: more of Clerk's effects, across the pages
+
+**Context.** A second pass over recordings of clerk.com (its home page, careers, company
+and MCP pages) found effects the site had not adopted. The owner asked for each to be
+brought in wherever it suits a page, judged from Clerk's side, and left the call on
+this system's own rules to the build. Three rules stood in the way: no brand marks for
+tools, no typing animation, and no particle background.
+
+**Decision.** Adopt the effects; keep every rule that protects honesty or reading.
+
+- Home: a pill per screen under the showcase stage, with illustrated screens a visitor
+  can try; the facts strip swaps two sets in a wave; the flagship bento gains richer hover
+  moments; the writing band becomes a wall of drifting columns. Each loop has a pause
+  button (WCAG 2.2.2), holds under the pointer and focus, and stands still under reduced
+  motion.
+- **Tool marks** (Simple Icons, components/icons/tech-logos.ts) on /uses' tiles and in
+  /about's stack grid: grey at rest, in brand colour on hover, always beside the tool's
+  name. Never alone, never a badge wall, never a rating. A tool without a mark keeps its
+  monogram.
+- **A typed line** is allowed inside a hover illustration only, replaying text that is
+  whole at rest (Clerk's code-entry and terminal cards do this): the tenancy card's
+  statement. Headings and body text never type.
+- **One particle background**: the falling lines behind /evaluate's hero (Clerk's MCP
+  page), with a pause button and a still frame under reduced motion. Nowhere else.
+- /about's quote band cycles lines from the essays with arrows (no autoplay); its mark
+  takes a hover sheen (never a cursor follower). /hire's figures get dotted dividers
+  and its footnote a hatched strip. /evaluate is new: the prompt to copy, prompts to try,
+  what an AI reads, and the privacy points.
+- Kept: no invented social proof (the quote band holds only my own lines, each held to
+  its essay by a test), no cursor followers or tilt, no scroll reveals, nothing hidden
+  waiting for an observer, and motion only in the forms design-system.md §6 lists.
+
+**Gates.** The motion gate allows the wall's drift and the falling lines as ambient loops
+and the facts swap as periodic, and holds each one's pause button, hover and focus holds
+and reduced-motion form; the interaction gate holds every illustrated screen's
+"Illustrative" foot in view for every case; /evaluate joins the a11y, motion and
+screenshot routes and the sitemap.

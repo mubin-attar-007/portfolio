@@ -69,6 +69,7 @@ Three products built at Sevina Technologies. The repositories are private; each 
 - [Uses](https://mubin-attar.vercel.app/uses): the free-tier stack behind the projects.
 - [Skills](https://mubin-attar.vercel.app/skills): technologies, LLM methods, and engineering practices.
 - [Trust](https://mubin-attar.vercel.app/trust): how the evidence on this site is produced and checked.
+- [Evaluate with your AI](https://mubin-attar.vercel.app/evaluate): prompts a reader can paste into their own AI to check this work against these pages.
 - [Privacy](https://mubin-attar.vercel.app/privacy)
 - [RSS: writing and notes](https://mubin-attar.vercel.app/rss.xml), [writing only](https://mubin-attar.vercel.app/writing/feed.xml), and the [sitemap](https://mubin-attar.vercel.app/sitemap.xml).
 - [GitHub](https://github.com/mubin-attar-007), [LinkedIn](https://www.linkedin.com/in/mubin-attar-53223716a), and [Hugging Face](https://huggingface.co/heisenbergblue).

@@ -1,7 +1,7 @@
 "use client";
 
 import { useEffect, useRef, useState, type ReactNode } from "react";
-import { Pause, Play } from "lucide-react";
+import { PauseButton } from "@/components/motion/pause-button";
 import styles from "./sections.module.css";
 
 /** How far below a column's top a card brought into view for keyboard focus sits: clear of the fade. */
@@ -72,14 +72,12 @@ export function WallMotion({ labels, children }: { labels: { pause: string; play
       >
         {children}
       </div>
-      <button
-        type="button"
+      <PauseButton
+        paused={paused}
+        onToggle={() => setPaused((value) => !value)}
+        labels={labels}
         className={styles.wallControl}
-        aria-label={paused ? labels.play : labels.pause}
-        onClick={() => setPaused((value) => !value)}
-      >
-        {paused ? <Play size={12} strokeWidth={2.2} aria-hidden /> : <Pause size={12} strokeWidth={2.2} aria-hidden />}
-      </button>
+      />
     </div>
   );
 }

@@ -1,7 +1,7 @@
 "use client";
 
 import { useEffect, useRef, useState, type CSSProperties } from "react";
-import { Pause, Play } from "lucide-react";
+import { PauseButton } from "@/components/motion/pause-button";
 import { useReducedMotion } from "@/lib/use-reduced-motion";
 import styles from "./sections.module.css";
 
@@ -92,14 +92,12 @@ export function FactsTicker({
           </li>
         ))}
       </ul>
-      <button
-        type="button"
+      <PauseButton
+        paused={paused}
+        onToggle={() => setPaused((value) => !value)}
+        labels={labels}
         className={styles.factsControl}
-        aria-label={paused ? labels.play : labels.pause}
-        onClick={() => setPaused((value) => !value)}
-      >
-        {paused ? <Play size={12} strokeWidth={2.2} aria-hidden /> : <Pause size={12} strokeWidth={2.2} aria-hidden />}
-      </button>
+      />
     </div>
   );
 }

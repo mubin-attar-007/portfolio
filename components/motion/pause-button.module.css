@@ -1,0 +1,40 @@
+/* PauseButton (pause-button.tsx): a 28px round control, a target above the
+   24px minimum, quiet until hovered. */
+@layer components {
+  .button {
+    display: grid;
+    width: 28px;
+    height: 28px;
+    place-items: center;
+    border: 1px solid var(--color-border);
+    border-radius: 50%;
+    background: var(--color-surface);
+    color: var(--color-ink-tertiary);
+    cursor: pointer;
+    transition:
+      color var(--motion-fast) var(--ease-out),
+      border-color var(--motion-fast) var(--ease-out);
+  }
+  .button:hover {
+    border-color: var(--color-border-strong);
+    color: var(--color-ink);
+  }
+  .button:focus-visible {
+    outline: 2px solid var(--color-accent);
+    outline-offset: 2px;
+  }
+  .dark {
+    border-color: var(--color-plate-border);
+    background: #18181c;
+    color: var(--color-plate-ink-secondary);
+  }
+  .dark:hover {
+    border-color: var(--color-plate-border-strong);
+    color: var(--color-plate-ink);
+  }
+  @media (prefers-reduced-motion: reduce) {
+    .button {
+      display: none;
+    }
+  }
+}

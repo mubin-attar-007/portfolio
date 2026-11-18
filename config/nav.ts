@@ -124,6 +124,7 @@ export const ABOUT_MENU = {
     { label: "Now", href: "/now", icon: "clock" },
     { label: "Uses", href: "/uses", icon: "laptop" },
     { label: "Trust", href: "/trust", icon: "shield" },
+    { label: "Ask your AI", href: "/evaluate", icon: "sparkles" },
   ],
 } as const satisfies { label: string; heading: string; items: readonly NavLink[] };
 
@@ -213,6 +214,7 @@ export const FOOTER_NAV = [
     heading: "Site",
     links: [
       { label: "Trust", href: "/trust" },
+      { label: "Ask your AI", href: "/evaluate" },
       { label: "Privacy", href: "/privacy" },
       { label: "llms.txt", href: "/llms.txt" },
     ],

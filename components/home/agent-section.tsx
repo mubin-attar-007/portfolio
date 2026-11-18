@@ -2,6 +2,7 @@ import type { ReactNode } from "react";
 import { MessageCircle, ShieldCheck, SquareTerminal, type LucideIcon } from "lucide-react";
 import { Section } from "@/components/layout/section";
 import { Marquee, MarqueeGroup } from "@/components/motion/marquee";
+import { Pausable } from "@/components/motion/pausable";
 import { CaretLink } from "@/components/ui/caret-link";
 import { Chip } from "@/components/ui/chip";
 import { SectionHeader } from "@/components/ui/section-header";
@@ -37,21 +38,27 @@ export function AgentSection() {
   const { columns } = AGENT;
   return (
     <Section space="md" id="agent" ariaLabelledBy="agent-title">
-      <SectionHeader title={AGENT.title} lead={AGENT.lead} align="center" id="agent-title" />
-      <MarqueeGroup decorative className={styles.rows}>
-        {AGENT.questions.map((row, i) => (
-          <Marquee key={i} duration={ROWS[i]!.duration} delay={ROWS[i]!.delay} fade={false}>
-            {row.map((question) => (
-              <Chip key={question} variant="raised" size="md" mono>
-                <b className={styles.prompt} aria-hidden="true">
-                  ›
-                </b>
-                {question}
-              </Chip>
-            ))}
-          </Marquee>
-        ))}
-      </MarqueeGroup>
+      <SectionHeader title={AGENT.title} lead={AGENT.lead} align="center" id="agent-title">
+        <CaretLink href={AGENT.more.href} size="md">
+          {AGENT.more.label}
+        </CaretLink>
+      </SectionHeader>
+      <Pausable labels={{ pause: AGENT.pause, play: AGENT.play }} className={styles.rowsWrap} buttonClassName={styles.rowsControl}>
+        <MarqueeGroup decorative className={styles.rows}>
+          {AGENT.questions.map((row, i) => (
+            <Marquee key={i} duration={ROWS[i]!.duration} delay={ROWS[i]!.delay} fade={false}>
+              {row.map((question) => (
+                <Chip key={question} variant="raised" size="md" mono>
+                  <b className={styles.prompt} aria-hidden="true">
+                    ›
+                  </b>
+                  {question}
+                </Chip>
+              ))}
+            </Marquee>
+          ))}
+        </MarqueeGroup>
+      </Pausable>
       <div className={styles.cols}>
         <Column icon={MessageCircle} title={columns.site.title} body={columns.site.body}>
           <OpenAssistantAction label={columns.site.action} />

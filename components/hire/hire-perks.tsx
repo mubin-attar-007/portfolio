@@ -1,6 +1,6 @@
 import { ChartColumn, Cpu, FileText, ListChecks, Route, Shield, type LucideIcon } from "lucide-react";
 import { Button } from "@/components/ui/button";
-import { DotBand, Frame } from "@/components/ui/blueprint";
+import { Frame } from "@/components/ui/blueprint";
 import { Label } from "@/components/ui/label";
 import { hirePage, type PerkIcon } from "@/content/pages/hire";
 import styles from "./hire.module.css";
@@ -16,7 +16,7 @@ const ICONS: Record<PerkIcon, LucideIcon> = {
 
 const PERK_ICON_SIZE = 44;
 
-/** "Working with me": six line-icon perks on a white band, a CTA, and the caption between dot bands. */
+/** "Working with me": six line-icon perks on a white band, a CTA, and the caption on a hatched strip. */
 export function HirePerks() {
   const { label, title, cta, items, caption } = hirePage.perks;
   return (
@@ -45,10 +45,9 @@ export function HirePerks() {
             })}
           </ul>
         </section>
+        {/* The footnote on a hatched strip, as Clerk's careers page closes a band. */}
         <div className={styles.caption}>
-          <DotBand />
           <p>{caption}</p>
-          <DotBand />
         </div>
       </Frame>
     </div>

@@ -75,6 +75,7 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
     entry(u("/about"), 0.6, "yearly"),
     entry(u("/uses"), 0.5, "monthly"),
     entry(u("/trust"), 0.55, "monthly"),
+    entry(u("/evaluate"), 0.55, "monthly"),
     entry(u("/resume"), 0.6, "monthly"),
     entry(u("/skills"), 0.58, "monthly"),
     entry(u("/privacy"), 0.3, "yearly"),

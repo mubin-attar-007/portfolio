@@ -94,6 +94,25 @@
       inset 0 0 0 1px var(--color-border-strong),
       var(--shadow-sm);
   }
+  /* A tile with a mark: grey at rest; while the card is hovered or focused the
+     tile turns to the plate and the mark takes its brand colour, which every
+     brand shows well on (the pale ones vanish on white). */
+  .markTile {
+    color: var(--color-ink-secondary);
+    transition:
+      transform var(--motion-slow) var(--spring),
+      box-shadow var(--motion-base) var(--ease-out),
+      background-color var(--motion-base) var(--ease-out);
+  }
+  .markTile svg {
+    transition: color var(--motion-base) var(--ease-out);
+  }
+  .tool:is(:hover, :focus-within) .markTile {
+    background: var(--color-plate);
+  }
+  .tool:is(:hover, :focus-within) .markTile svg {
+    color: var(--brand-on-dark);
+  }
   .toolName {
     font-size: 0.9375rem;
     font-weight: 650;

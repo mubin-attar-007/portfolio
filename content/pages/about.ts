@@ -31,9 +31,34 @@ export const aboutPage = {
     /** Names the list of flagship case studies in the employer's cell. */
     products: "Case studies",
   },
-  quote: {
-    text: "Trust the model to be helpful. Never trust it to be safe.",
-    essay: { label: "Trust is not a safety model", href: "/writing/trust-is-not-a-safety-model" },
+  /**
+   * Lines from my essays, word for word (test/about-quotes.test.mts holds each
+   * to its essay and the essay's title): the quote band cycles them with its
+   * arrows, the first shown on load.
+   */
+  quotes: [
+    {
+      text: "Trust the model to be helpful. Never trust it to be safe.",
+      essay: { label: "Trust is not a safety model", href: "/writing/trust-is-not-a-safety-model" },
+    },
+    {
+      text: "The prompt still matters. It just isn't the boundary.",
+      essay: { label: "A validator is not a better prompt", href: "/writing/a-validator-is-not-a-better-prompt" },
+    },
+    {
+      text: "The reliable way to keep a system honest is to make the dishonest states unrepresentable.",
+      essay: { label: "Look-ahead-free by construction", href: "/writing/look-ahead-free-by-construction" },
+    },
+    {
+      text: "A false “unsafe” costs a user one rejected query and a moment of friction. A false “safe” costs you a mutated or leaked database.",
+      essay: { label: "Trust is not a safety model", href: "/writing/trust-is-not-a-safety-model" },
+    },
+  ],
+  quoteBand: {
+    label: "Lines from my writing",
+    previous: "Previous line",
+    next: "Next line",
+    from: "From the essay",
   },
   stack: {
     label: "Tools I ship with",

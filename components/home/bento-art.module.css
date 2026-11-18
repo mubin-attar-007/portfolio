@@ -199,20 +199,37 @@
   font-size: 0.6875rem;
   color: var(--color-plate-ink-secondary);
 }
+/* The statement is typed again on hover, a character a step (the mono face
+   makes each step one character): a mask, so nothing reflows. The rows answer
+   once it is typed. */
+.typed {
+  display: inline-block;
+}
+.scope > :is(:hover, :focus-within) .typed {
+  animation: type-in calc(var(--chars) * 28ms) steps(var(--chars), end) both;
+}
+@keyframes type-in {
+  from {
+    clip-path: inset(0 100% 0 0);
+  }
+  to {
+    clip-path: inset(0 0 0 0);
+  }
+}
 .scope > :is(:hover, :focus-within) .rows li::before {
   opacity: 1;
-  animation: var(--kf-pop) 550ms var(--spring) both;
+  animation: var(--kf-pop) 550ms var(--spring) 1000ms both;
 }
 .scope > :is(:hover, :focus-within) .rows li:nth-child(2)::before {
-  animation-delay: 140ms;
+  animation-delay: 1140ms;
 }
 .scope > :is(:hover, :focus-within) .rows li:nth-child(3)::before {
-  animation-delay: 280ms;
+  animation-delay: 1280ms;
 }
 .scope > :is(:hover, :focus-within) .rows li[data-tenant="B"] {
   opacity: 0.42;
   text-decoration: line-through;
-  transition-delay: 140ms;
+  transition-delay: 1140ms;
 }
 
 /* Store review: "passed" at rest; on hover each review replays its wait (a

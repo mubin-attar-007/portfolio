@@ -40,6 +40,7 @@ const KEYFRAME_ROUTES = [
   "/notes",
   "/now",
   "/trust",
+  "/evaluate",
   "/uses",
   "/skills",
   "/resume",
@@ -47,7 +48,7 @@ const KEYFRAME_ROUTES = [
   "/route-that-does-not-exist",
 ];
 /** The ambient loops the motion law allows to run at rest (ADR-018 §5). CSS-module names carry a hash prefix. */
-const AMBIENT_LOOP = /(?:^|_)(?:marquee|float|hero-ring|wall-drift)$/;
+const AMBIENT_LOOP = /(?:^|_)(?:marquee|float|hero-ring|wall-drift|rain-fall)$/;
 /** The facts strip's swap: finite animations, but they recur every few seconds while the strip is watched. */
 const AMBIENT_SWAP = /(?:^|_)fact-(?:in|out)$/;
 /** The only properties a menu may transition: paint and compositor work, never layout (design-system.md §6). */
@@ -305,6 +306,57 @@ async function marqueeContracts(page) {
   const focusedLater = await trackState(all);
   await chip.evaluate((element) => { element.blur(); element.removeAttribute("tabindex"); });
   check("marquee: the rows pause while focus is inside them", alive && paused(focused, focusedLater), JSON.stringify(focused));
+
+  // Its pause button (WCAG 2.2.2): pauses every row until played again.
+  await page.getByRole("button", { name: "Pause the questions", exact: true }).click();
+  await page.mouse.move(0, 0);
+  await page.evaluate(() => document.activeElement?.blur());
+  await page.waitForTimeout(150);
+  const held = await trackState(all);
+  await page.waitForTimeout(300);
+  const heldLater = await trackState(all);
+  await page.getByRole("button", { name: "Play the questions", exact: true }).click();
+  await page.evaluate(() => document.activeElement?.blur());
+  await page.waitForTimeout(150);
+  const playing = await trackState(all);
+  check("marquee: its button pauses the rows and plays them again (WCAG 2.2.2)",
+    paused(held, heldLater) && playing.every((track) => track.states.includes("running")), JSON.stringify({ held, playing }));
+}
+
+/** /evaluate's falling lines: they fall at rest, the button holds them, and they play again. */
+async function rainContracts(page) {
+  const lines = () => page.evaluate(() => {
+    const spans = Array.from(document.querySelectorAll("section[aria-labelledby='evaluate-title'] [aria-hidden='true'] > span"));
+    return { count: spans.length, states: [...new Set(spans.flatMap((span) => span.getAnimations().map((animation) => animation.playState)))] };
+  });
+  const rest = await lines();
+  await page.getByRole("button", { name: "Pause the falling lines", exact: true }).click();
+  const held = await lines();
+  await page.getByRole("button", { name: "Play the falling lines", exact: true }).click();
+  const again = await lines();
+  check("/evaluate: the falling lines fall at rest, and their button pauses them and plays them again (WCAG 2.2.2)",
+    rest.count > 20 && rest.states.join() === "running" && held.states.join() === "paused" && again.states.join() === "running",
+    JSON.stringify({ rest, held, again }));
+}
+
+/** /about's quote band: the arrows bring in another line, and the band keeps its height. */
+async function quoteCarousel(page) {
+  const band = page.getByRole("group", { name: "Lines from my writing", exact: true });
+  await bringToRest(page, band);
+  const state = () => band.evaluate((element) => ({
+    height: element.getBoundingClientRect().height,
+    shown: Array.from(element.querySelectorAll("figure")).filter((figure) => figure.getAttribute("aria-hidden") !== "true").map((figure) => figure.getAttribute("aria-label")),
+  }));
+  const first = await state();
+  await band.getByRole("button", { name: "Next line", exact: true }).click();
+  await page.waitForTimeout(700);
+  const second = await state();
+  await band.getByRole("button", { name: "Previous line", exact: true }).click();
+  await page.waitForTimeout(700);
+  const back = await state();
+  check("/about: the quote band's arrows bring in the next line and back, one line shown at a time, and the band keeps its height",
+    first.shown.length === 1 && second.shown.length === 1 && second.shown[0] !== first.shown[0] && back.shown[0] === first.shown[0]
+    && Math.abs(second.height - first.height) < 0.5, JSON.stringify({ first, second, back }));
 }
 
 async function reducedMarquee(page) {
@@ -1249,6 +1301,13 @@ try {
     });
   }
 
+  await withPage({ viewport: { width: 1440, height: 900 } }, async (page) => {
+    await open(page, "/evaluate");
+    await rainContracts(page);
+    await open(page, "/about");
+    await quoteCarousel(page);
+  });
+
   await withPage({ permissions: ["clipboard-read", "clipboard-write"] }, async (page) => {
     await open(page, "/");
     await copyChipContracts(page);
@@ -1285,6 +1344,8 @@ try {
     const homeLoops = await loopsOn(page);
     check("reduced: nothing loops on the home page", homeLoops.length === 0, JSON.stringify(homeLoops));
     await reducedMarquee(page);
+    const questionsButton = await page.getByRole("button", { name: "Pause the questions", exact: true }).count();
+    check("reduced: the questions' pause button is gone (the rows stand still)", questionsButton === 0, String(questionsButton));
     await reducedWall(page);
     await reducedTicker(page);
     await reducedShowcase(page);
@@ -1293,6 +1354,12 @@ try {
     await pressFeedback(page, page.getByRole("link", { name: "Get in touch", exact: true }), true);
     await reducedCopyChip(page);
     await cardFeedback(page, true);
+    await open(page, "/evaluate");
+    await settle(page, 500);
+    const rainLoops = await loopsOn(page);
+    const rainButton = await page.getByRole("button", { name: "Pause the falling lines", exact: true }).count();
+    check("reduced: /evaluate's falling lines stand still, with no pause button", rainLoops.length === 0 && rainButton === 0,
+      JSON.stringify({ rainLoops, rainButton }));
     await open(page, "/work/dbwhisper");
     await bringToRest(page, root(page));
     await choose(page, "No schema");

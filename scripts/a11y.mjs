@@ -68,6 +68,7 @@ const ROUTES = [
   "/skills",
   "/privacy",
   "/trust",
+  "/evaluate",
   // The flagship case studies: the longest pages, with the media galleries,
   // the recordings and, below 760px, the phone disclosures (ShowMore).
   "/work/bench-discovery",

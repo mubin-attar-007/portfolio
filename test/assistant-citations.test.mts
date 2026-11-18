@@ -32,6 +32,7 @@ test("only pages of this site are link targets", () => {
     "/uses",
     "/now",
     "/trust",
+    "/evaluate",
     "/privacy",
   ]) {
     assert.ok(isSitePath(href), href);

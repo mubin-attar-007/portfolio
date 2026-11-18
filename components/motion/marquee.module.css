@@ -24,9 +24,11 @@
   .reverse {
     animation-direction: reverse;
   }
-  /* Pauses under the pointer, and for keyboard focus inside. */
+  /* Pauses under the pointer, for keyboard focus inside, and when a Pausable
+     around it is paused by its button (WCAG 2.2.2). */
   .marquee:is(:hover, :focus-within) .track,
-  .group:is(:hover, :focus-within) .track {
+  .group:is(:hover, :focus-within) .track,
+  [data-paused] .track {
     animation-play-state: paused;
   }
 

@@ -37,6 +37,7 @@ const DEFAULT_ROUTES = [
   "/now",
   "/uses",
   "/trust",
+  "/evaluate",
 ];
 
 // The six widths the design is specified at. 360 is the narrowest phone the

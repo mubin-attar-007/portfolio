@@ -62,34 +62,8 @@
     filter: blur(0);
   }
 }
-/* Pause and play for a band that moves on its own (WCAG 2.2.2): the facts
-   strip's and the writing wall's. */
-.factsControl,
-.wallControl {
-  display: grid;
-  width: 28px;
-  height: 28px;
-  place-items: center;
-  border: 1px solid var(--color-border);
-  border-radius: 50%;
-  background: var(--color-surface);
-  color: var(--color-ink-tertiary);
-  cursor: pointer;
-  transition:
-    color var(--motion-fast) var(--ease-out),
-    border-color var(--motion-fast) var(--ease-out);
-}
-.factsControl:hover,
-.wallControl:hover {
-  border-color: var(--color-border-strong);
-  color: var(--color-ink);
-}
-.factsControl:focus-visible,
-.wallControl:focus-visible {
-  outline: 2px solid var(--color-accent);
-  outline-offset: 2px;
-}
-/* The strip's sits in its bottom padding, so it moves nothing. */
+/* The strip's pause button (components/motion/pause-button.tsx) sits in its
+   bottom padding, so it moves nothing. */
 .factsControl {
   position: absolute;
   top: calc(100% + 20px);
@@ -106,9 +80,6 @@
   }
   .fact[data-shown="false"] {
     opacity: 1;
-  }
-  .factsControl {
-    display: none;
   }
 }
 .fact small {
@@ -157,6 +128,16 @@
 /* Agent section */
 .rows {
   margin-top: 48px;
+}
+/* The questions' pause button sits under the rows' right end, in the gap
+   before the columns, so it moves nothing. */
+.rowsWrap {
+  position: relative;
+}
+.rowsControl {
+  position: absolute;
+  top: calc(100% + 14px);
+  right: 0;
 }
 .prompt {
   margin-right: 8px;

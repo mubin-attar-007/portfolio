@@ -411,13 +411,15 @@ surfaces `--motion-base` 200ms · card elevation and illustration states
      150ms.
 2. **Illustrations that react to hover or focus-within.** Wires pulse and the hub lights
    cyan; halos spread; spinners spin; a timeline lights in sequence; checks pop; charts
-   redraw (`stroke-dashoffset`); bars fill; replies rise. The reaction decorates
+   redraw (`stroke-dashoffset`); bars fill; replies rise; a statement is typed again (a
+   `clip-path` mask in mono steps, never a heading or body text, and whole at rest). The reaction decorates
    information that is already on screen at rest. A hover moment never loops unhovered,
    even when it is a loop while it plays: the pulse on a flagship sketch's wires runs while
    the element that holds the sketch is hovered or holds focus, and a case study's flow
    wires while its steps are (StickySteps' frame is inert, so the moment keys on the
    steps' root and the pane marked `data-active`). At rest the pulse is hidden.
-3. **A few ambient loops.** The marquee (paused on hover and focus-within), `Float`,
+3. **A few ambient loops.** The marquee (paused on hover, focus-within and by its pause
+   button), `Float`,
    the 12s pulse rings, the sheen sweep on a showcase change, the assistant's
    "searching" shimmer and send spinner, the home facts strip's swap: two sets of
    five, exchanged slot by slot in a wave every few seconds, which runs only on screen
@@ -428,7 +430,9 @@ surfaces `--motion-base` 200ms · card elevation and illustration states
    essay and note on two columns moving in opposite directions under a fade, held
    under the pointer, while focus is inside (a card focused out of view is brought in
    by seeking the drift, never by scrolling) and by its pause button; still, two
-   cards a column, under reduced motion and on phones.
+   cards a column, under reduced motion and on phones. And the falling lines behind /evaluate's hero, with a
+   pause button; under reduced motion they stand still where they fell. Every loop that
+   carries content or fills a band has a pause button (`components/motion/pause-button.tsx`).
 
 **Banned:** scroll-triggered fade or slide-up reveals, typing effects, cursor
 followers and spotlights, scroll-jacking, parallax, and tilt. Content is never hidden
@@ -497,8 +501,8 @@ in `content/pages/<page>.ts` (spec/CONTENT_MODEL.md §5).
 | `/work` | Product overview | hero with jumps to both groups · the "Flagship work" plate (`#flagship`: a card per product with its real captures, its approved usage figure and its case study) · public systems (`#public`: four cards, each with a real capture and one metric with its method) · "What these systems run on": one technology line per system, flagships first · CTA |
 | `/work/bench-discovery`, `/work/careltc` | Product page, flagship ([ADR-019](./spec/decisions/ADR-019-named-flagship-case-studies.md)) | work sub-nav · hero: the "Built at Sevina Technologies", "In use" and private-repository pills, the product statement, "Request a walkthrough", "Watch the demo" and "Ask AI about <product>", the "My role" and "How I build" lines, the figures row (the approved usage figure, then test counts linked to Verification), and the real app in its frames · product tour (`MediaGallery`: Desktop \| Web, or Portal \| Mobile) · the problem, its users and what I built · recordings, each beside its scene list · how it works (`StickySteps` over the `ArchitectureSketch`) · engineering highlights (a bento on the dark plate) · architecture (the sketches and the boundary table) · code excerpts (Shiki, each with its story) · constraints · what broke · decisions · verification and "Not measured" · deployment, with the stack and its AWS services · outcome ("Proves" / "Doesn't show") · the walkthrough card with the "Ask AI" question chips · prev/next. Below 760px `ShowMore` holds back the rest of the highlights, constraints, incidents and decisions. The old `/work/field/*` URLs answer 308 |
 | `/work/[slug]` (public) | Product page | work sub-nav · hero: a "Watch the recording" pill (DBWhisper: "Walk through a request"), the product statement, "Try the demo" while a demo is up, "View source" and "Ask AI about <product>", the "Deployed demo" pill only while a demo is linked, then a `BrowserFrame` playing the captioned recording (click to play, `preload="none"`; DBWhisper shows its capture) · numbered "How it works" `StickySteps` (DBWhisper: its request walkthrough, then the boundary inspector) · the decision bento on a dark plate · results with methods (retired shown as Retired) · the shipping log · the full write-up beside its reading outline · stack · prev/next and the CTA with the "Ask AI" question chips |
-| `/about` (dark) | Company page | hero with the obsidian mark · "Where I've worked": each role and the degree, the Sevina cell linking both flagship case studies · a quote band with a halftone portrait of `public/mubin.png` · the stack band · principles · the closing split |
-| `/hire` | Careers page | glass mark with pulse rings · the letter, signed with a round headshot · stats · "Working with me" grid · "Open to" roles |
+| `/about` (dark) | Company page | hero with the obsidian mark (a sheen crosses it on hover) · "Where I've worked": each role and the degree, the Sevina cell linking the flagship case studies · a quote band with a halftone portrait of `public/mubin.png`, cycling lines from the essays with arrows (no autoplay; each line held to its essay by a test) · the stack grid: each tool's mark in grey above its name, in brand colour on hover · principles · the closing split |
+| `/hire` | Careers page | glass mark with pulse rings · the letter, signed with a round headshot · stats with dotted dividers · "Working with me" grid, its footnote on a hatched strip · "Open to" roles |
 | `/contact` | Contact page | header · cards (hiring, freelance, the assistant, résumé, source) with dotted guides and an aurora glow |
 | `/writing`, `/notes` | Blog index | RSS link · filter chips (All / Essays / Guides / Notes; `?type=` preselects) · three featured covers · the full list · the newsletter sign-up card, rendered only while the Buttondown list is connected (`NewsletterForm`). `/notes` is the same index with Notes selected |
 | `/writing/[slug]`, `/notes/[slug]` | Blog post | back link · date, reading time, category pill · title · lead · a typeset cover (essays) · a ~680px body · from `xl` a sticky sidebar with the category, a "Jump to" `Toc` and "Ask AI about this"; below `xl` the category and "Ask AI about this" close the header, where they sit in the Tab order · share, prev/next, related project |
@@ -506,7 +510,8 @@ in `content/pages/<page>.ts` (spec/CONTENT_MODEL.md §5).
 | `/resume` | Document | header with the PDF download · sticky section nav · summary · experience timeline · selected projects, each with how it is built, its metric and method · skills grid · education · a print stylesheet (§10) |
 | `/now` | Changelog | date rail with dots, dated entries with category pills (Building, Exploring, Reading), the availability card, faint circuit art |
 | `/trust` | Security page | light hero with circuit art · "Evidence at a glance" table (Verified / Retired / Not claimed, each with a source link, including what is *not* claimed) · principles · practice cards · CTA |
-| `/uses` | Glossary grid | category sections with a sticky category nav; a card per tool with a monogram tile, what it is for and where it is used |
+| `/uses` | Glossary grid | category sections with a sticky category nav; a card per tool with its mark in grey (the tile turns dark with the mark in brand colour on hover; a monogram where there is no mark), what it is for and where it is used |
+| `/evaluate` (dark) | MCP-style page | the obsidian mark over falling lines (with a pause button) · the prompt to copy and llms.txt · "Ask your AI to check the work": a card per prompt, copying the whole prompt, with the pages it leads to · "What your AI reads": six cells on dashed hairlines · "Checkable, and private by default": four numbered points · ask the site's assistant instead |
 | `/skills` | Capability map | groups from `content/resume.ts`, each linked to where it is used; no self-rated bars · a matrix of the groups by case study (both flagships, then the public systems, under the Work menu's group labels), marked only from each case study's own stack, scrolling sideways in a `ScrollRegion` with the group column pinned |
 | `/privacy` | Legal page | header with faint circuit art · intro · "Last updated" · body column with a sticky nested `Toc` |
 | 404, errors (dark) | 404 page | a "404" made of dots inside a dotted frame · one line · "Go to homepage" · Work, Writing, Contact. Errors: "Something went wrong", a retry and the email |
@@ -717,8 +722,10 @@ two dark plates back to back.
   halftone treatment is a CSS or pre-rendered dot pattern of the same photo. No stock
   imagery, 3D renders or AI-generated imagery.
 - Icons come from `lucide-react` or are drawn in the system's style, and appear only where
-  they carry meaning. No brand logos for tools or third parties: tools get monogram
-  tiles. Decorative glyphs are `aria-hidden`.
+  they carry meaning. A tool's brand mark (Simple Icons, `components/icons/tech-logos.ts`,
+  rendered by `TechMark`) appears only beside its name, on /uses' tiles and in /about's
+  stack grid: grey at rest, in brand colour on hover. A tool without a mark gets a monogram
+  tile. No third-party or client logos. Decorative glyphs are `aria-hidden`.
 
 ### 11.6 Anti-patterns — banned
 
@@ -732,12 +739,14 @@ two dark plates back to back.
 3. A second accent, or the accent as decoration.
 4. Uppercase headings or body text; letter-spaced all-caps buttons. The one exception is
    the 11px mono `label`, used sparingly.
-5. Skill-badge walls, self-rated bars or stars, and client-logo walls. A stack marquee is
-   text and monograms only, honest about what it claims ("tools I use"), with a real text
-   list behind it.
+5. Skill-badge walls, self-rated bars or stars, and client-logo walls. Tool marks sit
+   only beside the tool's name, never as a badge or a rating (§11.5); a stack band is
+   honest about what it claims ("tools I use"), with a real text list behind it.
 6. Card grids as the default layout; two grids in a row.
 7. Typing animations, cursor followers, spotlight cursors, tilt cards, particle
-   backgrounds.
+   backgrounds. Two recorded exceptions (ADR-018, amended 18 November 2026): a statement
+   typed again inside a hover illustration (§6), and the falling lines behind
+   /evaluate's hero, with a pause button and a still frame under reduced motion.
 8. Scroll-triggered reveals, scroll-jacking, parallax, and video that autoplays or has no
    control. Recordings never autoplay, fetch nothing until played, and have captions.
 9. Stock imagery, 3D blobs, emoji in headings or UI chrome.

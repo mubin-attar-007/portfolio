@@ -415,6 +415,11 @@ export const PUBLIC = {
 export const AGENT = {
   title: "Evaluate me with your own AI",
   lead: "Paste one prompt into the AI you already use. It reads my llms.txt and answers from my real work, with links you can check.",
+  /** The page with more prompts to try (/evaluate). */
+  more: { label: "More prompts to try", href: "/evaluate" },
+  /** The drifting questions' pause and play button (WCAG 2.2.2). */
+  pause: "Pause the questions",
+  play: "Play the questions",
   questions: [
     [
       "What has Mubin shipped for healthcare teams?",

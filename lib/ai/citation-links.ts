@@ -26,7 +26,7 @@ const PROJECTS = [
  * citation: it summarizes pages that are each cited in their own right.
  */
 const SITE_PATH =
-  /^\/(?:(?:work|writing|notes)\/[a-z0-9-]+|work|writing|notes|evals|hire|contact|resume|about|skills|uses|now|trust|privacy)(?:#[a-z0-9-]+)?$/;
+  /^\/(?:(?:work|writing|notes)\/[a-z0-9-]+|work|writing|notes|evals|hire|contact|resume|about|skills|uses|now|trust|evaluate|privacy)(?:#[a-z0-9-]+)?$/;
 
 /** Longest link label the panel renders; anything longer is not one of ours. */
 const MAX_LABEL_CHARS = 120;

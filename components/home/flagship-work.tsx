@@ -1,3 +1,4 @@
+import type { CSSProperties } from "react";
 import { ShotFrame } from "@/components/flagship/shot-frame";
 import { Plate } from "@/components/ui/plate";
 import { Bento, Card, CardArt, CardBody } from "@/components/ui/card";
@@ -91,12 +92,15 @@ export function FlagshipWork() {
 
         <Card>
           <CardArt>
-            {/* Row-level security, pictured: the session sets its tenant, and on
-                hover the other tenant's row is struck out while its own pass. */}
+            {/* Row-level security, pictured: on hover the session's statement is
+                typed again, then the other tenant's row is struck out while its
+                own pass. At rest the statement is whole. */}
             <div className={art.stack}>
               <span className={art.term}>
                 <span className={art.spin} />
-                {cards.tenancy.statement}
+                <span className={art.typed} style={{ "--chars": cards.tenancy.statement.length } as CSSProperties}>
+                  {cards.tenancy.statement}
+                </span>
               </span>
               <ul className={art.rows}>
                 {cards.tenancy.rows.map((row) => (

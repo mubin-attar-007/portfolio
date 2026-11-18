@@ -334,6 +334,7 @@ const PAGE_QUESTIONS: Readonly<Record<string, readonly string[]>> = {
   "/about": ["Who is Mubin?", "How does he approach the work?"],
   "/uses": ["What hosting do his public projects use?"],
   "/trust": ["What does he not claim?"],
+  "/evaluate": ["How can I check his work with my own AI?"],
   "/resume": ["Can I get his CV?", "What did he study?"],
   "/skills": ["What's his tech stack?", "Does Mubin have AWS experience?"],
   "/privacy": ["Does this assistant store my question?"],

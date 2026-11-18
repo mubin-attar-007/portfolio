@@ -30,6 +30,7 @@ import { FLAGSHIP_LABELS, FLAGSHIP_SECTION_IDS } from "@/content/flagship/labels
 import { AGENT_DIRECTION, EMPLOYER, PRIVATE_NOTICE, REAL_APP, USAGE, WALKTHROUGH } from "@/content/flagship/shared";
 import { aboutPage } from "@/content/pages/about";
 import { contactPage } from "@/content/pages/contact";
+import { evaluatePage } from "@/content/pages/evaluate";
 import { hirePage } from "@/content/pages/hire";
 import { EVIDENCE, TRUST_PAGE } from "@/content/pages/trust";
 import { TOOL_NOTES } from "@/content/pages/uses";
@@ -324,6 +325,7 @@ const PAGE = {
   uses: { label: "Uses", href: "/uses" },
   now: { label: "Now", href: "/now" },
   trust: { label: "Trust", href: "/trust" },
+  evaluate: { label: "Evaluate with your AI", href: "/evaluate" },
   evals: { label: "Evals", href: "/evals" },
   writing: { label: "Writing", href: "/writing" },
   notes: { label: "Notes", href: "/notes" },
@@ -967,7 +969,8 @@ function aboutPassages(): Passage[] {
         "About — his background: from healthcare workflows to AI products, where he has worked and the tools he ships with",
         `${aboutPage.hero.title}. In his words: “${aboutPage.hero.lead.map((part) => part.text).join("")}”`,
         summaries.length > 0 ? `${aboutPage.experience.title}: ${summaries.join("; ")}.` : null,
-        `A line he works by, from his essay “${aboutPage.quote.essay.label}”: “${aboutPage.quote.text}”`,
+        // One line, as the page leads with it: the others are in the essays, which are indexed whole.
+        `A line he works by, from his essay “${aboutPage.quotes[0].essay.label}”: “${aboutPage.quotes[0].text}”`,
         `${aboutPage.stack.label}: ${aboutPage.stack.items.join(", ")}.`,
       ),
       source: "About — background, experience and tools",
@@ -1059,6 +1062,29 @@ function trustPassage(): Passage {
     source: "Trust — claims and practices",
     kind: "page",
     links: [PAGE.trust],
+    projects: [],
+  };
+}
+
+/**
+ * /evaluate: how to check his work with your own AI, and what that AI reads.
+ * Its privacy points are left out: /privacy answers those, and one names a
+ * salary, which no passage may (the assistant answers that with a fixed reply).
+ */
+function evaluatePassage(): Passage {
+  const { hero, prompts, reads } = evaluatePage;
+  return {
+    id: "evaluate",
+    text: lines(
+      "Evaluate him with your own AI — the prompt to paste, prompts to try, and what your AI reads",
+      hero.lead,
+      `The prompt: ${hero.prompt}`,
+      `${prompts.title}: ${prompts.items.map((prompt) => `${prompt.label} — ${prompt.ask}`).join("; ")}.`,
+      `${reads.title}: ${reads.items.map((item) => `${item.title}: ${item.body}`).join(" ")}`,
+    ),
+    source: "Evaluate with your AI — prompts and llms.txt",
+    kind: "page",
+    links: [PAGE.evaluate],
     projects: [],
   };
 }
@@ -1194,6 +1220,7 @@ export function buildCorpus(): Passage[] {
     nowPassage(),
     ...usesPassages(),
     trustPassage(),
+    evaluatePassage(),
     evaluationGuidePassage(),
     ...evals.map(evaluationPassage),
     writingIndexPassage(),
