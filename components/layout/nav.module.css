@@ -1,0 +1,409 @@
+/* The floating pill nav (prototype `.navwrap`, `.nav`, `.menu`, `.mnav`).
+   Every colour is a token; on a page with a dark surface the header is a
+   `[data-chrome]` scope and the same rules render the dark nav. */
+@layer components {
+  /* The sticky band is click-through: only the pill takes the pointer, so
+     content scrolling past either side of it stays clickable. */
+  .wrap {
+    position: sticky;
+    top: 0;
+    z-index: 30;
+    padding: var(--nav-top) var(--gutter) 0;
+    pointer-events: none;
+  }
+
+  .nav {
+    position: relative;
+    display: flex;
+    align-items: center;
+    max-width: var(--width-nav);
+    height: var(--nav-h);
+    margin-inline: auto;
+    padding: 0 6px 0 12px;
+    border: 1px solid var(--color-border);
+    border-radius: var(--radius-lg);
+    background: var(--chrome-nav-bg);
+    -webkit-backdrop-filter: saturate(1.4) blur(12px);
+    backdrop-filter: saturate(1.4) blur(12px);
+    box-shadow: var(--shadow-nav);
+    color: var(--color-ink);
+    pointer-events: auto;
+  }
+
+  .brand {
+    margin-right: 6px;
+    padding-right: 12px;
+    border-right: 1px solid var(--color-border-strong);
+  }
+
+  /* ---- the links ---------------------------------------------------------- */
+  .links {
+    display: flex;
+    align-items: center;
+    gap: 2px;
+    list-style: none;
+    padding: 0;
+  }
+  .links > li {
+    position: relative;
+  }
+
+  .item {
+    display: inline-flex;
+    align-items: center;
+    gap: 5px;
+    height: 30px;
+    padding: 0 10px;
+    border: 0;
+    border-radius: var(--radius-md);
+    background: none;
+    color: inherit;
+    font: 500 0.90625rem/1 var(--font-sans);
+    white-space: nowrap;
+    cursor: pointer;
+    transition:
+      background-color var(--motion-fast) var(--ease-out),
+      color var(--motion-fast) var(--ease-out);
+  }
+  .item:hover,
+  .item[aria-expanded="true"],
+  .item[aria-current],
+  .item[data-section] {
+    background: var(--chrome-hover);
+  }
+  /* While a menu is open the other items step back, so the open one reads as
+     the subject (the reference nav does the same). Colour only; the hovered
+     item keeps its ink. */
+  .links:has(.item[aria-expanded="true"]) .item:not([aria-expanded="true"], :hover) {
+    color: var(--color-ink-secondary);
+  }
+
+  .chevron {
+    width: 10px;
+    height: 10px;
+    opacity: 0.55;
+    transition: transform var(--motion-fast) var(--ease-out);
+  }
+  .item[aria-expanded="true"] .chevron {
+    transform: rotate(180deg);
+  }
+
+  /* The assistant's own trigger, first of the actions, at every width. */
+  .askSlot {
+    display: flex;
+    align-items: center;
+    margin-right: 4px;
+  }
+
+  /* ---- the right-hand ghost pills ------------------------------------------ */
+  .actions {
+    display: flex;
+    align-items: center;
+    margin-left: auto;
+  }
+  .ghost {
+    display: inline-flex;
+    align-items: center;
+    height: 30px;
+    padding: 0 12px;
+    border-radius: var(--radius-md);
+    font-size: 0.90625rem;
+    font-weight: 500;
+    white-space: nowrap;
+    box-shadow: inset 0 0 0 1px transparent;
+    transition:
+      background-color var(--motion-fast) var(--ease-out),
+      box-shadow var(--motion-fast) var(--ease-out);
+  }
+  .ghost:hover,
+  .ghost[aria-current] {
+    background: var(--chrome-ghost-bg);
+    box-shadow: inset 0 0 0 1px var(--chrome-ghost-ring);
+  }
+  .divider {
+    width: 1px;
+    height: 16px;
+    background: var(--color-border-strong);
+  }
+
+  /* ---- dropdown menus (the "Company" menu pattern) ------------------------- */
+  .menu {
+    position: absolute;
+    z-index: 1;
+    top: calc(100% + 12px);
+    left: -6px;
+    min-width: 248px;
+    padding: 14px 8px 8px;
+    border-radius: var(--radius-lg);
+    background: var(--color-surface);
+    box-shadow: var(--shadow-menu);
+    opacity: 0;
+    visibility: hidden;
+    transform: translateY(-6px) scale(0.98);
+    transform-origin: 28px 0;
+    transition:
+      opacity var(--motion-menu) var(--ease-out),
+      transform var(--motion-menu-spring) var(--spring-soft),
+      visibility 0s linear var(--motion-menu);
+  }
+  /* The hover bridge across the gap under the trigger. */
+  .menu::before {
+    content: "";
+    position: absolute;
+    top: -14px;
+    right: 0;
+    left: 0;
+    height: 14px;
+  }
+  /* Visible at once on open, so Tab can enter; hidden only after the fade-out. */
+  .open,
+  :global(html:not(.js)) .links > li:is(:hover, :focus-within) > .menu {
+    opacity: 1;
+    visibility: visible;
+    transform: none;
+    transition:
+      opacity var(--motion-menu) var(--ease-out),
+      transform var(--motion-menu-spring) var(--spring-soft),
+      visibility 0s;
+  }
+
+  .wide {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 0 6px;
+    min-width: 560px;
+  }
+
+  .menuLabel {
+    padding: 0 10px 6px;
+  }
+  .menuList {
+    list-style: none;
+    padding: 0;
+  }
+
+  .menuLink {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    padding: 8px 10px;
+    border-radius: var(--radius-md);
+    font-size: var(--text-sm);
+    font-weight: 500;
+    transition: background-color var(--motion-fast) var(--ease-out);
+  }
+  .menuLink:hover,
+  .menuLink:focus-visible {
+    background: var(--chrome-menu-hover);
+  }
+  .menuLink[aria-current] {
+    background: var(--chrome-menu-hover);
+  }
+  .menuIcon {
+    flex: none;
+    color: var(--color-ink-secondary);
+  }
+
+  .rich .menuLink {
+    align-items: flex-start;
+    padding: 10px;
+  }
+  .tile {
+    display: grid;
+    flex: none;
+    width: 32px;
+    height: 32px;
+    place-items: center;
+    border-radius: var(--radius-md);
+    background: var(--chrome-tile-bg);
+    box-shadow: var(--shadow-tile);
+  }
+  .richTitle {
+    display: block;
+    font-weight: 600;
+  }
+  .richText {
+    display: block;
+    margin-top: 2px;
+    font-size: 0.8125rem;
+    font-weight: 450;
+    line-height: 1.4;
+    color: var(--color-ink-secondary);
+  }
+
+  .menuFoot {
+    grid-column: 1 / -1;
+    margin-top: 6px;
+    padding: 6px 0 0;
+    border-top: 1px solid var(--color-border);
+  }
+  .menuFoot .menuLink {
+    width: fit-content;
+    gap: 8px;
+    font-size: 0.84375rem;
+    font-weight: 600;
+  }
+
+  /* ---- the mobile menu ----------------------------------------------------- */
+  /* The sheet's dialog: the button and its panel (mobile-menu.tsx). Not
+     positioned, so the panel still hangs from the pill. */
+  .menuRoot {
+    display: flex;
+    align-items: center;
+  }
+  .menuButton {
+    display: none;
+    width: 34px;
+    height: 34px;
+    margin-left: 4px;
+    place-items: center;
+    align-content: center;
+    border: 0;
+    border-radius: var(--radius-md);
+    background: transparent;
+    color: inherit;
+    transition: background-color var(--motion-fast) var(--ease-out);
+  }
+  .menuButton:hover {
+    background: var(--chrome-hover);
+  }
+  .menuButton span {
+    display: block;
+    width: 14px;
+    height: 1.5px;
+    margin: 2px 0;
+    border-radius: 1px;
+    background: currentColor;
+    transition: transform var(--motion-base) var(--spring-soft);
+  }
+  .menuButton[aria-expanded="true"] span:first-child {
+    transform: translateY(2.75px) rotate(45deg);
+  }
+  .menuButton[aria-expanded="true"] span:last-child {
+    transform: translateY(-2.75px) rotate(-45deg);
+  }
+
+  .mobile {
+    display: none;
+  }
+
+  /* While the mobile menu is open a light scrim dims the page under it, so no
+     control is left half-covered and tappable beside the panel; a tap on it
+     closes the menu (mobile-menu.tsx). It belongs to the header band, which has
+     no filter or transform, so `fixed` is the viewport; z-index −1 keeps it
+     under the pill. */
+  .wrap::before {
+    content: "";
+    position: fixed;
+    inset: 0;
+    z-index: -1;
+    background: var(--scrim);
+    opacity: 0;
+    visibility: hidden;
+    transition:
+      opacity var(--motion-menu) var(--ease-out),
+      visibility 0s linear var(--motion-menu);
+  }
+  .wrap:has(.mobile.open)::before {
+    opacity: 1;
+    visibility: visible;
+    pointer-events: auto;
+    transition:
+      opacity var(--motion-menu) var(--ease-out),
+      visibility 0s;
+  }
+  /* The glass pill would show the scrim through it; with the panel open it is
+     solid, so the pill and the panel read as one surface above the dim page. */
+  .wrap:has(.mobile.open) .nav {
+    background: var(--color-surface);
+  }
+  /* The page, the launcher included, is inert while the sheet is open, so the
+     band rises above the launcher (40) and its scrim dims it too; the
+     assistant (50) still opens above everything. */
+  .wrap:has(.mobile.open) {
+    z-index: 45;
+  }
+
+  @media (max-width: 1000px) {
+    .links,
+    .divider {
+      display: none;
+    }
+    .menuButton {
+      display: inline-grid;
+    }
+    .mobile {
+      position: absolute;
+      top: calc(100% + 8px);
+      right: 0;
+      left: 0;
+      display: block;
+      /* From where the sheet opens (`--sheet-top`, set by MobileMenu), so it
+         ends inside the viewport even below the home announcement bar. */
+      max-height: calc(100dvh - var(--sheet-top, calc(var(--nav-offset) + 8px)) - 16px);
+      overflow: auto;
+      overscroll-behavior: contain;
+      padding: 10px;
+      border-radius: var(--radius-lg);
+      background: var(--color-surface);
+      box-shadow: var(--shadow-menu);
+      opacity: 0;
+      visibility: hidden;
+      transform: translateY(-6px) scale(0.98);
+      transform-origin: top right;
+      transition:
+        opacity var(--motion-menu) var(--ease-out),
+        transform var(--motion-menu-spring) var(--spring-soft),
+        visibility 0s linear var(--motion-menu);
+    }
+    .mobile.open {
+      opacity: 1;
+      visibility: visible;
+      transform: none;
+      transition:
+        opacity var(--motion-menu) var(--ease-out),
+        transform var(--motion-menu-spring) var(--spring-soft),
+        visibility 0s;
+    }
+    .mobileLabel {
+      padding: 10px 10px 4px;
+    }
+    .mobileList {
+      list-style: none;
+      padding: 0;
+    }
+    .mobileLink {
+      display: flex;
+      width: 100%;
+      align-items: center;
+      gap: 10px;
+      padding: 10px;
+      border: 0;
+      border-radius: var(--radius-md);
+      background: none;
+      color: inherit;
+      font: 500 0.9375rem/1.3 var(--font-sans);
+      text-align: left;
+      transition: background-color var(--motion-fast) var(--ease-out);
+    }
+    .mobileLink:hover,
+    .mobileLink[aria-current] {
+      background: var(--chrome-menu-hover);
+    }
+  }
+
+  /* Phones keep "Hire me" and move "Contact" into the menu, so the row fits
+     from 360px with the assistant as an icon. */
+  @media (max-width: 430px) {
+    .contact {
+      display: none;
+    }
+    .ghost {
+      padding: 0 10px;
+    }
+    .brand {
+      margin-right: 4px;
+      padding-right: 10px;
+    }
+  }
+}

@@ -1,18 +1,24 @@
-import { renderOg, OG_SIZE, OG_CONTENT_TYPE, formatOgEyebrow } from "@/lib/og";
+import { renderOg, ogAlt, OG_SIZE, OG_CONTENT_TYPE, type OgCard } from "@/lib/og";
 import { SITE } from "@/config/site";
+import { projects } from "@/content/projects";
+import { HERO } from "@/content/pages/home";
 
-const TITLE = "I build grounded AI systems — and show how they actually work.";
+/**
+ * The homepage card: the role, the hero's headline, and the facts line.
+ *
+ * The headline is the hero's h1 (content/pages/home.ts). The public-system
+ * count comes from the project registry.
+ */
+const CARD = {
+  kicker: SITE.role,
+  title: HERO.title,
+  description: ["2 field systems", `${projects.length} public systems`, SITE.location].join(" · "),
+} satisfies OgCard;
 
-/** Describes the card as it prints: the name, the role, and its one sentence. */
-export const alt = `${SITE.name}, ${SITE.role}: ${TITLE}`;
+export const alt = ogAlt(CARD);
 export const size = OG_SIZE;
 export const contentType = OG_CONTENT_TYPE;
 
-export default function OG() {
-  return renderOg({
-    eyebrow: formatOgEyebrow(SITE.role),
-    title: TITLE,
-    subtitle: "Four shipped products. Real architecture, real numbers, every metric linked to its method.",
-    footerRight: SITE.url.replace(/^https?:\/\//, ""),
-  });
+export default function Image() {
+  return renderOg(CARD);
 }

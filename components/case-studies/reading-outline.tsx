@@ -129,7 +129,7 @@ export function CaseStudyReadingOutline({
       <aside className="hidden xl:block">
         <nav
           aria-label="On this page"
-          className="mt-10 min-w-0 xl:sticky xl:top-32 xl:pl-2"
+          className="mt-10 min-w-0 xl:sticky xl:top-[var(--sticky-top)] xl:pl-2"
         >
           <p className="font-mono text-xs uppercase tracking-[0.06em] text-ink-tertiary">On this page</p>
           <ul className="mt-4 border-l border-border">

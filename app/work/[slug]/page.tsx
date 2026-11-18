@@ -1,39 +1,59 @@
 import type { Metadata } from "next";
 import type { ReactNode } from "react";
+import Image from "next/image";
 import { notFound } from "next/navigation";
-import { ArrowUpRight } from "lucide-react";
 import { Section } from "@/components/layout/section";
-import { Figure } from "@/components/ui/figure";
-import { ArticleHeader } from "@/components/ui/article-header";
-import { ArticleFooter } from "@/components/ui/article-footer";
-import { MetricCards } from "@/components/ui/metric";
-import { buttonVariants } from "@/components/ui/button";
-import { projects, projectBySlug, projectNeighbours } from "@/content/projects";
-import { PROJECT_LINKS, PROJECT_STATUS_LABEL } from "@/content/article";
-import type { Project } from "@/content/schema";
-import { formatDate } from "@/lib/format";
-import { absoluteUrl, pageMetadata } from "@/lib/seo";
-import { PAGE_BODY_BAND, PAGE_HEADER_BAND } from "@/constants/page";
-import {
-  CROWNWAGER_SECTIONS,
-  CrownWagerBody,
-} from "@/components/case-studies/crownwager";
+import { WorkSubnav } from "@/components/layout/work-subnav";
+import { BrowserFrame } from "@/components/ui/browser-frame";
+import { Button } from "@/components/ui/button";
+import { Caret, CaretLink } from "@/components/ui/caret-link";
+import { Chip } from "@/components/ui/chip";
+import { CircuitArt } from "@/components/ui/circuit-art";
+import { Plate } from "@/components/ui/plate";
+import { SectionHeader } from "@/components/ui/section-header";
+import { StatusPill } from "@/components/ui/status-pill";
+import { StickySteps } from "@/components/ui/sticky-steps";
+import { Timeline, TimelineEntry } from "@/components/ui/timeline";
+import { BreadcrumbJsonLd, ProjectJsonLd } from "@/components/seo/json-ld";
+import { BoundaryInspector } from "@/components/case-studies/boundary-inspector";
+import { CROWNWAGER_SECTIONS, CrownWagerBody } from "@/components/case-studies/crownwager";
 import { DBWHISPER_SECTIONS, DBWhisperBody } from "@/components/case-studies/dbwhisper";
 import { GENERIC_CASE_STUDY_SECTIONS, GenericBody } from "@/components/case-studies/generic";
 import { LLM_STUDIO_SECTIONS, LlmStudioBody } from "@/components/case-studies/llm-studio";
 import { TRADEPULSE_SECTIONS, TradePulseBody } from "@/components/case-studies/tradepulse";
-import { DemoPosterPreload } from "@/components/case-studies/demo-poster-preload";
 import { CaseStudyReadingOutline } from "@/components/case-studies/reading-outline";
-import { type CaseStudySection } from "@/components/case-studies/section";
-import { BreadcrumbJsonLd, ProjectJsonLd } from "@/components/seo/json-ld";
-import { Breadcrumb } from "@/components/ui/breadcrumb";
-type CaseStudyTemplate = {
-  Body: () => ReactNode;
-  sections: readonly CaseStudySection[];
-};
+import { FlagshipWalkthroughSection } from "@/components/case-studies/request-walkthrough";
+import type { CaseStudySection } from "@/components/case-studies/section";
+import { crownwagerDiagram } from "@/components/diagrams/data/crownwager";
+import { dbwhisperDiagram } from "@/components/diagrams/data/dbwhisper";
+import { llmStudioDiagram } from "@/components/diagrams/data/llm-studio";
+import { tradepulseDiagram } from "@/components/diagrams/data/tradepulse";
+import type { DiagramSpec } from "@/components/diagrams/types";
+import { AskAiButton, AskAiQuestions } from "@/components/work/ask-ai";
+import { DecisionBento } from "@/components/work/decision-bento";
+import { DEMO_FRAME_ID, DemoPlayer, WatchDemoButton } from "@/components/work/demo-player";
+import { FlowStep } from "@/components/work/flow-step";
+import { NeighbourCards } from "@/components/work/neighbour-cards";
+import { projectFrontmatter } from "@/components/work/project-frontmatter";
+import { Results } from "@/components/work/results";
+import { WorkCta } from "@/components/work/work-cta";
+import { projectNeighbourCards } from "@/components/work/work-neighbours";
+import styles from "@/components/work/case-study.module.css";
+import { boundaryCases } from "@/content/dbwhisper-boundary";
+import { evals } from "@/content/evals";
+import { CASE_STUDY_STEPS, askAiLabel, caseStudyPage as copy } from "@/content/pages/work";
+import { projects, projectBySlug } from "@/content/projects";
+import { CASE_STUDY_STARTERS } from "@/lib/ai/starters";
+import { formatDate } from "@/lib/format";
+import { absoluteUrl, pageMetadata } from "@/lib/seo";
 
 export const dynamicParams = false;
 
+/**
+ * The public case studies. The flagships have static routes of their own
+ * (app/work/bench-discovery, careltc, signflow), so this page never loads the
+ * flagship template, and any other slug is a 404.
+ */
 export function generateStaticParams() {
   return projects.map((p) => ({ slug: p.slug }));
 }
@@ -58,184 +78,296 @@ export async function generateMetadata({
   });
 }
 
-/** Projects with an authored deep write-up and a shared section index for the TOC. */
-const BODIES: Record<string, CaseStudyTemplate> = {
-  dbwhisper: { Body: DBWhisperBody, sections: DBWHISPER_SECTIONS },
-  tradepulse: { Body: TradePulseBody, sections: TRADEPULSE_SECTIONS },
-  crownwager: { Body: CrownWagerBody, sections: CROWNWAGER_SECTIONS },
-  "llm-studio": { Body: LlmStudioBody, sections: LLM_STUDIO_SECTIONS },
+/** Each project's authored write-up, its section index, and its architecture data. */
+type CaseStudyTemplate = {
+  Body: () => ReactNode;
+  sections: readonly CaseStudySection[];
+  diagram: DiagramSpec;
 };
 
+const TEMPLATES: Record<string, CaseStudyTemplate> = {
+  dbwhisper: { Body: DBWhisperBody, sections: DBWHISPER_SECTIONS, diagram: dbwhisperDiagram },
+  tradepulse: { Body: TradePulseBody, sections: TRADEPULSE_SECTIONS, diagram: tradepulseDiagram },
+  crownwager: { Body: CrownWagerBody, sections: CROWNWAGER_SECTIONS, diagram: crownwagerDiagram },
+  "llm-studio": { Body: LlmStudioBody, sections: LLM_STUDIO_SECTIONS, diagram: llmStudioDiagram },
+};
+
+/** The demo's hostname for the frame's URL pill, or the project name when there is no demo. */
+const frameUrl = (live: string | undefined, title: string): string => (live ? new URL(live).hostname : title);
+
+/** The hero frame's rendered widths (`.heroFrame` is 1040px at most). */
+const HERO_FRAME_SIZES = "(min-width: 1100px) 1040px, calc(100vw - 32px)";
+
+/**
+ * The hero lead: the summary without the tagline it often opens with, since
+ * the tagline is already the headline ("An honest quant backtesting platform —
+ * a look-ahead-free engine…" → "A look-ahead-free engine…").
+ */
+function heroLead(summary: string, tagline: string): string {
+  const opener = tagline.replace(/\.$/, "");
+  if (!summary.startsWith(opener)) return summary;
+  const rest = summary.slice(opener.length).replace(/^\s*[—–-]\s*/, "");
+  return rest.charAt(0).toUpperCase() + rest.slice(1);
+}
+
+/**
+ * /work/[slug] — a public system's product page (the Clerk product-page
+ * pattern): the work sub-nav, a centred hero with the real recording in a
+ * browser frame, how it works, the decisions, the measured results with their
+ * methods, the shipping log, then the full write-up.
+ *
+ * Every figure is read from the registries (content/projects.ts,
+ * content/evals.ts) or the diagram data; nothing on this page is retyped.
+ * DBWhisper has no recording — it was withdrawn because its frames showed
+ * retracted figures — so its frame holds the product capture, its hero leads
+ * with the request walkthrough, and a caret link jumps to the boundary
+ * inspector ("Try the validator").
+ */
 export default async function CaseStudyPage({ params }: { params: Promise<{ slug: string }> }) {
   const { slug } = await params;
-  const p: Project | undefined = projectBySlug(slug);
+  const p = projectBySlug(slug);
   if (!p) notFound();
-  const template = BODIES[slug];
+  const template = TEMPLATES[slug];
   const sections = template?.sections ?? GENERIC_CASE_STUDY_SECTIONS;
-  // The product recording (public/demos/<slug>.webm), captured from the real
-  // deployment, stays on the page when a free-tier demo is down, so the case
-  // study does not depend on a sleeping host. Its poster is a real screenshot,
-  // which older Safari shows when it cannot play webm. A project without one
-  // (DBWhisper, until it is re-recorded) opens on its metrics.
-  const demo = p.recording;
-  const { previous, next } = projectNeighbours(slug);
+  const { tagline, stack } = projectFrontmatter(slug);
+  const rows = evals.filter((e) => e.system === p.title);
+  const steps = CASE_STUDY_STEPS[slug];
+  const { previous, next } = projectNeighbourCards(slug);
+  const questions = CASE_STUDY_STARTERS[slug] ?? [];
   const url = absoluteUrl(`/work/${slug}`);
+  // DBWhisper leads with its request walkthrough and holds the boundary inspector.
+  const hasBoundary = slug === "dbwhisper";
 
   return (
     <>
-      {/* The shared page top keeps case studies aligned with every route. */}
-      <Section space="lg" className={PAGE_HEADER_BAND}>
-        <ProjectJsonLd
-          title={p.title}
-          description={p.summary}
-          url={url}
-          timeline={p.timeline}
-          role={p.role}
-          systems={p.systems}
-          links={p.links}
-          changelog={p.changelog}
-        />
-        <BreadcrumbJsonLd
-          items={[
-            { name: "Work", url: absoluteUrl("/work") },
-            { name: p.title, url },
-          ]}
-        />
-        {demo ? <DemoPosterPreload href={`/demos/${slug}.webp`} /> : null}
-        <Breadcrumb parent={{ label: "Work", href: "/work" }} current={p.title} />
+      <WorkSubnav current={slug} />
+      <ProjectJsonLd
+        title={p.title}
+        description={p.summary}
+        url={url}
+        timeline={p.timeline}
+        role={p.role}
+        systems={p.systems}
+        links={p.links}
+        changelog={p.changelog}
+      />
+      <BreadcrumbJsonLd
+        items={[
+          { name: "Work", url: absoluteUrl("/work") },
+          { name: p.title, url },
+        ]}
+      />
 
-        {/* The status is the kicker; role and timeline drop to the meta row, which
-          is where the other two article templates put their document facts. One
-          fused `status · role · timeline` line was the case study's own private
-          format and read as a slug dump ("active-development"). */}
-        <ArticleHeader
-          kicker={PROJECT_STATUS_LABEL[p.status]}
-          title={p.title}
-          lede={p.summary}
-          meta={[<span key="role">{p.role}</span>, <span key="timeline">{p.timeline}</span>]}
-        >
-          {p.links.live ? (
-            <a
-              href={p.links.live}
-              target="_blank"
-              rel="noopener noreferrer"
-              className={buttonVariants("secondary", "sm")}
-            >
-              {PROJECT_LINKS.demo} <ArrowUpRight size={14} strokeWidth={1.5} aria-hidden />
+      {/* ---- hero ---- */}
+      <section className={styles.hero} aria-labelledby="case-study-title">
+        <CircuitArt fade="center" className={styles.heroArt} />
+        <div className={styles.heroInner}>
+          {p.recording ? (
+            <WatchDemoButton label={copy.watchDemo} target={DEMO_FRAME_ID} />
+          ) : hasBoundary ? (
+            <a href="#request-walkthrough" className={styles.watchPill}>
+              {copy.readWalkthrough}
+              <Caret />
             </a>
           ) : null}
-          {/* ↗ marks a link that leaves the site in a new tab — the demo
-              button beside it says so, and so must this. */}
-          {p.links.repo ? (
-            <a
-              href={p.links.repo}
-              target="_blank"
-              rel="noopener noreferrer"
-              className="inline-flex items-center gap-1 text-sm text-ink underline decoration-border-strong underline-offset-4 hover:decoration-accent"
-            >
-              {PROJECT_LINKS.source}
-              <ArrowUpRight size={14} strokeWidth={1.5} aria-hidden />
-            </a>
-          ) : null}
-        </ArticleHeader>
+          <p className={styles.heroProduct}>{p.title}</p>
+          <h1 id="case-study-title" className={styles.heroTitle}>
+            {tagline}
+          </h1>
+          <p className={styles.heroLead}>{heroLead(p.summary, tagline)}</p>
+          <div className={styles.heroActions}>
+            {p.links.live ? (
+              <Button href={p.links.live} variant="dark" size="lg" caret>
+                {copy.tryDemo}
+              </Button>
+            ) : null}
+            {p.links.repo ? (
+              <Button href={p.links.repo} variant={p.links.live ? "light" : "dark"} size="lg" caret>
+                {copy.viewSource}
+              </Button>
+            ) : null}
+            {hasBoundary ? (
+              <CaretLink href={`#${copy.boundary.id}`} tone="muted" size="md" className={styles.heroLink}>
+                {copy.boundary.cta}
+              </CaretLink>
+            ) : null}
+            <AskAiButton label={askAiLabel(p.title)} variant="ghost" />
+          </div>
+          <div className={styles.heroMeta}>
+            {/* "Deployed demo" only while there is a demo to open (design-system §7.2). */}
+            {p.links.live ? <StatusPill status="deployed-demo" /> : null}
+            {p.links.repo ? <Chip variant="outline">Open source</Chip> : null}
+            <span className={styles.heroFacts}>
+              {p.role} · {p.timeline}
+            </span>
+          </div>
+        </div>
+
+        <div id={DEMO_FRAME_ID} className={styles.heroFrame}>
+          <BrowserFrame url={frameUrl(p.links.live, p.title)}>
+            {p.recording ? (
+              <DemoPlayer
+                id={DEMO_FRAME_ID}
+                src={`/demos/${slug}.webm`}
+                poster={`/demos/${slug}.webp`}
+                captions={`/demos/${slug}.vtt`}
+                alt={p.recording.alt}
+                width={p.recording.width}
+                height={p.recording.height}
+                playLabel={copy.recording.play}
+                sizes={HERO_FRAME_SIZES}
+                priority
+              />
+            ) : (
+              <Image
+                src={`/demos/${slug}.png`}
+                alt={p.card.alt}
+                width={1920}
+                height={1140}
+                sizes={HERO_FRAME_SIZES}
+                loading="eager"
+                fetchPriority="high"
+              />
+            )}
+          </BrowserFrame>
+          <p className={styles.heroCaption}>{p.recording ? p.recording.caption : p.card.caption}</p>
+        </div>
+      </section>
+
+      {/* ---- how it works ---- */}
+      {/* The flagship's walkthrough is its own region, named by its title; naming
+          this wrapper after the same heading made two regions of one name. */}
+      <Section space="md" id="how-it-works" ariaLabelledBy={hasBoundary ? undefined : "how-title"}>
+        {hasBoundary ? (
+          <FlagshipWalkthroughSection />
+        ) : template && steps ? (
+          <>
+            <SectionHeader
+              id="how-title"
+              kicker={copy.howItWorks.kicker}
+              title={copy.howItWorks.title}
+              lead={copy.howItWorks.lead}
+            />
+            <StickySteps
+              className={styles.steps}
+              label={copy.howItWorks.stepsLabel}
+              steps={steps.map((id) => {
+                const node = template.diagram.nodes.find((n) => n.id === id);
+                if (!node) throw new Error(`${slug}: no diagram node "${id}"`);
+                return {
+                  id,
+                  title: node.label,
+                  body: node.description,
+                  media: (
+                    <FlowStep
+                      spec={template.diagram}
+                      id={id}
+                      fromLabel={copy.howItWorks.from}
+                      toLabel={copy.howItWorks.to}
+                    />
+                  ),
+                };
+              })}
+            />
+          </>
+        ) : null}
       </Section>
 
-      {/* The body band spends the other half of the header seam; `lg` keeps the
-          208px close the article template always had. The metrics row is the
-          band's first content — no extra margin, the seam IS the gap. */}
-      <Section space="lg" className={PAGE_BODY_BAND}>
-        <div className="xl:grid xl:grid-cols-[minmax(0,1fr)_17rem] xl:gap-10">
-          <div id="work-case-study-content">
-            {/* §9 order: the product FIRST, then the numbers it earned. Opening
-                on three figures asks the reader to trust a claim before they
-                have seen the thing making it. */}
-            {demo ? (
-              <div className="max-w-[var(--width-prose)]">
-                <Figure
-                  caption={
-                    <>
-                      {demo.caption}
-                      {p.links.live ? (
-                        <>
-                          {" "}
-                          <a
-                            href={p.links.live}
-                            target="_blank"
-                            rel="noopener noreferrer"
-                            className="inline-flex items-center gap-0.5 text-accent underline decoration-border-strong underline-offset-2 hover:text-accent-hover hover:decoration-accent"
-                          >
-                            {PROJECT_LINKS.captionDemo}
-                            <ArrowUpRight size={12} strokeWidth={1.6} aria-hidden />
-                          </a>{" "}
-                          ({PROJECT_LINKS.captionWake}).
-                        </>
-                      ) : null}
-                    </>
-                  }
-                >
-                  <video
-                    poster={`/demos/${slug}.webp`}
-                    aria-label={demo.alt}
-                    width={demo.width}
-                    height={demo.height}
-                    controls
-                    muted
-                    playsInline
-                    preload="none"
-                    className="block h-auto w-full"
-                  >
-                    <source src={`/demos/${slug}.webm`} type="video/webm" />
-                    <track
-                      kind="captions"
-                      src={`/demos/${slug}.vtt`}
-                      srcLang="en"
-                      label="English"
-                      default
-                    />
-                  </video>
-                </Figure>
-              </div>
-            ) : null}
+      {/* ---- DBWhisper: try the boundary ---- */}
+      {hasBoundary ? (
+        <Section space="md" tone="subtle" id={copy.boundary.id} ariaLabelledBy="boundary-heading">
+          <div className={styles.boundary}>
+            <SectionHeader
+              id="boundary-heading"
+              kicker={copy.boundary.kicker}
+              title={copy.boundary.title}
+              lead={copy.boundary.lead}
+            />
+            <BoundaryInspector cases={boundaryCases} />
+          </div>
+        </Section>
+      ) : null}
 
-            {/* Pull-out metric cards. Every method line links to the chapter
-                that derives it, so the reader can jump from a claim to its
-                working rather than taking the number on trust. */}
-            <div className={demo ? "mt-10" : ""}>
-              <MetricCards metrics={p.metrics} methodHref="#performance-cost" />
-            </div>
+      {/* ---- key decisions ---- */}
+      {template ? (
+        <Plate id="key-decisions-band" labelledBy="decisions-title">
+          <SectionHeader id="decisions-title" kicker={copy.decisions.kicker} kickerTone="cyan" title={copy.decisions.title} />
+          <div className={styles.bandBody}>
+            <DecisionBento spec={template.diagram} labels={copy.decisions} />
+          </div>
+        </Plate>
+      ) : null}
 
-            {/* No top margin: the body's first `<CS>` heading carries the section gap
-                itself (PROSE.h2's `mt-14`), the same as the first heading in an MDX
-                essay. A margin here would stack on top of it and the case study would
-                open with a wider gap than the other two templates. */}
-            <div>
-              {template ? <template.Body /> : <GenericBody project={p} />}
-            </div>
+      {/* ---- results, with methods ---- */}
+      <Section space="lg" id="results" ariaLabelledBy="results-title">
+        <SectionHeader id="results-title" kicker={copy.results.kicker} title={copy.results.title} lead={copy.results.lead}>
+          <CaretLink href={copy.results.evalsLink.href} size="md">
+            {copy.results.evalsLink.label}
+          </CaretLink>
+        </SectionHeader>
+        <div className={styles.bandBody}>
+          <Results project={p} rows={rows} labels={copy.results} />
+        </div>
+      </Section>
 
-            {p.changelog.length > 0 ? (
-              <section
-                aria-label="Changelog"
-                className="mt-20 max-w-[var(--width-prose)] border-t border-border pt-8"
-              >
-                <h2 className="font-mono text-xs uppercase tracking-[0.04em] text-ink-tertiary">
-                  Changelog
-                </h2>
-                <ol className="mt-6 flex flex-col gap-5">
-                  {p.changelog.map((c, i) => (
-                    <li key={`${c.date}-${i}`} className="grid gap-1 sm:grid-cols-[8rem_1fr] sm:gap-6">
-                      <time dateTime={c.date} className="font-mono text-xs text-ink-tertiary">
-                        {formatDate(c.date)}
-                      </time>
-                      <p className="text-ink-secondary">{c.summary}</p>
-                    </li>
-                  ))}
-                </ol>
-              </section>
-            ) : null}
+      {/* ---- shipping log ---- */}
+      {p.changelog.length > 0 ? (
+        <Section space="md" tone="subtle" id="shipping-log" ariaLabelledBy="shipped-title">
+          <div className={styles.split}>
+            <SectionHeader id="shipped-title" kicker={copy.shipped.kicker} title={copy.shipped.title} />
+            <Timeline label={`${p.title} releases`}>
+              {p.changelog.map((c) => (
+                <TimelineEntry key={`${c.date}-${c.summary}`} date={formatDate(c.date)} dateTime={c.date}>
+                  <p>{c.summary}</p>
+                </TimelineEntry>
+              ))}
+            </Timeline>
+          </div>
+        </Section>
+      ) : null}
 
-            <ArticleFooter collection="work" previous={previous} next={next} />
+      {/* ---- the full write-up ---- */}
+      <Section space="lg" id="write-up" ariaLabelledBy="writeup-title">
+        <SectionHeader id="writeup-title" kicker={copy.writeup.kicker} title={copy.writeup.title} />
+        <div className={styles.writeup}>
+          <div id="work-case-study-content" className={styles.writeupBody}>
+            {template ? <template.Body /> : <GenericBody project={p} />}
           </div>
           <CaseStudyReadingOutline slug={slug} sections={sections} contentId="work-case-study-content" />
+        </div>
+      </Section>
+
+      {/* ---- stack, neighbours, CTA ---- */}
+      <Section space="md" tone="subtle" ariaLabelledBy="stack-title">
+        <div className={styles.split}>
+          <SectionHeader id="stack-title" kicker={copy.stack.kicker} title={copy.stack.title} size="sm" />
+          <div>
+            <ul className={styles.stack} aria-label={`${p.title} stack`}>
+              {stack.map((tool) => (
+                <li key={tool}>
+                  <Chip variant="raised" size="md">
+                    {tool}
+                  </Chip>
+                </li>
+              ))}
+            </ul>
+            <ul className={styles.stackSystems} aria-label={`${p.title} systems`}>
+              {p.systems.map((system) => (
+                <li key={system}>{system}</li>
+              ))}
+            </ul>
+          </div>
+        </div>
+      </Section>
+
+      <Section space="md" ariaLabelledBy="case-study-cta-title">
+        <NeighbourCards previous={previous} next={next} labels={copy.neighbours} />
+        <div className={styles.ctaGap}>
+          <WorkCta id="case-study-cta-title" {...copy.cta}>
+            {questions.length > 0 ? (
+              <AskAiQuestions title={askAiLabel(p.title)} questions={questions} align="center" />
+            ) : null}
+          </WorkCta>
         </div>
       </Section>
     </>

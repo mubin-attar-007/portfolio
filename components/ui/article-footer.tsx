@@ -33,9 +33,9 @@ import { ARTICLE_FOOTER, type ArticleCollection } from "@/content/article";
  * with no idea what is behind them, and title alone would drop the ordering the
  * arrows carry visually. The arrows are `aria-hidden` — the direction is
  * already in the text, so it is never conveyed by a glyph alone. The hover
- * state changes the border AND the title colour, so it is not colour-only.
+ * state deepens the shadow AND changes the title colour, so it is not colour-only.
  *
- * Motion: colour and border-colour only, at --motion-fast, plus TextLink's own
+ * Motion: colour and shadow only, plus TextLink's own
  * chevron nudge. Nothing transforms and nothing animates on load, so the global
  * prefers-reduced-motion rules already cover everything here.
  */
@@ -55,17 +55,17 @@ export function ArticleFooter({
   return (
     <nav
       aria-label={`More ${labels.label}`}
-      className="mt-20 max-w-[var(--width-prose)] border-t border-border pt-8"
+      className="mt-16 max-w-[var(--width-prose)]"
     >
       {hasNeighbours ? (
         <>
-          <h2 className="font-mono text-xs uppercase tracking-[0.04em] text-ink-tertiary">
+          <h2 className="text-[0.8125rem] font-semibold text-ink">
             {ARTICLE_FOOTER.heading}
           </h2>
           {/* Two equal columns from sm up. Grid's default `stretch` is what keeps
               a one-line title and a three-line title on cards of the SAME height,
               so the pair reads as one control rather than two unrelated boxes. */}
-          <ul className="mt-6 grid gap-4 sm:grid-cols-2">
+          <ul className="mt-4 grid gap-4 sm:grid-cols-2">
             {previous ? (
               <li>
                 <NeighbourCard
@@ -126,10 +126,10 @@ function NeighbourCard({
     <Link
       href={href}
       prefetch={false}
-      className="group/card flex h-full flex-col gap-2 rounded-[var(--radius-md)] border border-border bg-surface p-4 transition-colors duration-fast ease-[var(--ease-out)] hover:border-border-strong"
+      className="group/card flex h-full flex-col gap-2 rounded-[var(--radius-lg)] bg-surface p-5 shadow-[var(--shadow-card)] transition-shadow duration-base ease-[var(--ease-out)] hover:shadow-[var(--shadow-lift)]"
     >
       <span
-        className={`inline-flex items-center gap-1.5 font-mono text-xs uppercase tracking-[0.04em] text-ink-tertiary ${
+        className={`inline-flex items-center gap-1.5 text-sm text-ink-tertiary ${
           back ? "" : "self-end"
         }`}
       >
@@ -138,7 +138,7 @@ function NeighbourCard({
         {back ? null : <Glyph size={12} strokeWidth={1.8} aria-hidden />}
       </span>
       <span
-        className={`text-ink transition-colors duration-fast ease-[var(--ease-out)] group-hover/card:text-accent ${
+        className={`font-semibold text-balance text-ink transition-colors duration-fast ease-[var(--ease-out)] group-hover/card:text-ink-secondary ${
           back ? "" : "text-right"
         }`}
       >

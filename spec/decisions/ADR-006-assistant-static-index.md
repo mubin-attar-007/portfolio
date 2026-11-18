@@ -6,6 +6,9 @@ function, and Claude — was never what shipped; the code builds a lexical BM25 
 module load and calls Gemini from a Node.js route. The no-vector-DB decision stands.
 Amended 2026-11-16: the corpus covers every published collection, and relevance is
 judged per question instead of by a fixed score floor (see the amendment below).
+Amended 2026-11-17: the flagship case studies join the corpus; spelling correction,
+aliases and a page prior join the lexical search; and one bounded routing call, not
+embeddings, is the second chance when it finds nothing (the second amendment).
 
 ## Context
 Grounded retrieval over site content. The corpus is small: the FAQ, the project
@@ -65,3 +68,30 @@ stays straightforward if the corpus ever grows by orders of magnitude.
   row is preferred only by a question about it; a chain of follow-ups keeps the topic
   its first question set; and every essay and note passage is dated. Detail:
   AI_ASSISTANT.md §2.
+
+## Amendment — 2026-11-17
+
+- **Corpus.** The flagship case studies (`content/flagship/`, ADR-019) are indexed in
+  finer passages than their page bands: an overview, one passage per section, and one
+  per incident, highlight, code excerpt (its story, never the code) and surface built,
+  each cited at its anchor on `/work/<slug>`. A work index and the hiring, about, /now,
+  /uses and /trust pages join them, and the profile passage is now built from the
+  content modules; it is also the background of every live answer. 172 passages in
+  all.
+- **Reading a question.** Lexical search now corrects a word the index does not know
+  to the site's spelling (Damerau–Levenshtein, over names, passage titles and tools
+  only), maps a small, tested set of content-backed aliases ("the NFC app" → CareLTC,
+  "CV" → résumé), and weighs the page the panel is open on (`page`, a prior). The BM25
+  index itself is unchanged.
+- **Second-chance retrieval, not embeddings.** When lexical search finds nothing and a
+  key, a topic and budget allow, one routing call (`lib/ai/router.ts`) shows the model a
+  compact index — one `id | title | first line` row per passage — and accepts at most
+  three ids that exist in it; anything else, or its 3.5 s timeout, is "nothing", and the
+  visitor gets the same honest "not covered" answer as before. It counts against the
+  same limits as an answer. Embeddings were weighed again and rejected: a build step
+  and a stored vector per passage, an embedding call with its own quota on every
+  question, and a cache, for under two hundred passages that lexical search already
+  finds for every golden question offline. The router keeps every answer traceable to
+  an id in the index, at $0. The no-vector-DB decision stands.
+- **Evidence.** A 67-question golden set holds the retrieval and the answers: offline in
+  `npm test`, live with `npm run eval:assistant` (AI_ASSISTANT.md §8).

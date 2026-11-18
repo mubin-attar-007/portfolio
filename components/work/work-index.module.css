@@ -1,0 +1,362 @@
+/* /work — the product overview. Tokens only; the hover states move shadows,
+   transforms and colour, and reduced motion makes them instant. */
+
+/* ---- header ------------------------------------------------------------- */
+.head {
+  isolation: isolate;
+  overflow-x: clip;
+}
+.headArt {
+  z-index: -1;
+  color: var(--color-dots);
+}
+
+/* ---- flagship work (on the dark plate) ---------------------------------- */
+.flagshipGrid {
+  display: grid;
+  gap: 10px;
+  margin-top: 56px;
+}
+/* One card per flagship: stacked on phones and tablets, a row of three from
+   1000px (a two-column grid left the third card alone on its row). */
+@media (min-width: 1000px) {
+  .flagshipGrid {
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+  }
+}
+.flagship {
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+  border-radius: var(--radius-xl);
+  background: var(--color-surface);
+  box-shadow: var(--shadow-card);
+  transition:
+    background-color var(--motion-slow) var(--ease-out),
+    box-shadow var(--motion-slow) var(--ease-out);
+}
+.flagship:is(:hover, :focus-within) {
+  background: var(--card-hover-bg);
+  box-shadow: var(--shadow-card-hover);
+}
+/* The real app on a dotted stage: the main capture rises into view on hover,
+   the second one sits over its lower right. */
+.flagshipShot {
+  position: relative;
+  aspect-ratio: 16 / 10;
+  overflow: hidden;
+  padding: 28px 28px 0;
+  border-bottom: 1px solid var(--color-border);
+  background:
+    radial-gradient(circle, var(--color-dots) 1px, transparent 1.2px) 0 0 / 16px 16px,
+    var(--color-bg-subtle);
+}
+.flagshipMain {
+  width: 88%;
+  transform: translateY(10px);
+  transition: transform var(--motion-slow) var(--spring-soft);
+}
+.flagship:is(:hover, :focus-within) .flagshipMain {
+  transform: translateY(0);
+}
+.flagshipSide {
+  position: absolute;
+  right: 20px;
+  bottom: -18px;
+}
+.flagshipSide:is([data-kind="window"], [data-kind="browser"]) {
+  width: 48%;
+}
+.flagshipSide[data-kind="phone"] {
+  bottom: -38%;
+  width: 24%;
+}
+.flagshipBody {
+  display: flex;
+  flex: 1;
+  flex-direction: column;
+  padding: 26px 28px 28px;
+}
+.employer {
+  margin-top: 22px;
+  font-size: 0.8125rem;
+  font-weight: 500;
+  color: var(--color-ink-tertiary);
+}
+.employer + .fieldTitle {
+  margin-top: 4px;
+}
+.usage {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: baseline;
+  gap: 4px 10px;
+  margin-top: 18px;
+  padding-top: 16px;
+  border-top: 1px dashed var(--color-dots);
+}
+.usageValue {
+  font-size: 1.625rem;
+  font-weight: 700;
+  letter-spacing: -0.03em;
+  font-variant-numeric: tabular-nums;
+  color: var(--color-ink);
+}
+.usageLabel {
+  font-size: 0.875rem;
+  color: var(--color-ink-secondary);
+}
+.tech {
+  margin-top: 14px;
+  font-family: var(--font-mono);
+  font-size: 0.75rem;
+  line-height: 1.6;
+  color: var(--color-ink-tertiary);
+}
+.fieldTop {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+}
+.fieldIcon {
+  position: relative;
+  display: grid;
+  width: 40px;
+  height: 40px;
+  place-items: center;
+  border-radius: var(--radius-md);
+  color: var(--color-plate-cyan);
+  background: var(--color-plate-raised);
+  box-shadow: inset 0 0 0 1px var(--color-plate-border-strong);
+}
+/* The halo: one ring that breathes out while the card is hovered or focused. */
+.fieldIcon::after {
+  content: "";
+  position: absolute;
+  inset: -1px;
+  border-radius: inherit;
+  box-shadow: 0 0 0 1px var(--color-plate-cyan);
+  opacity: 0;
+}
+.flagship:is(:hover, :focus-within) .fieldIcon::after {
+  animation: var(--kf-halo) 1.4s var(--ease-out) infinite;
+}
+.fieldPrivate {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  font-size: 0.78125rem;
+  color: var(--color-ink-tertiary);
+}
+.fieldTitle {
+  margin-top: 28px;
+  font-size: var(--text-title);
+  font-weight: 700;
+  line-height: 1.35;
+  letter-spacing: -0.015em;
+  color: var(--color-ink);
+}
+/* The title link covers the card, so the whole card is one target. Its focus
+   ring is drawn on the card itself: on the link's overlay it would be cut off
+   by the card's `overflow: hidden`. */
+.stretch::after {
+  content: "";
+  position: absolute;
+  inset: 0;
+  border-radius: inherit;
+}
+.stretch:focus-visible {
+  outline: none;
+}
+.flagship:has(.stretch:focus-visible) {
+  outline: 2px solid var(--color-accent);
+  outline-offset: 2px;
+}
+.fieldBody {
+  margin-top: 10px;
+  font-size: 0.9375rem;
+  line-height: 1.6;
+  color: var(--color-ink-secondary);
+}
+.pills {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  margin-top: 18px;
+}
+.fieldMore {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  margin-top: auto;
+  padding-top: 24px;
+  font-size: 0.875rem;
+  font-weight: 600;
+  color: var(--color-ink);
+}
+
+/* ---- public systems ------------------------------------------------------ */
+.publicGrid {
+  display: grid;
+  gap: 12px;
+  margin-top: 56px;
+}
+@media (min-width: 900px) {
+  .publicGrid {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+}
+.public {
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+  border-radius: var(--radius-xl);
+  background: var(--color-surface);
+  box-shadow: var(--shadow-card);
+  transition: box-shadow var(--motion-slow) var(--ease-out);
+}
+.public:is(:hover, :focus-within) {
+  box-shadow: var(--shadow-card-hover);
+}
+/* The capture sits on a sunken, dotted stage and rises into view on hover. */
+.shot {
+  display: block;
+  padding: 28px 28px 0;
+  overflow: hidden;
+  background:
+    radial-gradient(circle, var(--color-dots) 1px, transparent 1.2px) 0 0 / 16px 16px,
+    var(--color-bg-subtle);
+  border-bottom: 1px solid var(--color-border);
+}
+.shot > * {
+  border-bottom-left-radius: 0;
+  border-bottom-right-radius: 0;
+  transform: translateY(10px);
+  transition: transform var(--motion-slow) var(--spring-soft);
+}
+.public:is(:hover, :focus-within) .shot > * {
+  transform: translateY(0);
+}
+.shot img {
+  display: block;
+  width: 100%;
+  height: auto;
+  aspect-ratio: 16 / 9;
+  object-fit: cover;
+  object-position: top;
+}
+.publicBody {
+  display: flex;
+  flex: 1;
+  flex-direction: column;
+  padding: 24px 26px 26px;
+}
+.publicHead {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px 12px;
+}
+.category {
+  font-size: 0.8125rem;
+  color: var(--color-ink-tertiary);
+}
+.publicTitle {
+  margin-top: 12px;
+  font-size: 1.375rem;
+  font-weight: 700;
+  letter-spacing: -0.02em;
+  color: var(--color-ink);
+}
+.publicTitle a {
+  transition: color var(--motion-fast) var(--ease-out);
+}
+.publicTitle a:hover {
+  color: var(--color-accent);
+}
+.publicDef {
+  margin-top: 6px;
+  font-size: 0.9375rem;
+  line-height: 1.55;
+  color: var(--color-ink-secondary);
+}
+.metric {
+  display: grid;
+  gap: 4px;
+  margin-top: 20px;
+  padding-top: 16px;
+  border-top: 1px dashed var(--color-dots);
+}
+.metricValue {
+  font-size: 1.125rem;
+  font-weight: 700;
+  letter-spacing: -0.015em;
+  font-variant-numeric: tabular-nums;
+  color: var(--color-ink);
+}
+.metricLabel {
+  font-size: 0.8125rem;
+  line-height: 1.5;
+  color: var(--color-ink-tertiary);
+}
+.methodLink {
+  color: var(--color-accent);
+  text-decoration: underline;
+  text-decoration-color: color-mix(in srgb, var(--color-accent) 35%, transparent);
+  text-underline-offset: 3px;
+}
+.methodLink:hover {
+  text-decoration-color: currentColor;
+}
+.links {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px 22px;
+  margin-top: auto;
+  padding-top: 22px;
+}
+
+/* ---- stack band: one line of technology per system ------------------------ */
+.stackBand {
+  display: grid;
+  gap: 28px;
+  align-items: start;
+}
+@media (min-width: 1000px) {
+  .stackBand {
+    grid-template-columns: minmax(0, 0.7fr) minmax(0, 1.3fr);
+    gap: 64px;
+  }
+}
+.stackRows {
+  display: grid;
+  margin: 0;
+  border-top: 1px solid var(--color-border);
+}
+.stackRow {
+  display: grid;
+  gap: 4px 24px;
+  padding: 14px 0;
+  border-bottom: 1px solid var(--color-border);
+}
+@media (min-width: 640px) {
+  .stackRow {
+    grid-template-columns: 9.5rem minmax(0, 1fr);
+    align-items: baseline;
+  }
+}
+.stackName {
+  font-size: 0.9375rem;
+  font-weight: 600;
+  color: var(--color-ink);
+}
+.stackTech {
+  margin: 0;
+  font-family: var(--font-mono);
+  font-size: 0.8125rem;
+  line-height: 1.6;
+  color: var(--color-ink-secondary);
+}

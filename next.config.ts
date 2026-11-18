@@ -8,12 +8,13 @@ const DBWHISPER = "https://heisenbergblue-dbwhisper.hf.space";
 // Content-Security-Policy. No nonces — a nonce must be minted per request, which
 // would opt every route out of static rendering, so 'unsafe-inline' is the price
 // of keeping the whole site static:
-//   script-src: Next's inline bootstrap + the pre-paint theme script in
-//               app/layout.tsx (it must run before first paint to avoid a flash).
+//   script-src: Next's inline bootstrap scripts (the site is light-only, so
+//               there is no pre-paint theme script any more).
 //   style-src:  React `style={{…}}` attributes — hero animation delays and the
 //               computed SVG geometry in components/diagrams/system-diagram.tsx.
-// connect-src explicitly allows the dbwhisper backend the hero drives; 'self'
-// covers the site's own fetches (including /api/chat).
+// connect-src: 'self' covers the site's own fetches (including /api/chat). The
+// dbwhisper backend origin predates the redesign; no page calls it now, so it
+// can go the next time this policy changes.
 const csp = [
   "default-src 'self'",
   `script-src 'self' 'unsafe-inline'${isDev ? " 'unsafe-eval'" : ""}`,
@@ -49,6 +50,27 @@ const securityHeaders = [
 
 const nextConfig: NextConfig = {
   output: "standalone",
+  // Render-blocking CSS: Next's default merging, kept explicit because it is a
+  // measured choice. A page loads two or three stylesheets (34–39 KB gzip),
+  // some of it other routes' CSS. `graph` chunking sends a page closer to only
+  // its own CSS, but in five to nine files, and under the Lighthouse budget's
+  // model (six HTTP/1.1 connections, a round trip per request) those requests
+  // cost more than the 2–14 KB they save: the case study goes from 9 files to
+  // 2 for 1.7 KB more (spec/ENGINEERING.md §5).
+  experimental: {
+    cssChunking: true,
+    // Fewer, larger JavaScript chunks per page. Every page loads all of its
+    // chunks before it can hydrate, and the Lighthouse budget's model fetches
+    // them over six HTTP/1.1 connections a round trip apiece, so a request
+    // costs about as much as the bytes in it. At the default (50 KB of source)
+    // a case study split its own components into two chunks and the layout's a
+    // 300-byte third; at 200 KB they merge (case study 11 -> 9 scripts, writing
+    // and home 10 -> 9) with the same bytes. Most visits are a single page, so
+    // the chunk reuse this gives up between routes is worth little here.
+    turbopackChunking: {
+      minChunkSize: 200_000,
+    },
+  },
   // The assistant's corpus (lib/ai/corpus.ts) reads these MDX folders with fs
   // when /api/chat loads. The tracer follows the literal reads too; this list
   // makes the bundle's contents a stated fact rather than an inference, so an
@@ -71,15 +93,18 @@ const nextConfig: NextConfig = {
   //   /timeline → /about  (the career narrative now lives inside /about)
   //   /changelog→ /now     (the running record folded into the "now" surface)
   // The paths recruiters, autocomplete and agents guess first:
-  //   /contact  → /hire    (moving /hire itself is a separate decision, ADR-015 §6)
   //   /cv       → /resume
+  // The anonymous field-report drafts became the named flagship case studies:
+  //   /work/field/records-triage  → /work/bench-discovery
+  //   /work/field/nfc-room-rounds → /work/careltc
   async redirects() {
     return [
       { source: "/talks", destination: "/about", permanent: true },
       { source: "/timeline", destination: "/about", permanent: true },
       { source: "/changelog", destination: "/now", permanent: true },
-      { source: "/contact", destination: "/hire", permanent: true },
       { source: "/cv", destination: "/resume", permanent: true },
+      { source: "/work/field/records-triage", destination: "/work/bench-discovery", permanent: true },
+      { source: "/work/field/nfc-room-rounds", destination: "/work/careltc", permanent: true },
     ];
   },
 };

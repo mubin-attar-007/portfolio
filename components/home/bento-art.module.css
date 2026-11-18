@@ -1,0 +1,684 @@
+/* Home bento illustrations (the flagship captures, `.badge`, `.term`,
+   `.tline`, `.hub` on the dark plate; `.mini`, the chart and the bar on the
+   light grid). `.scope` sits on the Bento; each card is a direct child, so
+   `.scope > :is(:hover, :focus-within)` is "this card is hovered or focused".
+   Every moment is decorative (the art is aria-hidden) and plays only under the
+   pointer or keyboard focus; reduced motion stops it (globals.css). The
+   keyframes are the shared ones, named through `--kf-*` (globals.css). */
+
+/* ---------- Dark plate: the flagship products ---------- */
+/* A product card gives its captures a taller stage. */
+.productCard {
+  --card-art-h: 300px;
+}
+.product {
+  position: relative;
+  width: 100%;
+  height: 100%;
+  overflow: hidden;
+  background: radial-gradient(circle, var(--color-dots) 1px, transparent 1.2px) 0 0 / 16px 16px;
+}
+.productMain {
+  position: absolute;
+  top: 28px;
+  left: 7%;
+  width: 62%;
+  transform: translateY(8px);
+  transition: transform var(--motion-slow) var(--spring-soft);
+}
+.scope > :is(:hover, :focus-within) .productMain {
+  transform: none;
+}
+.productSide {
+  position: absolute;
+  top: 78px;
+  right: 6%;
+  transition: transform var(--motion-slow) var(--spring-soft);
+}
+/* On hover the two captures ease apart: the main one settles, the side one lifts away. */
+.scope > :is(:hover, :focus-within) .productSide {
+  transform: translate(6px, -6px);
+}
+.productSide:is([data-kind="window"], [data-kind="browser"]) {
+  width: 46%;
+}
+.productSide[data-kind="phone"] {
+  top: 44px;
+  right: 10%;
+  width: 17%;
+}
+/* Two classes, so it outranks `.halo { position: relative }` below, which the
+   badge also carries: a relative badge sat at the top of the stage, half cut
+   off by its edge. */
+.product > .productBadge {
+  position: absolute;
+  z-index: 3;
+  bottom: 18px;
+  left: 7%;
+}
+.usage {
+  margin-top: 12px;
+  font-size: 0.875rem;
+  font-weight: 600;
+  color: var(--color-ink);
+}
+.tech {
+  margin-top: 6px;
+  font-family: var(--font-mono);
+  font-size: 0.75rem;
+  line-height: 1.6;
+  color: var(--color-ink-tertiary);
+}
+
+/* ---------- Dark plate ---------- */
+.chips {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+  margin-top: 14px;
+}
+.chip {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 3px 9px;
+  border-radius: var(--radius-pill);
+  border: 1px solid var(--color-plate-border);
+  font-size: 0.78125rem;
+  font-weight: 550;
+}
+.chip::before {
+  content: "";
+  width: 6px;
+  height: 6px;
+  border-radius: 50%;
+  background: currentColor;
+}
+.chipLive {
+  color: var(--color-plate-positive);
+}
+.badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  padding: 8px 12px;
+  border-radius: 10px;
+  background: #222227;
+  box-shadow: inset 0 0 0 1px #34343b;
+  font-size: 0.78125rem;
+  color: var(--color-plate-ink);
+}
+.okText {
+  display: inline-block;
+  font-weight: 700;
+  color: var(--color-plate-positive);
+}
+.halo {
+  position: relative;
+}
+.halo::after {
+  content: "";
+  position: absolute;
+  inset: -1px;
+  border-radius: inherit;
+  box-shadow: 0 0 0 1px rgba(157, 140, 255, 0.6);
+  opacity: 0;
+  pointer-events: none;
+}
+.scope > :is(:hover, :focus-within) .halo::after {
+  animation: var(--kf-halo) 1.8s var(--ease-out) infinite;
+}
+
+.stack {
+  display: grid;
+  gap: 10px;
+  justify-items: start;
+}
+.term {
+  display: inline-flex;
+  align-items: center;
+  gap: 10px;
+  padding: 9px 12px;
+  border-radius: 9px;
+  background: #202025;
+  box-shadow: inset 0 0 0 1px #34343b;
+  font-family: var(--font-mono);
+  font-size: 0.75rem;
+  color: #b9b9c6;
+}
+.spin {
+  width: 11px;
+  height: 11px;
+  border-radius: 50%;
+  border: 1.5px solid #4a4a55;
+  border-top-color: #c9c9d6;
+}
+.scope > :is(:hover, :focus-within) .spin {
+  animation: var(--kf-spin) 900ms linear infinite;
+}
+
+/* Tenancy: the session's tenant set, then its rows. On hover the other
+   tenant's row is struck out (✕) and the session's rows pass (✓), in turn. */
+.rows {
+  display: grid;
+  gap: 6px;
+  width: min(300px, 100%);
+}
+.rows li {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 7px 10px;
+  border-radius: 8px;
+  background: #1d1d22;
+  box-shadow: inset 0 0 0 1px #2e2e35;
+  font-family: var(--font-mono);
+  font-size: 0.75rem;
+  color: #b9b9c6;
+  transition:
+    opacity 420ms var(--ease-out),
+    color 420ms var(--ease-out);
+}
+.rows li::before {
+  content: "✓";
+  display: inline-block;
+  font-weight: 700;
+  color: var(--color-plate-positive);
+  opacity: 0.4;
+  transition: opacity 300ms var(--ease-out);
+}
+.rows li[data-tenant="B"]::before {
+  content: "✕";
+  color: var(--color-plate-negative);
+}
+.tenantTag {
+  margin-left: auto;
+  padding: 1px 7px;
+  border-radius: var(--radius-pill);
+  box-shadow: inset 0 0 0 1px #3a3a42;
+  font-size: 0.6875rem;
+  color: var(--color-plate-ink-secondary);
+}
+/* The statement is typed again on hover, a character a step (the mono face
+   makes each step one character): a mask, so nothing reflows. The rows answer
+   once it is typed. */
+.typed {
+  display: inline-block;
+}
+.scope > :is(:hover, :focus-within) .typed {
+  animation: type-in calc(var(--chars) * 28ms) steps(var(--chars), end) both;
+}
+@keyframes type-in {
+  from {
+    clip-path: inset(0 100% 0 0);
+  }
+  to {
+    clip-path: inset(0 0 0 0);
+  }
+}
+.scope > :is(:hover, :focus-within) .rows li::before {
+  opacity: 1;
+  animation: var(--kf-pop) 550ms var(--spring) 1000ms both;
+}
+.scope > :is(:hover, :focus-within) .rows li:nth-child(2)::before {
+  animation-delay: 1140ms;
+}
+.scope > :is(:hover, :focus-within) .rows li:nth-child(3)::before {
+  animation-delay: 1280ms;
+}
+.scope > :is(:hover, :focus-within) .rows li[data-tenant="B"] {
+  opacity: 0.42;
+  text-decoration: line-through;
+  transition-delay: 1140ms;
+}
+
+/* Store review: "passed" at rest; on hover each review replays its wait (a
+   spinner, "in review"), then the check pops, the second a beat later. */
+.review {
+  gap: 9px;
+}
+.reviewIcon,
+.reviewState {
+  display: grid;
+}
+.reviewIcon > *,
+.reviewState > * {
+  grid-area: 1 / 1;
+}
+.reviewIcon {
+  width: 12px;
+  place-items: center;
+}
+.reviewIcon .spin {
+  opacity: 0;
+}
+.reviewState {
+  margin-left: 2px;
+  font-weight: 600;
+  color: var(--color-plate-positive);
+}
+.reviewState > :first-child {
+  color: var(--color-plate-ink-secondary);
+  opacity: 0;
+}
+.scope > :is(:hover, :focus-within) .reviewIcon .spin {
+  animation:
+    review-wait 1s linear both,
+    var(--kf-spin) 600ms linear infinite;
+}
+.scope > :is(:hover, :focus-within) .reviewIcon .okText {
+  animation: review-pass 1s var(--ease-out) both;
+}
+.scope > :is(:hover, :focus-within) .reviewState > :first-child {
+  animation: review-wait 1s linear both;
+}
+.scope > :is(:hover, :focus-within) .reviewState > :last-child {
+  animation: review-now 1s linear both;
+}
+.scope > :is(:hover, :focus-within) .review + .review :is(.spin, .okText, .reviewState > *) {
+  animation-delay: 260ms;
+}
+@keyframes review-wait {
+  0%,
+  72% {
+    opacity: 1;
+  }
+  100% {
+    opacity: 0;
+  }
+}
+@keyframes review-now {
+  0%,
+  72% {
+    opacity: 0;
+  }
+  100% {
+    opacity: 1;
+  }
+}
+@keyframes review-pass {
+  0%,
+  70% {
+    opacity: 0;
+    transform: scale(0.4);
+  }
+  86% {
+    opacity: 1;
+    transform: scale(1.4);
+  }
+  100% {
+    opacity: 1;
+    transform: none;
+  }
+}
+
+/* A signing link opened twice: on hover the attempts arrive in turn. */
+.attempts {
+  display: grid;
+  gap: 8px;
+  width: min(300px, 100%);
+}
+.attempts li {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 9px 12px;
+  border-radius: 9px;
+  background: #202025;
+  box-shadow: inset 0 0 0 1px #34343b;
+  font-family: var(--font-mono);
+  font-size: 0.75rem;
+  color: #b9b9c6;
+}
+.attempts li::before {
+  content: "✓";
+  display: inline-block;
+  font-weight: 700;
+  color: var(--color-plate-positive);
+}
+.attempts li[data-outcome="refused"]::before {
+  content: "✕";
+  color: var(--color-plate-negative);
+}
+.attemptResult {
+  margin-left: auto;
+  color: var(--color-plate-ink);
+}
+.scope > :is(:hover, :focus-within) .attempts li {
+  animation: var(--kf-rise) 520ms var(--spring-soft) both;
+}
+.scope > :is(:hover, :focus-within) .attempts li::before {
+  animation: var(--kf-pop) 520ms var(--spring) 220ms both;
+}
+.scope > :is(:hover, :focus-within) .attempts li + li {
+  animation-delay: 420ms;
+}
+.scope > :is(:hover, :focus-within) .attempts li + li::before {
+  animation-delay: 640ms;
+}
+
+.tline {
+  display: grid;
+  gap: 10px;
+  width: 80%;
+}
+.tline li {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  font-size: 0.78125rem;
+  color: var(--color-plate-ink-secondary);
+  transition: color 400ms var(--ease-out);
+}
+.tline i {
+  flex: none;
+  width: 9px;
+  height: 9px;
+  border-radius: 50%;
+  opacity: 0.5;
+  transform: scale(0.8);
+  transition:
+    opacity 400ms var(--ease-out),
+    transform 450ms var(--spring),
+    box-shadow 400ms var(--ease-out);
+}
+.tline li:nth-child(1) i {
+  background: var(--color-plate-negative);
+}
+.tline li:nth-child(2) i {
+  background: var(--color-plate-warning);
+}
+.tline li:nth-child(3) i {
+  background: var(--color-plate-positive);
+}
+.scope > :is(:hover, :focus-within) .tline li {
+  color: var(--color-plate-ink);
+}
+.scope > :is(:hover, :focus-within) .tline i {
+  opacity: 1;
+  transform: none;
+  box-shadow: 0 0 0 4px rgba(255, 255, 255, 0.06);
+}
+.scope > :is(:hover, :focus-within) .tline li:nth-child(2),
+.scope > :is(:hover, :focus-within) .tline li:nth-child(2) i {
+  transition-delay: 150ms;
+}
+.scope > :is(:hover, :focus-within) .tline li:nth-child(3),
+.scope > :is(:hover, :focus-within) .tline li:nth-child(3) i {
+  transition-delay: 300ms;
+}
+
+.hub {
+  position: relative;
+  width: 100%;
+  height: 100%;
+}
+/* The wires run under the hub and its satellites; while the card is hovered
+   or focused, dashes flow out from the hub. */
+.hubWires {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  overflow: visible;
+}
+.hubWires line {
+  stroke: #34343c;
+  stroke-width: 1;
+  stroke-dasharray: 3 5;
+  vector-effect: non-scaling-stroke;
+  transition: stroke 400ms var(--ease-out);
+}
+.scope > :is(:hover, :focus-within) .hubWires line {
+  stroke: rgba(99, 210, 239, 0.55);
+  animation: hub-flow 900ms linear infinite;
+}
+@keyframes hub-flow {
+  to {
+    stroke-dashoffset: -16;
+  }
+}
+.hubCenter {
+  position: absolute;
+  left: 50%;
+  top: 50%;
+  display: grid;
+  width: 78px;
+  height: 78px;
+  place-items: center;
+  transform: translate(-50%, -50%);
+  border-radius: 50%;
+  background: #202025;
+  box-shadow:
+    inset 0 0 0 1px #3a3a42,
+    0 0 0 10px rgba(255, 255, 255, 0.02),
+    0 0 0 22px rgba(255, 255, 255, 0.015);
+  font-weight: 800;
+  letter-spacing: -0.04em;
+  color: var(--color-plate-ink);
+  transition:
+    box-shadow 500ms var(--ease-out),
+    background 500ms var(--ease-out),
+    color 500ms var(--ease-out);
+}
+.scope > :is(:hover, :focus-within) .hubCenter {
+  background: radial-gradient(circle at 35% 30%, #3a4370, #1c1d2a 70%);
+  color: #a5ecff;
+  box-shadow:
+    inset 0 0 0 1px rgba(99, 210, 239, 0.65),
+    0 0 0 10px rgba(99, 210, 239, 0.07),
+    0 0 0 22px rgba(157, 140, 255, 0.05),
+    0 0 44px rgba(99, 210, 239, 0.35);
+}
+.sat {
+  position: absolute;
+  padding: 6px 10px;
+  border-radius: var(--radius-pill);
+  background: #222227;
+  box-shadow: inset 0 0 0 1px #34343b;
+  font-size: 0.75rem;
+  color: var(--color-plate-ink);
+  transition:
+    transform 550ms var(--spring-soft),
+    box-shadow 400ms var(--ease-out),
+    color 400ms var(--ease-out);
+}
+.sat:nth-of-type(1) {
+  left: 16%;
+  top: 22%;
+}
+.sat:nth-of-type(2) {
+  left: 20%;
+  bottom: 20%;
+}
+.sat:nth-of-type(3) {
+  right: 16%;
+  top: 24%;
+}
+.sat:nth-of-type(4) {
+  right: 18%;
+  bottom: 22%;
+}
+.scope > :is(:hover, :focus-within) .sat {
+  box-shadow: inset 0 0 0 1px #4a4a58;
+  color: #fff;
+}
+.scope > :is(:hover, :focus-within) .sat:nth-of-type(1) {
+  transform: translate(-6px, -4px);
+}
+.scope > :is(:hover, :focus-within) .sat:nth-of-type(2) {
+  transform: translate(-6px, 4px);
+}
+.scope > :is(:hover, :focus-within) .sat:nth-of-type(3) {
+  transform: translate(6px, -4px);
+}
+.scope > :is(:hover, :focus-within) .sat:nth-of-type(4) {
+  transform: translate(6px, 4px);
+}
+
+/* ---------- Light grid (public work) ---------- */
+.mini {
+  width: min(320px, 80%);
+  padding: 14px 16px;
+  border-radius: var(--radius-lg);
+  background: var(--color-surface);
+  box-shadow: var(--shadow-card);
+  font-size: 0.78125rem;
+  color: var(--color-ink);
+}
+.q {
+  margin-bottom: 8px;
+  color: var(--color-ink-secondary);
+}
+.miniSql {
+  margin-bottom: 8px;
+  padding: 8px 10px;
+  border: 1px solid var(--color-border);
+  border-radius: 9px;
+  background: var(--color-bg);
+  font-family: var(--font-mono);
+  font-size: 0.75rem;
+}
+.check {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 4px 0;
+}
+.check::before {
+  content: "✓";
+  display: inline-block;
+  font-weight: 700;
+  color: var(--color-positive);
+}
+.scope > :is(:hover, :focus-within) .check::before {
+  animation: var(--kf-pop) 550ms var(--spring) both;
+}
+.scope > :is(:hover, :focus-within) .check + .check::before {
+  animation-delay: 120ms;
+}
+.chart {
+  width: 80%;
+  overflow: visible;
+}
+.chartLine {
+  stroke-dasharray: 460;
+  stroke-dashoffset: 0;
+}
+.scope > :is(:hover, :focus-within) .chartLine {
+  animation: var(--kf-draw) 1.3s var(--ease-out) both;
+}
+.scope > :is(:hover, :focus-within) .chartArea {
+  animation: var(--kf-fadein) 1.3s var(--ease-out) both;
+}
+.chartPill {
+  position: absolute;
+  right: 10%;
+  top: 22px;
+  padding: 3px 10px;
+  border-radius: var(--radius-pill);
+  background: var(--color-surface);
+  box-shadow: inset 0 0 0 1px var(--color-border-strong);
+  font-size: 0.6875rem;
+  font-weight: 550;
+  color: var(--color-positive);
+}
+.pick {
+  text-align: center;
+}
+.odds {
+  display: flex;
+  justify-content: space-around;
+  font-size: 1.25rem;
+  font-weight: 700;
+  letter-spacing: -0.02em;
+}
+.odds small {
+  display: block;
+  font-size: 0.6875rem;
+  font-weight: 500;
+  letter-spacing: 0;
+  color: var(--color-ink-tertiary);
+}
+.oddsAway {
+  color: var(--color-ink-tertiary);
+}
+.prob {
+  display: flex;
+  height: 6px;
+  margin: 12px 0 2px;
+  overflow: hidden;
+  border-radius: 99px;
+  background: #ececf1;
+}
+.prob i {
+  display: block;
+  width: 62%;
+  height: 100%;
+  border-radius: inherit;
+  background: var(--color-ink);
+  transform-origin: left;
+}
+.scope > :is(:hover, :focus-within) .prob i {
+  animation: var(--kf-fill) 1s var(--spring-soft) both;
+}
+.sample {
+  display: inline-block;
+  margin-top: 10px;
+  padding: 2px 9px;
+  border-radius: var(--radius-pill);
+  background: #f1f1f3;
+  font-size: 0.71875rem;
+  color: var(--color-ink-secondary);
+}
+.bubbleQ {
+  width: fit-content;
+  max-width: 85%;
+  margin-left: auto;
+  padding: 8px 12px;
+  border-radius: 14px 14px 4px 14px;
+  background: var(--color-ink);
+  color: #fff;
+}
+.bubbleA {
+  margin-top: 10px;
+  padding: 9px 12px;
+  border-radius: 14px 14px 14px 4px;
+  background: #f4f4f6;
+  line-height: 1.5;
+}
+.scope > :is(:hover, :focus-within) .bubbleA {
+  animation: var(--kf-rise) 550ms var(--spring-soft) 120ms both;
+}
+
+@media (max-width: 640px) {
+  /* On a narrow card the window would cover the end of the main capture's
+     "Real app · dummy data" label; it starts just below it instead. */
+  .productSide:is([data-kind="window"], [data-kind="browser"]) {
+    top: 108px;
+  }
+  .sat:nth-of-type(1),
+  .sat:nth-of-type(2) {
+    left: 6%;
+  }
+  .sat:nth-of-type(3),
+  .sat:nth-of-type(4) {
+    right: 6%;
+  }
+}
+
+@media (max-width: 1000px) {
+  .productCard {
+    --card-art-h: 240px;
+  }
+  .productMain {
+    width: 74%;
+  }
+  .productSide:is([data-kind="window"], [data-kind="browser"]) {
+    width: 52%;
+  }
+  .productSide[data-kind="phone"] {
+    right: 6%;
+    width: 24%;
+  }
+}

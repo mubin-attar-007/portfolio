@@ -1,8 +1,6 @@
 "use client";
 
 import {
-  Fragment,
-  memo,
   useCallback,
   useEffect,
   useId,
@@ -10,86 +8,85 @@ import {
   useRef,
   useState,
   type Dispatch,
-  type ReactNode,
   type SetStateAction,
 } from "react";
 import { createPortal } from "react-dom";
-import Link from "next/link";
-import { Square, X } from "lucide-react";
-import { PROSE } from "@/components/mdx/prose";
-import { parseAnswer, type Inline } from "@/lib/ai/answer-format";
+import { ArrowDown, Sparkles, Square, X } from "lucide-react";
+import { Composer } from "@/components/assistant/composer";
+import { ASSISTANT_COPY } from "@/components/assistant/copy";
+import { EmptyState } from "@/components/assistant/empty-state";
+import { CLIENT_TIMEOUT_MS, slowAnswerCue } from "@/components/assistant/pending";
+import { Turn } from "@/components/assistant/turn";
+import { isFailedTurn } from "@/components/assistant/turn-status";
+import { useKeyboardInset } from "@/components/assistant/viewport";
+import styles from "@/components/assistant/assistant.module.css";
+import { readActions } from "@/lib/ai/actions";
 import {
+  askedQuestions,
   historyForRequest,
-  MAX_MESSAGE_CHARS,
   type AnswerMode,
   type AnswerNote,
+  type ChatRequest,
   type ChatTurn,
 } from "@/lib/ai/chat-contract";
 import { readCitations } from "@/lib/ai/citation-links";
-import { STARTERS } from "@/lib/ai/starters";
+import { readFollowUps } from "@/lib/ai/follow-ups";
+import { STARTERS, startersFor } from "@/lib/ai/starters";
 import { useInertBackground } from "@/lib/use-inert-background";
 
 /**
  * AssistantPanel — a grounded, cited assistant over this site's content
- * (AI_ASSISTANT.md §5). Calm slide-over (desktop) / bottom sheet (mobile), the
- * one place a shadow is allowed. Streams from /api/chat over SSE and renders
- * the answer's small markdown subset as React elements (never as HTML).
+ * (AI_ASSISTANT.md §5). A bottom sheet on phones, kept above the on-screen
+ * keyboard, and an inset drawer from `sm`, the one place a large shadow is
+ * allowed. Streams from /api/chat over SSE and renders the answer's small
+ * markdown subset as React elements (never as HTML).
  *
  * The conversation itself belongs to the launcher (`Assistant`), which stays
  * mounted in the header across page changes: closing the panel, or opening a
  * cited page, keeps the transcript. Closing during an answer stops it.
  *
+ * Page-aware: on a case study or an article the starters are that page's, and
+ * every question carries the page, which retrieval uses as a mild prior.
+ *
  * A11y: modal dialog with a focus trap, Escape to close, focus restore (owned
- * by the launcher), a polite log for answers. Focus never drops to <body>:
- * sending moves it to the question field, and a control that disappears (a
- * starter, Stop, Clear) hands it back to the field first.
+ * by the launcher), a polite log for answers and a polite status line for
+ * what the panel does (searching, ready, copied). Focus never drops to
+ * <body>: sending moves it to the question field, and a control that
+ * disappears (a starter, a follow-up, Stop, Clear, a retry, Jump to latest)
+ * hands it back to the field first. The transcript is a tab stop, so a long
+ * answer can be scrolled from the keyboard.
  */
+
+/** A question handed to the panel by an `assistant:open` request. */
+export type SeedQuestion = { id: number; question: string };
 
 type Props = {
   turns: ChatTurn[];
   setTurns: Dispatch<SetStateAction<ChatTurn[]>>;
   onClose: () => void;
+  /** A question to send as soon as the panel is open, or null. */
+  seed: SeedQuestion | null;
+  /** Called when the panel takes the seed, so it is sent once. */
+  onSeedTaken: (id: number) => void;
+  /** The page the panel is open on (the current pathname); the route ignores anything else. */
+  page: string | null;
 };
 
 /** HTTP status /api/chat answers with when the per-client window is exhausted. */
 const RATE_LIMITED = 429;
 
-/** Longer than the route's own 20 s answer timeout, so the server's fallback normally wins. */
-const CLIENT_TIMEOUT_MS = 30_000;
+/** How long the send button shows its check after an answer lands. */
+const ANSWERED_MS = 1_400;
 
-/** The character counter appears once a question is this long. */
-const COUNTER_FROM = Math.floor(MAX_MESSAGE_CHARS * 0.8);
+/** How long a one-off announcement ("Answer copied") holds the status line. */
+const ANNOUNCE_MS = 2_500;
 
-/** Tallest the question field grows before it scrolls. */
-const MAX_FIELD_HEIGHT_PX = 112;
+/** Within this distance of the bottom, the transcript follows new text. */
+const FOLLOW_SLACK_PX = 48;
 
 const UNAVAILABLE =
   "The assistant is unavailable right now. You can still explore the case studies and résumé.";
 const TIMED_OUT = "That answer took too long, so I stopped waiting. Try again in a moment.";
-
-/**
- * A short, honest label for a turn that is not a complete live answer — so the
- * UI never dresses a rate-limit notice, a stopped answer or site search up as
- * a live answer. Notes whose text already says it all carry no label.
- */
-const NOTE_LABEL: Partial<Record<AnswerNote, string>> = {
-  "injection-screened": "declined — out of scope",
-  "live-unavailable": "live answers unavailable — site search only",
-  "daily-budget-reached": "live answers paused for today — site search only",
-  "client-allowance-reached": "live answers paused for today — site search only",
-  "rate-limited": "rate limited",
-  stopped: "stopped",
-  "timed-out": "timed out",
-};
-
-function turnLabel(turn: ChatTurn): string | null {
-  const byNote = turn.note ? NOTE_LABEL[turn.note] : undefined;
-  if (byNote) return byNote;
-  if (turn.mode === "refusal") return "declined — out of scope";
-  if (turn.incomplete) return "cut short";
-  if (turn.mode === "fallback" && turn.sources && turn.sources.length > 0) return "from site search";
-  return null;
-}
 
 const MODES: readonly AnswerMode[] = ["live", "fallback", "refusal"];
 const NOTES: readonly AnswerNote[] = [
@@ -156,147 +153,8 @@ function newId(): string {
     : `${Date.now().toString(36)}-${Math.random().toString(36).slice(2)}`;
 }
 
-// ---- Answer text -------------------------------------------------------------
-
-/** Text with its single line breaks kept. */
-function withBreaks(text: string): ReactNode {
-  const lines = text.split("\n");
-  return lines.map((line, i) => (
-    <Fragment key={i}>
-      {i > 0 ? <br /> : null}
-      {line}
-    </Fragment>
-  ));
-}
-
-function InlineText({ inlines }: { inlines: Inline[] }) {
-  return inlines.map((inline, i) => {
-    switch (inline.kind) {
-      case "text":
-        return <Fragment key={i}>{withBreaks(inline.text)}</Fragment>;
-      case "code":
-        return (
-          <code key={i} className={PROSE.code}>
-            {inline.text}
-          </code>
-        );
-      case "strong":
-        return (
-          <strong key={i} className={PROSE.strong}>
-            <InlineText inlines={inline.children} />
-          </strong>
-        );
-      case "em":
-        return (
-          <em key={i}>
-            <InlineText inlines={inline.children} />
-          </em>
-        );
-    }
-  });
-}
-
-/**
- * An answer, rendered from the parsed markdown subset. Every string reaches
- * the DOM as a React text node, so model output can never become markup.
- */
-function AnswerText({ text }: { text: string }) {
-  const blocks = useMemo(() => parseAnswer(text), [text]);
-  return blocks.map((block, i) => {
-    switch (block.kind) {
-      case "paragraph":
-        return (
-          <p key={i} className="mt-2 first:mt-0">
-            <InlineText inlines={block.inlines} />
-          </p>
-        );
-      case "heading":
-        return (
-          <p key={i} className="mt-3 font-medium text-ink first:mt-0">
-            <InlineText inlines={block.inlines} />
-          </p>
-        );
-      case "list": {
-        const List = block.ordered ? "ol" : "ul";
-        return (
-          <List
-            key={i}
-            className={`mt-2 space-y-1 pl-5 marker:text-ink-tertiary first:mt-0 ${block.ordered ? "list-decimal" : "list-disc"}`}
-          >
-            {block.items.map((item, j) => (
-              <li key={j} className="pl-1">
-                <InlineText inlines={item} />
-              </li>
-            ))}
-          </List>
-        );
-      }
-      case "code":
-        return (
-          <pre
-            key={i}
-            className="mt-2 overflow-x-auto rounded-[var(--radius-sm)] bg-bg-subtle px-3 py-2 font-mono text-xs leading-relaxed text-ink first:mt-0"
-          >
-            <code>{block.text}</code>
-          </pre>
-        );
-    }
-  });
-}
-
-/** One turn of the transcript. Memoized: only the streaming turn re-renders per frame. */
-const Turn = memo(function Turn({ turn, onNavigate }: { turn: ChatTurn; onNavigate: () => void }) {
-  if (turn.role === "user") {
-    return (
-      <p className="self-end whitespace-pre-wrap break-words rounded-[var(--radius-md)] bg-bg-subtle px-3 py-2 text-sm text-ink">
-        {turn.content}
-      </p>
-    );
-  }
-  const label = turnLabel(turn);
-  const sources = turn.sources ?? [];
-  return (
-    <div>
-      {label ? <p className="mb-1 font-mono text-xs text-ink-tertiary">{label}</p> : null}
-      <div className="break-words text-sm leading-relaxed text-ink-secondary" aria-busy={turn.streaming || undefined}>
-        {turn.content ? <AnswerText text={turn.content} /> : null}
-        {turn.streaming && !turn.content ? (
-          <span className="font-mono text-xs text-ink-tertiary">
-            searching<span className="motion-safe:animate-pulse">…</span>
-          </span>
-        ) : null}
-      </div>
-      {sources.length > 0 ? (
-        <div className="mt-3 flex flex-col gap-2" aria-label="Answer sources">
-          {sources.map((citation, i) => (
-            <div key={i} className="text-xs">
-              <p className="break-words leading-relaxed text-ink-tertiary">{citation.source}</p>
-              {citation.links.length > 0 ? (
-                <div className="mt-1 flex flex-wrap gap-x-3 gap-y-1">
-                  {citation.links.map((link) => (
-                    <Link
-                      key={link.href}
-                      href={link.href}
-                      prefetch={false}
-                      onNavigate={onNavigate}
-                      className="inline-flex min-h-6 items-center gap-1 text-ink underline decoration-border-strong underline-offset-4 hover:decoration-ink"
-                    >
-                      {link.label}
-                      {/* → : a page of this site, same tab. ↗ is reserved for a new tab or mail (design-system §11.5). */}
-                      <span aria-hidden>→</span>
-                    </Link>
-                  ))}
-                </div>
-              ) : null}
-            </div>
-          ))}
-        </div>
-      ) : null}
-    </div>
-  );
-});
-
-// ---- Panel -------------------------------------------------------------------
+/** True when the visitor prefers reduced motion: the transcript jumps instead of gliding. */
+const prefersReducedMotion = (): boolean => window.matchMedia("(prefers-reduced-motion: reduce)").matches;
 
 type ActiveRequest = {
   id: string;
@@ -305,9 +163,18 @@ type ActiveRequest = {
   reason: "stopped" | "timed-out" | null;
 };
 
-export function AssistantPanel({ turns, setTurns, onClose }: Props) {
+export function AssistantPanel({ turns, setTurns, onClose, seed, onSeedTaken, page }: Props) {
   const [draft, setDraft] = useState("");
   const [busy, setBusy] = useState(false);
+  const [answered, setAnswered] = useState(false);
+  // The pending answer has sent no text for SLOW_AFTER_MS: say so, once.
+  const [slow, setSlow] = useState(false);
+  const [announcement, setAnnouncement] = useState<string | null>(null);
+  // The visitor scrolled up from the latest text: offer the way back down.
+  const [behind, setBehind] = useState(false);
+  // Turns already in the transcript when the panel opened stay still; only
+  // turns added while it is open rise into place.
+  const [initialTurnIds] = useState(() => new Set(turns.map((turn) => turn.id)));
   const panelRef = useRef<HTMLDivElement>(null);
   const inputRef = useRef<HTMLTextAreaElement>(null);
   const stopRef = useRef<HTMLButtonElement>(null);
@@ -317,14 +184,17 @@ export function AssistantPanel({ turns, setTurns, onClose }: Props) {
   const mountedRef = useRef(true);
   const streamFrameRef = useRef<number | null>(null);
   const followTranscriptRef = useRef(true);
+  // The transcript's last scroll position, so a scroll can tell up from down.
+  const lastScrollTopRef = useRef(0);
+  const answeredTimer = useRef<number | null>(null);
+  const announceTimer = useRef<number | null>(null);
   const dialogTitleId = useId();
   const dialogDescId = useId();
-  const hintId = useId();
-  const counterId = useId();
 
   // The panel only exists while it is open, so the boundary is unconditional:
   // everything behind it is inert for exactly as long as this component lives.
   useInertBackground(true);
+  useKeyboardInset(panelRef);
 
   const patchTurn = useCallback(
     (id: string, patch: Partial<ChatTurn>) => {
@@ -342,6 +212,13 @@ export function AssistantPanel({ turns, setTurns, onClose }: Props) {
   }, []);
 
   const focusField = useCallback(() => inputRef.current?.focus(), []);
+
+  /** Say something once through the status line, then return it to the panel's state. */
+  const announce = useCallback((message: string) => {
+    setAnnouncement(message);
+    if (announceTimer.current !== null) window.clearTimeout(announceTimer.current);
+    announceTimer.current = window.setTimeout(() => setAnnouncement(null), ANNOUNCE_MS);
+  }, []);
 
   // Focus the question field on open; trap focus and handle Escape while open.
   // Every close path calls the launcher's `onClose`, which unmounts the panel
@@ -387,21 +264,28 @@ export function AssistantPanel({ turns, setTurns, onClose }: Props) {
     return () => {
       mountedRef.current = false;
       stop("stopped");
+      if (answeredTimer.current !== null) window.clearTimeout(answeredTimer.current);
+      if (announceTimer.current !== null) window.clearTimeout(announceTimer.current);
     };
   }, [stop]);
 
-  // Follow new tokens only while the reader is at the bottom of the transcript.
-  // Scrolling back to an earlier answer must not fight the incoming stream.
+  // Follow new text only while the reader is at the bottom of the transcript.
+  // Scrolling back to an earlier answer must not fight the incoming stream:
+  // "Jump to latest" appears instead.
   useEffect(() => {
     turnsRef.current = turns;
     const el = logRef.current;
-    if (el && turns.length > 0 && followTranscriptRef.current) el.scrollTop = el.scrollHeight;
+    if (!el || turns.length === 0) return;
+    if (followTranscriptRef.current) el.scrollTop = el.scrollHeight;
+    else setBehind(true);
   }, [turns]);
 
-  // Collapse the field back to one line once it's cleared (after send).
-  useEffect(() => {
-    if (draft === "" && inputRef.current) inputRef.current.style.height = "auto";
-  }, [draft]);
+  /** The send button's moment of confirmation once an answer has landed. */
+  const markAnswered = useCallback(() => {
+    setAnswered(true);
+    if (answeredTimer.current !== null) window.clearTimeout(answeredTimer.current);
+    answeredTimer.current = window.setTimeout(() => setAnswered(false), ANSWERED_MS);
+  }, []);
 
   const ask = useCallback(
     async (question: string) => {
@@ -409,6 +293,7 @@ export function AssistantPanel({ turns, setTurns, onClose }: Props) {
       if (!q || activeRef.current) return;
 
       const history = historyForRequest(turnsRef.current, q);
+      const asked = [...askedQuestions(turnsRef.current), q];
       const id = newId();
       setTurns((prev) => [
         ...prev,
@@ -419,15 +304,23 @@ export function AssistantPanel({ turns, setTurns, onClose }: Props) {
       // leaves a visitor's next question intact, ready to submit afterwards.
       setDraft("");
       setBusy(true);
+      setSlow(false);
+      setAnswered(false);
+      setBehind(false);
       followTranscriptRef.current = true;
-      // A starter button unmounts with the empty state; keep focus in the
-      // dialog, on the field the next question goes into (WCAG 2.4.3).
+      // A starter or follow-up button unmounts as the conversation moves on;
+      // keep focus in the dialog, on the field the next question goes into
+      // (WCAG 2.4.3).
       focusField();
 
       const active: ActiveRequest = { id, controller: new AbortController(), reason: null };
       activeRef.current = active;
       const timer = setTimeout(() => stop("timed-out"), CLIENT_TIMEOUT_MS);
+      const cue = slowAnswerCue(() => {
+        if (mountedRef.current && activeRef.current === active) setSlow(true);
+      });
       let text = "";
+      let landed = false;
       const flush = () => {
         if (streamFrameRef.current !== null) cancelAnimationFrame(streamFrameRef.current);
         streamFrameRef.current = null;
@@ -442,10 +335,11 @@ export function AssistantPanel({ turns, setTurns, onClose }: Props) {
       };
 
       try {
+        const body: ChatRequest = { messages: history, ...(page ? { page } : {}) };
         const res = await fetch("/api/chat", {
           method: "POST",
           headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({ messages: history }),
+          body: JSON.stringify(body),
           signal: active.controller.signal,
         });
         // The rate limiter answers 429 + Retry-After, not a stream — surface the
@@ -485,9 +379,14 @@ export function AssistantPanel({ turns, setTurns, onClose }: Props) {
               patchTurn(id, { mode: asMode(data.mode), note: asNote(data.note), content: "" });
             } else if (event === "token" && typeof data.text === "string") {
               text += data.text;
+              cue.arrived();
               schedule();
             } else if (event === "sources") {
               patchTurn(id, { sources: readCitations(data.citations) });
+            } else if (event === "actions") {
+              patchTurn(id, { actions: readActions(data.actions) });
+            } else if (event === "followups") {
+              patchTurn(id, { followups: readFollowUps(data.questions, asked) });
             } else if (event === "done") {
               finished = true;
               incomplete = data.incomplete === true;
@@ -498,6 +397,7 @@ export function AssistantPanel({ turns, setTurns, onClose }: Props) {
         // A stream that ends without `done` was cut off on the way here.
         const cut = incomplete || (!finished && text.length > 0);
         patchTurn(id, { streaming: false, incomplete: cut || undefined });
+        landed = finished && !cut;
       } catch {
         flush();
         if (active.reason) {
@@ -515,6 +415,7 @@ export function AssistantPanel({ turns, setTurns, onClose }: Props) {
         }
       } finally {
         clearTimeout(timer);
+        cue.cancel();
         if (streamFrameRef.current !== null) cancelAnimationFrame(streamFrameRef.current);
         streamFrameRef.current = null;
         if (activeRef.current === active) activeRef.current = null;
@@ -522,35 +423,69 @@ export function AssistantPanel({ turns, setTurns, onClose }: Props) {
           // Stop is about to disappear; never let focus fall with it.
           if (document.activeElement === stopRef.current) focusField();
           setBusy(false);
+          setSlow(false);
+          if (landed) markAnswered();
         }
       }
     },
-    [focusField, patchTurn, setTurns, stop],
+    [focusField, markAnswered, page, patchTurn, setTurns, stop],
   );
 
   const clear = useCallback(() => {
     stop("stopped");
     setTurns([]);
+    setBehind(false);
     focusField();
   }, [focusField, setTurns, stop]);
 
+  /** Ask the latest question again after it failed. */
+  const retry = useCallback(() => {
+    const question = turnsRef.current.at(-2);
+    if (question?.role === "user") void ask(question.content);
+  }, [ask]);
+
+  const askQuestion = useCallback((question: string) => void ask(question), [ask]);
+
+  const submitDraft = useCallback(() => void ask(draft), [ask, draft]);
+
+  /** Back to the newest text, following it again; the button goes, so focus goes to the field. */
+  const jumpToLatest = useCallback(() => {
+    const el = logRef.current;
+    followTranscriptRef.current = true;
+    setBehind(false);
+    if (el) el.scrollTo({ top: el.scrollHeight, behavior: prefersReducedMotion() ? "auto" : "smooth" });
+    focusField();
+  }, [focusField]);
+
+  // A question handed over by an `assistant:open` request is sent as if typed.
+  // Deferred a frame, like the focus above, so a remount cancels it rather
+  // than sending it twice. While an answer streams it waits in the field.
+  useEffect(() => {
+    if (!seed) return;
+    const frame = requestAnimationFrame(() => {
+      onSeedTaken(seed.id);
+      if (activeRef.current) setDraft(seed.question);
+      else void ask(seed.question);
+    });
+    return () => cancelAnimationFrame(frame);
+  }, [seed, ask, onSeedTaken]);
+
+  const starters = useMemo(() => startersFor(page), [page]);
   const empty = turns.length === 0;
   const canSend = !busy && draft.trim().length > 0;
-  const showCounter = draft.length >= COUNTER_FROM;
-  const statusText = busy
-    ? "Searching the site and generating a cited answer."
-    : "Ready to search this site.";
+  const lastTurn = turns.at(-1);
+  const retryable = lastTurn !== undefined && isFailedTurn(lastTurn);
+  // A polite status line: one change when an answer starts, at most one when it is slow
+  // (kept until it ends, so it is read once), and one when it ends.
+  const statusText =
+    announcement ??
+    (busy ? (slow ? ASSISTANT_COPY.statusSlow : ASSISTANT_COPY.statusSearching) : ASSISTANT_COPY.statusReady);
 
   // Portal to <body>: the header pill has backdrop-filter, which would otherwise
   // make it the containing block for this fixed panel and mis-anchor it.
   return createPortal(
     <>
-      <div
-        data-modal-root
-        className="fixed inset-0 z-50 bg-[var(--scrim)]"
-        onClick={onClose}
-        aria-hidden="true"
-      />
+      <div data-modal-root className={styles.scrim} onClick={onClose} aria-hidden="true" />
       <div
         data-modal-root
         id="assistant-panel-dialog"
@@ -559,158 +494,135 @@ export function AssistantPanel({ turns, setTurns, onClose }: Props) {
         aria-modal="true"
         aria-labelledby={dialogTitleId}
         aria-describedby={dialogDescId}
-        className="fixed inset-x-0 bottom-0 z-50 flex h-[85dvh] flex-col overflow-hidden rounded-t-[var(--radius-lg)] border border-border bg-surface shadow-[var(--shadow-overlay)] sm:inset-x-auto sm:bottom-6 sm:right-6 sm:h-[min(38rem,calc(100dvh-6rem))] sm:w-[408px] sm:rounded-[var(--radius-lg)]"
+        className={styles.dialog}
       >
-        <header className="flex items-center justify-between gap-2 border-b border-border px-5 py-3">
-          <div className="min-w-0">
-            <p id={dialogTitleId} className="text-sm font-medium text-ink">
-              Ask about my work
-            </p>
-            <p className="font-mono text-xs text-ink-tertiary">
-              Projects, experience, and the decisions behind them
-            </p>
+        {/* A div, not <header>: under <body> a header is a second banner landmark. */}
+        <div className={styles.header}>
+          <span className={styles.mark} aria-hidden>
+            <Sparkles size={17} strokeWidth={1.75} />
+          </span>
+          <div className={styles.titles}>
+            <h2 id={dialogTitleId} className={styles.title}>
+              {ASSISTANT_COPY.title}
+            </h2>
+            <p className={styles.subtitle}>{ASSISTANT_COPY.subtitle}</p>
             <p id={dialogDescId} className="sr-only">
-              Ask about Mubin&apos;s projects, experience and writing. Answers link the pages they
-              come from. Press Escape to close.
+              {ASSISTANT_COPY.description}
             </p>
           </div>
-          <div className="flex shrink-0 items-center">
+          <div className={styles.actions}>
             {empty ? null : (
               <button
                 type="button"
                 onClick={clear}
-                aria-label="Clear conversation"
-                className="inline-flex h-11 items-center rounded-[var(--radius-md)] px-3 text-xs text-ink-secondary hover:text-ink"
+                aria-label={ASSISTANT_COPY.clearLabel}
+                className={styles.ghost}
               >
-                Clear
+                {ASSISTANT_COPY.clear}
               </button>
             )}
             <button
               type="button"
               onClick={onClose}
-              aria-label="Close"
-              className="inline-flex h-11 w-11 items-center justify-center rounded-[var(--radius-md)] text-ink-secondary hover:text-ink"
+              aria-label={ASSISTANT_COPY.close}
+              className={`${styles.ghost} ${styles.close}`}
             >
-              <X size={18} strokeWidth={1.5} aria-hidden />
+              <X size={18} strokeWidth={1.75} aria-hidden />
             </button>
           </div>
-        </header>
+        </div>
 
         <div
           ref={logRef}
-          className="min-h-0 flex-1 overflow-y-auto overscroll-contain px-5 py-4"
+          className={styles.log}
           onScroll={(event) => {
             const el = event.currentTarget;
-            followTranscriptRef.current = el.scrollHeight - el.scrollTop - el.clientHeight < 48;
+            const atBottom = el.scrollHeight - el.scrollTop - el.clientHeight < FOLLOW_SLACK_PX;
+            const up = el.scrollTop < lastScrollTopRef.current;
+            lastScrollTopRef.current = el.scrollTop;
+            // Only the reader scrolling back up pauses the follow; reaching the
+            // end resumes it. A glide down (Jump to latest, or the follow
+            // itself) passes through "not at the end" on every frame, and must
+            // not bring the button back on its way.
+            if (atBottom) {
+              followTranscriptRef.current = true;
+              setBehind(false);
+            } else if (up) {
+              followTranscriptRef.current = false;
+              setBehind(true);
+            }
           }}
           role="log"
+          aria-label={ASSISTANT_COPY.conversation}
           aria-live="polite"
           aria-relevant="additions text"
           aria-atomic="false"
           aria-busy={busy}
+          tabIndex={0}
         >
           {empty ? (
-            <div>
-              <p className="text-sm leading-relaxed text-ink-secondary">
-                Ask about Mubin&apos;s projects, experience and writing. Answers come from the
-                site&apos;s case studies, essays, notes, evaluations and résumé, and link the page
-                each one comes from.
-              </p>
-              <p className="mt-5 font-mono text-xs uppercase tracking-wide text-ink-tertiary">
-                Try one, or ask your own
-              </p>
-              <ul className="mt-4 flex flex-col gap-2">
-                {STARTERS.map((s) => (
-                  <li key={s}>
-                    <button
-                      type="button"
-                      onClick={() => void ask(s)}
-                      className="min-h-11 w-full rounded-[var(--radius-md)] border border-border bg-bg-subtle px-3 py-2 text-left text-sm text-ink transition-colors hover:border-border-strong"
-                    >
-                      {s}
-                    </button>
-                  </li>
-                ))}
-              </ul>
-            </div>
+            <EmptyState starters={starters} onPage={starters !== STARTERS} onAsk={askQuestion} />
           ) : (
-            <div className="flex flex-col gap-5">
-              {turns.map((turn) => (
-                <Turn key={turn.id} turn={turn} onNavigate={onClose} />
-              ))}
+            <div className={styles.transcript}>
+              {turns.map((turn) => {
+                const latest = turn === lastTurn;
+                return (
+                  <Turn
+                    key={turn.id}
+                    turn={turn}
+                    slow={latest && slow}
+                    onNavigate={onClose}
+                    animate={!initialTurnIds.has(turn.id)}
+                    onRetry={retryable && latest ? retry : undefined}
+                    onAsk={latest && !busy ? askQuestion : undefined}
+                    followUps={latest ? turn.followups : undefined}
+                    onAnnounce={announce}
+                  />
+                );
+              })}
             </div>
           )}
         </div>
 
-        {busy ? (
-          <div className="flex justify-center border-t border-border px-5 py-2">
-            <button
-              ref={stopRef}
-              type="button"
-              onClick={() => {
-                stop("stopped");
-                focusField();
-              }}
-              className="inline-flex h-9 items-center gap-1.5 rounded-[var(--radius-sm)] border border-border px-3 text-xs text-ink-secondary transition-colors hover:border-border-strong hover:text-ink"
-            >
-              <Square size={10} strokeWidth={2} aria-hidden />
-              Stop answering
+        <div className={styles.footer}>
+          {behind && !empty ? (
+            <button type="button" onClick={jumpToLatest} className={`${styles.ghost} ${styles.jump}`}>
+              <ArrowDown size={13} strokeWidth={2} aria-hidden />
+              {ASSISTANT_COPY.jump}
             </button>
-          </div>
-        ) : null}
-
-        <form
-          onSubmit={(e) => {
-            e.preventDefault();
-            void ask(draft);
-          }}
-          aria-label="Ask this site a question"
-          className="flex items-end gap-2 border-t border-border px-5 py-3"
-        >
-          <textarea
-            ref={inputRef}
-            rows={1}
-            value={draft}
-            maxLength={MAX_MESSAGE_CHARS}
-            onChange={(e) => {
-              setDraft(e.target.value);
-              e.target.style.height = "auto";
-              e.target.style.height = `${Math.min(e.target.scrollHeight, MAX_FIELD_HEIGHT_PX)}px`;
-            }}
-            onKeyDown={(e) => {
-              if (e.key === "Enter" && !e.shiftKey && !e.nativeEvent.isComposing) {
-                e.preventDefault();
-                void ask(draft);
-              }
-            }}
-            placeholder="Ask about a project or a decision…"
-            aria-describedby={showCounter ? `${hintId} ${counterId}` : hintId}
-            aria-label="Your question"
-            className="max-h-28 flex-1 resize-none overflow-y-auto rounded-[var(--radius-md)] border border-border bg-bg px-3 py-2 text-sm text-ink focus-visible:border-border-strong"
+          ) : null}
+          {busy ? (
+            <div className={styles.stopRow}>
+              <button
+                ref={stopRef}
+                type="button"
+                onClick={() => {
+                  stop("stopped");
+                  focusField();
+                }}
+                className={`${styles.ghost} ${styles.stop}`}
+              >
+                <Square size={9} strokeWidth={0} fill="currentColor" aria-hidden />
+                {ASSISTANT_COPY.stop}
+              </button>
+            </div>
+          ) : null}
+          <Composer
+            inputRef={inputRef}
+            draft={draft}
+            onDraftChange={setDraft}
+            onSubmit={submitDraft}
+            busy={busy}
+            answered={answered}
+            canSend={canSend}
           />
-          {/* aria-disabled, not disabled: a focused button that becomes
-              disabled drops focus to <body>. The submit handler ignores it. */}
-          <button
-            type="submit"
-            aria-disabled={!canSend || undefined}
-            className="inline-flex h-11 items-center rounded-[var(--radius-md)] bg-accent px-3 text-sm font-medium text-on-accent transition-colors hover:bg-accent-hover aria-disabled:cursor-not-allowed aria-disabled:opacity-50 aria-disabled:hover:bg-accent"
-          >
-            Ask
-          </button>
-        </form>
-        <p id={hintId} className="sr-only">
-          Enter to send, Shift+Enter for a new line. Up to {MAX_MESSAGE_CHARS.toLocaleString("en")}{" "}
-          characters.
-        </p>
-        {showCounter ? (
-          <p id={counterId} className="px-5 font-mono text-xs tabular-nums text-ink-tertiary">
-            {draft.length.toLocaleString("en")} / {MAX_MESSAGE_CHARS.toLocaleString("en")} characters
+          <p className={styles.privacy}>
+            {ASSISTANT_COPY.disclosure} {ASSISTANT_COPY.privacy}
           </p>
-        ) : null}
+        </div>
         <span className="sr-only" role="status" aria-live="polite" aria-atomic="true">
           {statusText}
         </span>
-        <p className="px-5 pb-3 font-mono text-xs text-ink-tertiary">Cited · may be imperfect · not stored.</p>
       </div>
     </>,
     document.body,

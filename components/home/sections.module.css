@@ -1,0 +1,408 @@
+/* Home bands (prototype `.strip`, `.metric`, `.agent`, `.steps`, `.writing`, `.cta`). */
+
+/* Facts strip */
+.strip {
+  padding: 64px 0 104px;
+}
+.facts {
+  display: grid;
+  grid-template-columns: repeat(5, minmax(0, 1fr));
+  gap: 16px;
+  text-align: center;
+}
+/* Two facts share a slot's one grid cell, so a swap never changes its height
+   (facts-ticker.tsx). The resting fact is transparent, never hidden: a screen
+   reader reads both. */
+.ticker {
+  position: relative;
+}
+.slot {
+  display: grid;
+  overflow: hidden;
+}
+.fact {
+  grid-area: 1 / 1;
+  font-size: 1.125rem;
+  font-weight: 650;
+  letter-spacing: -0.02em;
+  color: #2c2c33;
+}
+.fact[data-shown="false"] {
+  opacity: 0;
+}
+/* The wave: slot by slot from the left, the leaving fact lifts away into a
+   short blur, then the arriving one rises out of it. */
+.ticker[data-started] .fact {
+  animation: fact-out 480ms var(--ease-out) calc(var(--i) * 90ms) both;
+}
+.ticker[data-started] .fact[data-shown="true"] {
+  animation: fact-in 760ms var(--spring-soft) calc(var(--i) * 90ms + 140ms) both;
+}
+@keyframes fact-out {
+  from {
+    opacity: 1;
+    transform: none;
+    filter: blur(0);
+  }
+  to {
+    opacity: 0;
+    transform: translateY(-60%);
+    filter: blur(3px);
+  }
+}
+@keyframes fact-in {
+  from {
+    opacity: 0;
+    transform: translateY(60%);
+    filter: blur(3px);
+  }
+  to {
+    opacity: 1;
+    transform: none;
+    filter: blur(0);
+  }
+}
+/* The strip's pause button (components/motion/pause-button.tsx) sits in its
+   bottom padding, so it moves nothing. */
+.factsControl {
+  position: absolute;
+  top: calc(100% + 20px);
+  right: 0;
+}
+/* Reduced motion: both sets, still, each in its own row across the slots. */
+@media (prefers-reduced-motion: reduce) {
+  .slot {
+    grid-row: span 2;
+    grid-template-rows: subgrid;
+  }
+  .fact {
+    grid-area: auto;
+  }
+  .fact[data-shown="false"] {
+    opacity: 1;
+  }
+}
+.fact small {
+  display: block;
+  margin-top: 2px;
+  font-size: 0.84375rem;
+  font-weight: 450;
+  letter-spacing: 0;
+  color: var(--color-ink-tertiary);
+}
+
+/* Public work: the result line and the card links */
+.metric {
+  margin-top: 14px;
+  font-size: 0.875rem;
+  font-weight: 600;
+  color: var(--color-ink);
+}
+.metric small {
+  display: block;
+  margin-top: 2px;
+  font-size: 0.8125rem;
+  font-weight: 450;
+  color: var(--color-ink-tertiary);
+}
+.methodLink {
+  color: var(--color-ink-secondary);
+  text-decoration: underline;
+  text-decoration-color: var(--color-border-strong);
+  text-underline-offset: 3px;
+  transition:
+    color var(--motion-fast) var(--ease-out),
+    text-decoration-color var(--motion-fast) var(--ease-out);
+}
+.methodLink:hover {
+  color: var(--color-ink);
+  text-decoration-color: currentColor;
+}
+.cardLinks {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px 18px;
+  margin-top: 16px;
+}
+
+/* Agent section */
+.rows {
+  margin-top: 48px;
+}
+/* The questions' pause button sits under the rows' right end, in the gap
+   before the columns, so it moves nothing. */
+.rowsWrap {
+  position: relative;
+}
+.rowsControl {
+  position: absolute;
+  top: calc(100% + 14px);
+  right: 0;
+}
+.prompt {
+  margin-right: 8px;
+  font-weight: 400;
+  color: var(--color-ink-tertiary);
+}
+.cols {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 40px;
+  max-width: 960px;
+  margin: 64px auto 0;
+}
+.col h3 {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  font-size: var(--text-title-sm);
+  font-weight: 650;
+  color: var(--color-ink);
+}
+.colIcon {
+  flex: none;
+  color: var(--color-ink-secondary);
+}
+.col p {
+  margin: 10px 0 0 26px;
+  font-size: 0.90625rem;
+  line-height: 1.55;
+  color: var(--color-ink-secondary);
+}
+.colAction {
+  margin: 14px 0 0 26px;
+}
+/* A button that reads as the site's caret link. */
+.action {
+  display: inline-flex;
+  min-height: 24px;
+  align-items: center;
+  gap: 8px;
+  font-size: var(--text-sm);
+  font-weight: 600;
+  color: var(--color-ink);
+  cursor: pointer;
+}
+
+/* How I work */
+.steps {
+  display: grid;
+  grid-template-columns: repeat(5, minmax(0, 1fr));
+  gap: 10px;
+  margin-top: 64px;
+}
+.step {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  padding: 22px 20px;
+  border-radius: var(--radius-xl);
+  background: var(--color-plate-card);
+  box-shadow: inset 0 0 0 1px var(--color-plate-border);
+}
+.stepN {
+  display: grid;
+  width: 28px;
+  height: 28px;
+  place-items: center;
+  border-radius: 8px;
+  background: rgba(157, 140, 255, 0.08);
+  box-shadow: inset 0 0 0 1px rgba(157, 140, 255, 0.4);
+  font-size: 0.8125rem;
+  font-weight: 700;
+  color: var(--color-plate-violet);
+}
+.step h3 {
+  margin-top: 18px;
+  font-size: 0.9375rem;
+  font-weight: 650;
+  color: var(--color-plate-ink);
+}
+.step p {
+  margin-top: 8px;
+  margin-bottom: auto;
+  font-size: 0.875rem;
+  line-height: 1.55;
+  color: var(--color-plate-ink-secondary);
+}
+
+/* Writing */
+.wgrid {
+  display: grid;
+  grid-template-columns: minmax(0, 0.8fr) minmax(0, 1.2fr);
+  gap: 48px;
+  align-items: start;
+}
+.featured {
+  margin-top: 28px;
+}
+.quoteMark {
+  display: block;
+  font-size: 3rem;
+  font-weight: 800;
+  line-height: 0.6;
+  color: var(--color-border-strong);
+}
+.featured blockquote {
+  margin-top: 26px;
+  font-size: 1.375rem;
+  font-weight: 500;
+  line-height: 1.45;
+  letter-spacing: -0.015em;
+  text-wrap: balance;
+  color: var(--color-ink);
+}
+.featured figcaption {
+  margin-top: 18px;
+  font-size: 0.875rem;
+  color: var(--color-ink-secondary);
+}
+/* The writing wall (writing-wall.tsx): two columns drift in opposite
+   directions under a fade, each loop two copies of its column, so it never
+   jumps. WallMotion holds it under the pointer, with keyboard focus inside
+   (a card focused out of view is brought in by seeking the drift) and when
+   paused; these rules hold it under the pointer without JavaScript. A column
+   clips (it never scrolls), so focus cannot shift it. */
+.wallWrap {
+  display: grid;
+  justify-items: end;
+  gap: 12px;
+}
+.wall {
+  display: grid;
+  width: 100%;
+  height: 560px;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 12px;
+  mask-image: linear-gradient(to bottom, transparent, #000 12%, #000 88%, transparent);
+}
+.wallCol {
+  min-height: 0;
+  overflow: clip;
+}
+/* Positioned, so a card's offsetTop is measured from the track (WallMotion's seek). */
+.wallTrack {
+  position: relative;
+  animation: wall-drift var(--wall-seconds) linear infinite;
+}
+.wallReverse {
+  animation-direction: reverse;
+}
+.wallSet {
+  display: grid;
+  gap: 12px;
+  padding-bottom: 12px;
+}
+.wallSet .wcard p:not(.meta) {
+  display: -webkit-box;
+  overflow: hidden;
+  -webkit-box-orient: vertical;
+  -webkit-line-clamp: 3;
+}
+.wall:hover .wallTrack,
+.wall[data-paused] .wallTrack {
+  animation-play-state: paused;
+}
+.wall:focus-within {
+  mask-image: none;
+}
+@keyframes wall-drift {
+  to {
+    transform: translateY(-50%);
+  }
+}
+/* Reduced motion, and phones: still, the first two cards of each column. */
+@media (prefers-reduced-motion: reduce), (max-width: 640px) {
+  .wall {
+    height: auto;
+    mask-image: none;
+  }
+  .wallTrack {
+    animation: none;
+  }
+  .wallClone,
+  .wallControl,
+  .wallSet > :nth-child(n + 3) {
+    display: none;
+  }
+}
+@media (max-width: 640px) {
+  .wall {
+    grid-template-columns: minmax(0, 1fr);
+  }
+}
+.wcard {
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  padding: 20px 22px;
+  border-radius: 14px;
+  background: var(--color-surface);
+  box-shadow: var(--shadow-card);
+  transition: box-shadow var(--motion-slow) var(--ease-out);
+}
+.wcard:is(:hover, :focus-within) {
+  box-shadow: var(--shadow-card-hover);
+}
+.wcard h3 {
+  font-size: 0.9375rem;
+  font-weight: 650;
+  line-height: 1.4;
+}
+/* The title link covers the card, so the whole card is one target. */
+.wcardLink {
+  color: var(--color-ink);
+  transition: color var(--motion-fast) var(--ease-out);
+}
+/* Keyboard focus inside the card gets the same feedback as hover. */
+.wcard:is(:hover, :focus-within) .wcardLink {
+  color: var(--color-accent);
+}
+.wcardLink::after {
+  content: "";
+  position: absolute;
+  inset: 0;
+  border-radius: inherit;
+}
+.wcard p {
+  margin-top: 8px;
+  font-size: 0.875rem;
+  line-height: 1.55;
+  color: var(--color-ink-secondary);
+}
+.wcard .meta {
+  margin-top: auto;
+  padding-top: 14px;
+  font-size: 0.8125rem;
+  color: var(--color-ink-tertiary);
+}
+
+/* CTA */
+.avail {
+  margin-top: 26px;
+  text-align: center;
+  font-size: 0.875rem;
+  color: var(--color-ink-secondary);
+}
+
+@media (max-width: 1000px) {
+  .facts {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    row-gap: 24px;
+  }
+  .cols {
+    grid-template-columns: minmax(0, 1fr);
+    gap: 28px;
+  }
+  .steps {
+    grid-template-columns: minmax(0, 1fr);
+  }
+  .wgrid {
+    grid-template-columns: minmax(0, 1fr);
+  }
+}
+@media (max-width: 640px) {
+  .strip {
+    padding: 48px 0 72px;
+  }
+}

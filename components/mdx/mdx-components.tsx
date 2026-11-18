@@ -6,6 +6,8 @@ import { Figure } from "@/components/ui/figure";
 import { DecisionLog } from "@/components/mdx/decision-log";
 import { FailureLog } from "@/components/mdx/failure-log";
 import { PROSE } from "@/components/mdx/prose";
+import { ArrowOut } from "@/components/ui/caret-link";
+import { SmartLink, isWebLink, opensOutside } from "@/components/ui/smart-link";
 
 /**
  * MDX component map — plain markdown elements bound to the shared reading scale
@@ -20,10 +22,12 @@ import { PROSE } from "@/components/mdx/prose";
  * A11y: headings get slugged ids so they can be deep-linked and so a future
  * table of contents has real targets; PROSE.h2/h3 carry the scroll margin that
  * keeps a jumped-to heading clear of the sticky header. Links are underlined at
- * rest, never distinguished by colour alone (WCAG 1.4.1). External links are
- * marked `rel="noopener noreferrer"`.
+ * rest, never distinguished by colour alone (WCAG 1.4.1). A link renders through
+ * `SmartLink`: a page of the site navigates client-side, another site opens a new
+ * tab (`rel="noopener noreferrer"`, announced), and a link that leaves the site
+ * carries the out-arrow ↗ (design-system §11.4).
  */
-function slugify(text: string): string {
+export function slugify(text: string): string {
   return text
     .toLowerCase()
     .replace(/[^a-z0-9]+/g, "-")
@@ -38,16 +42,38 @@ function toText(node: ReactNode): string {
   return "";
 }
 
-function H2({ children, ...props }: ComponentPropsWithoutRef<"h2">) {
+/**
+ * The hover "#" beside a heading: a real link to the section, so a reader can
+ * copy a deep link. It sits in the left margin from `md` up and is hidden
+ * from assistive tech (the heading itself is the target; the TOC links to it).
+ */
+function HeadingAnchor({ id }: { id: string }) {
   return (
-    <h2 id={slugify(toText(children))} className={PROSE.h2} {...props}>
+    <a
+      href={`#${id}`}
+      aria-hidden="true"
+      tabIndex={-1}
+      className="absolute top-0 -left-6 hidden pr-2 font-normal text-ink-tertiary opacity-0 transition-opacity duration-fast ease-[var(--ease-out)] group-hover/heading:opacity-100 hover:text-accent md:block"
+    >
+      #
+    </a>
+  );
+}
+
+function H2({ children, ...props }: ComponentPropsWithoutRef<"h2">) {
+  const id = slugify(toText(children));
+  return (
+    <h2 id={id} className={PROSE.h2} {...props}>
+      <HeadingAnchor id={id} />
       {children}
     </h2>
   );
 }
 function H3({ children, ...props }: ComponentPropsWithoutRef<"h3">) {
+  const id = slugify(toText(children));
   return (
-    <h3 id={slugify(toText(children))} className={PROSE.h3} {...props}>
+    <h3 id={id} className={PROSE.h3} {...props}>
+      <HeadingAnchor id={id} />
       {children}
     </h3>
   );
@@ -60,14 +86,15 @@ export const mdxComponents = {
   ul: (p: ComponentPropsWithoutRef<"ul">) => <ul className={PROSE.ul} {...p} />,
   ol: (p: ComponentPropsWithoutRef<"ol">) => <ol className={PROSE.ol} {...p} />,
   li: (p: ComponentPropsWithoutRef<"li">) => <li className={PROSE.li} {...p} />,
-  a: ({ href = "", ...p }: ComponentPropsWithoutRef<"a">) => (
-    <a
-      href={href}
-      className={PROSE.link}
-      {...(/^https?:\/\//.test(href) ? { target: "_blank", rel: "noopener noreferrer" } : {})}
-      {...p}
-    />
-  ),
+  a: ({ href = "", children, ...p }: ComponentPropsWithoutRef<"a">) => {
+    const newTab = isWebLink(href);
+    return (
+      <SmartLink href={href} newTab={newTab} className={PROSE.link} {...p}>
+        {children}
+        {opensOutside(href, newTab) ? <ArrowOut inline /> : null}
+      </SmartLink>
+    );
+  },
   strong: (p: ComponentPropsWithoutRef<"strong">) => <strong className={PROSE.strong} {...p} />,
   em: (p: ComponentPropsWithoutRef<"em">) => <em {...p} />,
   hr: () => <hr className={PROSE.hr} />,

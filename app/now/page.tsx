@@ -1,13 +1,18 @@
 import type { Metadata } from "next";
-import Link from "next/link";
 import { Section } from "@/components/layout/section";
-import { PageHeader } from "@/components/ui/page-header";
-import { buttonVariants } from "@/components/ui/button";
+import { nowCopy } from "@/content/pages/now";
+import { loadNowEntries, type NowEntry } from "@/components/now/now-entries";
+import styles from "@/components/now/now.module.css";
+import { Button } from "@/components/ui/button";
+import { Chip } from "@/components/ui/chip";
+import { CircuitArt } from "@/components/ui/circuit-art";
+import { Kicker } from "@/components/ui/kicker";
+import { Timeline, TimelineEntry } from "@/components/ui/timeline";
+import { PAGE_TOP } from "@/constants/page";
 import { STATUS } from "@/config/site";
 import { nowPage } from "@/content/site";
-import { loadNow } from "@/lib/now";
 import { formatDate } from "@/lib/format";
-import { LABEL, PAGE_BODY_BAND, PAGE_HEADER_BAND, PANEL } from "@/constants/page";
+import { loadNow } from "@/lib/now";
 import { pageMetadata } from "@/lib/seo";
 
 export const metadata: Metadata = pageMetadata({
@@ -17,75 +22,86 @@ export const metadata: Metadata = pageMetadata({
 });
 
 /**
- * /now — a hand-updated snapshot of current work.
+ * /now — a hand-updated snapshot in the Clerk changelog pattern: a date rail
+ * with dots, one entry per section of content/now.mdx (plus the structured
+ * "Currently exploring" list from its front-matter),
+ * and faint circuit art at the side. The snapshot has one date, the required
+ * `updated` front-matter (never file mtime), so every entry carries it.
  *
- * Content is one MDX file (content/now.mdx); the "Last updated" line reads the
- * required `updated` front-matter (never file mtime), so the page cannot go
- * silently stale. The "Open to" tail is single-sourced from STATUS so it can't
- * diverge from /hire and the footer.
- *
- * Design: the shared PageHeader, then the prose at
- * `--width-prose` in a body band whose top padding is pulled in — the header
- * band already paid the gap, so the page opens on the snapshot rather than on
- * air. The closing "Open to" panel stays flat and action-led.
- *
- * A11y: the freshness dot is decorative — the date beside it carries the meaning,
- * so nothing depends on colour. One `<h1>` (PageHeader); the closing panel's `<h2>`
- * uses the shared LABEL style without becoming a heading level of its own.
+ * A11y: one `<h1>`; each entry's title is an `<h2>` in an ordered list; the
+ * dots and the art are decorative.
  */
 export default async function NowPage() {
-  const { meta, content } = await loadNow();
+  const [{ meta }, sections] = await Promise.all([loadNow(), loadNowEntries()]);
+  const date = formatDate(meta.updated);
 
-  return (
-    <>
-      <Section space="md" className={PAGE_HEADER_BAND}>
-        <PageHeader kicker={nowPage.kicker} title={nowPage.title} lede={meta.lede}>
-          <p className="inline-flex items-center gap-2 font-mono text-xs text-ink-tertiary">
-            <span className="h-1.5 w-1.5 rounded-full bg-positive" aria-hidden />
-            {nowPage.updatedLabel} {formatDate(meta.updated)}
-          </p>
-        </PageHeader>
-      </Section>
-      <Section space="md" className={PAGE_BODY_BAND}>
-        <div className="reveal max-w-[var(--width-prose)]">{content}</div>
-
-        {/* "Exploring" is structured front-matter rather than a markdown list in
-            the body, because the homepage shows the same three themes. A list
-            that lives in prose can only be duplicated; as data it has one
-            source, and the two surfaces cannot drift apart. */}
-        {meta.exploring.length > 0 ? (
-          <section className="reveal mt-12 max-w-[var(--width-prose)]">
-            <h2 className={LABEL}>{nowPage.exploringTitle}</h2>
-            <ul className="mt-5 flex flex-col gap-3">
+  const exploring: NowEntry | null =
+    meta.exploring.length > 0
+      ? {
+          id: nowCopy.exploringId,
+          title: nowPage.exploringTitle,
+          content: (
+            <ul className={styles.cards}>
               {meta.exploring.map((item) => (
-                <li
-                  key={item.title}
-                  className="rounded-[var(--radius-md)] border border-border bg-surface p-4 shadow-[var(--shadow-sm)]"
-                >
-                  <h3 className="text-[0.9375rem] font-[550] leading-snug text-ink">
-                    {item.title}
-                  </h3>
-                  <p className="mt-1.5 text-sm leading-relaxed text-ink-secondary">{item.body}</p>
+                <li key={item.title} className={styles.card}>
+                  <h3>{item.title}</h3>
+                  <p>{item.body}</p>
                 </li>
               ))}
             </ul>
-          </section>
-        ) : null}
+          ),
+        }
+      : null;
+  // Exploring sits between what is being built and what is being read.
+  const entries = exploring ? [sections[0], exploring, ...sections.slice(1)].filter((e): e is NowEntry => !!e) : sections;
 
-        <hr className="rule-fade mt-14 max-w-[var(--width-prose)]" />
+  return (
+    <Section space="lg" className={`${PAGE_TOP} overflow-x-clip`}>
+      <div className={styles.art} aria-hidden="true">
+        <CircuitArt fade="top" />
+      </div>
 
-        {/* Open to — single-sourced from STATUS so it never diverges from /hire
-            and the footer. The one panel on the page with card elevation. */}
-        <section className={`reveal mt-8 max-w-[var(--width-prose)] ${PANEL}`}>
-          <h2 className={LABEL}>{nowPage.openTo.title}</h2>
-          <p className="mt-4 text-lg text-ink">{STATUS.text}.</p>
-          <div className="mt-6">
-            <Link href={nowPage.openTo.cta.href} prefetch={false} className={buttonVariants("primary")}>
+      <header className="relative max-w-[640px]">
+        <Kicker className="mb-4">{nowPage.kicker}</Kicker>
+        <h1 className="text-display text-ink text-balance">{nowPage.title}</h1>
+        <p className="mt-6 text-page-lead text-ink-secondary">{meta.lede}</p>
+        <p className="mt-6 inline-flex items-center gap-2 text-sm text-ink-tertiary">
+          <span className={styles.fresh} aria-hidden="true" />
+          {nowPage.updatedLabel} <time dateTime={meta.updated}>{date}</time>
+        </p>
+      </header>
+
+      <div className={`relative mt-20 ${styles.feed}`}>
+        <Timeline label={nowCopy.timeline}>
+          {entries.map((entry) => {
+            const category = nowCopy.categories[entry.id];
+            return (
+              <TimelineEntry
+                key={entry.id}
+                id={entry.id}
+                date={date}
+                dateTime={meta.updated}
+                title={entry.title}
+                titleAs="h2"
+                tags={category ? <Chip variant="soft">{category}</Chip> : undefined}
+              >
+                <div className={styles.prose}>{entry.content}</div>
+              </TimelineEntry>
+            );
+          })}
+        </Timeline>
+
+        <aside className={styles.openTo} aria-labelledby="now-open-to">
+          <h2 id="now-open-to" className="text-title text-ink">
+            {STATUS.text}.
+          </h2>
+          <div className="mt-5">
+            <Button href={nowPage.openTo.cta.href} variant="dark" caret>
               {nowPage.openTo.cta.label}
-            </Link>
+            </Button>
           </div>
-        </section>
-      </Section>
-    </>
+        </aside>
+      </div>
+    </Section>
   );
 }

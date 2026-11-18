@@ -1,0 +1,256 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Mubin Attar · Applied AI Engineer</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Geist:wght@400..800&family=Geist+Mono:wght@400..600&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="site.css">
+</head>
+<body data-page="home">
+<div class="announce"><div class="wrap"><span class="live">Open to Applied AI Engineer roles</span><span class="sep" aria-hidden="true"></span><a class="caret" href="#agent">Ask my AI assistant</a></div></div>
+<div id="site-nav"></div>
+
+<main id="main">
+  <section class="hero" aria-labelledby="hero-h">
+    <div class="wrap">
+      <div class="hero-top">
+        <div>
+          <h1 id="hero-h">I ship AI and software inside the customer's rules</h1>
+          <p class="sub">Applied AI Engineer. Two systems in use at a healthcare operation, and four public AI systems with source and methods.</p>
+        </div>
+        <div class="prompt-wrap">
+          <div class="prompt-chip">
+            <span class="agents" aria-hidden="true"><span>✦</span><span>›_</span><span>◎</span></span>
+            <span class="prompt-text" aria-hidden="true">Read mubin-attar.vercel.app/llms.txt, then tell me whether Mubin fits my team</span>
+            <button class="copy-btn" type="button" data-copy-prompt aria-label="Copy prompt"><span class="lbl">Copy prompt</span><svg class="i-copy" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="8.5" y="8.5" width="11" height="11" rx="2.5"/><path d="M15.5 8.5v-2a2 2 0 0 0-2-2h-7a2 2 0 0 0-2 2v7a2 2 0 0 0 2 2h2"/></svg><svg class="i-check" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M5 12.5l4.5 4.5L19 7.5"/></svg></button>
+          </div>
+          <small id="prompt-status" aria-live="polite">Ask your own AI whether I fit your role</small>
+        </div>
+      </div>
+
+      <div class="show">
+        <div class="tabs" role="tablist" aria-label="Showcase">
+          <span class="tab-ind" aria-hidden="true"></span>
+          <button class="tab" role="tab" id="t1" aria-selected="true" aria-controls="p1" tabindex="0">Records triage</button>
+          <button class="tab" role="tab" id="t2" aria-selected="false" aria-controls="p2" tabindex="-1">NFC room rounds</button>
+          <button class="tab" role="tab" id="t3" aria-selected="false" aria-controls="p3" tabindex="-1">DBWhisper</button>
+          <button class="tab" role="tab" id="t4" aria-selected="false" aria-controls="p4" tabindex="-1">Ask my assistant</button>
+        </div>
+        <div class="stage">
+          <div class="panel" id="p1" role="tabpanel" aria-labelledby="t1">
+            <div class="ghost" style="left:4%; top:70px; width:300px" aria-hidden="true"><b>Indicator list</b><div class="row"><span>Names and terms</span><span>14</span></div><div class="row"><span>Case numbers</span><span>6</span></div><div class="row"><span>Updated</span><span>today</span></div></div>
+            <div class="ghost" style="right:4%; top:120px; width:300px" aria-hidden="true"><b>Audit trail</b><div class="row"><span>Manifest</span><span>written</span></div><div class="row"><span>Originals</span><span>unchanged</span></div><div class="row"><span>Names in logs</span><span>hashed</span></div></div>
+            <div class="focus">
+              <div class="focus-body">
+                <h3>Triage run complete</h3>
+                <p class="hint">Scans, faxes and Office files, read on this PC</p>
+                <div class="kv"><span>Needs review</span><b>312</b></div>
+                <div class="kv"><span>Other</span><b>12,141</b></div>
+                <div class="kv"><span>Error, re-run</span><b>27</b></div>
+                <div class="kv"><span>Leaves this PC</span><span class="okv">Licence check only</span></div>
+                <button class="primary-mini" type="button" tabindex="-1">Open the needs-review copies</button>
+              </div>
+              <div class="focus-foot"><span class="sample">Illustrative sample · synthetic data</span></div>
+            </div>
+          </div>
+          <div class="panel" id="p2" role="tabpanel" aria-labelledby="t2" hidden>
+            <div class="ghost" style="left:4%; top:90px; width:300px" aria-hidden="true"><b>Live status</b><div class="row"><span>Rounds due</span><span>48</span></div><div class="row"><span>Missed</span><span>2</span></div><div class="row"><span>Excused</span><span>1</span></div></div>
+            <div class="ghost" style="right:4%; top:70px; width:300px" aria-hidden="true"><b>Compliance report</b><div class="row"><span>Period</span><span>this week</span></div><div class="row"><span>Export</span><span>Excel, PDF</span></div></div>
+            <div class="focus">
+              <div class="focus-body">
+                <h3>Room 214</h3>
+                <p class="hint">Tap the tag at the door to record this round</p>
+                <div class="phone-tag"><span class="ring"></span><span class="ring r2"></span><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" aria-hidden="true"><path d="M6.5 8.5a5 5 0 0 1 0 7M10 6a9 9 0 0 1 0 12M13.5 3.5a13 13 0 0 1 0 17"/></svg></div>
+                <div class="kv"><span>Round recorded</span><span class="okv">10:42</span></div>
+                <div class="kv"><span>Next</span><b>Room 216</b></div>
+              </div>
+              <div class="focus-foot"><span class="sample">Illustrative sample · synthetic data</span></div>
+            </div>
+          </div>
+          <div class="panel" id="p3" role="tabpanel" aria-labelledby="t3" hidden>
+            <div class="ghost" style="left:4%; top:80px; width:300px" aria-hidden="true"><b>Schema retrieval</b><div class="row"><span>Tables matched</span><span>2</span></div><div class="row"><span>Dialect</span><span>Postgres</span></div></div>
+            <div class="ghost" style="right:4%; top:110px; width:300px" aria-hidden="true"><b>Policy</b><div class="row"><span>Writes</span><span>denied</span></div><div class="row"><span>Multiple statements</span><span>denied</span></div></div>
+            <div class="focus">
+              <div class="focus-body">
+                <h3>Ask your database</h3>
+                <p class="hint">"Revenue by month, January to April 2024"</p>
+                <div class="sql">SELECT date_trunc('month', created_at) AS month,<br>&nbsp;&nbsp;SUM(amount) AS revenue<br>FROM orders GROUP BY 1 ORDER BY 1;</div>
+                <div class="check">Single statement</div>
+                <div class="check">Read-only</div>
+                <div class="check">Enrolled schema</div>
+                <button class="primary-mini" type="button" tabindex="-1">Run read-only</button>
+              </div>
+              <div class="focus-foot"><span class="sample">Illustrative case · no query is sent</span></div>
+            </div>
+          </div>
+          <div class="panel" id="p4" role="tabpanel" aria-labelledby="t4" hidden>
+            <div class="focus wide">
+              <div class="focus-body">
+                <h3>Ask about my work</h3>
+                <p class="hint">Answers come from this site and cite the page they used</p>
+                <div class="chat-q">What has Mubin shipped for healthcare teams?</div>
+                <div class="chat-a">Two systems in use at a healthcare operation: records triage that keeps documents on the facility's own PCs, and NFC room rounds for care staff.<div class="cite"><span>Field work · Records triage</span><span>Field work · NFC rounds</span></div></div>
+                <div class="ask-input">Ask a question…</div>
+              </div>
+            </div>
+          </div>
+        </div>
+        <div class="under" aria-hidden="true"><span class="on">Overview</span><span>Architecture</span><span>What broke</span></div>
+      </div>
+    </div>
+  </section>
+
+  <section class="strip" aria-label="At a glance">
+    <div class="wrap"><ul>
+      <li>3.5+ years<small>in software engineering</small></li>
+      <li>2 field systems<small>in use today</small></li>
+      <li>4 public systems<small>with source and methods</small></li>
+      <li>iOS and Android<small>shipped through store review</small></li>
+      <li>Ahmedabad, India<small>remote, hybrid or on-site</small></li>
+    </ul></div>
+  </section>
+
+  <section class="plate" id="field" aria-labelledby="field-h">
+    <div class="wrap">
+      <div class="head center">
+        <p class="kicker">Field work</p>
+        <h2 class="h2" id="field-h">Two systems people rely on every day</h2>
+        <p class="lead">The code and the organisation stay private. Each report covers the problem, the constraints, where it runs, what broke and what I changed.</p>
+        <a class="more caret" href="contact.html">Request a walkthrough</a>
+      </div>
+      <div class="bento">
+        <article class="card span2">
+          <div class="art" aria-hidden="true"><div class="flow"><div class="node">Facility folders<small>scans, faxes, Office, email</small></div><div class="wire"></div><div class="node hot">Windows app, on the PC<small>local OCR · indicator match · verified redaction</small></div><div class="wire"></div><div class="node">Needs-review copies<small>originals unchanged</small></div></div></div>
+          <div class="card-body"><h3>Records triage and review</h3><p>An offline Windows app that finds the records a case needs in years of mixed files, without the documents leaving the PC. Primary engineer and release owner; I also built and operate the cloud platform where a team reviews them with cited answers.</p><div class="chips"><span class="chip ok">Desktop app in use</span><span class="chip pilot">Cloud platform in pilot</span></div></div>
+        </article>
+        <article class="card">
+          <div class="art" aria-hidden="true"><div class="badge halo" style="flex-direction:column; padding:16px 22px; gap:6px"><span style="font-size:13px">Room 214</span><span class="ok">✓ Round recorded</span><span style="color:var(--plate-ink-2); font-size:11.5px">tap at the door, 10:42</span></div></div>
+          <div class="card-body"><h3>NFC room rounds</h3><p>Care staff record each round with a tap at the door; nurses watch live status and follow up on missed rounds. One of two engineers; I ran the iOS and Android releases.</p><div class="chips"><span class="chip ok">In use on care floors</span></div></div>
+        </article>
+        <article class="card">
+          <div class="art" aria-hidden="true"><div style="display:grid; gap:8px"><span class="term"><span class="spin"></span>scanning compiled assemblies…</span><span class="term"><span style="color:#4ade80">✓</span>no network types in document handling</span></div></div>
+          <div class="card-body"><h3>Documents never leave the PC</h3><p>Tests over the compiled code fail the build on any network type in document handling. Only the licence check goes online.</p></div>
+        </article>
+        <article class="card">
+          <div class="art" aria-hidden="true"><div style="display:grid; gap:10px"><span class="badge"><span class="ok">✓</span>App Store review passed</span><span class="badge"><span class="ok">✓</span>Google Play review passed</span></div></div>
+          <div class="card-body"><h3>Shipped through store review</h3><p>iOS and Android releases passed both stores' review in 2026, and older builds keep working while new ones wait.</p></div>
+        </article>
+        <article class="card">
+          <div class="art" aria-hidden="true"><div class="tline"><div><i style="background:#f87171"></i>iPhone scans fail: duplicate session</div><div><i style="background:#fbbf24"></i>Cause: app inactive under the scan sheet</div><div><i style="background:#4ade80"></i>Fix: stop only in background, then retry</div></div></div>
+          <div class="card-body"><h3>What broke, and what I changed</h3><p>iOS marks an app inactive while its NFC sheet is open, and the scanner restarted under itself. It now stops only in the background.</p></div>
+        </article>
+        <article class="card span2">
+          <div class="art" aria-hidden="true"><div class="hub"><div class="center">MA</div><span class="sat" style="left:16%; top:22%">Architecture</span><span class="sat" style="left:20%; bottom:20%">Quality gates</span><span class="sat" style="right:16%; top:24%">Code review</span><span class="sat" style="right:18%; bottom:22%">Releases</span></div></div>
+          <div class="card-body"><h3>I direct AI coding agents</h3><p>I set the architecture, the quality gates and the invariants, review every change and own the releases.</p></div>
+        </article>
+        <article class="card">
+          <div class="art" aria-hidden="true"><span class="badge halo" style="padding:10px 16px"><i data-icon="lock"></i>Private repository</span></div>
+          <div class="card-body"><h3>Walkthrough on request</h3><p>Names are withheld and the code stays private. I'll walk you through either system on a call.</p></div>
+        </article>
+      </div>
+    </div>
+  </section>
+
+  <section class="section-light" id="public" aria-labelledby="public-h">
+    <div class="wrap">
+      <div class="head">
+        <p class="kicker">Public work</p>
+        <h2 class="h2" id="public-h">Four AI systems you can inspect today</h2>
+        <p class="lead">Source, recordings and the method behind every result.</p>
+        <a class="more caret" href="#">All case studies</a>
+      </div>
+      <div class="bento">
+        <article class="card">
+          <div class="art" aria-hidden="true"><div class="mini"><div class="q">"Revenue by month, Jan–Apr 2024"</div><div class="sql" style="margin:0 0 8px">SELECT … FROM orders GROUP BY 1;</div><div class="check">Read-only</div><div class="check">Enrolled schema</div></div></div>
+          <div class="card-body"><h3>DBWhisper</h3><p>Ask a database a question in plain English; a validator approves the SQL before it runs.</p><p class="metric">343 of 343 unsafe runs denied<small>An adversarial policy corpus: a deterministic test, not model accuracy</small></p><div class="cardlinks"><a class="caret" href="#">Case study</a><a class="caret" href="#">Source</a></div></div>
+        </article>
+        <article class="card">
+          <div class="art" aria-hidden="true"><svg viewBox="0 0 320 140" width="80%"><defs><linearGradient id="g" x1="0" x2="0" y1="0" y2="1"><stop offset="0" stop-color="#6b4bff" stop-opacity=".22"/><stop offset="1" stop-color="#6b4bff" stop-opacity="0"/></linearGradient></defs><path class="chart-area" d="M0 110 L30 100 L60 104 L90 86 L120 90 L150 70 L180 76 L210 56 L240 62 L270 40 L300 46 L320 30 L320 140 L0 140Z" fill="url(#g)"/><path class="chart-line" d="M0 110 L30 100 L60 104 L90 86 L120 90 L150 70 L180 76 L210 56 L240 62 L270 40 L300 46 L320 30" fill="none" stroke="#6b4bff" stroke-width="2"/><rect x="180" y="10" width="134" height="24" rx="12" fill="#fff" stroke="#e5e5ea"/><text x="192" y="26" font-family="Geist" font-size="11" fill="#16a34a">✓ closed bars only</text></svg></div>
+          <div class="card-body"><h3>TradePulse</h3><p>Backtest trading strategies with next-bar fills, costs modelled, and an AI copilot.</p><p class="metric">Look-ahead can't be written<small>Strategies read closed bars only, and a canary test proves it</small></p><div class="cardlinks"><a class="caret" href="#">Case study</a><a class="caret" href="#">Source</a></div></div>
+        </article>
+        <article class="card">
+          <div class="art" aria-hidden="true"><div class="mini" style="text-align:center"><div class="q">Model pick, graded after the final score</div><div style="display:flex; justify-content:space-around; font-size:20px; font-weight:700; letter-spacing:-.02em"><span>62%<small style="display:block; font-size:11px; color:var(--ink-3); font-weight:500">home</small></span><span style="color:var(--ink-3)">38%<small style="display:block; font-size:11px; font-weight:500">away</small></span></div><div class="prob"><i></i></div><span class="sample" style="margin-top:10px">Illustrative pick</span></div></div>
+          <div class="card-body"><h3>CrownWager</h3><p>NBA predictions from an XGBoost model, graded publicly against final scores.</p><p class="metric">About 65% accuracy<small>5-fold stratified cross-validation, not a single split</small></p><div class="cardlinks"><a class="caret" href="#">Case study</a><a class="caret" href="#">Source</a></div></div>
+        </article>
+        <article class="card">
+          <div class="art" aria-hidden="true"><div class="mini"><div class="chat-q" style="font-size:12px">Summarise my last chat</div><div class="chat-a" style="font-size:12px">Only your own conversations are visible to you.</div></div></div>
+          <div class="card-body"><h3>LLM Studio</h3><p>A multi-user AI chat platform with accounts, streaming and six model providers behind one interface.</p><p class="metric">Tenancy on every query<small>Enforced once, in the repository layer, not in each route</small></p><div class="cardlinks"><a class="caret" href="#">Case study</a><a class="caret" href="#">Source</a></div></div>
+        </article>
+      </div>
+    </div>
+  </section>
+
+  <section class="agent" id="agent" aria-labelledby="agent-h">
+    <div class="wrap">
+      <div class="head center">
+        <h2 class="h2" id="agent-h">Evaluate me with your own AI</h2>
+        <p class="lead">Paste one prompt into the AI you already use. It reads my llms.txt and answers from my real work, with links you can check.</p>
+      </div>
+      <div class="chiprows" aria-hidden="true">
+        <div class="chiprow"><span><b>›</b>What has Mubin shipped for healthcare teams?</span><span><b>›</b>How does DBWhisper keep SQL safe?</span><span><b>›</b>Does Mubin fit an Applied AI Engineer role?</span><span><b>›</b>Where can Mubin work from?</span></div>
+        <div class="chiprow"><span><b>›</b>What broke in the NFC rounds app?</span><span><b>›</b>Which result was retired, and why?</span><span><b>›</b>How does Mubin use AI coding agents?</span><span><b>›</b>Show me the evals</span></div>
+        <div class="chiprow"><span><b>›</b>Is Mubin open to travel?</span><span><b>›</b>What does the records triage app do?</span><span><b>›</b>Summarise Mubin's experience</span><span><b>›</b>How do I get in touch?</span></div>
+      </div>
+      <div class="cols3">
+        <div><h3><i data-icon="chat"></i>Ask on this site</h3><p>The assistant answers from my case studies and links the page it used.</p><a class="caret" href="#">Open the assistant</a></div>
+        <div><h3><i data-icon="code"></i>Ask your own agent</h3><p>One prompt points your AI at llms.txt, a plain summary of my work written for machines.</p><a class="caret" href="#" data-copy-prompt>Copy the prompt</a></div>
+        <div><h3><i data-icon="shield"></i>Private by default</h3><p>Your question is used to write one answer. This site doesn't store it.</p><a class="caret" href="#">How it works</a></div>
+      </div>
+    </div>
+  </section>
+
+  <section class="plate" id="how" aria-labelledby="how-h">
+    <div class="wrap">
+      <div class="head center">
+        <p class="kicker cyan">How I work</p>
+        <h2 class="h2" id="how-h">Most of a deployment happens away from the editor</h2>
+        <p class="lead">How I take a system from a customer's problem to something their staff rely on.</p>
+      </div>
+      <ol class="steps" style="list-style:none; padding:0">
+        <li class="step"><span class="n">1</span><h3>Start from the operator's day</h3><p>Who uses it, on what device, in which shift, and what a mistake costs.</p><a class="caret" href="#field">The rounds app</a></li>
+        <li class="step"><span class="n">2</span><h3>Write the constraints down</h3><p>Each one names what it forces and how it is checked.</p><a class="caret" href="#field">The records suite</a></li>
+        <li class="step"><span class="n">3</span><h3>Ship versions people install</h3><p>Releases go out through gates I own, and through store review.</p><a class="caret" href="#field">Mobile releases</a></li>
+        <li class="step"><span class="n">4</span><h3>Measure, and retire what fails</h3><p>A score that failed its own audit is retired in public, with the reason.</p><a class="caret" href="#public">Evaluations</a></li>
+        <li class="step"><span class="n">5</span><h3>Hand over in writing</h3><p>Reports, decision logs and guides a team can work from.</p><a class="caret" href="writing.html">Writing</a></li>
+      </ol>
+    </div>
+  </section>
+
+  <section class="writing" aria-labelledby="writing-h">
+    <div class="wrap wgrid">
+      <div class="featured">
+        <p class="kicker">Writing</p>
+        <h2 class="h2" id="writing-h">Decisions, written down</h2>
+        <span class="quote-mark" aria-hidden="true">“</span>
+        <blockquote>Trust the model to be helpful. Never trust it to be safe.</blockquote>
+        <p class="by">From the essay <a class="caret" href="writing.html" style="font-weight:600; color:var(--ink)">Trust is not a safety model</a></p>
+      </div>
+      <div class="wcards">
+        <article class="wcard"><h3>Look-ahead-free by construction</h3><p>The most common way a backtest lies to you is look-ahead bias. How I designed it out of TradePulse.</p><p class="meta">Essay</p></article>
+        <article class="wcard"><h3>Retrieval beats stuffing the schema</h3><p>Document the schema, embed it, and retrieve per question instead of pasting all of it into the prompt.</p><p class="meta">Guide</p></article>
+        <article class="wcard"><h3>A validator is not a better prompt</h3><p>Why DBWhisper gates every generated query with deterministic code instead of a stricter system prompt.</p><p class="meta">Essay</p></article>
+        <article class="wcard"><h3>For text-to-SQL, measure execution accuracy</h3><p>Grade a query by the rows it returns, not by how closely its text matches.</p><p class="meta">Note</p></article>
+      </div>
+    </div>
+  </section>
+
+  <section class="cta" id="contact" aria-labelledby="cta-h">
+    <div class="wrap">
+      <div class="head center">
+        <h2 class="h2" id="cta-h">Need an engineer who ships inside your customer's rules?</h2>
+        <p class="lead">Tell me who will use the system, where it has to run, and what it must never do. I'll reply with a first version and how we'd know it works.</p>
+      </div>
+      <div class="btns"><a class="btn btn-dark btn-lg" href="contact.html">Get in touch <span class="c"></span></a><a class="btn btn-light btn-lg" href="#">View résumé</a></div>
+      <p class="avail">Open to full-time Applied AI Engineer roles and freelance projects · remote, or hybrid and on-site in India · comfortable travelling to customer sites</p>
+    </div>
+  </section>
+</main>
+
+<div id="site-footer"></div>
+<script src="chrome.js"></script>
+<script src="site.js"></script>
+</body>
+</html>

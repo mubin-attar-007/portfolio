@@ -1,0 +1,22 @@
+WEBVTT
+
+00:00.000 --> 00:07.000
+Classify by Content, on the PC: a folder of 37 dummy documents and a demo keyword list. Nothing is uploaded.
+
+00:07.000 --> 00:19.000
+Start Processing: scans and a fax are read with local OCR. All 37 documents are done in about 4 seconds.
+
+00:19.000 --> 00:28.000
+The counters: 37 processed, 8 need review and 4 are errors, each with its reason.
+
+00:28.000 --> 00:33.000
+The results grid: category, confidence, pages read and keyword findings for every file.
+
+00:33.000 --> 00:39.000
+File Redaction: the active rule set lists five field types. The folder scanned is never changed.
+
+00:39.000 --> 00:45.000
+Three dummy forms: each copy is checked after it is written. Two are Redacted and Verified; one has fields to check.
+
+00:45.000 --> 00:57.720
+File Search indexes names and paths only, never contents: 'invoice' finds 3 files.

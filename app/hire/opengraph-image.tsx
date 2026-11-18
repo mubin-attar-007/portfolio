@@ -1,15 +1,21 @@
-import { renderOg, OG_SIZE, OG_CONTENT_TYPE, formatOgEyebrow } from "@/lib/og";
-import { SITE } from "@/config/site";
+import { renderOg, ogAlt, OG_SIZE, OG_CONTENT_TYPE, type OgCard } from "@/lib/og";
+import { STATUS } from "@/config/site";
+import { hirePage } from "@/content/pages/hire";
 
-export const alt = `Hire — ${SITE.name}, ${SITE.role}`;
+/**
+ * The headline is the /hire h1 with its accent (content/pages/hire.ts); the
+ * line is the site's availability sentence, single-sourced in STATUS.
+ */
+const CARD = {
+  kicker: "Hire me",
+  title: `${hirePage.hero.title} ${hirePage.hero.accent}`,
+  description: STATUS.text,
+} satisfies OgCard;
+
+export const alt = ogAlt(CARD);
 export const size = OG_SIZE;
 export const contentType = OG_CONTENT_TYPE;
 
-export default function OG() {
-  return renderOg({
-    eyebrow: formatOgEyebrow("Hire"),
-    title: "Hire me",
-    subtitle: "Clear process, real delivery evidence, and a direct path to start a conversation.",
-    footerRight: "/hire",
-  });
+export default function Image() {
+  return renderOg(CARD);
 }

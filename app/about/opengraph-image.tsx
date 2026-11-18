@@ -1,15 +1,19 @@
-import { renderOg, OG_SIZE, OG_CONTENT_TYPE, formatOgEyebrow } from "@/lib/og";
+import { renderOg, ogAlt, OG_SIZE, OG_CONTENT_TYPE, type OgCard } from "@/lib/og";
 import { SITE } from "@/config/site";
+import { about } from "@/content/site";
 
-export const alt = `About — ${SITE.name}, ${SITE.role}`;
+/** /about is a dark page, so its card is the dark plate. */
+const CARD = {
+  kicker: about.kicker,
+  title: about.headline,
+  description: `${SITE.role} · ${SITE.location}`,
+  tone: "dark",
+} satisfies OgCard;
+
+export const alt = ogAlt(CARD);
 export const size = OG_SIZE;
 export const contentType = OG_CONTENT_TYPE;
 
-export default function OG() {
-  return renderOg({
-    eyebrow: formatOgEyebrow("About"),
-    title: "Solo engineer, real products.",
-    subtitle: "Who I am, what I build, and the principles behind it.",
-    footerRight: "/about",
-  });
+export default function Image() {
+  return renderOg(CARD);
 }

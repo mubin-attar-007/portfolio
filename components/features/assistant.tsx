@@ -1,13 +1,48 @@
 "use client";
 
-import { Suspense, lazy, useCallback, useEffect, useState, useSyncExternalStore } from "react";
+import {
+  Suspense,
+  lazy,
+  useCallback,
+  useEffect,
+  useRef,
+  useState,
+  useSyncExternalStore,
+} from "react";
+import { usePathname } from "next/navigation";
 import { Sparkles } from "lucide-react";
+import { ASSISTANT_COPY } from "@/components/assistant/copy";
+import {
+  ASSISTANT_OPEN_EVENT,
+  LEGACY_OPEN_EVENT,
+  requestedQuestion,
+} from "@/components/assistant/open-assistant";
+import styles from "@/components/assistant/trigger.module.css";
 import type { ChatTurn } from "@/lib/ai/chat-contract";
+import type { SeedQuestion } from "./assistant-panel";
 
-const AssistantPanel = lazy(() =>
-  import("./assistant-panel").then((m) => ({ default: m.AssistantPanel })),
-);
+/**
+ * The panel's code-split chunk. It is never part of a page's first load: it is
+ * fetched on the first sign of intent (see `Assistant`) or, at the latest, on
+ * the first open. The module system caches it, so every later call resolves at
+ * once.
+ */
+const loadPanel = () => import("./assistant-panel");
+const AssistantPanel = lazy(() => loadPanel().then((m) => ({ default: m.AssistantPanel })));
 const ASSISTANT_LAUNCHER_ATTR = "data-assistant-launcher";
+const PANEL_ID = "assistant-panel-dialog";
+
+/** How long closing keeps trying to hand focus back while the page leaves its inert state. */
+const FOCUS_RESTORE_BUDGET_MS = 1000;
+
+/** What can take focus inside a launcher that is itself a wrapper. */
+const FOCUSABLE = 'a[href], button:not([disabled]), [tabindex]:not([tabindex="-1"]), summary';
+
+/** The element to focus for a launcher, or null while it cannot take focus (detached, inert or hidden). */
+function focusTargetOf(el: HTMLElement | null): HTMLElement | null {
+  if (!el || !el.isConnected || el.closest("[inert]") || el.getClientRects().length === 0) return null;
+  return el.matches(FOCUSABLE) ? el : el.querySelector<HTMLElement>(FOCUSABLE);
+}
 
 /** True on macOS, iOS and iPadOS, where the shortcut is ⌘K rather than Ctrl+K. */
 function isApplePlatform(): boolean {
@@ -39,67 +74,117 @@ function isEditable(el: Element | null): boolean {
 }
 
 /**
- * Assistant — the "Ask about my work" launcher. Renders a quiet trigger and,
- * only once opened, lazy-loads the panel (keeps it off the initial bundle per
- * the ≤60KB assistant budget).
+ * Assistant — the "Ask this site" trigger and the owner of the conversation.
+ * Mount it ONCE, in the persistent header: it renders the trigger and, only
+ * once opened, renders the lazy panel (kept off the first load per the ≤60KB
+ * assistant budget; its chunk is warmed when a pointer or focus first reaches
+ * a launcher).
  *
- * It owns the conversation: the launcher lives in the header, which stays
- * mounted across page changes, so closing the panel or opening a cited page
- * keeps the transcript until the tab is closed. Nothing is stored.
+ * It owns the conversation: the header stays mounted across page changes, so
+ * closing the panel or opening a cited page keeps the transcript until the tab
+ * is closed. Nothing is stored. It also reads the current page, so the panel is
+ * page-aware (a case study's own starters, a prior for its passages) without
+ * any caller passing anything.
  *
- * Shortcut: Ctrl+K, or ⌘K on Apple devices — a modifier shortcut, so typing a
- * character never opens anything (WCAG 2.1.4). On a Mac, Ctrl+K in a text
- * field keeps its system meaning (delete to the end of the line).
+ * Opening:
+ * - the trigger; Ctrl+K, or ⌘K on Apple devices — a modifier shortcut, so
+ *   typing a character never opens anything (WCAG 2.1.4). On a Mac, Ctrl+K in
+ *   a text field keeps its system meaning (delete to the end of the line);
+ * - the `assistant:open` window event from any other control (the floating
+ *   launcher, an article's "Ask AI about this"), see `openAssistant()` in
+ *   `components/assistant/open-assistant.ts`. A `detail.question` is sent as
+ *   the next question once the panel is open;
+ * - the older `open-assistant` event, which the mobile menu sends after it
+ *   has closed itself.
  *
- * A11y: owns the close path so focus always returns to a launcher the visitor
- * can see (WCAG 2.4.3). The accessible name is the visible label; the shortcut
- * is announced through `aria-keyshortcuts`.
+ * A11y: owns the close path, so focus returns to the launcher that opened the
+ * panel when it is still on screen, and otherwise to the first visible one
+ * (WCAG 2.4.3). A launcher is any element marked `data-assistant-launcher`.
+ * The accessible name is the visible label; the shortcut is announced through
+ * `aria-keyshortcuts`.
+ *
+ * @param className Optional classes appended to the trigger, for the nav's own
+ *   spacing. The trigger's look and its breakpoints stay its own.
  */
-export function Assistant() {
+export function Assistant({ className }: { className?: string }) {
   const [open, setOpen] = useState(false);
   const [turns, setTurns] = useState<ChatTurn[]>([]);
+  const [seed, setSeed] = useState<SeedQuestion | null>(null);
+  const seedCount = useRef(0);
+  // A question waiting out the mobile menu's close-then-reopen hand-off.
+  const pendingQuestion = useRef<string | null>(null);
+  // The launcher that opened the panel, if one did.
+  const returnTo = useRef<HTMLElement | null>(null);
   const hint = useShortcutHint();
+  // The owner outlives page changes, so the pathname is the page the panel is
+  // open on now: its starters, and the prior its questions carry.
+  const page = usePathname();
 
-  const launch = useCallback(() => {
+  const launch = useCallback((question: string | null = null) => {
+    const request = question ?? pendingQuestion.current;
+    pendingQuestion.current = null;
     if (document.getElementById("mobile-menu")) {
+      pendingQuestion.current = request;
       window.dispatchEvent(new CustomEvent("close-menu-for-assistant"));
       return;
     }
     // Respect any other modal that owns focus rather than layering another.
     const dialog = document.querySelector('[role="dialog"][aria-modal="true"]');
-    if (dialog && dialog.id !== "assistant-panel-dialog") return;
+    if (dialog && dialog.id !== PANEL_ID) return;
+    if (!dialog) {
+      const active = document.activeElement;
+      returnTo.current =
+        active instanceof HTMLElement
+          ? active.closest<HTMLElement>(`[${ASSISTANT_LAUNCHER_ATTR}]`)
+          : null;
+    }
+    if (request) {
+      seedCount.current += 1;
+      setSeed({ id: seedCount.current, question: request });
+    }
     setOpen(true);
   }, []);
 
-  // Restore to the launcher that is actually visible at the current breakpoint.
-  // getClientRects() is robust for both fixed and in-flow controls.
+  const takeSeed = useCallback((id: number) => {
+    setSeed((current) => (current?.id === id ? null : current));
+  }, []);
+
+  // Restore to the launcher that opened the panel, or else to the first one
+  // that can take focus at the current breakpoint (WCAG 2.4.3).
   //
-  // Deferred by a frame, and that frame is load-bearing. While the panel is
-  // open the page behind it is `inert`, and the launcher lives in the header —
-  // inside that inert subtree. Focusing it in the same tick as `setOpen(false)`
-  // would silently do nothing: the panel has not unmounted yet, so the header
-  // is still inert and inert elements cannot take focus. The frame lets React
-  // commit the unmount and run the boundary's cleanup first.
+  // Deferred to animation frames, and the wait is load-bearing. While the panel
+  // is open the page behind it is `inert`, and the launchers live in that inert
+  // subtree, so focusing one before React commits the unmount and the
+  // boundary's cleanup runs silently does nothing. How many frames that takes
+  // is a scheduler detail, not a contract: on a slow device or a busy CI runner
+  // it is more than one. So each frame skips launchers that are still inert,
+  // hidden or detached, focuses the first that takes it, and tries again on the
+  // next frame within a short budget. It never moves focus the visitor (or
+  // another component) has already placed outside the closing panel.
   const close = useCallback(() => {
     setOpen(false);
-    const restore = () => {
-      const launchers = document.querySelectorAll<HTMLElement>(
-        `[${ASSISTANT_LAUNCHER_ATTR}]`,
-      );
+    setSeed(null);
+    const deadline = performance.now() + FOCUS_RESTORE_BUDGET_MS;
+    const restore = (): boolean => {
+      const launchers = [
+        returnTo.current,
+        ...document.querySelectorAll<HTMLElement>(`[${ASSISTANT_LAUNCHER_ATTR}]`),
+      ];
       for (const el of launchers) {
-        if (el.getClientRects().length > 0) {
-          el.focus();
-          return document.activeElement === el;
-        }
+        const target = focusTargetOf(el);
+        if (!target) continue;
+        target.focus();
+        if (document.activeElement === target) return true;
       }
-      return true;
+      return false;
     };
-    // One retry. Effect-flush timing is a scheduler detail, not a contract, so
-    // if the first attempt lands while the header is still inert we take the
-    // next frame rather than leaving focus stranded on <body> (WCAG 2.4.3).
-    requestAnimationFrame(() => {
-      if (!restore()) requestAnimationFrame(restore);
-    });
+    const step = () => {
+      const active = document.activeElement;
+      if (active && active !== document.body && !active.closest(`#${PANEL_ID}`)) return;
+      if (restore() || performance.now() > deadline) return;
+      requestAnimationFrame(step);
+    };
+    requestAnimationFrame(step);
   }, []);
 
   useEffect(() => {
@@ -109,43 +194,62 @@ export function Assistant() {
       e.preventDefault();
       launch();
     };
-    // Mobile nav (and any other trigger) can open the same panel via this event.
-    const onOpen = launch;
+    const onOpenRequest = (event: Event) => launch(requestedQuestion(event));
     document.addEventListener("keydown", onKey);
-    window.addEventListener("open-assistant", onOpen);
+    window.addEventListener(ASSISTANT_OPEN_EVENT, onOpenRequest);
+    window.addEventListener(LEGACY_OPEN_EVENT, onOpenRequest);
     return () => {
       document.removeEventListener("keydown", onKey);
-      window.removeEventListener("open-assistant", onOpen);
+      window.removeEventListener(ASSISTANT_OPEN_EVENT, onOpenRequest);
+      window.removeEventListener(LEGACY_OPEN_EVENT, onOpenRequest);
     };
   }, [launch]);
+
+  // Warm the panel's chunk the first time a pointer rests on, or focus
+  // reaches, a launcher, so the first open renders without a network wait. It
+  // stays off the first load, and a failed warm-up is left to the open itself
+  // to retry and report.
+  useEffect(() => {
+    const listening = new AbortController();
+    const warm = (event: Event) => {
+      if (!(event.target instanceof Element) || !event.target.closest(`[${ASSISTANT_LAUNCHER_ATTR}]`)) return;
+      listening.abort();
+      loadPanel().catch(() => undefined);
+    };
+    document.addEventListener("pointerover", warm, { passive: true, signal: listening.signal });
+    document.addEventListener("focusin", warm, { signal: listening.signal });
+    return () => listening.abort();
+  }, []);
 
   return (
     <>
       <button
         {...{ [ASSISTANT_LAUNCHER_ATTR]: "" }}
         type="button"
-        onClick={launch}
+        onClick={() => launch()}
         aria-expanded={open}
-        aria-controls={open ? "assistant-panel-dialog" : undefined}
-        aria-label="Ask this site"
+        aria-controls={open ? PANEL_ID : undefined}
+        aria-label={ASSISTANT_COPY.trigger}
         aria-keyshortcuts="Control+K Meta+K"
-        title={hint ? `Ask this site (${hint})` : "Ask this site"}
-        className="icon-btn inline-flex h-9 w-9 items-center justify-center rounded-[var(--radius-sm)] text-ink-secondary hover:text-ink xl:h-8 xl:w-auto xl:gap-2 xl:rounded-[var(--radius-sm)] xl:border xl:border-border xl:bg-surface xl:px-2.5 xl:text-[0.8125rem] xl:text-ink-secondary xl:shadow-[var(--shadow-sm)] xl:hover:border-border-strong xl:hover:text-ink"
+        title={hint ? `${ASSISTANT_COPY.trigger} (${hint})` : ASSISTANT_COPY.trigger}
+        className={className ? `${styles.trigger} ${className}` : styles.trigger}
       >
-        <Sparkles size={18} strokeWidth={1.5} className="xl:hidden" aria-hidden />
-        <span className="hidden xl:inline">Ask this site</span>
-        {/* Fixed width: "⌘K" and "Ctrl K" take the same room, so the hint
-            appearing after hydration shifts nothing. */}
-        <kbd
-          aria-hidden
-          className="hidden min-w-[3.25rem] rounded-[var(--radius-xs)] border border-border bg-bg-subtle px-1.5 text-center font-mono text-[0.7rem] text-ink-tertiary xl:inline-block"
-        >
+        <Sparkles size={16} strokeWidth={1.75} className={styles.icon} aria-hidden />
+        <span className={styles.label}>{ASSISTANT_COPY.trigger}</span>
+        <kbd aria-hidden className={styles.kbd}>
           {hint}
         </kbd>
       </button>
       {open ? (
         <Suspense fallback={null}>
-          <AssistantPanel turns={turns} setTurns={setTurns} onClose={close} />
+          <AssistantPanel
+            turns={turns}
+            setTurns={setTurns}
+            onClose={close}
+            seed={seed}
+            onSeedTaken={takeSeed}
+            page={page}
+          />
         </Suspense>
       ) : null}
     </>

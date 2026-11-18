@@ -1,0 +1,91 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>About · Mubin Attar</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Geist:wght@400..800&family=Geist+Mono:wght@400..600&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="site.css">
+</head>
+<body data-page="about" class="page-dark">
+<div id="site-nav"></div>
+
+<main id="main">
+  <section class="about-hero" aria-labelledby="about-h">
+    <svg class="circuit" viewBox="0 0 1440 760" preserveAspectRatio="xMidYMin slice" aria-hidden="true">
+      <g id="half" fill="none" stroke="currentColor" stroke-width="1.2">
+        <path d="M30 120H250V250H430"/>
+        <path d="M140 30V190H300V410H500"/>
+        <path d="M0 330H170V520H360"/>
+        <path d="M210 640H420V480H540"/>
+        <path d="M60 470H120V700"/>
+        <path d="M330 60H520V170"/>
+        <rect x="190" y="228" width="64" height="44" rx="5"/>
+        <rect x="330" y="380" width="48" height="48" rx="5"/>
+        <rect x="470" y="140" width="36" height="28" rx="4"/>
+        <path d="M200 228v-8M214 228v-8M228 228v-8M242 228v-8M200 272v8M214 272v8M228 272v8M242 272v8"/>
+        <circle cx="430" cy="250" r="5"/><circle cx="500" cy="410" r="5"/><circle cx="360" cy="520" r="4"/><circle cx="540" cy="480" r="4"/><circle cx="30" cy="120" r="4"/><circle cx="520" cy="170" r="4"/>
+        <circle cx="354" cy="404" r="9"/>
+      </g>
+      <use href="#half" transform="translate(1440 0) scale(-1 1)"/>
+    </svg>
+    <div class="obsidian" aria-hidden="true"><span>MA</span></div>
+    <div class="wrap">
+      <h1 id="about-h">From healthcare workflows to AI products</h1>
+      <p class="lead">I'm an applied AI engineer with <strong>3.5+ years</strong> in software engineering and a production-AI focus since 2024. I work across the whole system, from data pipelines and retrieval to <strong>the interface people use</strong>.</p>
+    </div>
+  </section>
+
+  <div class="wrap">
+    <section class="xgrid" aria-labelledby="exp-h">
+      <div class="xcell"><h2 id="exp-h">Where I've worked</h2><p>From web apps for a hospital system to AI and automation for healthcare operations.</p></div>
+      <div class="xcell"><span class="xi"><i data-icon="building"></i></span><h3>AI/ML Engineer</h3><p class="org">Sevina Technologies</p><p>Healthcare automation, including clinical-compliance and reimbursement workflows.</p><p class="when">2024 – present · Ahmedabad</p></div>
+      <div class="xcell"><span class="xi"><i data-icon="code"></i></span><h3>Junior Python Developer</h3><p class="org">Linescripts Software</p><p>Web applications including a hospital management system, REST APIs and integrations.</p><p class="when">2022 – 2024 · Pune</p></div>
+      <div class="xcell"><span class="xi"><i data-icon="cap"></i></span><h3>Master of Computer Applications</h3><p class="org">Savitribai Phule Pune University</p><p>MCA, CGPA 8.0.</p><p class="when">2021</p></div>
+    </section>
+
+    <div class="about-col">
+      <figure class="qblock">
+        <blockquote>“Trust the model to be helpful. Never trust it to be safe.”</blockquote>
+        <figcaption class="who"><span class="mono-mark" aria-hidden="true">MA</span><span><b>Mubin Attar</b><span>From the essay <a href="writing.html" style="color:#fff">Trust is not a safety model</a></span></span></figcaption>
+      </figure>
+    </div>
+
+    <section class="stackband" aria-label="Tools I ship with">
+      <ul><li>Python</li><li>TypeScript</li><li>C# / .NET</li><li>FastAPI</li><li>Next.js</li><li>React Native</li><li>PostgreSQL</li><li>Docker</li></ul>
+    </section>
+
+    <section class="pcard" aria-labelledby="pr-h">
+      <h2 id="pr-h">How I approach the work</h2>
+      <p>Three rules I hold every project to, from a free-tier demo to a system on a care floor.</p>
+      <div class="principles">
+        <div><span class="xi"><i data-icon="target"></i></span><h3>Evidence over demos</h3><p>Publish the method, sample size and limitations alongside the result. Where details are confidential, describe the engineering without disclosing the data.</p></div>
+        <div><span class="xi"><i data-icon="shield"></i></span><h3>Bound the model's authority</h3><p>Validate generated output before execution. Use permissions, explicit rules and refusal paths to limit what the model can do.</p></div>
+        <div><span class="xi"><i data-icon="gauge"></i></span><h3>Design for the operating constraints</h3><p>Free-tier hosting shaped the projects: scoped retrieval, bounded agent loops and lean containers, with cold starts and quotas treated as part of the design.</p></div>
+      </div>
+    </section>
+
+    <section class="about-split" aria-label="Next steps">
+      <div>
+        <p class="kicker">Work with me</p>
+        <h2>Start with<br>the problem</h2>
+        <p>Tell me who will use the system, where it has to run and what it must never do. I'll reply with a first version and how we'd know it works.</p>
+        <a class="btn btn-violet" href="contact.html">Get in touch <span class="c"></span></a>
+      </div>
+      <div>
+        <p class="kicker grey">Writing</p>
+        <h3>Read how I make decisions</h3>
+        <p>Essays and notes on validators, retrieval, evaluation and the trade-offs behind each project.</p>
+        <a class="btn btn-grey" href="writing.html">Read the writing</a>
+      </div>
+    </section>
+  </div>
+</main>
+
+<div id="site-footer"></div>
+<script src="chrome.js"></script>
+<script src="site.js"></script>
+</body>
+</html>

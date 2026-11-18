@@ -1,0 +1,42 @@
+/* CaretLink (prototype `.caret` / `.more`). The caret itself is the global
+   `.caret-swap` device, so any interactive ancestor can trigger it. */
+@layer components {
+  .link {
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+    min-height: 24px;
+    font-weight: 600;
+    transition: color var(--motion-fast) var(--ease-out);
+  }
+
+  .regular {
+    font-weight: 500;
+  }
+
+  .sm {
+    font-size: var(--text-sm);
+  }
+
+  .md {
+    font-size: 0.9375rem;
+  }
+
+  .ink {
+    color: var(--color-ink);
+  }
+
+  .muted {
+    color: var(--color-ink-secondary);
+  }
+  .muted:is(:hover, :focus-visible) {
+    color: var(--color-ink);
+  }
+
+  .accent {
+    color: var(--color-accent);
+  }
+  .accent:is(:hover, :focus-visible) {
+    color: var(--color-accent-hover);
+  }
+}

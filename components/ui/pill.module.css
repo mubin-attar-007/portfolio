@@ -1,0 +1,92 @@
+/* Chip and StatusPill: the two pill shapes. Colours are tokens (--pill-*),
+   re-declared for dark plates and pages in tokens.css. */
+@layer components {
+  .pill {
+    display: inline-flex;
+    flex: none;
+    align-items: center;
+    gap: 6px;
+    width: fit-content;
+    border-radius: var(--radius-pill);
+    font-weight: 550;
+    line-height: 1.3;
+    white-space: nowrap;
+  }
+
+  .dot::before {
+    content: "";
+    width: 6px;
+    height: 6px;
+    flex: none;
+    border-radius: 50%;
+    background: currentColor;
+  }
+
+  /* ---- StatusPill ------------------------------------------------------------ */
+  .status {
+    padding: 3px 9px;
+    font-size: 0.78125rem;
+  }
+  .positive {
+    color: var(--pill-positive-ink);
+    background: var(--pill-positive-bg);
+    box-shadow: inset 0 0 0 1px var(--pill-positive-ring);
+  }
+  .caution {
+    color: var(--pill-caution-ink);
+    background: var(--pill-caution-bg);
+    box-shadow: inset 0 0 0 1px var(--pill-caution-ring);
+  }
+  .accent {
+    color: var(--pill-accent-ink);
+    background: var(--pill-accent-bg);
+    box-shadow: inset 0 0 0 1px var(--pill-accent-ring);
+  }
+  .neutral {
+    color: var(--pill-neutral-ink);
+    background: var(--pill-neutral-bg);
+    box-shadow: inset 0 0 0 1px var(--pill-neutral-ring);
+  }
+  /* "Not claimed": an absence, so a dashed outline and a hollow dot. */
+  .outline {
+    padding: 2px 8px;
+    color: var(--pill-neutral-ink);
+    border: 1px dashed var(--pill-outline-ring);
+  }
+  .outline::before {
+    background: transparent;
+    box-shadow: inset 0 0 0 1.5px currentColor;
+  }
+
+  /* ---- Chip ---------------------------------------------------------------- */
+  .chip {
+    color: var(--color-ink-secondary);
+  }
+  .sm {
+    padding: 3px 9px;
+    font-size: 0.78125rem;
+  }
+  .md {
+    padding: 8px 15px;
+    font-size: var(--text-sm);
+  }
+  .mono {
+    font-family: var(--font-mono);
+    font-weight: 400;
+  }
+  .chipOutline {
+    box-shadow: inset 0 0 0 1px var(--color-border-strong);
+  }
+  .chipRaised {
+    color: var(--color-ink-secondary);
+    background: var(--color-surface);
+    box-shadow: var(--shadow-card);
+  }
+  .chipSoft {
+    background: var(--color-bg-subtle);
+    box-shadow: inset 0 0 0 1px var(--color-border);
+  }
+  .chipDot::before {
+    background: var(--color-accent);
+  }
+}

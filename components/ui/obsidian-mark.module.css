@@ -1,0 +1,81 @@
+/* The obsidian monogram tile (prototype `.obsidian`): /about's and /evaluate's
+   hero mark. Its place on the page (margins) is the page's. */
+@layer components {
+  .mark {
+    position: relative;
+    width: 220px;
+    height: 220px;
+    border-radius: 60px;
+    display: grid;
+    place-items: center;
+    background: linear-gradient(160deg, #3a3a42 0%, #1b1b20 40%, var(--color-plate-deep) 100%);
+    box-shadow:
+      inset 0 1px 0 rgb(255 255 255 / 0.35),
+      inset 0 0 0 1px rgb(255 255 255 / 0.08),
+      inset 0 -18px 30px rgb(0 0 0 / 0.6),
+      0 30px 80px -20px rgb(0 0 0 / 0.9),
+      0 0 120px rgb(255 255 255 / 0.05);
+  }
+  .mark::before {
+    content: "";
+    position: absolute;
+    inset: 0;
+    border-radius: inherit;
+    background: radial-gradient(70% 50% at 30% 10%, rgb(255 255 255 / 0.28), transparent 60%);
+    pointer-events: none;
+  }
+  /* A sheen crosses the obsidian once while the mark is hovered (a hover
+     moment, never a cursor follower): the band slides across a fixed overlay,
+     so the tile keeps its own light. */
+  .mark::after {
+    content: "";
+    position: absolute;
+    inset: 0;
+    z-index: 1;
+    border-radius: inherit;
+    pointer-events: none;
+    background: linear-gradient(
+        105deg,
+        transparent 34%,
+        rgb(255 255 255 / 0.16) 47%,
+        rgb(255 255 255 / 0.24) 50%,
+        rgb(255 255 255 / 0.16) 53%,
+        transparent 66%
+      )
+      100% 0 / 300% 100% no-repeat;
+  }
+  .mark:hover::after {
+    animation: mark-sheen 1.2s var(--ease-out) both;
+  }
+  @keyframes mark-sheen {
+    from {
+      background-position: 100% 0;
+    }
+    to {
+      background-position: 0% 0;
+    }
+  }
+  .mark span {
+    position: relative;
+    z-index: 2;
+    font-size: 96px;
+    font-weight: 800;
+    letter-spacing: -0.07em;
+    background: linear-gradient(175deg, #fff 0%, #a9a9b6 55%, #55555f 100%);
+    -webkit-background-clip: text;
+    background-clip: text;
+    color: transparent;
+    filter: drop-shadow(0 10px 18px rgb(0 0 0 / 0.6));
+  }
+
+  @media (max-width: 640px) {
+    .mark {
+      width: 168px;
+      height: 168px;
+      border-radius: 46px;
+    }
+    .mark span {
+      font-size: 72px;
+    }
+  }
+}

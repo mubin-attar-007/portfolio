@@ -25,18 +25,21 @@ Production is served at `https://mubin-attar.vercel.app`.
 
 ## 2. Environment variables
 
-All are read in `lib/env.ts`, `lib/ai/gemini.ts`, `app/hire/page.tsx`, and
-`components/features/newsletter-form.tsx`. `.env.example` lists all six; the last two
-are commented out.
+They are read in `lib/env.ts` (the site URL, the model and the daily cap),
+`lib/ai/gemini.ts` (the key), `lib/ai/rate-limit.ts` (the per-visitor limit) and
+`components/features/newsletter-form.tsx` (the newsletter). `.env.example` lists
+seven; the last three are commented out, and one of those, `NEXT_PUBLIC_CAL_URL`, is
+read by nothing (its row says why).
 
 | Variable | Scope | Default | Purpose |
 | --- | --- | --- | --- |
-| `GEMINI_API_KEY` | **Server-side only** | unset | Enables live model answers in the assistant. Without it the assistant serves grounded site-search answers. |
-| `GEMINI_MODEL` | Server-side | `gemini-3.5-flash-lite` | The Gemini model the assistant calls. It must be a Gemini 3 or later model that accepts the `MINIMAL` thinking level. A value that is not a bare model id falls back to the default. |
+| `GEMINI_API_KEY` | **Server-side only** | unset | Enables live model answers in the assistant. Without it the assistant serves grounded site-search answers and makes no model call at all. |
+| `GEMINI_MODEL` | Server-side | `gemini-3.5-flash-lite` | The Gemini model the assistant calls. It must be a Gemini 3 or later model that accepts the `MINIMAL` thinking level. A value that is not a bare model id falls back to the default. Measure a change with `npm run eval:assistant` first: on 2026-11-17 `gemini-3.5-flash` stalled or returned 503s on most calls and hit its free-tier quota after 21 requests ([AI_ASSISTANT.md §8](spec/AI_ASSISTANT.md#8-evaluation)). |
 | `NEXT_PUBLIC_SITE_URL` | Public | `https://mubin-attar.vercel.app` | Canonical origin for metadata, canonicals, sitemap, robots, JSON-LD, and OG cards. Normalized to an origin; an invalid value falls back to the default. Set it if you add a custom domain. |
-| `ASSISTANT_DAILY_CAP` | Server-side | `500` | Gemini calls allowed per UTC day, per server instance. Clamped to 1–20,000; an invalid value falls back to 500. |
-| `NEXT_PUBLIC_CAL_URL` | Public | the Cal.com URL in `config/site.ts` | Overrides the booking link on `/hire`. Anything other than an absolute http(s) URL, including an empty value, hides it. |
-| `NEXT_PUBLIC_BUTTONDOWN_USERNAME` | Public | unset — the form is hidden | Shows the newsletter form on `/writing`, `/notes` and their articles, posting to this Buttondown handle. Unset, empty, or anything other than a plain handle (letters, digits, `-` and `_`) hides it. Set it only once the list is confirmed to deliver. |
+| `ASSISTANT_DAILY_CAP` | Server-side | `500` | Gemini calls allowed per UTC day, per server instance. Every call counts: an answer, its hedged second call when the first is slow, and a routing call. Clamped to 1–20,000; an invalid value falls back to 500. |
+| `ASSISTANT_CLIENT_DAILY_LIMIT` | Server-side | `30` in production; under `next dev`, the value of `ASSISTANT_DAILY_CAP` | Gemini calls one visitor may cause per UTC day, counted the same way. A whole number from 1 to 20,000 sets it; anything else uses the default. `next dev` lifts the limit because every local request is the same visitor; set it in `.env.local` to test the per-visitor limit locally. |
+| `NEXT_PUBLIC_CAL_URL` | Public | not read | Listed in `.env.example`, but no code reads it since the redesign. The booking link is `INTEGRATIONS.calUrl` in `config/site.ts`, used by the "Book a call" links on `/contact`, `/hire` and the flagship walkthrough card and by the assistant's Book-a-call action; change it there. |
+| `NEXT_PUBLIC_BUTTONDOWN_USERNAME` | Public | unset — the form is hidden | Shows the newsletter sign-up at the foot of `/writing` and `/notes`, posting to this Buttondown handle; `/privacy` names Buttondown only while it is set. Unset, empty, or anything other than a plain handle (letters, digits, `-` and `_`) hides it. Set it only once the list is confirmed to deliver. |
 
 ### `GEMINI_API_KEY`
 
@@ -71,7 +74,9 @@ Set it locally for `npm run dev` in `.env.local`:
 GEMINI_API_KEY=your_key_here
 ```
 
-`.env.local` is gitignored — never commit a key.
+`.env.local` is gitignored — never commit a key. The assistant's live evaluation
+(`npm run eval:assistant`, README "Checks") reads the same file and spends the same
+quota.
 
 ---
 
@@ -80,23 +85,31 @@ GEMINI_API_KEY=your_key_here
 The assistant is designed to stay useful and honest at **zero LLM quota** — it
 does not fail a visitor with a 500 and does not fabricate:
 
-- **Retrieval is network-free.** Every answer is grounded in local content
-  (`content/`: FAQ, project overviews and write-ups, essays, notes, evaluation
-  results, profile, contact details, résumé and skills) through an in-memory BM25
-  index built at module load — no embedding API, no vector store, no external call
-  to retrieve. A question the site does not cover gets an honest "not covered"
-  answer without calling the model or spending budget.
+- **Retrieval is local.** Every answer is grounded in the site's own content (the
+  flagship case studies, the public projects' records and write-ups, essays and
+  notes, evaluation results, the hiring, contact, about, /now, /uses and /trust
+  pages, the résumé and skills, and the FAQ) through an in-memory BM25 index built
+  at module load — no embedding API and no vector store. Only when lexical search
+  finds nothing, a key is set and budget remains does the route make one small
+  routing call (`lib/ai/router.ts`) to pick passages from an index of their titles;
+  if it picks none, the visitor gets an honest "not covered" answer.
 - **With a working key and quota:** Gemini streams a grounded synthesis of the
-  retrieved passages, then the route sends the sources it used; the panel links
-  each one to the matching page on the site.
+  retrieved passages. If no text arrives within 3.5 s, one identical second call
+  races the first (a hedged request) and the slower one is aborted. Then the route
+  sends the pages it cited, next-step actions (email, a call, the résumé, a case
+  study) and curated follow-up questions; the panel links each page.
 - **On quota exhaustion, an API error, a missing key, a timeout (no text after
-  8 s, or 20 s in all), or an empty or blocked reply:** the route streams the
+  12 s, or 25 s in all), or an empty or blocked reply:** the route streams the
   best-matching passage verbatim (an FAQ answer when one is as good) with its
   citation, labelled in the panel as site search rather than the live model. An
   answer that fails part-way is marked as cut short rather than shown as complete.
+  With no text after 5 s the panel says the answer is taking longer than usual, and
+  it gives up at 32 s, past the function's 30 s limit.
 - **Prompt-injection and configuration attempts** ("ignore your instructions",
   etc.) get a polite refusal and the model is **not** called. A refusal does not
-  carry over to the visitor's next question.
+  carry over to the visitor's next question. A hiring term the site does not
+  publish (salary, relocation, a start date, a visa) and a question about his
+  private life get a fixed, grounded answer without the model too.
 - **Cross-site requests are refused** (`403`), and so is any body not sent as JSON
   (`415`): another site cannot make visitors' browsers spend this site's budget.
 
@@ -108,10 +121,15 @@ what one client can do to one instance:
 
 - 15 requests per minute per client (a salted hash of its address, never the
   address itself);
-- 30 live answers per client per UTC day, after which that client gets site-search
-  answers only;
-- `ASSISTANT_DAILY_CAP` (default 500) live answers per instance per UTC day, after
+- 30 model calls per client per UTC day in production (`ASSISTANT_CLIENT_DAILY_LIMIT`
+  overrides it, and `next dev` lifts it to the instance cap), after which that client
+  gets site-search answers only;
+- `ASSISTANT_DAILY_CAP` (default 500) model calls per instance per UTC day, after
   which every visitor on that instance gets site-search answers.
+
+Both daily limits count every Gemini call: the answer, a hedged second call and a
+routing call. A turn that needs no model (no key, a refusal, a hiring gap) spends
+nothing, and a question the site cannot answer spends at most the one routing call.
 
 With several instances the true total is a multiple of these, so they are not a
 spending ceiling. Set the real ceilings outside the function:
@@ -123,10 +141,15 @@ spending ceiling. Set the real ceilings outside the function:
 ### Logs
 
 The route writes one JSON line per answered turn, shaped like
-`{"evt":"assistant","mode":"live","note":null,"hits":4,"latencyMs":<ms>,"model":"gemini-3.5-flash-lite","firstTokenMs":<ms>,"finish":"stop","promptTokens":<n>,"outputTokens":<n>}`.
-It records the mode, the note, the passages retrieved, timings, the finish or
-failure reason and token counts — never the question, the answer, the key or the
-visitor's address. Without a key every turn logs `"failure":"not-configured"`; an
+`{"evt":"assistant","retrieval":"lexical","mode":"live","note":null,"hits":4,"passages":["<content id>",…],"actions":["case-study"],"latencyMs":<ms>,"model":"gemini-3.5-flash-lite","firstTokenMs":<ms>,"finish":"stop","promptTokens":<n>,"outputTokens":<n>}`.
+It records the mode and the note; how the passages were found (`retrieval`:
+`lexical`, `fuzzy` after a spelling correction, `router`, or `none`) and, when a
+routing call ran, its result (`router`) and tokens (`routerTokens`); the ids of the
+passages used (content ids, never visitor text); the kinds of actions offered;
+`page: true` when the request named a page (not which page); timings; the finish or
+failure reason; `hedged` and `hedgeWon` when a second call ran; and token counts —
+never the question, the answer, the key or the visitor's address. Without a key
+every turn logs `"failure":"not-configured"`; an
 `upstream-<status>` failure is a status Gemini actually returned. It also warns with the model id and HTTP status when Gemini
 rejects a request (check this after changing `GEMINI_MODEL`), and warns
 `[assistant] content/<dir> is not readable` if a content collection is missing
@@ -138,7 +161,8 @@ synthesis.
 
 The panel itself is **code-split** (`React.lazy` + `Suspense` in
 `components/features/assistant.tsx`) so none of the chat/streaming code ships in
-the landing bundle; it loads only when a visitor first opens the assistant.
+the landing bundle; it loads when a pointer or focus first reaches a launcher, or at
+the latest when a visitor first opens the assistant.
 
 ---
 
@@ -146,15 +170,19 @@ the landing bundle; it loads only when a visitor first opens the assistant.
 
 - `/` renders the hero and the homepage sections; the header's **Ask this site**
   button (or <kbd>Ctrl+K</kbd>, <kbd>⌘K</kbd> on a Mac) opens the assistant.
-- The assistant answers from every collection: ask "What does DBWhisper do?" and
-  "What has he written?" — each answer cites a page (a case study, then an essay or
-  the writing index). An answer without sources, or the warning
+- The assistant answers from every collection: ask "What is Bench Discovery?", "What
+  does DBWhisper do?" and "What has he written?" — each answer cites a page (a
+  flagship case study, a public one, then an essay or the writing index). On a case
+  study, "Ask AI about <product>" opens the panel on that page's starters without
+  sending anything. An answer without sources, or the warning
   `[assistant] content/<dir> is not readable` in the function logs, means the
   content files were not bundled with `/api/chat`.
 - A cross-site request is refused:
   `curl -i -X POST https://<deployment-host>/api/chat -H 'Content-Type: text/plain' -d '{}'`
   returns `415`, and the same request with `-H 'Origin: https://example.com' -H 'Content-Type: application/json'` returns `403`.
-- `/work` and each `/work/<slug>` case study render with unique title/description.
+- `/work` and each `/work/<slug>` case study render with unique title/description,
+  including the flagships `/work/bench-discovery` and `/work/careltc`;
+  `/work/field/records-triage` and `/work/field/nfc-room-rounds` answer 308 to them.
 - SEO endpoints resolve: `/sitemap.xml`, `/robots.txt`, `/rss.xml`,
   `/opengraph-image`, `/work/opengraph-image`, `/work/<slug>/opengraph-image`,
   `/manifest.webmanifest`, `/favicon.ico` (the site's [✓] mark, not Vercel's) and
@@ -162,7 +190,8 @@ the landing bundle; it loads only when a visitor first opens the assistant.
 - Run the metadata gate against the deployment:
   `LIGHTHOUSE_BASE_URL=https://<deployment-host> npm run test:metadata` (every
   sitemap URL's canonical, social card and title/description limits; the 404 and
-  `/dev/components` unindexed; `/contact`, `/cv` and the other redirects).
+  `/dev/components` unindexed; `/cv`, the old field-report URLs and the other
+  redirects).
 - View source on `/` — the `<head>` includes Person + WebSite JSON-LD.
 - Run the smoke test against the deployment:
 

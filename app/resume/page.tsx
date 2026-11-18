@@ -1,13 +1,19 @@
 import type { Metadata } from "next";
-import Link from "next/link";
+import { ArrowDownToLine } from "lucide-react";
 import { Section } from "@/components/layout/section";
-import { PageHeader } from "@/components/ui/page-header";
-import { TextLink } from "@/components/ui/text-link";
-import { buttonVariants } from "@/components/ui/button";
 import { ResumeDownloadLink } from "@/components/features/resume-download-link";
+import { resumePage } from "@/content/pages/resume";
+import styles from "@/components/resume/resume.module.css";
+import { buttonClassName } from "@/components/ui/button";
+import { ArrowOut, CaretLink } from "@/components/ui/caret-link";
+import { Chip } from "@/components/ui/chip";
+import { Kicker } from "@/components/ui/kicker";
+import { SmartLink, isWebLink } from "@/components/ui/smart-link";
+import { Timeline, TimelineEntry } from "@/components/ui/timeline";
+import { Toc } from "@/components/ui/toc";
+import { PAGE_TOP } from "@/constants/page";
 import { SITE } from "@/config/site";
 import { resume } from "@/content/resume";
-import { LABEL, PAGE_BODY_BAND, PAGE_HEADER_BAND, PANEL } from "@/constants/page";
 import { pageMetadata } from "@/lib/seo";
 
 export const metadata: Metadata = pageMetadata({
@@ -16,182 +22,189 @@ export const metadata: Metadata = pageMetadata({
   description: `${SITE.name} — ${SITE.role}. Experience, featured projects, skills, and education.`,
 });
 
+const S = resumePage.sections;
+const TOC_ITEMS = [S.summary, S.experience, S.projects, S.skills, S.education].map(({ id, label }) => ({ id, label }));
+
+/** "2024 – present" → "2024": the machine-readable start of a period. */
+const periodStart = (period: string): string => period.slice(0, 4);
+
 /**
  * /resume — the same facts as /public/Mubin_Attar_Resume.pdf and LinkedIn, from
- * one source (content/resume.ts). Site, PDF and LinkedIn must never disagree.
+ * one source (content/resume.ts), in the Clerk document layout: a header with
+ * the download, then a body column beside a sticky table of contents.
  *
- * Design: the shared PageHeader carries the name as the h1
- * (on a résumé the person IS the title), the role/location as its `meta` line,
- * and the PDF download as the primary action — so the thing a recruiter came for
- * is in the header rather than floated opposite it, which is where it used to sit
- * as a small secondary button with no relationship to the type beside it.
+ * Print: the nav, footer, TOC and download are chrome (`data-print="hide"`);
+ * the layout collapses to one column, ink on white, and the contact links print
+ * their addresses (resume.module.css; gate: scripts/print-check.mjs).
  *
- * The body is one column of `.rule-fade`-separated groups plus a skills panel in
- * the site's card vocabulary. Section labels use the shared LABEL style, so
- * "Experience" here is the same object as "Built" in the /about timeline and
- * "Open to" on /now.
- *
- * A11y: one `<h1>`, an `<h2>` per group and `<h3>` per entry — the outline reads
- * as a résumé with styles off. Every metric links to the page documenting how it
- * was measured, with a persistent underline (colour is never the only cue) and a
- * disambiguating accessible name that LEADS with the visible word (WCAG 2.5.3).
+ * A11y: one `<h1>` (the name), an `<h2>` per section, an `<h3>` per entry. Every
+ * metric links to the page that documents how it was measured; the link's
+ * accessible name leads with its visible word (WCAG 2.5.3).
  */
 export default function ResumePage() {
-  return (
-    <>
-      <Section space="md" className={PAGE_HEADER_BAND}>
-        <PageHeader
-          kicker={resume.kicker}
-          meta={`${SITE.role} · ${SITE.location}`}
-          title={SITE.name}
-          lede={resume.summary}
-        >
-          <ResumeDownloadLink href={resume.pdf} className={buttonVariants("primary")}>
-            {resume.download}
-          </ResumeDownloadLink>
-          {/* `quiet`: the kicker's accent mark and the primary button have already
-              spent this viewport's two-accent budget (design-system.md §11.2). */}
-          <TextLink href={resume.cta.href} tone="quiet">
-            {resume.cta.label}
-          </TextLink>
-        </PageHeader>
-      </Section>
+  const contacts = [
+    { label: resumePage.contact.email, text: SITE.email, href: `mailto:${SITE.email}` },
+    { label: resumePage.contact.github, text: resumePage.contact.github, href: SITE.socials.github },
+    { label: resumePage.contact.linkedin, text: resumePage.contact.linkedin, href: SITE.socials.linkedin },
+  ];
 
-      <Section space="md" className={PAGE_BODY_BAND}>
-        <div className="reveal grid gap-12 lg:grid-cols-[1fr_20rem] lg:gap-16">
-          <div className="min-w-0">
-            <h2 className={LABEL}>{resume.labels.experience}</h2>
-            <div className="mt-6 flex flex-col gap-8">
+  return (
+    <Section space="lg" className={PAGE_TOP}>
+      <header className={styles.header}>
+        <div>
+          <Kicker className="mb-4">{resume.kicker}</Kicker>
+          <h1 className="text-display text-ink">{SITE.name}</h1>
+          <p className="mt-3 text-xl font-medium text-ink-secondary">
+            {SITE.role} · {SITE.location}
+          </p>
+          <ul className={styles.contact}>
+            {contacts.map((c) => (
+              <li key={c.label}>
+                <SmartLink href={c.href} newTab={isWebLink(c.href)}>
+                  {c.text}
+                  <ArrowOut inline />
+                </SmartLink>
+              </li>
+            ))}
+          </ul>
+        </div>
+        <div className={styles.actions} data-print="hide">
+          {/* A file, not a page: the glyph says it downloads (and dips on hover),
+              where a caret would say it navigates. */}
+          <ResumeDownloadLink href={resume.pdf} className={`group ${buttonClassName("violet", "lg")}`}>
+            {resume.download}
+            <ArrowDownToLine
+              size={15}
+              strokeWidth={1.9}
+              aria-hidden
+              className="opacity-80 transition-transform duration-[var(--motion-slow)] ease-[var(--spring)] group-hover:translate-y-0.5 group-focus-visible:translate-y-0.5"
+            />
+          </ResumeDownloadLink>
+          <CaretLink href={resume.cta.href} tone="muted">
+            {resume.cta.label}
+          </CaretLink>
+        </div>
+      </header>
+
+      <div className={styles.layout}>
+        <aside className={styles.aside} data-print="hide">
+          <Toc items={TOC_ITEMS} title={resumePage.toc} />
+        </aside>
+
+        <div className={styles.doc}>
+          <section className={styles.section} aria-labelledby={S.summary.id}>
+            <h2 id={S.summary.id} className={styles.h2}>
+              {S.summary.label}
+            </h2>
+            <p className={styles.summary}>{resume.summary}</p>
+          </section>
+
+          <section className={styles.section} aria-labelledby={S.experience.id}>
+            <h2 id={S.experience.id} className={styles.h2}>
+              {S.experience.label}
+            </h2>
+            <Timeline label={S.experience.label}>
               {resume.experience.map((e) => (
-                <div key={e.org}>
-                  <div className="flex flex-wrap items-baseline justify-between gap-x-4 gap-y-1">
-                    <h3 className="text-lg text-ink">
-                      {e.role} <span className="text-ink-secondary">· {e.org}</span>
-                    </h3>
-                    <span className="font-mono text-xs text-ink-tertiary">
-                      {e.place} · {e.period}
-                    </span>
-                  </div>
-                  <ul className="mt-3 list-disc space-y-2 pl-5 marker:text-ink-tertiary">
+                <TimelineEntry
+                  key={e.org}
+                  date={e.period}
+                  dateTime={periodStart(e.period)}
+                  title={e.role}
+                  tags={
+                    <>
+                      <Chip variant="soft">{e.org}</Chip>
+                      <Chip>{e.place}</Chip>
+                    </>
+                  }
+                >
+                  <ul className={styles.points}>
                     {e.points.map((pt) => (
-                      <li
-                        key={pt}
-                        className="max-w-[var(--width-prose)] leading-[1.7] text-ink-secondary"
-                      >
-                        {pt}
-                      </li>
+                      <li key={pt}>{pt}</li>
                     ))}
                   </ul>
-                </div>
+                </TimelineEntry>
               ))}
-            </div>
+            </Timeline>
+          </section>
 
-            <hr className="rule-fade my-12" />
-
-            {/* The qualifier stays the SAME tertiary as the label — it is already
-                the lowest-contrast text the site ships (at the AA floor), so it
-                cannot be dimmed further; the em-dash carries the separation. */}
-            <h2 className={LABEL}>
-              {resume.labels.projects} — {resume.labels.projectsNote}
+          <section className={styles.section} aria-labelledby={S.projects.id}>
+            <h2 id={S.projects.id} className={styles.h2}>
+              {S.projects.label}
             </h2>
-            <div className="mt-6 flex flex-col gap-6">
+            <ul className={styles.projects}>
               {resume.projects.map((p) => (
-                <div key={p.name}>
-                  <div className="flex flex-wrap items-baseline justify-between gap-x-3 gap-y-1">
-                    {/* The name is the way into the case study the heading above
-                        promises. Underlined at rest, so it never reads as a link by
-                        colour alone (WCAG 1.4.1). */}
-                    <h3 className="text-lg text-ink">
-                      <Link
-                        href={p.caseStudy}
-                        prefetch={false}
-                        className="underline decoration-border-strong underline-offset-4 hover:decoration-accent"
-                      >
-                        {p.name}
-                      </Link>
+                <li key={p.slug} className={styles.project}>
+                  <div className={styles.projectHead}>
+                    <h3 className={styles.projectName}>
+                      <SmartLink href={p.caseStudy}>{p.name}</SmartLink>
                     </h3>
-                    <span className="flex items-center gap-3">
-                      {/* A demo link only while the deployed demo is up; the
-                          source is always public. */}
+                    <span className={styles.projectLinks} data-print="hide">
                       {p.demo ? (
-                        <TextLink href={p.demo} external tone="quiet">
+                        <CaretLink href={p.demo} tone="muted" weight="regular">
                           {resume.labels.demo}
-                        </TextLink>
+                        </CaretLink>
                       ) : null}
                       {p.source ? (
-                        <TextLink href={p.source} external tone="quiet">
+                        <CaretLink href={p.source} tone="muted" weight="regular">
                           {resume.labels.source}
-                        </TextLink>
+                        </CaretLink>
                       ) : null}
                     </span>
                   </div>
-                  <p className="mt-1 max-w-[var(--width-prose)] text-sm leading-[1.65] text-ink-secondary">
-                    {p.tagline}
-                  </p>
-                  {/* No naked numbers: every metric line carries a link to the
-                      page that documents how it was measured, with its scope and
-                      date in the line itself (site rule — evidence over claims). */}
-                  <ul className="mt-1.5 flex flex-col gap-1">
+                  <p className={styles.tagline}>{p.tagline}</p>
+                  {/* How it is built, where that is the evidence: the same line the PDF sets. */}
+                  {p.detail ? <p className={styles.tagline}>{p.detail}</p> : null}
+                  <ul className={styles.metrics}>
                     {p.metrics.map((m) => (
-                      <li
-                        key={m.text}
-                        className="max-w-[var(--width-prose)] font-mono text-xs leading-relaxed tabular-nums text-ink-secondary"
-                      >
-                        {m.text}{" "}
-                        <span className="text-ink-tertiary">
-                          ·{" "}
-                          {/* Accessible name leads with the visible word so voice-control
-                              users can say "click method" (WCAG 2.5.3 Label in Name); the
-                              suffix names the figure, so the links stay distinguishable.
-                              The underline is persistent, not hover-only: this link sits
-                              inside a run of text, so colour alone would be its only
-                              distinguishing cue (WCAG 1.4.1 Use of Colour). */}
-                          <Link
+                      <li key={m.text} className={styles.metric}>
+                        <span>
+                          {m.text}{" "}
+                          <SmartLink
                             href={m.method}
-                            prefetch={false}
+                            className={styles.method}
                             aria-label={`${resume.labels.method} for ${p.name}'s ${m.topic}`}
-                            className="text-accent underline decoration-from-font underline-offset-2 hover:text-accent-hover"
+                            data-print="hide"
                           >
                             {resume.labels.method}
-                          </Link>
+                          </SmartLink>
                         </span>
                       </li>
                     ))}
                   </ul>
-                  <p className="mt-1 font-mono text-xs text-ink-tertiary">{p.stack}</p>
-                </div>
+                  <p className={styles.stack}>{p.stack}</p>
+                </li>
               ))}
-            </div>
+            </ul>
+          </section>
 
-            <hr className="rule-fade my-12" />
-
-            <h2 className={LABEL}>{resume.labels.education}</h2>
-            <div className="mt-4">
-              <p className="text-ink">{resume.education.degree}</p>
-              <p className="text-ink-secondary">{resume.education.school}</p>
-              <p className="font-mono text-xs text-ink-tertiary">{resume.education.year}</p>
-            </div>
-          </div>
-
-          {/* Skills as a panel, not a bare column: at this width it is a sidebar,
-              and a surface is what tells a reader it is a reference block beside
-              the narrative rather than the next section of it. Resting elevation
-              only — nothing in it is clickable. */}
-          <aside className={`${PANEL} h-fit`}>
-            <h2 className={LABEL}>{resume.labels.skills}</h2>
-            <dl className="mt-5 flex flex-col gap-4">
+          <section className={styles.section} aria-labelledby={S.skills.id}>
+            <h2 id={S.skills.id} className={styles.h2}>
+              {S.skills.label}
+            </h2>
+            <dl className={styles.skills}>
               {resume.skills.map((s) => (
-                <div key={s.group}>
-                  <dt className="text-sm text-ink">{s.group}</dt>
-                  <dd className="mt-0.5 font-mono text-xs leading-relaxed text-ink-secondary">
-                    {s.items}
-                  </dd>
+                <div key={s.group} className={styles.skill}>
+                  <dt>{s.group}</dt>
+                  <dd>{s.items}</dd>
                 </div>
               ))}
             </dl>
-          </aside>
+          </section>
+
+          <section className={styles.section} aria-labelledby={S.education.id}>
+            <h2 id={S.education.id} className={styles.h2}>
+              {S.education.label}
+            </h2>
+            <div className={styles.education}>
+              <div>
+                <p className={styles.degree}>{resume.education.degree}</p>
+                <p className={styles.school}>{resume.education.school}</p>
+              </div>
+              <p className={styles.year}>{resume.education.year}</p>
+            </div>
+          </section>
         </div>
-      </Section>
-    </>
+      </div>
+    </Section>
   );
 }

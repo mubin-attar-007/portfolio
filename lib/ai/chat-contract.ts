@@ -22,6 +22,12 @@ export const MAX_HISTORY_TURNS = 8;
  */
 export const MAX_ASSISTANT_TURN_CHARS = 600;
 
+/** Most actions one answer carries. */
+export const MAX_ACTIONS = 3;
+
+/** Most follow-up questions one answer offers. */
+export const MAX_FOLLOW_UPS = 3;
+
 /** How an answer was produced. */
 export type AnswerMode = "live" | "fallback" | "refusal";
 
@@ -32,7 +38,7 @@ export type AnswerMode = "live" | "fallback" | "refusal";
 export type AnswerNote =
   // sent by the route
   | "injection-screened" // refused without calling the model
-  | "not-covered" // site search found nothing; the model was not called
+  | "not-covered" // the site does not answer it; the model wrote nothing
   | "too-long" // over MAX_MESSAGE_CHARS
   | "live-unavailable" // no key, upstream error, timeout, empty or blocked reply
   | "daily-budget-reached" // the instance's daily model budget is spent
@@ -43,21 +49,47 @@ export type AnswerNote =
   | "timed-out" // the panel gave up waiting
   | "unavailable"; // network or server failure
 
-/** A site page where a reader can check a cited source. */
+/**
+ * A site page where a reader can check an answer, with the label its chip
+ * shows. A cited page is one of these: the wire carries pages, never the
+ * internal source line a passage was built from.
+ */
 export type CitationLink = { label: string; href: string };
 
-/** One cited source and the site pages a reader can open to check it. */
-export type Citation = { source: string; links: CitationLink[] };
+/** What an action does: write, book, open a page, or get the résumé. */
+export type ActionKind = "email" | "book" | "contact" | "resume-pdf" | "resume" | "case-study";
+
+/**
+ * The fixed actions' labels, by kind (a case study's action is named by its
+ * page). lib/ai/actions.ts offers them; the home page's showcase shows them.
+ */
+export const ACTION_LABELS = {
+  email: "Email Mubin",
+  book: "Book a call",
+  contact: "Contact page",
+  "resume-pdf": "Download résumé (PDF)",
+  resume: "View résumé",
+} as const satisfies Record<Exclude<ActionKind, "case-study">, string>;
+
+/**
+ * A next step offered under an answer ("Email Mubin", "Open the case study").
+ * Chosen by the route from the question's intent and the cited pages, never
+ * from model text, and checked again by the panel (lib/ai/actions.ts).
+ */
+export type AssistantAction = { kind: ActionKind; label: string; href: string };
 
 /**
  * The server-sent events of one answer, in order: one `meta`, any number of
- * `token`s, one `sources`, one `done`. `done.incomplete` marks an answer that
- * ended before the model finished it (cut off, or failed part-way).
+ * `token`s, one `sources`, then `actions` and `followups` when there are
+ * any, and one `done`. `done.incomplete` marks an answer that ended before the
+ * model finished it (cut off, or failed part-way).
  */
 export type StreamEvent =
   | { event: "meta"; data: { mode: AnswerMode; note: AnswerNote | null } }
   | { event: "token"; data: { text: string } }
-  | { event: "sources"; data: { citations: Citation[] } }
+  | { event: "sources"; data: { citations: CitationLink[] } }
+  | { event: "actions"; data: { actions: AssistantAction[] } }
+  | { event: "followups"; data: { questions: string[] } }
   | { event: "done"; data: { incomplete?: true } };
 
 /** One turn of the conversation as the panel keeps it. */
@@ -68,7 +100,11 @@ export type ChatTurn = {
   content: string;
   mode?: AnswerMode;
   note?: AnswerNote | null;
-  sources?: Citation[];
+  /** The pages the answer cites. */
+  sources?: CitationLink[];
+  actions?: AssistantAction[];
+  /** Curated questions to ask next (lib/ai/follow-ups.ts). */
+  followups?: string[];
   /** True while tokens are still arriving. */
   streaming?: boolean;
   /** True when the answer ended before the model finished it. */
@@ -77,6 +113,13 @@ export type ChatTurn = {
 
 /** A turn as the route accepts it. */
 export type WireTurn = { role: "user" | "assistant"; content: string };
+
+/**
+ * The body of POST /api/chat. `page` is the site path the panel was opened on
+ * (the page-aware assistant); the route ignores anything that is not a page of
+ * this site.
+ */
+export type ChatRequest = { messages: WireTurn[]; page?: string };
 
 /**
  * Notes whose assistant turn is not an answer worth sending back as context.
@@ -124,3 +167,7 @@ export function historyForRequest(turns: readonly ChatTurn[], question: string):
   const kept = pairs.slice(Math.max(0, pairs.length - pairTurns));
   return [...kept, { role: "user", content: question }];
 }
+
+/** Every question the visitor asked in a conversation, oldest first. */
+export const askedQuestions = (turns: readonly ChatTurn[]): string[] =>
+  turns.filter((turn) => turn.role === "user").map((turn) => turn.content);

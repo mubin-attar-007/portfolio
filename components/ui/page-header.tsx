@@ -1,39 +1,27 @@
 import type { ReactNode } from "react";
-import { EyebrowChip } from "./eyebrow-chip";
+import { cx } from "./cx";
+import { Kicker } from "./kicker";
 
 /**
- * PageHeader — the ONE page-top used by every route, so a visitor arriving on
- * /notes reads the same object they read on /work. Before this existed each
- * route had grown its own header (four different h1 sizes, three different
- * kicker treatments, two different ledes measures), which is what made the site
- * read as a designed homepage bolted to a set of drafts.
- *
- * Structure, top to bottom: kicker → h1 → lede → actions.
+ * PageHeader — the one page top (prototype `.page-head`): kicker → h1 → lead →
+ * actions, so every route opens on the same object.
  *
  * Props:
- * - `kicker` — the branded page eyebrow: a short mono label.
- *   Use on index/landing routes.
- * - `meta` — a factual metadata line (status · role · timeline) for case
- *   studies. Deliberately a SEPARATE slot from `kicker` rather than one prop
- *   with a tone flag: they carry different information (a brand label vs. a
- *   record about this document) and are styled to say so.
- * - `title` — the h1. Held to ~20ch so it always breaks to two balanced lines at
- *   the desktop size rather than running as one thin ribbon.
- * - `lede` — one supporting paragraph, capped at 62ch.
- * - `align` — `start` (default) or `center`. Left is the norm; `center` exists
- *   for a header that opens a dark band, where the site already centres (see
- *   SectionHeading's align alternation).
- * - `children` — the actions slot: CTAs, a feed link, a cross-reference.
+ * - `kicker` — the violet line above the title.
+ * - `meta` — a factual line under the kicker (status · role · timeline), in the
+ *   quieter tertiary ink. Separate from `kicker` because it is a record, not a label.
+ * - `title` — the page's `<h1>`.
+ * - `lede` — one supporting paragraph (the page lead, 17 → 20px, held to 600px).
+ * - `align` — `start` (default) or `center` (a centred hero).
+ * - `size` — `display` (default, 40 → 64px) or `section` (28 → 40px, an article title).
+ * - `titleId` — an id for the `<h1>`, to label the page's first section.
+ * - `children` — the actions row (buttons, a feed link).
  *
- * Type: the shared `--text-section` step (32px → 52px). One step BELOW the
- * homepage hero's `--text-display` (40px → 84px), deliberately: the hero stays
- * the largest type on the site, so arriving on an index route still reads as
- * going one level in. Both are tokens, so the gap between them is a design
- * decision in tokens.css rather than two clamps in two files that happen to
- * differ today.
+ * Spacing: none outside itself. Put it in `<Section space="head">` for the
+ * prototype's 96/64px page-head rhythm.
  *
- * A11y: renders the page's single `<h1>`. Performance: the entire header paints
- * immediately; the h1 is commonly the LCP element on index routes.
+ * A11y: renders the page's single `<h1>`. Performance: server-only and static;
+ * the h1 is often the LCP element, so nothing here animates in.
  */
 export function PageHeader({
   kicker,
@@ -41,6 +29,9 @@ export function PageHeader({
   title,
   lede,
   align = "start",
+  size = "display",
+  titleId,
+  className,
   children,
 }: {
   kicker?: string;
@@ -48,43 +39,27 @@ export function PageHeader({
   title: string;
   lede?: string;
   align?: "start" | "center";
+  size?: "display" | "section";
+  titleId?: string;
+  className?: string;
   children?: ReactNode;
 }) {
   const centered = align === "center";
-  const eyebrow = kicker ?? meta;
   return (
-    <header
-      className={`flex flex-col ${
-        centered ? "items-center text-center" : ""
-      }`}
-    >
-      {kicker ? <EyebrowChip>{kicker}</EyebrowChip> : null}
-      {meta ? (
-        <p className={`font-mono text-xs uppercase tracking-[0.04em] text-ink-tertiary ${
-          kicker ? "mt-3" : ""
-        }`}>
-          {meta}
-        </p>
-      ) : null}
+    <header className={cx("flex flex-col", centered && "items-center text-center", className)}>
+      {kicker ? <Kicker className="mb-4">{kicker}</Kicker> : null}
+      {meta ? <p className="mb-4 text-sm text-ink-tertiary">{meta}</p> : null}
       <h1
-        className={`${
-          eyebrow ? "mt-6" : ""
-        } max-w-[20ch] text-balance text-section font-bold text-ink`}
+        id={titleId}
+        className={cx(size === "display" ? "text-display" : "text-section", "text-ink")}
       >
         {title}
       </h1>
-      {/* `text-pretty`, not `text-balance`: at 62ch this is a two-line
-          paragraph, and balancing it would leave a short orphan line under a
-          headline that is already balanced. */}
       {lede ? (
-        <p className="mt-6 max-w-[62ch] text-pretty text-lg text-ink-secondary">
-          {lede}
-        </p>
+        <p className="mt-[22px] max-w-[600px] text-page-lead text-ink-secondary">{lede}</p>
       ) : null}
       {children ? (
-        <div className={`mt-8 flex flex-wrap items-center gap-x-6 gap-y-3 ${
-          centered ? "justify-center" : ""
-        }`}>
+        <div className={cx("mt-8 flex flex-wrap items-center gap-x-3 gap-y-3", centered && "justify-center")}>
           {children}
         </div>
       ) : null}

@@ -21,7 +21,7 @@ import {
   formatRatio,
   publishedEvals,
 } from "../content/evals.ts";
-import { about } from "../content/site.ts";
+import { aboutPage } from "../content/pages/about.ts";
 import { SITE } from "../config/site.ts";
 
 const ROOT = fileURLToPath(new URL("..", import.meta.url));
@@ -168,8 +168,17 @@ test("the superseded job title appears nowhere on the site", () => {
 test("the role reads correctly inside a sentence", () => {
   assert.equal(SITE.roleInSentence.toLowerCase(), SITE.role.toLowerCase(), "the two forms name one role");
   assert.match(SITE.roleInSentence, /\bAI\b/, "the acronym stays capitalised");
-  for (const paragraph of about.body) {
-    assert.doesNotMatch(paragraph, /\bai\b/, `a lowercased "ai" in /about: ${paragraph.slice(0, 60)}…`);
+  // The prose /about renders: its lead, read as one sentence, and every other
+  // line of the page's own copy (content/pages/about.ts).
+  const aboutLead = aboutPage.hero.lead.map((part) => part.text).join("");
+  const copyOf = (value: unknown): string[] =>
+    typeof value === "string"
+      ? [value]
+      : typeof value === "object" && value !== null
+        ? Object.values(value).flatMap(copyOf)
+        : [];
+  for (const text of [aboutLead, ...copyOf(aboutPage)]) {
+    assert.doesNotMatch(text, /\bai\b/, `a lowercased "ai" in /about: ${text.slice(0, 60)}…`);
   }
   const lowered = CODE.filter((file) => /\brole\.toLowerCase\(\)/.test(read(file)));
   assert.deepEqual(lowered, [], `use SITE.roleInSentence instead of lowercasing the role:\n${lowered.join("\n")}`);

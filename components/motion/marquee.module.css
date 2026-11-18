@@ -1,0 +1,56 @@
+/* Marquee (prototype `.chiprows.marquee`): the content twice in one track that
+   slides by half its width, so the loop is seamless. Uses the global
+   `marquee` keyframe through `--kf-marquee` (globals.css: a bare name here
+   would be renamed by the module transform and match nothing). */
+@layer components {
+  .group {
+    display: grid;
+    gap: 12px;
+  }
+
+  .marquee {
+    overflow: hidden;
+  }
+  .fade {
+    -webkit-mask-image: linear-gradient(90deg, transparent, #000 18%, #000 82%, transparent);
+    mask-image: linear-gradient(90deg, transparent, #000 18%, #000 82%, transparent);
+  }
+
+  .track {
+    display: flex;
+    width: max-content;
+    animation: var(--kf-marquee) var(--marquee-duration) linear var(--marquee-delay) infinite;
+  }
+  .reverse {
+    animation-direction: reverse;
+  }
+  /* Pauses under the pointer, for keyboard focus inside, and when a Pausable
+     around it is paused by its button (WCAG 2.2.2). */
+  .marquee:is(:hover, :focus-within) .track,
+  .group:is(:hover, :focus-within) .track,
+  [data-paused] .track {
+    animation-play-state: paused;
+  }
+
+  .set {
+    display: flex;
+    flex: none;
+    gap: var(--marquee-gap);
+    padding-inline-end: var(--marquee-gap);
+  }
+
+  /* Reduced motion: one still copy, centred. */
+  @media (prefers-reduced-motion: reduce) {
+    .track {
+      width: auto;
+      justify-content: center;
+      animation: none;
+    }
+    .clone {
+      display: none;
+    }
+    .set {
+      padding-inline-end: 0;
+    }
+  }
+}

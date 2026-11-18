@@ -144,9 +144,7 @@ export const NowSchema = z.object({
   lede: z.string(),
   /**
    * "Currently exploring" — structured rather than a markdown list in the body,
-   * because the homepage shows the same three themes. A list that lives in prose
-   * can only be duplicated; as data it has exactly one source, and /now and the
-   * homepage cannot drift apart.
+   * so the themes are data with exactly one source, rendered by /now.
    */
   exploring: z
     .array(z.object({ title: z.string(), body: z.string() }))
@@ -234,16 +232,3 @@ export const EvalSchema = z
     }
   });
 export type EvalRow = z.infer<typeof EvalSchema>;
-
-/** One phase of the timeline. Body carries Built/Learned/Mistake/Changed lines. */
-export const TimelineSchema = z.object({
-  period: z.string(),
-  role: z.string(),
-  org: z.string().optional(),
-  order: z.number(),
-  built: z.string(),
-  learned: z.string(),
-  mistake: z.string(),
-  changed: z.string(),
-});
-export type TimelinePhase = z.infer<typeof TimelineSchema>;

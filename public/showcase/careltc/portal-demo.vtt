@@ -1,0 +1,22 @@
+WEBVTT
+
+00:00.000 --> 00:02.000
+The portal signs in on a local demo stack with dummy data.
+
+00:02.000 --> 00:10.000
+Live floor status: every occupied room by floor, with its round state.
+
+00:10.000 --> 00:16.000
+The Missed filter and the alerts bell: each missed round raises an alert for nurses and admins.
+
+00:16.000 --> 00:56.000
+Room 118: rounds paused until resumed while the resident is at hospital. They show as Excused, not Missed, with who paused them and why.
+
+00:56.000 --> 01:04.000
+Reports: compliance is completed ÷ (completed + missed), with excused rounds left out. The figures are seeded dummy data.
+
+01:04.000 --> 01:09.000
+The virtual NFC demo runs the real checks for a tap at room 101.
+
+01:09.000 --> 01:15.160
+Demo complete, nothing saved: it shows what the app would record, without changing any round, report or check-in.

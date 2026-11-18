@@ -10,7 +10,6 @@
 // Output lands in .screenshots/ (gitignored), named <route>__<theme>__<width>.png.
 //
 //   ROUTES=/,/work    limit the sweep
-//   THEMES=light,dark limit the themes
 //   FULL=1            capture the whole page rather than the first viewport
 
 import { mkdirSync } from "node:fs";
@@ -31,10 +30,14 @@ const DEFAULT_ROUTES = [
   "/evals",
   "/about",
   "/hire",
+  "/contact",
+  "/work/bench-discovery",
+  "/work/careltc",
   "/resume",
   "/now",
   "/uses",
   "/trust",
+  "/evaluate",
 ];
 
 // The six widths the design is specified at. 360 is the narrowest phone the
@@ -49,7 +52,8 @@ const VIEWPORTS = [
 ];
 
 const routes = (process.env.ROUTES ?? DEFAULT_ROUTES.join(",")).split(",").filter(Boolean);
-const themes = (process.env.THEMES ?? "light,dark").split(",").filter(Boolean);
+// One theme (ADR-018). The name stays in the file names so older sweeps sort beside new ones.
+const themes = ["light"];
 
 mkdirSync(OUT, { recursive: true });
 
@@ -63,16 +67,6 @@ for (const theme of themes) {
       viewport: { width: vp.width, height: vp.height },
       deviceScaleFactor: 1,
     });
-    // The app ignores prefers-color-scheme and switches on a [data-theme]
-    // attribute seeded from localStorage, so the theme has to be planted before
-    // any page script runs.
-    await ctx.addInitScript((t) => {
-      try {
-        localStorage.setItem("theme", t);
-      } catch {
-        /* storage disabled — the page falls back to the light default */
-      }
-    }, theme);
 
     for (const route of routes) {
       const page = await ctx.newPage();
@@ -84,11 +78,9 @@ for (const theme of themes) {
 
       await page.goto(`${BASE}${route}`, { waitUntil: "networkidle" });
 
-      // Scroll the page through before capturing. Section entrances are
-      // viewport-triggered, so a capture taken without scrolling tests a state
-      // no reader ever sees — and would report an entrance mid-flight as a
-      // defect. This walks the document the way a person does, then returns to
-      // the top so the capture starts where the page starts.
+      // Scroll the page through before capturing, the way a person does, so
+      // anything that loads on approach (an image, a lazy illustration) is in
+      // place; then return to the top so the capture starts where the page does.
       await page.evaluate(async () => {
         const step = Math.round(window.innerHeight * 0.8);
         for (let y = 0; y < document.body.scrollHeight; y += step) {

@@ -1,14 +1,17 @@
-import { renderOg, OG_SIZE, OG_CONTENT_TYPE, formatOgEyebrow } from "@/lib/og";
+import { renderOg, ogAlt, OG_SIZE, OG_CONTENT_TYPE, type OgCard } from "@/lib/og";
+import { uses } from "@/content/site";
 
-export const alt = "Uses — the $0 stack behind four shipped products";
+/** The line is the opening sentence of the page's own intro (`uses.intro`), read from it. */
+const CARD = {
+  kicker: uses.kicker,
+  title: uses.title,
+  description: uses.intro.slice(0, uses.intro.indexOf(".") + 1),
+} satisfies OgCard;
+
+export const alt = ogAlt(CARD);
 export const size = OG_SIZE;
 export const contentType = OG_CONTENT_TYPE;
 
-export default function OG() {
-  return renderOg({
-    eyebrow: formatOgEyebrow("Uses"),
-    title: "The $0 stack behind four shipped products.",
-    subtitle: "A deliberately boring, free-tier stack — and why.",
-    footerRight: "/uses",
-  });
+export default function Image() {
+  return renderOg(CARD);
 }

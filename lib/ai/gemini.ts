@@ -1,14 +1,17 @@
 // -----------------------------------------------------------------------------
-// Minimal Google Gemini streaming client (generativelanguage REST API).
+// Minimal Google Gemini client (generativelanguage REST API).
 //
-// Uses `streamGenerateContent` with `alt=sse` to receive server-sent chunks and
-// yields plain text deltas. No SDK dependency. The API key is read from
-// process.env server-side only, sent as an `x-goog-api-key` header (never a
-// query parameter), and is NEVER included in any thrown error or log.
+// Two calls, no SDK dependency:
+//   - `streamGemini`: `streamGenerateContent` with `alt=sse`, yielding the
+//     answer's text deltas as they arrive;
+//   - `generateJson`: one small `generateContent` call that must answer JSON
+//     (the router's choice of passages, lib/ai/router.ts).
 //
-// `args.signal` is forwarded to fetch, so a client disconnect or a timeout in
-// the caller stops generation upstream instead of burning quota on an answer
-// nobody will read.
+// The API key is read from process.env server-side only, sent as an
+// `x-goog-api-key` header (never a query parameter), and is NEVER included in
+// any thrown error or log. `args.signal` is forwarded to fetch, so a client
+// disconnect or a timeout in the caller stops generation upstream instead of
+// burning quota on an answer nobody will read.
 // -----------------------------------------------------------------------------
 
 import type { ChatMessage } from "./guard";
@@ -45,6 +48,15 @@ export class GeminiNotConfiguredError extends GeminiError {
   }
 }
 
+/**
+ * True when a key is set, so a live answer can be attempted at all. The route
+ * checks it before reserving any allowance: without a key no model call can
+ * happen, so none is counted.
+ */
+export function isLiveConfigured(): boolean {
+  return Boolean(process.env.GEMINI_API_KEY);
+}
+
 type GeminiPart = { text: string };
 type GeminiContent = { role: "user" | "model"; parts: GeminiPart[] };
 
@@ -69,7 +81,7 @@ export type StreamArgs = {
  */
 export type FinishReason = "stop" | "max-tokens" | "blocked" | "other" | "unknown";
 
-/** What the stream reports once it ends: its finish reason and token counts. */
+/** What a call reports once it ends: its finish reason and token counts. */
 export type StreamOutcome = {
   finish: FinishReason;
   promptTokens?: number;
@@ -86,7 +98,7 @@ function classify(reason: string | undefined): FinishReason {
   return BLOCKED.has(reason) ? "blocked" : "other";
 }
 
-/** The parts of one streamed chunk this client reads. */
+/** The parts of one response (or one streamed chunk) this client reads. */
 type Chunk = {
   candidates?: {
     content?: { parts?: { text?: string; thought?: boolean }[] };
@@ -106,50 +118,49 @@ function parseChunk(payload: string): Chunk | null {
   }
 }
 
+/** The answer text of a chunk: its parts, without any reasoning ("thought") part. */
+const textOf = (chunk: Chunk): string =>
+  (chunk.candidates?.[0]?.content?.parts ?? [])
+    .filter((part) => part.text && !part.thought)
+    .map((part) => part.text!)
+    .join("");
+
 /**
- * Stream a grounded completion from Gemini: yields text deltas and returns how
- * the stream ended. Throws GeminiError on a missing key, a network failure, a
- * non-OK status (quota 429, server 5xx, a rejected model), or a prompt Google
- * blocks outright — every case where the caller should serve its fallback.
+ * Grounded Q&A over retrieved passages needs no reasoning pass; one would only
+ * add latency and spend free-tier tokens. Gemini 3 replaces the numeric
+ * thinking budget with a level, and MINIMAL ("little to no thinking") is the
+ * nearest to the old budget of 0. It is 3.5 Flash-Lite's default, stated so an
+ * override with a higher default keeps it too. No temperature or topP: from
+ * 3.5 Flash-Lite on, Google deprecates the sampling parameters (ignored now,
+ * an error in later models). includeThoughts is false by default; it is stated
+ * so a later default change cannot start returning reasoning parts (the
+ * parsers below also drop any part marked `thought`).
+ *
+ * Measured on 2026-11-17 (spec/AI_ASSISTANT.md §8): LOW spent 150–810 thinking
+ * tokens an answer, which count against maxOutputTokens, so at 800 a fifth of
+ * answers came back empty or cut off, and the median first token took twice
+ * as long. Raise maxOutputTokens before raising the level.
  */
-export async function* streamGemini(args: StreamArgs): AsyncGenerator<string, StreamOutcome> {
+const THINKING = { thinkingLevel: "MINIMAL", includeThoughts: false } as const;
+
+/**
+ * POST one request to the model and return the response, or throw a
+ * GeminiError on a missing key, a network failure or a non-OK status.
+ */
+async function post(method: string, body: unknown, signal: AbortSignal | undefined): Promise<Response> {
   const key = process.env.GEMINI_API_KEY;
-  if (!key) {
-    throw new GeminiNotConfiguredError();
-  }
+  if (!key) throw new GeminiNotConfiguredError();
 
   // The key goes in `x-goog-api-key`, never in the query string. Google accepts
   // either, but a URL-borne key ends up in access logs, error traces, and proxy
   // records — a header does not.
-  const url = `${BASE}/${GEMINI_MODEL}:streamGenerateContent?alt=sse`;
-
-  const body = {
-    systemInstruction: { parts: [{ text: args.systemInstruction }] },
-    contents: toContents(args.messages),
-    generationConfig: {
-      maxOutputTokens: 800,
-      // Grounded Q&A over retrieved passages needs no reasoning pass; one would
-      // only add latency and spend free-tier tokens. Gemini 3 replaces the
-      // numeric thinking budget with a level, and MINIMAL ("little to no
-      // thinking") is the nearest to the old budget of 0. It is 3.5 Flash-Lite's
-      // default, stated so an override with a higher default keeps it too.
-      // No temperature or topP: from 3.5 Flash-Lite on, Google deprecates the
-      // sampling parameters (ignored now, an error in later models).
-      // includeThoughts is false by default; it is stated so a later default
-      // change cannot start returning reasoning parts (the parser below also
-      // drops any part marked `thought`).
-      thinkingConfig: { thinkingLevel: "MINIMAL", includeThoughts: false },
-    },
-    // Keep safety at defaults; content is professional Q&A about a portfolio.
-  };
-
   let res: Response;
   try {
-    res = await fetch(url, {
+    res = await fetch(`${BASE}/${GEMINI_MODEL}:${method}`, {
       method: "POST",
       headers: { "Content-Type": "application/json", "x-goog-api-key": key },
       body: JSON.stringify(body),
-      signal: args.signal,
+      signal,
     });
   } catch {
     // Network / abort — surface a generic message, never the upstream detail.
@@ -163,13 +174,33 @@ export async function* streamGemini(args: StreamArgs): AsyncGenerator<string, St
     let status = res.status;
     if (status === 0) status = 502;
     // Without this line a rejected model id or setting would silently turn
-    // every answer into the FAQ fallback. It logs the model and the status
-    // only: never the key, the response body, or anything the visitor typed.
+    // every answer into the fallback. It logs the model and the status only:
+    // never the key, the response body, or anything the visitor typed.
     console.warn(`[assistant] Gemini ${GEMINI_MODEL} returned HTTP ${status}; serving the grounded fallback`);
     throw new GeminiError(`Upstream error (${status}).`, status || 502);
   }
+  return res;
+}
 
-  const reader = res.body.getReader();
+/**
+ * Stream a grounded completion from Gemini: yields text deltas and returns how
+ * the stream ended. Throws GeminiError on a missing key, a network failure, a
+ * non-OK status (quota 429, server 5xx, a rejected model), or a prompt Google
+ * blocks outright — every case where the caller should serve its fallback.
+ */
+export async function* streamGemini(args: StreamArgs): AsyncGenerator<string, StreamOutcome> {
+  const res = await post(
+    "streamGenerateContent?alt=sse",
+    {
+      systemInstruction: { parts: [{ text: args.systemInstruction }] },
+      contents: toContents(args.messages),
+      generationConfig: { maxOutputTokens: 800, thinkingConfig: THINKING },
+      // Keep safety at defaults; content is professional Q&A about a portfolio.
+    },
+    args.signal,
+  );
+
+  const reader = res.body!.getReader();
   const decoder = new TextDecoder();
   let buffer = "";
   let finishReason: string | undefined;
@@ -200,14 +231,60 @@ export async function* streamGemini(args: StreamArgs): AsyncGenerator<string, St
           promptTokens = chunk.usageMetadata.promptTokenCount ?? promptTokens;
           outputTokens = chunk.usageMetadata.candidatesTokenCount ?? outputTokens;
         }
-        for (const part of candidate?.content?.parts ?? []) {
-          // A thought part is the model's reasoning, never answer text.
-          if (part.text && !part.thought) yield part.text;
-        }
+        const text = textOf(chunk);
+        if (text) yield text;
       }
     }
   } finally {
     reader.releaseLock();
   }
   return { finish: classify(finishReason), promptTokens, outputTokens };
+}
+
+export type JsonArgs = {
+  systemInstruction: string;
+  prompt: string;
+  /** The JSON shape the answer must take (Gemini's OpenAPI-style schema). */
+  schema: Record<string, unknown>;
+  maxOutputTokens: number;
+  signal?: AbortSignal;
+};
+
+/** A JSON answer's raw text, with how the call ended. */
+export type JsonOutcome = StreamOutcome & { text: string };
+
+/**
+ * One small, non-streaming call that must answer JSON. Returns the raw text;
+ * the caller validates it, so a malformed answer is just an answer it rejects.
+ * Throws GeminiError on the same failures as `streamGemini`.
+ */
+export async function generateJson(args: JsonArgs): Promise<JsonOutcome> {
+  const res = await post(
+    "generateContent",
+    {
+      systemInstruction: { parts: [{ text: args.systemInstruction }] },
+      contents: [{ role: "user", parts: [{ text: args.prompt }] }],
+      generationConfig: {
+        maxOutputTokens: args.maxOutputTokens,
+        responseMimeType: "application/json",
+        responseSchema: args.schema,
+        thinkingConfig: THINKING,
+      },
+    },
+    args.signal,
+  );
+  let chunk: Chunk | null;
+  try {
+    chunk = parseChunk(await res.text());
+  } catch {
+    throw new GeminiError("Upstream response unreadable.", 502);
+  }
+  if (!chunk) throw new GeminiError("Upstream response unreadable.", 502);
+  if (chunk.promptFeedback?.blockReason) throw new GeminiError("Prompt blocked.", 502);
+  return {
+    text: textOf(chunk),
+    finish: classify(chunk.candidates?.[0]?.finishReason),
+    promptTokens: chunk.usageMetadata?.promptTokenCount,
+    outputTokens: chunk.usageMetadata?.candidatesTokenCount,
+  };
 }

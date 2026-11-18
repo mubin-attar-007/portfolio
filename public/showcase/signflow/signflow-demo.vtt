@@ -1,0 +1,37 @@
+WEBVTT
+
+00:00.000 --> 00:04.410
+Signed in as the sender, on a local test stack with invented data.
+
+00:04.410 --> 00:13.540
+New envelope: subject, document type Consent (it sets the retention policy), the PDF. Signing order: Riley first, Casey second; Morgan gets a copy (CC).
+
+00:13.540 --> 00:17.880
+Fields per signer: signature and date for Riley, signature for Casey.
+
+00:17.880 --> 00:20.200
+Review, preview the emails, send.
+
+00:20.200 --> 00:24.730
+The local test mailbox: Riley and Morgan have their emails, Casey none yet.
+
+00:24.730 --> 00:28.410
+Riley opens the emailed link, signs and adds the date.
+
+00:28.410 --> 00:33.830
+On submit the server renders Riley's copy and seals it: PAdES signature, RFC 3161 timestamp.
+
+00:33.830 --> 00:38.740
+Casey's email arrives only now, after Riley's signature.
+
+00:38.740 --> 00:42.210
+Casey signs from a separate link.
+
+00:42.210 --> 00:48.850
+Last signature in: one final PDF with every signature and an audit certificate, sealed and timestamped.
+
+00:48.850 --> 00:53.180
+Back as the sender: the envelope is Completed.
+
+00:53.180 --> 00:55.800
+The sealed final document is ready to download.

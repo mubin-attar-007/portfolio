@@ -1,0 +1,28 @@
+/* CircuitArt: faint traces behind a hero, filling its positioned parent. The
+   ink at 7% reads as the prototype on light and, through the token remap, on
+   dark plates and pages. */
+@layer components {
+  .art {
+    position: absolute;
+    inset: 0;
+    width: 100%;
+    height: 100%;
+    pointer-events: none;
+    color: color-mix(in srgb, var(--color-ink) 7%, transparent);
+  }
+  /* A soft ellipse around the centre, as behind the About mark. */
+  .center {
+    -webkit-mask-image: radial-gradient(60% 70% at 50% 35%, #000 30%, transparent 80%);
+    mask-image: radial-gradient(60% 70% at 50% 35%, #000 30%, transparent 80%);
+  }
+  /* Fading downwards from the top, for a page header (privacy, trust). */
+  .top {
+    -webkit-mask-image: linear-gradient(180deg, #000 10%, transparent 85%);
+    mask-image: linear-gradient(180deg, #000 10%, transparent 85%);
+  }
+  /* Strongest at the edges, clear in the middle, for a centred title. */
+  .sides {
+    -webkit-mask-image: linear-gradient(90deg, #000, transparent 35%, transparent 65%, #000);
+    mask-image: linear-gradient(90deg, #000, transparent 35%, transparent 65%, #000);
+  }
+}

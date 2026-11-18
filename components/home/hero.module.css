@@ -1,0 +1,215 @@
+/* Home hero (prototype `.hero`, `.prompt-chip`). */
+.hero {
+  padding-top: 120px;
+}
+.top {
+  display: grid;
+  gap: 28px;
+  align-items: end;
+}
+@media (min-width: 960px) {
+  .top {
+    grid-template-columns: 1fr auto;
+  }
+}
+.title {
+  max-width: 820px;
+  font-size: clamp(2.25rem, 5vw, 3.5rem);
+  line-height: 1.14;
+  font-weight: 700;
+  letter-spacing: -0.035em;
+  text-wrap: balance;
+  color: var(--color-ink);
+}
+.sub {
+  margin-top: 16px;
+  max-width: 560px;
+  font-size: clamp(1.0625rem, 1.5vw, 1.25rem);
+  line-height: 1.5;
+  color: var(--color-ink-secondary);
+}
+
+/* Copy-prompt chip */
+.promptWrap {
+  display: grid;
+  gap: 8px;
+  justify-items: start;
+}
+@media (min-width: 960px) {
+  .promptWrap {
+    justify-items: end;
+  }
+}
+.status {
+  font-size: 0.8125rem;
+  color: var(--color-ink-tertiary);
+}
+.chip {
+  display: inline-flex;
+  max-width: 100%;
+  align-items: center;
+  padding: 6px;
+  border-radius: var(--radius-pill);
+  background: var(--color-surface);
+  box-shadow: var(--shadow-card);
+  cursor: pointer; /* the whole pill copies (prompt-chip.tsx) */
+  transition: box-shadow var(--motion-slow) var(--ease-out);
+}
+.chip:is(:hover, :focus-within) {
+  box-shadow: var(--shadow-card-hover);
+}
+.agents {
+  display: flex;
+  flex: none;
+  margin: 0 12px 0 2px;
+}
+.agents span {
+  position: relative;
+  display: grid;
+  width: 30px;
+  height: 30px;
+  margin-left: -6px;
+  place-items: center;
+  border-radius: 50%;
+  background: var(--color-ink);
+  color: var(--color-surface);
+  font-size: 13px;
+  box-shadow: 0 0 0 2px var(--color-surface);
+  transition:
+    margin-left 450ms var(--spring-soft),
+    transform 450ms var(--spring-soft),
+    opacity 250ms var(--ease-out);
+}
+.agents span:first-child {
+  z-index: 3;
+  margin-left: 0;
+}
+.agents span:nth-child(2) {
+  z-index: 2;
+  background: #2b2b33;
+}
+.agents span:nth-child(3) {
+  z-index: 1;
+  background: #3b3b46;
+}
+.promptText {
+  min-width: 0;
+  max-width: 0;
+  overflow: hidden;
+  opacity: 0;
+  white-space: nowrap;
+  text-overflow: ellipsis;
+  font: 0.8125rem/1.2 var(--font-mono);
+  color: var(--color-ink-secondary);
+  transition:
+    max-width 500ms var(--spring-soft),
+    opacity 250ms var(--ease-out),
+    margin 500ms var(--spring-soft);
+}
+.copyBtn {
+  position: relative;
+  display: inline-flex;
+  flex: none;
+  height: 36px;
+  min-width: 36px;
+  align-items: center;
+  justify-content: center;
+  padding: 0 16px;
+  border-radius: var(--radius-pill);
+  background: #2a2a30;
+  color: #fff;
+  font-size: 0.9375rem;
+  font-weight: 600;
+  cursor: pointer;
+  transition:
+    padding 450ms var(--spring-soft),
+    background-color var(--motion-fast) var(--ease-out),
+    transform 300ms var(--spring);
+}
+.copyBtn:hover {
+  background: var(--color-ink);
+}
+.copyBtn:active {
+  transform: scale(var(--press-scale));
+}
+.copyLabel {
+  display: inline-block;
+  max-width: 140px;
+  overflow: hidden;
+  white-space: nowrap;
+  transition:
+    max-width 450ms var(--spring-soft),
+    opacity 200ms var(--ease-out);
+}
+.iconCopy,
+.iconCheck {
+  position: absolute;
+  left: 50%;
+  top: 50%;
+  width: 16px;
+  height: 16px;
+  margin: -8px 0 0 -8px;
+  opacity: 0;
+  transform: scale(0.6);
+  filter: blur(2px);
+  transition:
+    opacity 200ms var(--ease-out),
+    transform 300ms var(--spring),
+    filter 200ms var(--ease-out);
+}
+
+/* Hover or focus: the stack folds into one, the prompt slides in, and the
+   label folds into a copy icon. After a copy, the icon becomes a tick. */
+.chip:is(:hover, :focus-within) .agents span:nth-child(2) {
+  margin-left: -30px;
+  opacity: 0;
+  transform: rotate(-16deg) scale(0.8);
+}
+.chip:is(:hover, :focus-within) .agents span:nth-child(3) {
+  margin-left: -30px;
+  opacity: 0;
+  transform: rotate(14deg) scale(0.7);
+}
+.chip:is(:hover, :focus-within) .promptText {
+  max-width: 250px;
+  margin-right: 12px;
+  opacity: 1;
+}
+.chip:is(:hover, :focus-within, .copied) .copyBtn {
+  padding: 0;
+}
+.chip:is(:hover, :focus-within, .copied) .copyLabel {
+  max-width: 0;
+  opacity: 0;
+}
+.chip:is(:hover, :focus-within) .iconCopy {
+  opacity: 1;
+  transform: none;
+  filter: none;
+}
+/* `.chip.copied` outranks the hover and focus rule above, so the copy icon
+   gives way to the tick while the pointer or focus is still on the chip —
+   which is always the case at the moment of copying. */
+.chip.copied .iconCopy {
+  opacity: 0;
+  transform: scale(0.6);
+  filter: blur(2px);
+}
+.chip.copied .iconCheck {
+  opacity: 1;
+  transform: none;
+  filter: none;
+  transition:
+    opacity 130ms cubic-bezier(0.175, 0.885, 0.32, 1.1),
+    transform 130ms cubic-bezier(0.175, 0.885, 0.32, 1.1),
+    filter 130ms;
+}
+
+@media (max-width: 640px) {
+  .hero {
+    padding-top: 64px;
+  }
+  .chip:is(:hover, :focus-within) .promptText {
+    max-width: 200px;
+  }
+}

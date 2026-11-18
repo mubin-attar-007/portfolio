@@ -1,14 +1,16 @@
-import { renderOg, OG_SIZE, OG_CONTENT_TYPE, formatOgEyebrow } from "@/lib/og";
+import { renderOg, ogAlt, OG_SIZE, OG_CONTENT_TYPE, type OgCard } from "@/lib/og";
+import { nowPage } from "@/content/site";
 
-export const alt = "Now — what Mubin Attar is building, exploring, and reading";
+const CARD = {
+  kicker: nowPage.kicker,
+  title: nowPage.title,
+  description: "What I'm building, exploring and reading, updated by hand.",
+} satisfies OgCard;
+
+export const alt = ogAlt(CARD);
 export const size = OG_SIZE;
 export const contentType = OG_CONTENT_TYPE;
 
-export default function OG() {
-  return renderOg({
-    eyebrow: formatOgEyebrow("Now"),
-    title: "What I'm doing now",
-    subtitle: "Building, exploring, and reading — a running snapshot, updated by hand.",
-    footerRight: "/now",
-  });
+export default function Image() {
+  return renderOg(CARD);
 }

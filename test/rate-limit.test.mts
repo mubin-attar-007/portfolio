@@ -10,6 +10,7 @@ import {
   CLIENT_DAILY_LIVE_ANSWERS,
   GEMINI_DAILY_BUDGET,
   checkRateLimit,
+  clientDailyLimit,
   clientKeyFromHeaders,
   reserveLiveAnswer,
 } from "../lib/ai/rate-limit.ts";
@@ -60,4 +61,15 @@ test("the instance budget caps all clients together, and a refusal spends nothin
   // "late" was refused without being counted, so its allowance is whole tomorrow.
   for (let i = 0; i < CLIENT_DAILY_LIVE_ANSWERS; i++) assert.equal(reserveLiveAnswer("late", day + DAY + i), "ok");
   assert.equal(reserveLiveAnswer("late", day + DAY + 99), "client-allowance-reached");
+});
+
+test("the per-client allowance: 30 in production, lifted for next dev, set by ASSISTANT_CLIENT_DAILY_LIMIT", () => {
+  assert.equal(CLIENT_DAILY_LIVE_ANSWERS, 30, "the tests run with production defaults");
+  assert.equal(clientDailyLimit(undefined, "production"), 30);
+  assert.equal(clientDailyLimit(undefined, undefined), 30);
+  // Every request from localhost is one client: local review is never blocked by it.
+  assert.equal(clientDailyLimit(undefined, "development"), GEMINI_DAILY_BUDGET);
+  assert.equal(clientDailyLimit("200", "production"), 200);
+  assert.equal(clientDailyLimit(" 5 ", "development"), 5);
+  for (const bad of ["", "0", "-3", "2.5", "lots", "20001"]) assert.equal(clientDailyLimit(bad, "production"), 30, bad);
 });

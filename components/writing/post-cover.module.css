@@ -1,0 +1,151 @@
+/* PostCover: the typeset cover card (prototype `.post-cover`, Clerk Blog).
+   Pure CSS/SVG, no raster, so it never competes for LCP. */
+@layer components {
+  .cover {
+    position: relative;
+    container-type: inline-size;
+    aspect-ratio: 19 / 10;
+    overflow: hidden;
+    border-radius: var(--radius-lg);
+    background: var(--color-surface);
+    box-shadow: var(--shadow-card);
+    transition: box-shadow var(--motion-base) var(--ease-out);
+  }
+  /* A faint dot field behind the art, fading to the left so the title stays clean. */
+  .cover::before {
+    content: "";
+    position: absolute;
+    inset: 0;
+    background-image: radial-gradient(var(--color-dots) 0.8px, transparent 0.8px);
+    background-size: 12px 12px;
+    -webkit-mask-image: linear-gradient(100deg, transparent 38%, #000 92%);
+    mask-image: linear-gradient(100deg, transparent 38%, #000 92%);
+    opacity: 0.7;
+  }
+
+  .brand {
+    position: absolute;
+    top: 7.5cqi;
+    left: 6.5cqi;
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    font-size: 12px;
+    font-weight: 700;
+    letter-spacing: -0.02em;
+    color: var(--color-ink);
+  }
+  .mark {
+    display: grid;
+    place-items: center;
+    width: 15px;
+    height: 15px;
+    border-radius: 4px;
+    background: var(--color-ink);
+    color: #fff;
+    font-size: 7.5px;
+    font-weight: 800;
+    letter-spacing: -0.04em;
+  }
+
+  .title {
+    position: absolute;
+    left: 6.5cqi;
+    bottom: 7cqi;
+    max-width: 46%;
+    font-size: clamp(18px, 6.4cqi, 44px);
+    line-height: 1.08;
+    font-weight: 750;
+    letter-spacing: -0.035em;
+    color: var(--color-ink);
+    text-wrap: balance;
+  }
+
+  .art {
+    position: absolute;
+    top: 6cqi;
+    right: 5cqi;
+    bottom: 6cqi;
+    width: 44%;
+    display: grid;
+    place-items: center;
+    transition: transform 800ms var(--ease-out);
+  }
+
+  /* Hover or focus on the card's link: the art leans in, the shadow deepens. */
+  :is(a:hover, a:focus-visible) .cover {
+    box-shadow: var(--shadow-lift);
+  }
+  :is(a:hover, a:focus-visible) .art {
+    transform: scale(1.04) rotate(-0.6deg);
+  }
+
+  /* ---- the mini illustrations ------------------------------------------- */
+  .sheet {
+    width: 100%;
+    padding: 2cqi 3cqi;
+    border-radius: 10px;
+    background: var(--color-surface);
+    box-shadow: var(--shadow-card);
+    font-family: var(--font-mono);
+    font-size: clamp(8px, 2.6cqi, 15px);
+    color: var(--color-ink);
+  }
+  .row {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 8px;
+    padding: 2.1cqi 0.4cqi;
+    white-space: nowrap;
+  }
+  .row + .row {
+    border-top: 1px solid var(--color-border);
+  }
+  .row > span:first-child {
+    overflow: hidden;
+    text-overflow: ellipsis;
+  }
+  .verdict {
+    flex: none;
+    padding: 1px 6px;
+    border-radius: var(--radius-pill);
+    font-family: var(--font-sans);
+    font-weight: 600;
+  }
+  .deny {
+    color: var(--pill-caution-ink);
+    background: var(--pill-caution-bg);
+  }
+  .allow {
+    color: var(--pill-positive-ink);
+    background: var(--pill-positive-bg);
+  }
+
+  .stack {
+    display: grid;
+    justify-items: center;
+    gap: 3cqi;
+    width: 100%;
+  }
+  .tag {
+    padding: 0.8cqi 2.6cqi;
+    border-radius: var(--radius-pill);
+    background: var(--color-surface);
+    box-shadow: var(--shadow-card);
+    font-size: clamp(9px, 2.6cqi, 15px);
+    font-weight: 600;
+    color: var(--color-ink);
+    white-space: nowrap;
+  }
+  .svg {
+    width: 100%;
+    height: auto;
+    overflow: visible;
+  }
+  .shield {
+    width: 46%;
+    height: auto;
+    color: var(--color-ink);
+  }
+}

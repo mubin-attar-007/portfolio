@@ -10,10 +10,10 @@ components.
 ## Decision
 Tailwind v4 `@theme` in `styles/tokens.css` defines every token as CSS custom
 properties; components use utilities, token-reading arbitrary values
-(`rounded-[var(--radius-sm)]`), or `var()` in a CSS module. Dark theme = overriding
-custom properties under `:root[data-theme="dark"]`, and a dark band inside the light
-page scopes the same `--dark-*` ramp under `.tone-invert` — components never know which
-theme they're in.
+(`rounded-[var(--radius-sm)]`), or `var()` in a CSS module. The site is light-only
+(ADR-018); a dark plate, a dark page and the chrome of a dark page re-declare the same
+custom properties in one remap block (`.tone-invert`, `[data-surface="dark"]`) —
+components never know which surface they are on.
 
 ## Alternatives considered
 - **CSS Modules + vanilla-extract** — great type-safety, more ceremony, slower iteration solo.

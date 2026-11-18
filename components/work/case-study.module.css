@@ -1,0 +1,717 @@
+/* /work/[slug] — the public product page (the Clerk product-page pattern).
+   Tokens only; motion is transform/opacity (plus a stroke on small SVGs), and
+   the global reduced-motion rule makes every state change instant. */
+
+/* The work sub-nav hangs under the floating nav on this page; its
+   `data-subnav` moves `--chrome-offset` below it (tokens.css), so anchors, the
+   control Tab brings into view (WCAG 2.4.11) and every sticky panel here clear
+   both. */
+
+/* ---- hero ------------------------------------------------------------------ */
+.hero {
+  position: relative;
+  isolation: isolate;
+  overflow-x: clip;
+  padding: clamp(56px, 8vw, 96px) var(--gutter) clamp(56px, 7vw, 88px);
+}
+.heroArt {
+  z-index: -1;
+  color: var(--color-dots);
+}
+/* The violet glow behind the frame, Clerk's light source. */
+.hero::after {
+  content: "";
+  position: absolute;
+  z-index: -1;
+  inset: auto 0 0;
+  height: 60%;
+  background: radial-gradient(50% 60% at 50% 70%, color-mix(in srgb, var(--color-accent) 10%, transparent), transparent 75%);
+  pointer-events: none;
+}
+.heroInner {
+  display: flex;
+  max-width: 880px;
+  margin-inline: auto;
+  flex-direction: column;
+  align-items: center;
+  text-align: center;
+}
+.heroProduct {
+  margin-top: 22px;
+  font-size: 0.875rem;
+  font-weight: 600;
+  color: var(--color-accent);
+}
+.heroTitle {
+  margin-top: 10px;
+  font-size: var(--text-display);
+  font-weight: var(--text-display--font-weight);
+  line-height: var(--text-display--line-height);
+  letter-spacing: var(--text-display--letter-spacing);
+  color: var(--color-ink);
+  text-wrap: balance;
+}
+.heroLead {
+  max-width: 640px;
+  margin-top: 20px;
+  font-size: var(--text-page-lead);
+  line-height: var(--text-page-lead--line-height);
+  color: var(--color-ink-secondary);
+  text-wrap: pretty;
+}
+.heroActions {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: center;
+  gap: 10px;
+  margin-top: 30px;
+}
+/* A secondary caret link beside the buttons ("Try the validator") sits a
+   little apart from them, as a quieter third action. */
+.heroLink {
+  margin-inline: 10px;
+}
+.heroMeta {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: center;
+  gap: 8px 10px;
+  margin-top: 22px;
+}
+.heroFacts {
+  font-size: 0.8125rem;
+  color: var(--color-ink-tertiary);
+}
+.heroFrame {
+  max-width: 1040px;
+  margin: clamp(40px, 6vw, 64px) auto 0;
+}
+.heroCaption {
+  max-width: 720px;
+  margin: 14px auto 0;
+  font-size: 0.8125rem;
+  line-height: 1.5;
+  text-align: center;
+  color: var(--color-ink-tertiary);
+}
+
+/* The "Watch the recording" pill (a button, or a link for DBWhisper). */
+.watchPill {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  min-height: 32px;
+  padding: 4px 14px 4px 5px;
+  border-radius: var(--radius-pill);
+  background: var(--color-surface);
+  box-shadow: var(--shadow-sm);
+  font-size: 0.875rem;
+  font-weight: 500;
+  color: var(--color-ink);
+  transition: box-shadow var(--motion-base) var(--ease-out);
+}
+a.watchPill {
+  padding-left: 14px;
+}
+.watchPill:hover {
+  box-shadow: var(--shadow-card-hover);
+}
+.watchPill:active {
+  transform: scale(0.97);
+}
+.watchIcon {
+  display: grid;
+  width: 22px;
+  height: 22px;
+  place-items: center;
+  border-radius: 50%;
+  color: var(--color-on-accent);
+  background: var(--color-accent);
+}
+/* The button form (beside a violet primary): an ink play mark, so the view
+   keeps one violet control. */
+.watchButton {
+  gap: 9px;
+}
+.watchMark {
+  display: grid;
+  width: 18px;
+  height: 18px;
+  place-items: center;
+  border-radius: 50%;
+  color: var(--color-surface);
+  background: var(--color-ink);
+}
+
+/* ---- recording -------------------------------------------------------------- */
+.player {
+  position: relative;
+  background: var(--color-bg-subtle);
+}
+/* A scrim under the play button, so it reads over any poster. */
+.player:not([data-started])::after {
+  content: "";
+  position: absolute;
+  inset: 0;
+  background: radial-gradient(40% 50% at 50% 50%, rgb(19 19 22 / 0.35), transparent 80%);
+  pointer-events: none;
+}
+.player video {
+  display: block;
+  width: 100%;
+  height: auto;
+}
+/* The poster, over the video until it plays (demo-player.tsx). */
+.poster {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+.playButton {
+  position: absolute;
+  left: 50%;
+  top: 50%;
+  display: inline-flex;
+  align-items: center;
+  gap: 10px;
+  min-height: 44px;
+  padding: 6px 18px 6px 6px;
+  border-radius: var(--radius-pill);
+  background: color-mix(in srgb, var(--color-ink) 88%, transparent);
+  box-shadow: 0 10px 30px -10px rgb(19 19 22 / 0.5);
+  font-size: 0.9375rem;
+  font-weight: 600;
+  color: var(--color-plate-ink);
+  z-index: 1;
+  transform: translate(-50%, -50%);
+  transition: transform var(--motion-press) var(--spring);
+}
+.playButton:hover {
+  transform: translate(-50%, -50%) scale(1.04);
+}
+.playButton:active {
+  transform: translate(-50%, -50%) scale(0.97);
+}
+.playIcon {
+  display: grid;
+  width: 32px;
+  height: 32px;
+  place-items: center;
+  border-radius: 50%;
+  color: var(--color-on-accent);
+  background: var(--color-accent);
+}
+
+/* ---- how it works: the flow pane ------------------------------------------- */
+.steps {
+  margin-top: 56px;
+}
+.flow {
+  display: grid;
+  width: 100%;
+  grid-template-columns: minmax(0, 1fr) 28px minmax(0, 1.05fr) 28px minmax(0, 1fr);
+  align-items: center;
+  padding: clamp(20px, 3vw, 36px);
+  min-height: 300px;
+  background:
+    radial-gradient(circle, var(--color-dots) 1px, transparent 1.2px) 0 0 / 16px 16px,
+    var(--color-bg-subtle);
+}
+.flowSide {
+  display: grid;
+  gap: 8px;
+  align-content: center;
+}
+.flowSideOut {
+  text-align: right;
+}
+.flowSide ul {
+  display: grid;
+  gap: 8px;
+  list-style: none;
+  padding: 0;
+}
+.flowSide li {
+  display: grid;
+  gap: 2px;
+  padding: 8px 10px;
+  border-radius: var(--radius-md);
+  background: var(--color-surface);
+  box-shadow: var(--shadow-sm);
+}
+.flowSide li[data-dashed] {
+  background: transparent;
+  box-shadow: none;
+  outline: 1px dashed var(--color-border-strong);
+  outline-offset: -1px;
+}
+.flowLabel,
+.flowEdge,
+.flowFocusSub {
+  font-family: var(--font-mono);
+  font-size: 0.6875rem;
+  letter-spacing: 0.02em;
+  color: var(--color-ink-tertiary);
+}
+.flowLabel {
+  text-transform: uppercase;
+  letter-spacing: 0.1em;
+}
+.flowNode {
+  font-size: 0.8125rem;
+  font-weight: 600;
+  color: var(--color-ink);
+}
+.flowNone {
+  font-size: 0.8125rem;
+  color: var(--color-ink-tertiary);
+}
+.flowWire {
+  position: relative;
+  height: 1px;
+  overflow: hidden;
+  background: var(--color-border-strong);
+}
+/* The pulse that travels the wire (the shared `wire` keyframes). A hover
+   moment, not an ambient loop (ADR-018 §5): it runs only while the steps are
+   engaged — the pointer over them or focus inside — and only on the media in
+   view, which StickySteps marks `data-active` (the frame's active pane; below
+   1000px, the active step's own media). At rest the wire is a plain hairline. */
+.flowWire::after {
+  content: "";
+  position: absolute;
+  inset: -1px auto -1px 0;
+  width: 10px;
+  border-radius: 2px;
+  background: var(--color-accent);
+  opacity: 0;
+  --wire-distance: 28px;
+}
+.steps:is(:hover, :focus-within) [data-active] .flowWire::after {
+  animation: var(--kf-wire) 1.8s var(--ease-std) infinite;
+}
+.flowFocus {
+  display: grid;
+  gap: 6px;
+  justify-items: center;
+  padding: 22px 14px;
+  border-radius: var(--radius-lg);
+  background: var(--color-surface);
+  box-shadow:
+    0 0 0 1px color-mix(in srgb, var(--color-accent) 45%, transparent),
+    0 0 0 6px color-mix(in srgb, var(--color-accent) 10%, transparent),
+    var(--shadow-card);
+  text-align: center;
+}
+.flowFocusLabel {
+  font-size: 1rem;
+  font-weight: 700;
+  letter-spacing: -0.01em;
+  color: var(--color-ink);
+}
+.flowFocusSub {
+  color: var(--color-accent-hover);
+}
+@media (max-width: 560px) {
+  .flow {
+    grid-template-columns: minmax(0, 1fr);
+    gap: 10px;
+    min-height: 0;
+  }
+  .flowSideOut {
+    text-align: left;
+  }
+  .flowWire {
+    width: 1px;
+    height: 18px;
+    margin-left: 18px;
+  }
+  .flowWire::after {
+    display: none;
+  }
+}
+
+/* ---- DBWhisper: try the boundary -------------------------------------------- */
+.boundary {
+  display: grid;
+  gap: 40px;
+  align-items: start;
+}
+@media (min-width: 1000px) {
+  .boundary {
+    grid-template-columns: minmax(0, 0.8fr) minmax(0, 1.2fr);
+    gap: 64px;
+  }
+  .boundary > :first-child {
+    position: sticky;
+    top: var(--sticky-top);
+  }
+}
+
+/* ---- shared band layout -------------------------------------------------------- */
+.bandBody {
+  margin-top: 48px;
+}
+.split {
+  display: grid;
+  gap: 32px;
+  align-items: start;
+}
+@media (min-width: 1000px) {
+  .split {
+    grid-template-columns: minmax(0, 0.8fr) minmax(0, 1.2fr);
+    gap: 64px;
+  }
+}
+
+/* ---- key decisions --------------------------------------------------------------- */
+.decisionNode {
+  font-family: var(--font-mono);
+  font-size: 0.6875rem;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  color: var(--color-ink-tertiary);
+}
+.decisions {
+  --card-art-h: 150px;
+}
+.decisions h3 {
+  margin-top: 6px;
+}
+.decisionFacts {
+  display: grid;
+  gap: 10px;
+  margin-top: 16px;
+  padding-top: 14px;
+  border-top: 1px solid var(--card-art-rule);
+}
+.decisionFacts dt {
+  font-size: 0.75rem;
+  font-weight: 600;
+  color: var(--color-ink);
+}
+.decisionFacts dd {
+  margin-top: 2px;
+  font-size: 0.84375rem;
+  line-height: 1.5;
+  color: var(--color-ink-secondary);
+}
+.fork {
+  width: min(240px, 80%);
+  height: auto;
+  overflow: visible;
+  fill: none;
+  stroke-width: 1.5;
+  stroke-linecap: round;
+  stroke-linejoin: round;
+}
+.forkOrigin {
+  fill: var(--color-surface);
+  stroke: var(--color-ink-tertiary);
+}
+.forkBase,
+.forkRejectedPath {
+  stroke: var(--color-border-strong);
+}
+.forkRejectedPath {
+  stroke-dasharray: 4 5;
+}
+.forkRejected rect {
+  stroke: var(--color-border-strong);
+}
+.forkRejected path {
+  stroke: var(--color-ink-tertiary);
+}
+.forkPick rect {
+  fill: color-mix(in srgb, var(--color-accent) 18%, transparent);
+  stroke: var(--color-accent);
+}
+.forkPick path {
+  stroke: var(--color-accent);
+}
+/* The chosen path draws itself on hover or focus inside the card. */
+.forkChosen {
+  stroke: var(--color-accent);
+  stroke-width: 2;
+  stroke-dasharray: 1;
+  stroke-dashoffset: 1;
+  transition: stroke-dashoffset 900ms var(--ease-out);
+}
+:global(article):is(:hover, :focus-within) .forkChosen {
+  stroke-dashoffset: 0;
+}
+.forkPick {
+  transform-box: fill-box;
+  transform-origin: center;
+  transition: transform var(--motion-slow) var(--spring);
+}
+:global(article):is(:hover, :focus-within) .forkPick {
+  transform: scale(1.12);
+}
+
+/* ---- results ------------------------------------------------------------------- */
+.results {
+  display: grid;
+  gap: 48px;
+}
+.resultList {
+  display: grid;
+  gap: 12px;
+  list-style: none;
+  padding: 0;
+}
+@media (min-width: 900px) {
+  .resultList:not([data-count="1"]) {
+    grid-template-columns: repeat(auto-fit, minmax(320px, 1fr));
+  }
+}
+.result {
+  display: flex;
+  flex-direction: column;
+  padding: 24px;
+  border-radius: var(--radius-xl);
+  background: var(--color-surface);
+  box-shadow: var(--shadow-card);
+}
+.result[data-retired] {
+  background: var(--color-bg-subtle);
+  box-shadow: inset 0 0 0 1px var(--color-border);
+}
+.resultHead {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+}
+.resultBenchmark {
+  font-size: 0.875rem;
+  font-weight: 600;
+  color: var(--color-ink);
+}
+.resultValue {
+  margin-top: 18px;
+  font-size: clamp(1.75rem, 3vw, 2.25rem);
+  font-weight: 700;
+  line-height: 1.1;
+  letter-spacing: -0.03em;
+  font-variant-numeric: tabular-nums;
+  color: var(--color-ink);
+}
+.result[data-retired] .resultValue {
+  color: var(--color-ink-tertiary);
+}
+.resultMetric {
+  margin-top: 6px;
+  font-size: 0.875rem;
+  color: var(--color-ink-secondary);
+}
+.resultFacts {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px 28px;
+  margin-top: 18px;
+  padding-top: 14px;
+  border-top: 1px solid var(--color-border);
+}
+.resultFacts dt,
+.resultNoteTitle {
+  font-family: var(--font-mono);
+  font-size: 0.6875rem;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  color: var(--color-ink-tertiary);
+}
+.resultFacts dd {
+  margin-top: 3px;
+  font-size: 0.875rem;
+  font-variant-numeric: tabular-nums;
+  color: var(--color-ink);
+}
+.resultNote {
+  display: grid;
+  max-width: 78ch;
+  gap: 10px;
+  margin-top: 16px;
+  font-size: 0.84375rem;
+  line-height: 1.6;
+  color: var(--color-ink-secondary);
+}
+.claims {
+  display: grid;
+  gap: 20px;
+}
+.claimsTitle {
+  font-size: var(--text-title);
+  font-weight: 700;
+  letter-spacing: -0.015em;
+  color: var(--color-ink);
+}
+.claimList {
+  display: grid;
+  border-top: 1px solid var(--color-border);
+}
+.claimList > div {
+  display: grid;
+  gap: 6px 32px;
+  padding: 18px 0;
+  border-bottom: 1px solid var(--color-border);
+}
+@media (min-width: 800px) {
+  .claimList > div {
+    grid-template-columns: minmax(0, 0.7fr) minmax(0, 1.3fr);
+  }
+}
+.claimList dt {
+  display: grid;
+  gap: 2px;
+}
+.claimValue {
+  font-size: 1.125rem;
+  font-weight: 700;
+  letter-spacing: -0.015em;
+  color: var(--color-ink);
+}
+.claimLabel {
+  font-size: 0.8125rem;
+  color: var(--color-ink-tertiary);
+}
+.claimList dd {
+  font-size: 0.9375rem;
+  line-height: 1.6;
+  color: var(--color-ink-secondary);
+}
+
+/* ---- write-up --------------------------------------------------------------------- */
+.writeup {
+  margin-top: 16px;
+}
+@media (min-width: 80rem) {
+  .writeup {
+    display: grid;
+    grid-template-columns: minmax(0, 1fr) 15rem;
+    gap: 64px;
+  }
+}
+.writeupBody {
+  min-width: 0;
+  max-width: 760px;
+}
+
+/* ---- stack ------------------------------------------------------------------------- */
+.stack {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  list-style: none;
+  padding: 0;
+}
+.stackSystems {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px 20px;
+  margin-top: 20px;
+  list-style: none;
+  padding: 0;
+  font-size: 0.875rem;
+  color: var(--color-ink-secondary);
+}
+.stackSystems li::before {
+  content: "";
+  display: inline-block;
+  width: 5px;
+  height: 5px;
+  margin-right: 8px;
+  border-radius: 50%;
+  vertical-align: middle;
+  background: var(--color-accent);
+}
+
+/* ---- neighbours ------------------------------------------------------------------- */
+.neighbours {
+  display: grid;
+  gap: 12px;
+}
+@media (min-width: 800px) {
+  .neighbours {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+  .neighbour[data-side="next"]:only-child {
+    grid-column: 2;
+  }
+}
+.neighbour {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) minmax(0, 0.8fr);
+  gap: 20px;
+  align-items: center;
+  overflow: hidden;
+  padding: 20px 0 20px 22px;
+  border-radius: var(--radius-xl);
+  background: var(--color-surface);
+  box-shadow: var(--shadow-card);
+  transition: box-shadow var(--motion-slow) var(--ease-out);
+}
+.neighbour:hover {
+  box-shadow: var(--shadow-card-hover);
+}
+.neighbourText {
+  display: grid;
+  gap: 4px;
+}
+.neighbourLabel {
+  font-size: 0.8125rem;
+  color: var(--color-ink-tertiary);
+}
+.neighbourTitle {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  font-size: 1.125rem;
+  font-weight: 700;
+  letter-spacing: -0.015em;
+  color: var(--color-ink);
+}
+.neighbourBody {
+  font-size: 0.875rem;
+  line-height: 1.5;
+  color: var(--color-ink-secondary);
+}
+.neighbourShot {
+  display: block;
+  overflow: hidden;
+  border-radius: var(--radius-md) 0 0 var(--radius-md);
+  box-shadow: var(--shadow-sm);
+  transform: translateX(8px);
+  transition: transform var(--motion-slow) var(--spring-soft);
+}
+.neighbour:is(:hover, :focus-visible) .neighbourShot {
+  transform: translateX(0);
+}
+.neighbourShot img {
+  display: block;
+  width: 100%;
+  height: auto;
+}
+
+
+.ctaGap {
+  margin-top: clamp(64px, 8vw, 96px);
+}
+
+/* The band's heading stays in view beside a long column. */
+@media (min-width: 1000px) {
+  .split > :first-child {
+    position: sticky;
+    top: var(--sticky-top);
+  }
+}
+
+@media (max-width: 1000px) {
+  .decisions {
+    --card-art-h: 112px;
+  }
+}

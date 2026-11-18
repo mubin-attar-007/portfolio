@@ -10,22 +10,26 @@ refines an earlier one, both are kept and the status line says what changed.
 | [ADR-003](ADR-003-mdx-content-collections.md) | Typed content in `content/`, validated by Zod; MDX through `next-mdx-remote`; no CMS. |
 | [ADR-004](ADR-004-single-app-not-monorepo.md) | One Next.js app at the repo root, not a monorepo. |
 | [ADR-005](ADR-005-custom-system-diagram.md) | A custom, keyboard-navigable `SystemDiagram` instead of React Flow or Mermaid. |
-| [ADR-006](ADR-006-assistant-static-index.md) | Assistant retrieval from an in-memory BM25 index over site content; no vector DB (amended 2026-11-16: every published collection is indexed, and relevance is judged per question). |
+| [ADR-006](ADR-006-assistant-static-index.md) | Assistant retrieval from an in-memory BM25 index over site content; no vector DB (amended 2026-11-16: every published collection is indexed, and relevance is judged per question; amended 2026-11-17: spelling and aliases, a page prior, and one bounded routing call instead of embeddings). |
 | [ADR-007](ADR-007-no-storybook-preview-route.md) | A `/dev/components` preview route instead of Storybook; plain navigation labels. |
 | [ADR-008](ADR-008-shiki-highlighting.md) | Shiki highlighting on the server, zero client JS. |
 | [ADR-009](ADR-009-lighthouse-budget-gate.md) | Lighthouse budget gate in CI, with a metadata gate over every sitemap URL. |
-| [ADR-012](ADR-012-clerk-fidelity.md) | Layout and motion values measured off clerk.com, the navigation set, and the 2,500 ms LCP budget (partly superseded). |
-| [ADR-013](ADR-013-openrouter-palette.md) | The two-theme palette adapted from openrouter.ai: violet in light, lime in dark. |
 | [ADR-014](ADR-014-motion-and-modality.md) | Walkthrough playback, native `<details>` methodology, and an `inert` modal boundary (§1 superseded). |
-| [ADR-015](ADR-015-personal-platform.md) | A compact personal platform: Applied AI Engineer role, light default, canonical project and résumé data. |
-| [ADR-016](ADR-016-inspectable-engineering.md) | The homepage boundary inspector, editorial project rows, and the walkthrough moved to the case study (its evidence counts superseded 2026-11-16: the golden-set run is retired, the policy-corpus result replaces it). |
-| [ADR-017](ADR-017-responsive-interaction.md) | Responsive interaction feedback without hiding content or adding dependencies. |
+| [ADR-015](ADR-015-personal-platform.md) | The Applied AI Engineer role, scoped proof, and canonical project and résumé data (its theme and homepage decisions superseded by ADR-018). |
+| [ADR-018](ADR-018-clerk-grade-visual-system.md) | The Clerk-grade visual system: light-only with dark plates and pages, Geist only, the motion law, one pattern per page, `/contact`. Amended 17 Nov 2026: the mobile menu is a modal sheet, and the anonymous field reports became the flagship case studies (ADR-019). |
+| [ADR-019](ADR-019-named-flagship-case-studies.md) | Named flagship case studies (Bench Discovery, CareLTC), approved by the employer: approved figures word for word, captures and recordings on dummy data, curated code excerpts; production repositories, URLs and client or facility names stay private; credit never by git history; "In use", never a frequency; a local denylist scanned before every change and on the built output. |
+| [ADR-020](ADR-020-lcp-gate-tolerance.md) | The LCP gate: 2.5 s stays the target (a CI warning above it), the gate fails above 2.7 s, and Lighthouse takes the median of five runs; performance ≥ 95, CLS and TBT unchanged. |
 
 Superseded records were removed on 2026-11-13: ADR-010 (the "ember console"
-identity, never implemented) and ADR-011 (the "evidence paths" identity, replaced by
-ADR-013, ADR-015, and ADR-016). They remain in git history at commit `8949fdf`, as do
-the earlier sprint plans, backlog, QA report, brand-positioning template, and
-flagship-transformation audit. The numbering gap is intentional.
+identity, never implemented) and ADR-011 (the "evidence paths" identity). They remain
+in git history at commit `8949fdf`, as do the earlier sprint plans, backlog, QA report,
+brand-positioning template, and flagship-transformation audit.
+
+ADR-012 (Clerk fidelity), ADR-013 (the two-theme openrouter palette), ADR-016 (the
+homepage boundary inspector) and ADR-017 (responsive interaction) were removed on
+2026-11-17, superseded by ADR-018, which carries forward the parts that still govern
+(the LCP budget's rationale, the curated footer, the inspector's honesty rules). They
+remain in git history at commit `9c1f0f0`. The numbering gaps are intentional.
 
 Two removed documents record which claims and wording the owner approved; check them
 before changing positioning or published numbers:

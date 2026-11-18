@@ -1,0 +1,64 @@
+/* The frames real captures sit in: the desktop app's window (the capture
+   already holds its own title bar, so the frame is the edge and the shadow),
+   a sheet of paper for a document the app wrote, and the in-frame label.
+   The browser and phone frames are primitives (components/ui). */
+@layer components {
+  .window {
+    overflow: hidden;
+    border-radius: var(--radius-md);
+    background: var(--color-surface);
+    box-shadow: var(--shadow-panel);
+  }
+
+  .page {
+    overflow: hidden;
+    border-radius: var(--radius-xs);
+    background: var(--color-surface);
+    box-shadow: var(--shadow-panel);
+  }
+
+  .shot {
+    position: relative;
+  }
+  .shot > img {
+    display: block;
+    width: 100%;
+    height: auto;
+  }
+
+  /* "Real app · dummy data": inside the frame, small and solid, so it reads
+     on any capture without hiding much of it. */
+  .label {
+    position: absolute;
+    left: 10px;
+    bottom: 10px;
+    padding: 3px 9px;
+    border-radius: var(--radius-pill);
+    background: var(--color-surface);
+    box-shadow: var(--shadow-sm);
+    font-size: 0.6875rem;
+    font-weight: 550;
+    line-height: 1.45;
+    white-space: nowrap;
+    color: var(--color-ink-secondary);
+    transition: opacity var(--motion-base) var(--ease-out);
+  }
+  /* A frame whose lower part a stage crops away (the home cards) carries the
+     label at its top instead, where it is always seen. */
+  .labelTop {
+    top: 10px;
+    bottom: auto;
+  }
+  /* On a recording, the label steps aside once it plays (the native controls
+     sit along the bottom edge). */
+  .shot:has([data-started]) .label {
+    opacity: 0;
+  }
+
+  /* Fit a frame inside a box whose size is known (a container): as wide as the
+     box allows, and no taller. `--ar` is the frame's width ÷ height and
+     `--chrome` the chrome that does not scale (shot-frame.tsx `frameFit`). */
+  .fit {
+    width: min(100cqw, calc((100cqh - var(--chrome, 0px)) * var(--ar, 1.6)));
+  }
+}

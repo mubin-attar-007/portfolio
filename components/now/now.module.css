@@ -1,0 +1,110 @@
+/* /now — the Clerk changelog: faint circuit art at the side, the timeline, and
+   the entry prose. */
+
+.art {
+  position: absolute;
+  top: 0;
+  right: 0;
+  width: min(46vw, 640px);
+  height: 640px;
+  pointer-events: none;
+  display: none;
+}
+@media (min-width: 1000px) {
+  .art {
+    display: block;
+  }
+}
+
+.fresh {
+  width: 6px;
+  height: 6px;
+  border-radius: 50%;
+  background: var(--color-positive);
+}
+
+.feed {
+  max-width: 920px;
+}
+
+/* MDX inside an entry: lists, emphasis and links in the site's body voice.
+   The "Currently exploring" cards are a list too, but a grid of cards, never
+   a bulleted one. */
+.prose {
+  max-width: 640px;
+}
+.prose ul:not(.cards) {
+  display: grid;
+  gap: 12px;
+  padding-left: 18px;
+  list-style: disc;
+}
+.prose ul:not(.cards) > li::marker {
+  color: var(--color-ink-tertiary);
+}
+.prose li,
+.prose p {
+  line-height: 1.65;
+}
+.prose strong {
+  color: var(--color-ink);
+  font-weight: 600;
+}
+.prose a {
+  color: var(--color-ink);
+  text-decoration: underline;
+  text-decoration-color: var(--color-border-strong);
+  text-underline-offset: 4px;
+  transition: text-decoration-color 150ms var(--ease-out);
+}
+.prose a:hover {
+  text-decoration-color: var(--color-accent);
+}
+
+.cards {
+  display: grid;
+  gap: 10px;
+}
+@media (min-width: 760px) {
+  .cards {
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+  }
+}
+.card {
+  padding: 18px;
+  border-radius: var(--radius-md);
+  background: var(--color-surface);
+  box-shadow: var(--shadow-card);
+}
+.card h3 {
+  font-size: 0.9375rem;
+  font-weight: 650;
+  line-height: 1.4;
+  color: var(--color-ink);
+}
+.card p {
+  margin-top: 6px;
+  font-size: var(--text-sm);
+  line-height: 1.55;
+  color: var(--color-ink-secondary);
+}
+
+.openTo {
+  max-width: 640px;
+  margin-top: 72px;
+  padding: 28px;
+  border-radius: var(--radius-lg);
+  background: var(--color-surface);
+  box-shadow: var(--shadow-card);
+}
+@media (min-width: 760px) {
+  .openTo {
+    margin-left: 204px;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .prose a {
+    transition: none;
+  }
+}

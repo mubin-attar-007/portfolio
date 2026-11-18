@@ -1,16 +1,21 @@
 /**
- * The browser-chrome colour of each theme: each theme's `--color-bg`
- * (styles/tokens.css), so the address bar and an installed shortcut's splash
- * continue the page. Read by the `theme-color` meta tag (app/layout.tsx), the
- * theme toggle that rewrites it (components/features/theme-toggle.tsx), and the
- * web manifest (app/manifest.ts).
+ * The browser-chrome colour of each page surface, so the address bar and an
+ * installed shortcut's splash continue the page.
+ *
+ * - `light` is the canvas (`--color-bg`, styles/tokens.css): the site default,
+ *   read by the root layout's `theme-color` and the web manifest (app/manifest.ts).
+ * - `dark` is the dark-surface canvas (`--color-plate-deep`): a dark page
+ *   (/about, /evals, the 404 — the pages that render `<DarkSurface>`) can export
+ *   `viewport = { themeColor: BROWSER_CHROME.dark }` so its address bar matches.
+ *
+ * The site has one theme. These are surfaces, not modes: nothing here is a
+ * visitor preference.
  *
  * Literals, not `var()`: these values leave CSS — a meta tag and a JSON
  * manifest cannot read a custom property — so a palette change updates them in
- * the same change (design-system.md §11.1). `scripts/smoke.mjs` asserts both
- * against the rendered page, and test/icons.test.mts against tokens.css.
+ * the same change. test/icons.test.mts checks `light` against tokens.css.
  */
-export const BROWSER_CHROME = { light: "#fcfcfe", dark: "#03080a" } as const;
+export const BROWSER_CHROME = { light: "#f7f7f8", dark: "#0f0f12" } as const;
 
-/** A site theme: light by default, dark only as a remembered choice. */
-export type Theme = keyof typeof BROWSER_CHROME;
+/** A page surface: the light canvas, or a dark page. */
+export type Surface = keyof typeof BROWSER_CHROME;

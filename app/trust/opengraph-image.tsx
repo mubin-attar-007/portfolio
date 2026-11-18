@@ -1,16 +1,16 @@
-import { renderOg, OG_SIZE, OG_CONTENT_TYPE, formatOgEyebrow } from "@/lib/og";
-import { SITE } from "@/config/site";
+import { renderOg, ogAlt, OG_SIZE, OG_CONTENT_TYPE, type OgCard } from "@/lib/og";
+import { trust } from "@/content/site";
 
-export const alt = `Trust — ${SITE.name}, ${SITE.role}`;
+const CARD = {
+  kicker: trust.kicker,
+  title: trust.title,
+  description: "Every item links to a source you can check.",
+} satisfies OgCard;
+
+export const alt = ogAlt(CARD);
 export const size = OG_SIZE;
 export const contentType = OG_CONTENT_TYPE;
 
-export default function OG() {
-  return renderOg({
-    eyebrow: formatOgEyebrow("Trust & Quality"),
-    title: "I publish what ships and what changes.",
-    subtitle:
-      "Evidence-first trust, deterministic safety controls, and reliable release practice for production AI systems.",
-    footerRight: "/trust",
-  });
+export default function Image() {
+  return renderOg(CARD);
 }

@@ -1,8 +1,8 @@
 {
   "source": "app/icon.svg",
-  "sourceSha256": "29b839398b0441d6509fc2f89564e471f23f27f65ba094c52ff3836db4b76c35",
+  "sourceSha256": "c5e337bbcab8ac532eaa63a37bd9b7ced33c69c60cae51be4e4cc32bebc4ddc9",
   "outputs": {
-    "app/favicon.ico": "0a656f2148a2bb4307da3d132ffa33d60021d89f4ecc20838f1badf5662ccc30",
-    "app/apple-icon.png": "cf9267a6dae9584fe4a8a05e59e479cf9c7753dd75b8ff81fe39ab0fcbf87a22"
+    "app/favicon.ico": "bc1954c6cc505c8d27bd0eaed3cde23a80b63ceb1fa19394c3145026c5c68237",
+    "app/apple-icon.png": "f04d672fd7b709acdaed5a110b8961327a067031d6df7dc3ab832656acb68ea9"
   }
 }

@@ -88,7 +88,7 @@ jobs:
           curl -sf http://localhost:3200 >/dev/null || { echo "::error::The production server did not start within 80s (see server.log)."; exit 1; }
           export BASE_URL=http://localhost:3200
 
-          echo "::group::Accessibility (axe, all routes × light/dark × 3 viewports)"
+          echo "::group::Accessibility (axe, all routes × 3 viewports)"
           npm run test:a11y
           echo "::endgroup::"
 
@@ -100,12 +100,10 @@ jobs:
           npm run test:motion
           echo "::endgroup::"
 
-          # Accent drift is invisible to axe and to the overflow sweep; a violet
-          # section inside the lime theme shipped once because nothing looked.
-          echo "::group::Accent drift — dark"
-          THEME=dark npm run test:hue
-          echo "::endgroup::"
-          echo "::group::Accent drift — light"
+          # Accent drift is invisible to axe and to the overflow sweep; an
+          # off-palette hue shipped once because nothing looked. The site has
+          # one theme (ADR-018), so one pass.
+          echo "::group::Accent drift"
           THEME=light npm run test:hue
           echo "::endgroup::"
 
@@ -132,7 +130,7 @@ jobs:
       - name: Lighthouse budgets and social-preview gate
         if: github.event_name == 'push' || github.base_ref == 'main'
         env:
-          LIGHTHOUSE_RUNS: "3"
+          LIGHTHOUSE_RUNS: "5"
         run: npm run test:lighthouse
 
       - name: Upload diagnostics

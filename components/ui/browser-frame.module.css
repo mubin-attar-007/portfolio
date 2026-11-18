@@ -1,0 +1,56 @@
+/* BrowserFrame: window chrome for product footage (the Clerk product-page
+   frame) — a light title bar with three dots and a centred URL pill. */
+@layer components {
+  .frame {
+    overflow: hidden;
+    border-radius: var(--radius-lg);
+    background: var(--color-surface);
+    box-shadow: var(--shadow-panel);
+  }
+
+  .bar {
+    display: grid;
+    grid-template-columns: 1fr auto 1fr;
+    align-items: center;
+    gap: 12px;
+    height: 34px;
+    padding-inline: 12px;
+    background: var(--color-bg-subtle);
+    border-bottom: 1px solid var(--color-border);
+  }
+
+  .dots {
+    display: flex;
+    gap: 6px;
+  }
+  .dots span {
+    width: 9px;
+    height: 9px;
+    border-radius: 50%;
+    background: var(--color-border-strong);
+  }
+
+  .url {
+    min-width: min(240px, 46vw);
+    max-width: 100%;
+    overflow: hidden;
+    padding: 3px 14px;
+    border-radius: var(--radius-pill);
+    background: var(--color-border);
+    color: var(--color-ink-secondary);
+    font-size: 0.71875rem;
+    line-height: 1.4;
+    text-align: center;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+  }
+
+  .view {
+    position: relative;
+  }
+  .view > :is(img, video) {
+    display: block;
+    width: 100%;
+    height: auto;
+  }
+}

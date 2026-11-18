@@ -1,12 +1,12 @@
 # ADR-009 — Lighthouse budget gate
 
 **Status:** Accepted
-**Date:** 2026-07-24 (facts updated 2026-11-16)
+**Date:** 2026-07-24 (facts updated 2026-11-16 and 2026-11-17)
 
 ## Context
 
-`ENGINEERING.md` requires Lighthouse on the home page, flagship case study, and
-one writing route, with minimum category scores of 95/100/100/100 and explicit
+`ENGINEERING.md` requires Lighthouse on the home page, a case study and one writing
+route, with minimum category scores of 95/100/100/100 and explicit
 LCP, CLS, and TBT budgets. The repository previously described that contract but
 did not execute it in CI. Social image URLs could therefore return 404 while the
 build and accessibility checks remained green.
@@ -26,9 +26,13 @@ The gate:
 - enforces Performance ≥ 95, Accessibility = 100, Best Practices = 100, and
   SEO = 100;
 - enforces LCP ≤ 2,500 ms, CLS < 0.05, and TBT < 150 ms. LCP was re-baselined
-  from 2,000 ms to the Core Web Vitals "good" threshold (ADR-012, decision 2);
+  from 2,000 ms to the Core Web Vitals "good" threshold (ADR-018, "Carried forward");
 - prints first-load JavaScript against targets of 120 KB (home) and 90 KB
-  (flagship, writing) as an advisory figure, not a failure;
+  (the case study and writing) as an advisory figure, not a failure;
+- prints, also as advice only, each run's observed timeline: the observed FCP and
+  LCP, what had finished by the observed LCP (Lantern charges LCP for all of it),
+  when the stylesheets and scripts finished, and the long main-thread tasks around
+  the paint (ENGINEERING.md §5, "What the LCP budget measures");
 - before auditing, reads the sitemap and verifies every URL it lists: status 200,
   exactly one canonical equal to the URL, og:url, a complete Open Graph/Twitter
   card with a live same-origin image, RSS discovery, one h1, a title of at most 60

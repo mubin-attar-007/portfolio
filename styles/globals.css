@@ -1,361 +1,254 @@
 @import "tailwindcss";
 @import "./tokens.css";
+@import "./error-stage.css";
 
 /* ============================================================================
-   Base + the handful of GLOBAL devices.
+   Base, the accessibility contract, and the few devices shared site-wide.
 
    Everything visual comes from tokens.css. What lives here is (a) element
-   defaults, (b) the accessibility contract (focus, skip link, reduced motion),
-   and (c) the four devices used on more than one route: the dark band, the
-   entrance reveal, the fading hairline, and the decorative grid field.
-   Section-specific composition lives in that section's CSS module.
+   defaults, (b) focus, selection, the skip link and reduced motion, (c) the
+   devices used on more than one route (the arrow-swap caret, fading rules, the
+   link underline), and (d) the shared keyframes. A section's own composition
+   lives in its CSS module. The one exception is the error stage
+   (error-stage.css): Next preloads the error boundary's styles on every page,
+   so they belong to the sheet every page already loads.
    ============================================================================ */
 
-*,
-*::before,
-*::after {
-  box-sizing: border-box;
-}
-
-html {
-  -webkit-text-size-adjust: 100%;
-  scroll-behavior: smooth;
-  /* Anchor targets must clear the sticky header (64px) plus a breath, or a deep
-     link lands with its own heading hidden behind the nav. */
-  scroll-padding-top: 5.5rem;
-  /* Native UI follows the page: scrollbars, the assistant's textarea, form
-     controls, and the <details> marker. Keyed to OUR [data-theme] rather than
-     to `light dark`, because the site never consults prefers-color-scheme — and
-     native controls remain consistent with the visitor’s selected theme. */
-  color-scheme: light;
-}
-
-html[data-theme="dark"] {
-  color-scheme: dark;
-}
-
-body {
-  background: var(--color-bg);
-  color: var(--color-ink);
-  font-family: var(--font-sans);
-  font-size: var(--text-base);
-  line-height: 1.7;
-  -webkit-font-smoothing: antialiased;
-  text-rendering: optimizeLegibility;
-}
-
-/* Display headings default to a tight, slightly-light-of-bold face. 550, not
-   600: at display sizes the heavier weight reads as generic-bold, and the
-   tighter tracking is what makes a large headline read as typeset rather than
-   enlarged. Components refine per step. */
-h1,
-h2,
-h3,
-h4 {
-  font-weight: 550;
-  letter-spacing: -0.02em;
-  text-wrap: balance;
-}
-
-/* In @layer base so text-colour utilities (e.g. `text-on-accent` on a Link
-   styled as a button) win — an UNLAYERED `a{color}` would beat every utility. */
 @layer base {
+  html {
+    -webkit-text-size-adjust: 100%;
+    scroll-behavior: smooth;
+    /* Anchor targets clear the stuck chrome (the nav, and the work sub-nav
+       where there is one) plus a breath, and a control focused by Tab is
+       scrolled clear of the floating launcher at the bottom (WCAG 2.4.11:
+       focus is never hidden under the sticky chrome). */
+    scroll-padding-top: var(--sticky-top);
+    scroll-padding-bottom: var(--launcher-clearance);
+    color-scheme: light;
+  }
+
+  body {
+    background: var(--color-bg);
+    color: var(--color-ink);
+    font-family: var(--font-sans);
+    font-size: var(--text-base);
+    line-height: 1.5;
+    -webkit-font-smoothing: antialiased;
+    -moz-osx-font-smoothing: grayscale;
+    text-rendering: optimizeLegibility;
+  }
+
+  /* A page that contains a dark surface is a dark page: its canvas (seen past
+     the end of the content and in overscroll) and its native UI go dark too. */
+  html:has([data-surface="dark"]) {
+    color-scheme: dark;
+  }
+  html:has([data-surface="dark"]) body {
+    background: var(--color-plate-deep);
+  }
+  /* A modal overlay keeps its own light ground and native controls on any page. */
+  [data-modal-root] {
+    color-scheme: light;
+  }
+
+  /* Preflight resets heading weight to `inherit`; give an unstyled heading a
+     heading's weight. Components set their own scale on top. */
+  h1,
+  h2,
+  h3,
+  h4 {
+    font-weight: 650;
+    letter-spacing: -0.015em;
+    text-wrap: balance;
+  }
+  blockquote {
+    text-wrap: balance;
+  }
+  p,
+  dd,
+  li {
+    text-wrap: pretty;
+  }
+
   a {
     color: inherit;
+    text-decoration: none;
+  }
+
+  ::selection {
+    background: var(--color-accent-soft);
+    color: var(--color-ink);
+  }
+
+  /* Focus is visible on everything: a 2px violet ring, never removed, never
+     replaced by a colour change alone. The ring follows each element's own
+     radius. */
+  :focus-visible {
+    outline: 2px solid var(--color-accent);
+    outline-offset: 2px;
+  }
+  :focus:not(:focus-visible) {
+    outline: none;
+  }
+  /* A text link (or a button styled as one) has no box of its own, so its ring
+     would draw square corners; it takes a small radius instead. Zero
+     specificity in the base layer, so a component that sets its own radius (a
+     button, a pill) always keeps it. */
+  :where(a, button, summary):focus-visible {
+    border-radius: var(--radius-xs);
+  }
+
+  /* One cursor standard: every enabled control is a pointer, a disabled one is
+     not-allowed. */
+  button:not(:disabled),
+  [role="button"]:not([aria-disabled="true"]),
+  label[for],
+  summary {
+    cursor: pointer;
+  }
+  button:disabled,
+  [aria-disabled="true"],
+  [disabled] {
+    cursor: not-allowed;
   }
 }
 
-::selection {
-  background: var(--color-accent-soft);
-  color: var(--color-ink);
-}
-
-/* ---- the accessibility contract ---------------------------------------- */
-
-/* Focus is visible on everything, and it is the accent ring — never removed,
-   never replaced by a colour change alone. */
-:focus-visible {
-  outline: 2px solid var(--color-accent);
-  outline-offset: 2px;
-  border-radius: var(--radius-xs);
-}
-:focus:not(:focus-visible) {
-  outline: none;
-}
-
-/* One cursor standard: every ENABLED interactive control is a pointer, anything
-   disabled is not-allowed. Native <button> otherwise defaults to the arrow while
-   <a> gets the hand, which is what made icon controls feel unlike the links
-   beside them. */
-button:not(:disabled),
-[role="button"]:not([aria-disabled="true"]),
-label[for],
-summary {
-  cursor: pointer;
-}
-button:disabled,
-[aria-disabled="true"],
-[disabled] {
-  cursor: not-allowed;
-}
-
-/* Icon-only control: a square hit-area veil on hover, so an icon button reads as
-   pressable rather than as a glyph that happens to change colour. */
-.icon-btn {
-  transition:
-    color var(--motion-fast) var(--ease-out),
-    background-color var(--motion-fast) var(--ease-out);
-}
-.icon-btn:not(:disabled):not([aria-disabled="true"]):not([aria-busy="true"]):is(:hover, :focus-visible) {
-  background-color: color-mix(in srgb, var(--color-ink) 6%, transparent);
-}
-
-/* Directional feedback belongs to the actual link or button, never its parent
-   row. Explicit icon names keep loading spinners and other symbols stationary. */
-:is(.button-control, .text-link-control) > :is(.lucide-arrow-right, .lucide-chevron-right) {
-  --control-arrow-x: var(--motion-nudge, calc(var(--spacing) / 2));
-}
-:is(.button-control, .text-link-control) > :is(.lucide-arrow-left, .lucide-chevron-left) {
-  --control-arrow-x: calc(-1 * var(--motion-nudge, calc(var(--spacing) / 2)));
-}
-:is(.button-control, .text-link-control) > .lucide-arrow-up-right {
-  --control-arrow-x: var(--motion-nudge, calc(var(--spacing) / 2));
-  --control-arrow-y: calc(-1 * var(--motion-nudge, calc(var(--spacing) / 2)));
-}
-:is(.button-control, .text-link-control) > :is(.lucide-arrow-down, .lucide-chevron-down) {
-  --control-arrow-y: var(--motion-nudge, calc(var(--spacing) / 2));
-}
-
-@media (prefers-reduced-motion: no-preference) {
-  .button-control {
-    transition-property: color, background-color, border-color, box-shadow, opacity, translate;
-  }
-
-  .button-control:not(:disabled):not([aria-disabled="true"]):not([aria-busy="true"]):active {
-    translate: 0 var(--motion-press, calc(var(--spacing) / 4));
-  }
-
-  :is(.button-control, .text-link-control) > :is(.lucide-arrow-right, .lucide-chevron-right, .lucide-arrow-left, .lucide-chevron-left, .lucide-arrow-up-right, .lucide-arrow-down, .lucide-chevron-down) {
-    transition: transform var(--motion-base) var(--ease-out);
-  }
-
-  :is(.button-control, .text-link-control):not(:disabled):not([aria-disabled="true"]):not([aria-busy="true"]):is(:hover, :focus-visible) > :is(.lucide-arrow-right, .lucide-chevron-right, .lucide-arrow-left, .lucide-chevron-left, .lucide-arrow-up-right, .lucide-arrow-down, .lucide-chevron-down) {
-    transform: translate(var(--control-arrow-x, 0), var(--control-arrow-y, 0));
-  }
-
-  .icon-btn > svg:not(.lucide-loader-circle) {
-    transition: transform var(--motion-base) var(--ease-out);
-  }
-
-  .icon-btn:not(:disabled):not([aria-disabled="true"]):not([aria-busy="true"]):is(:hover, :focus-visible) > svg:not(.lucide-loader-circle) {
-    transform: scale(1.08);
-  }
-}
-
+/* ---- the skip link -------------------------------------------------------- */
 .skip-link {
   position: fixed;
-  top: 0.5rem;
-  left: 0.5rem;
-  z-index: 100;
-  transform: translateY(-150%);
-  background: var(--color-accent);
-  color: var(--color-on-accent);
-  padding: 0.5rem 0.875rem;
-  border-radius: var(--radius-sm);
+  top: 12px;
+  left: 12px;
+  z-index: 60;
+  padding: 8px 12px;
+  border-radius: var(--radius-md);
+  background: var(--color-ink);
+  color: var(--color-surface);
   font-size: var(--text-sm);
+  font-weight: 500;
+  transform: translateY(-160%);
   transition: transform var(--motion-base) var(--ease-out);
 }
 .skip-link:focus {
-  transform: translateY(0);
+  transform: none;
 }
 
-/* Reduced motion collapses every animation and transition to effectively zero.
-   Kept as a blanket rule rather than per-component guards so a new component
-   cannot forget: scripts/a11y.mjs asserts every computed duration is ≤80ms in
-   this mode, and a component that opted out would fail the gate. */
-@media (prefers-reduced-motion: reduce) {
-  html {
-    scroll-behavior: auto;
-  }
-  *,
-  *::before,
-  *::after {
-    animation-duration: var(--motion-reduced) !important;
-    animation-iteration-count: 1 !important;
-    transition-duration: var(--motion-reduced) !important;
-    scroll-behavior: auto !important;
-  }
+/* ---- device: the arrow-swap caret -----------------------------------------
+   Two masked triangles in a clipped 10×8 box. When the nearest link or button
+   is hovered or focused, the first slides out to the right while the second
+   slides in from the left, and the pair brightens. Rendered by `<Caret />`
+   (components/ui/caret-link.tsx); any interactive ancestor triggers it, so a
+   whole card can animate its "Read more" caret. */
+.caret-swap {
+  display: inline-block;
+  flex: none;
+  width: 10px;
+  height: 8px;
+  background-color: currentColor;
+  opacity: 0.6;
+  -webkit-mask-image: var(--caret-tri), var(--caret-tri);
+  mask-image: var(--caret-tri), var(--caret-tri);
+  -webkit-mask-repeat: no-repeat;
+  mask-repeat: no-repeat;
+  -webkit-mask-size: 5px 8px;
+  mask-size: 5px 8px;
+  -webkit-mask-position: 2px 0, -8px 0;
+  mask-position: 2px 0, -8px 0;
+  transition:
+    -webkit-mask-position var(--motion-caret) var(--spring-soft),
+    mask-position var(--motion-caret) var(--spring-soft),
+    opacity var(--motion-base) var(--ease-out);
+}
+:is(a, button, [data-caret-trigger]):is(:hover, :focus-visible) .caret-swap {
+  -webkit-mask-position: 16px 0, 2px 0;
+  mask-position: 16px 0, 2px 0;
+  opacity: 1;
 }
 
-/* ---- device 1: the entrance reveal -------------------------------------
-   Section wrappers (never prose) fade and rise ONCE. The `opacity: 0` start
-   lives only inside `no-preference` via the keyframe's `both` fill, so with
-   reduced motion — or before the animation runs — content is simply present.
-   Nothing is ever hidden behind a transform that might not fire.
-
-   `.reveal-stagger > *` additionally delays each sibling by --i × --stagger-step
-   (the index comes from stagger(i) in constants/page.ts). Load-orchestrated
-   rather than scroll-triggered, so body copy never fades in under the reader. */
-@media (prefers-reduced-motion: no-preference) {
-  .reveal,
-  .reveal-stagger > * {
-    animation: reveal-in var(--motion-reveal) var(--ease-emphasized) both;
-  }
-  .reveal-stagger > * {
-    animation-delay: calc(var(--i, 0) * var(--stagger-step));
-  }
+/* ---- device: the out-arrow -------------------------------------------------
+   The ↗ on every link that leaves the site — a new tab or a mail client
+   (design-system §11.4) — and only on those. The caret's twin: two masked
+   arrows in a clipped 10×10 box; when the nearest link or button is hovered or
+   focused, the first leaves up and to the right while the second arrives from
+   the lower left, and the pair brightens. Rendered by `<ArrowOut />`
+   (components/ui/caret-link.tsx). A flex parent spaces it with its gap; inside
+   a sentence (`.arrow-out-inline`) it sits on the baseline, raised like a
+   superscript, a hair after the last word. */
+.arrow-out {
+  display: inline-block;
+  flex: none;
+  width: 10px;
+  height: 10px;
+  background-color: currentColor;
+  opacity: 0.6;
+  -webkit-mask-image: var(--arrow-out), var(--arrow-out);
+  mask-image: var(--arrow-out), var(--arrow-out);
+  -webkit-mask-repeat: no-repeat;
+  mask-repeat: no-repeat;
+  -webkit-mask-size: 10px 10px;
+  mask-size: 10px 10px;
+  -webkit-mask-position: 0 0, -12px 12px;
+  mask-position: 0 0, -12px 12px;
+  transition:
+    -webkit-mask-position var(--motion-caret) var(--spring-soft),
+    mask-position var(--motion-caret) var(--spring-soft),
+    opacity var(--motion-base) var(--ease-out);
 }
-@keyframes reveal-in {
-  from {
-    opacity: 0;
-    transform: translateY(8px);
-  }
-  to {
-    opacity: 1;
-    transform: none;
-  }
+:is(a, button, [data-caret-trigger]):is(:hover, :focus-visible) .arrow-out {
+  -webkit-mask-position: 12px -12px, 0 0;
+  mask-position: 12px -12px, 0 0;
+  opacity: 1;
 }
-
-/* One short sheen on an enabled primary control. Leaving the target resets the
-   light off-screen, without a second reverse sweep. Reduced motion omits it. */
-@media (prefers-reduced-motion: no-preference) {
-  .btn-sheen {
-    position: relative;
-    overflow: hidden;
-  }
-  .btn-sheen::after {
-    content: "";
-    position: absolute;
-    inset: 0;
-    transform: translateX(-130%) skewX(-18deg);
-    background: linear-gradient(
-      100deg,
-      transparent 30%,
-      color-mix(in srgb, var(--color-on-accent) 16%, transparent) 50%,
-      transparent 70%
-    );
-    pointer-events: none;
-  }
-  .btn-sheen:not(:disabled):not([aria-disabled="true"]):not([aria-busy="true"]):is(:hover, :focus-visible)::after {
-    animation: control-sheen var(--motion-slow) var(--ease-out) both;
-  }
-  @keyframes control-sheen {
-    from { transform: translateX(-130%) skewX(-18deg); }
-    to { transform: translateX(130%) skewX(-18deg); }
-  }
+.arrow-out-inline {
+  margin-left: 0.2em;
 }
 
-/* ---- device 2: the animated underline ---------------------------------- */
+/* ---- device: the animated underline --------------------------------------- */
 .link-underline {
   background-image: linear-gradient(currentColor, currentColor);
   background-position: 0 100%;
   background-repeat: no-repeat;
   background-size: 0% 1px;
   padding-bottom: 1px;
+  transition: background-size var(--motion-base) var(--ease-out);
 }
 .link-underline:hover,
 .link-underline:focus-visible,
 .text-link-control:is(:hover, :focus-visible) .link-underline {
   background-size: 100% 1px;
 }
-@media (prefers-reduced-motion: no-preference) {
-  .link-underline {
-    transition: background-size var(--motion-base) var(--ease-out);
-  }
-}
 
-/* ---- device 3: the dark band -------------------------------------------
-   Scopes the dark ramp LOCALLY, so every token-driven child adapts with no
-   component-level dark variant. The values are `var(--dark-*)` from tokens.css
-   rather than a second copy of the palette: a band and the full-dark theme that
-   disagree is a bug waiting on a redesign.
-
-   The edge is a clean full-bleed boundary. The previous identity drew a
-   "graticule" tick-scale at every light↔dark seam; it read as instrument chrome
-   and competed with the content it was framing. A dark plate does not need a
-   device to announce it. */
-.tone-invert {
-  --color-bg: var(--dark-bg);
-  --color-bg-subtle: var(--dark-bg-subtle);
-  --color-surface: var(--dark-surface);
-  --color-surface-raised: var(--dark-surface-raised);
-  --color-ink: var(--dark-ink);
-  --color-ink-secondary: var(--dark-ink-secondary);
-  --color-ink-tertiary: var(--dark-ink-tertiary);
-  --color-border: var(--dark-border);
-  --color-border-strong: var(--dark-border-strong);
-  /* The BAND accent — violet. A dark band inside the light page belongs to the
-     light theme's scroll (ADR-013); the lime is the full-dark theme's accent
-     and is applied by [data-theme="dark"] below. */
-  --color-accent: var(--dark-accent-band);
-  --color-accent-hover: var(--dark-accent-band-hover);
-  --color-on-accent: var(--dark-on-accent-band);
-  --color-accent-soft: var(--dark-accent-band-soft);
-  /* Status colours must be scoped here too: without them a Metric delta dropped
-     into a dark band keeps the LIGHT #15803d / #b91c1c against the dark surface
-     (~3:1, below AA). A valid component in a valid container can never render an
-     inaccessible result. */
-  --color-positive: var(--dark-positive);
-  --color-negative: var(--dark-negative);
-  --color-warning: var(--dark-warning);
-  --shadow-sm: var(--dark-shadow-sm);
-  --shadow-md: var(--dark-shadow-md);
-  --shadow-lg: var(--dark-shadow-lg);
-  --shadow-overlay: var(--dark-shadow-lg);
-  --shadow-surface: var(--dark-shadow-surface);
-  --shadow-surface-hover: var(--dark-shadow-surface-hover);
-  --shadow-stage: var(--dark-shadow-stage);
-  --shadow-float: var(--dark-shadow-float);
-  --shadow-btn: inset 0 1px 0 rgb(255 255 255 / 0.16), 0 1px 2px rgb(0 0 0 / 0.5);
-  background-color: var(--color-bg);
-  color: var(--color-ink);
-}
-
-/* Under the full-dark preference there is no light↔dark flip left to make, so a
-   dark band would vanish into the page. Recess it one step instead — the band
-   still reads as a distinct plate, by depth rather than by inversion. */
-/* In the full-dark theme the page is already near-black, so a band cannot
-   recess — there is no room below #03080a. It steps UP instead: the plate reads
-   as raised out of the page rather than sunk into it, which is the only
-   direction this ground allows and still keeps the band a distinct object. */
-:root[data-theme="dark"] .tone-invert {
-  --color-bg: #0a1013;
-  --color-bg-subtle: #0e1417;
-  --color-surface: #12181b;
-  --color-surface-raised: #171d20;
-  /* The accent reverts to the THEME's. `.tone-invert` sets the violet band
-     accent for bands inside the LIGHT page; inside a dark document that band is
-     just another dark surface, and keeping the violet there put two accents on
-     one scroll — exactly the incoherence the band/theme split exists to
-     prevent. */
-  --color-accent: var(--dark-accent-theme);
-  --color-accent-hover: var(--dark-accent-theme-hover);
-  --color-on-accent: var(--dark-on-accent-theme);
-  --color-accent-soft: var(--dark-accent-theme-soft);
-  --gradient-accent: var(--dark-gradient-accent);
-  --gradient-accent-control: var(--dark-gradient-accent-control);
-}
-
-/* ---- device 4: hairlines that dissolve --------------------------------- */
+/* ---- device: a hairline that dissolves before the gutter ------------------ */
 .rule-fade {
-  border: 0;
   height: 1px;
-  background: var(--hairline-fade);
+  border: 0;
+  background: linear-gradient(90deg, transparent, var(--color-rule) 10%, var(--color-rule) 90%, transparent);
 }
 
-/* ---- long-form + syntax ------------------------------------------------- */
-
-/* Case-study chapters are substantial, independently anchored documents. Let the
-   browser skip style, layout and paint for chapters well below the viewport
-   while keeping a stable scroll estimate. `auto` keeps find-in-page, deep links,
-   focus, printing and accessibility semantics available. */
-.case-study-section {
-  content-visibility: auto;
-  contain-intrinsic-size: auto 36rem;
+/* ---- legacy control devices ------------------------------------------------
+   Kept while the components that use them are restyled: `.icon-btn` (the
+   assistant trigger) and the arrow nudge of `.text-link-control` (the project
+   card). */
+.icon-btn {
+  transition:
+    color var(--motion-fast) var(--ease-out),
+    background-color var(--motion-fast) var(--ease-out);
+}
+.icon-btn:not(:disabled):not([aria-disabled="true"]):not([aria-busy="true"]):is(:hover, :focus-visible) {
+  background-color: var(--chrome-hover);
+}
+.text-link-control > :is(.lucide-arrow-right, .lucide-chevron-right, .lucide-arrow-up-right) {
+  transition: transform var(--motion-base) var(--ease-out);
+}
+.text-link-control:is(:hover, :focus-visible) > :is(.lucide-arrow-right, .lucide-chevron-right) {
+  transform: translateX(var(--motion-nudge));
+}
+.text-link-control:is(:hover, :focus-visible) > .lucide-arrow-up-right {
+  transform: translate(var(--motion-nudge), calc(-1 * var(--motion-nudge)));
 }
 
-/* Reading-depth indicator on case-study contents. Orientation only — it never
-   carries meaning on its own. */
+/* ---- long-form and code ---------------------------------------------------- */
+
+/* Reading-depth indicator on case-study contents. Orientation only. */
 .progress-track {
   background: var(--color-border);
 }
@@ -366,8 +259,7 @@ button:disabled,
   will-change: transform;
 }
 
-/* Shiki — transparent ground (we supply the surface), our mono face, dark
-   palette only under the explicit dark choice. */
+/* Shiki: a transparent ground (the code block supplies the surface) in the mono face. */
 .shiki {
   background-color: transparent !important;
 }
@@ -378,29 +270,117 @@ button:disabled,
   font-size: 0.8125rem;
   line-height: 1.65;
 }
-:root[data-theme="dark"] .shiki,
-:root[data-theme="dark"] .shiki span {
-  color: var(--shiki-dark) !important;
+
+/* ============================================================================
+   Shared keyframes. Each reads an optional custom property for its travel, so
+   one keyframe serves every size:
+     float      --float (default -10px)         hero-ring  --ring-scale (2.05)
+     wire       --wire-distance (48px)          draw       --draw-length (460)
+   Decorative loops must stop under reduced motion (see below), and none of
+   these may be used as a scroll-triggered reveal (the motion law).
+
+   Reference them through their `--kf-*` name, never the bare name:
+     animation: var(--kf-marquee) 48s linear infinite;
+   A CSS module renames every animation name it sees to a local one (`marquee`
+   becomes `<hash>_marquee`), which matches no keyframe here, so a bare name in
+   a module is a dead animation in the production build. The transform leaves
+   `var()` alone, and the custom property resolves to the global name.
+   ============================================================================ */
+:root {
+  --kf-marquee: marquee;
+  --kf-float: float;
+  --kf-hero-ring: hero-ring;
+  --kf-sheen: sheen;
+  --kf-pop: pop;
+  --kf-halo: halo;
+  --kf-wire: wire;
+  --kf-spin: spin;
+  --kf-draw: draw;
+  --kf-fill: fill;
+  --kf-rise: rise;
+  --kf-fadein: fadein;
+}
+@keyframes marquee {
+  to { transform: translateX(-50%); }
+}
+@keyframes float {
+  0%, 100% { translate: 0 0; }
+  50% { translate: 0 var(--float, -10px); }
+}
+@keyframes hero-ring {
+  0% { opacity: 0; transform: scale(1); }
+  5% { opacity: 0.9; }
+  50%, 100% { opacity: 0; transform: scale(var(--ring-scale, 2.05)); }
+}
+@keyframes sheen {
+  from { transform: translateX(-120%); }
+  to { transform: translateX(120%); }
+}
+@keyframes pop {
+  0% { transform: scale(1); }
+  45% { transform: scale(1.45); }
+  100% { transform: scale(1); }
+}
+@keyframes halo {
+  0% { opacity: 0.9; transform: scale(1); }
+  100% { opacity: 0; transform: scale(1.18, 1.35); }
+}
+@keyframes wire {
+  0% { transform: translateX(0); opacity: 0; }
+  25%, 75% { opacity: 1; }
+  100% { transform: translateX(var(--wire-distance, 48px)); opacity: 0; }
+}
+@keyframes spin {
+  to { transform: rotate(360deg); }
+}
+@keyframes draw {
+  from { stroke-dashoffset: var(--draw-length, 460); }
+  to { stroke-dashoffset: 0; }
+}
+@keyframes fill {
+  from { transform: scaleX(0); }
+  to { transform: scaleX(1); }
+}
+@keyframes rise {
+  from { opacity: 0; transform: translateY(8px); filter: blur(2px); }
+  to { opacity: 1; transform: none; filter: none; }
+}
+@keyframes fadein {
+  from { opacity: 0; }
+  to { opacity: 1; }
+}
+
+/* Reduced motion: every animation and transition collapses to effectively zero
+   and loops run once, so decorative loops stop and state changes are instant.
+   A blanket rule rather than per-component guards, so a new component cannot
+   forget; components add only what this cannot express (the marquee centres
+   its row, the pulse rings disappear). */
+@media (prefers-reduced-motion: reduce) {
+  html {
+    scroll-behavior: auto;
+  }
+  *,
+  *::before,
+  *::after {
+    animation-duration: var(--motion-reduced) !important;
+    animation-delay: 0s !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: var(--motion-reduced) !important;
+    transition-delay: 0s !important;
+    scroll-behavior: auto !important;
+  }
 }
 
 /* ============================================================================
    PRINT
 
-   /resume is a document people print or save as PDF, and until now printing it
-   produced the availability bar, the sticky nav, the site footer, a "Download
-   PDF" button (on the thing already being printed) and every card shadow — four
-   pages of chrome around two pages of résumé.
-
-   Written against LANDMARKS and one `data-print="hide"` hook rather than a list
-   of component classes, so a new piece of chrome is excluded by being chrome
-   rather than by someone remembering to add it here.
+   /resume is printed and saved as PDF. Written against landmarks and one
+   `data-print="hide"` hook rather than a list of component classes, so a new
+   piece of chrome is excluded by being chrome.
    ============================================================================ */
 @media print {
-  /* Colour-adjust off: the brand's near-white page becomes real white, and ink
-     becomes real black. Printing a design system's greys wastes toner and reads
-     washed out on paper. */
   :root,
-  :root[data-theme="dark"] {
+  :is(.tone-invert, [data-surface="dark"]) {
     --color-bg: #ffffff;
     --color-bg-subtle: #ffffff;
     --color-surface: #ffffff;
@@ -411,6 +391,10 @@ button:disabled,
     --color-border: #cccccc;
     --color-border-strong: #999999;
     --color-accent: #000000;
+    --shadow-card: none;
+    --shadow-card-hover: none;
+    --shadow-panel: none;
+    --shadow-menu: none;
     --shadow-sm: none;
     --shadow-md: none;
     --shadow-lg: none;
@@ -447,15 +431,6 @@ button:disabled,
     padding-bottom: 0 !important;
   }
 
-  /* Entrance animation must never leave printed content faded out. */
-  .reveal,
-  .reveal-stagger > * {
-    animation: none !important;
-    opacity: 1 !important;
-    transform: none !important;
-  }
-
-  /* Keep a job, a project or a heading from being split across a page break. */
   h1,
   h2,
   h3 {
@@ -468,9 +443,7 @@ button:disabled,
     break-inside: avoid;
   }
 
-  /* A printed link cannot be clicked, so external destinations are spelled out
-     — but only for genuinely external ones. Printing "(/work)" after every
-     internal link is noise. */
+  /* A printed link cannot be clicked, so external destinations are spelled out. */
   a[href^="http"]::after {
     content: " (" attr(href) ")";
     font-size: 8.5pt;

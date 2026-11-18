@@ -2,7 +2,8 @@
 
 Status: Accepted. Amended 2026-11-13 to record the implementation: the original
 decision named `@content-collections/*`; the code uses `next-mdx-remote` with the same
-intent (`content/schema.ts`).
+intent (`content/schema.ts`). Facts updated 2026-11-17: the timeline record is gone, and
+the flagship case studies are typed modules (ADR-019).
 
 ## Context
 Long-form content needs rich embedded components (DecisionLog, CodeBlock) plus strict,
@@ -12,9 +13,10 @@ build-time-validated metadata feeding pages, feeds, the sitemap, and the assista
 Content lives in `content/`, validated by Zod schemas in `content/schema.ts`, with types
 inferred from those schemas. Invalid content throws, so the build fails.
 
-- Structured records (projects, evaluations, timeline) are typed TypeScript modules
-  parsed with Zod at module load. The résumé (`content/resume.ts`) is an `as const`
-  module that TypeScript checks but no schema validates.
+- Structured records (projects, evaluations) are typed TypeScript modules parsed with
+  Zod at module load. The résumé (`content/resume.ts`) is an `as const` module, and
+  each flagship case study (`content/flagship/`) a module typed `Flagship`, that
+  TypeScript checks but no schema validates.
 - Writing and notes are MDX, loaded by `lib/mdx-collection.ts`: `fs` reads, then
   `compileMDX` from `next-mdx-remote/rsc` parses frontmatter for Zod and renders the
   body with the component map. `/now` is one MDX file loaded by `lib/now.ts`.

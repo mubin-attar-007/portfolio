@@ -1,15 +1,19 @@
-import { renderOg, OG_SIZE, OG_CONTENT_TYPE, formatOgEyebrow } from "@/lib/og";
+import { renderOg, ogAlt, OG_SIZE, OG_CONTENT_TYPE, type OgCard } from "@/lib/og";
+import { pages } from "@/content/site";
+import { flagships } from "@/content/flagship";
+import { projects } from "@/content/projects";
 
-export const alt = "Work — four shipped AI systems, deep-dived · Mubin Attar";
+/** The work index: its title, and every system it holds, by name, the flagships first. */
+const CARD = {
+  kicker: "Work",
+  title: pages.work.title,
+  description: [...flagships.map((flagship) => flagship.name), ...projects.map((project) => project.title)].join(" · "),
+} satisfies OgCard;
+
+export const alt = ogAlt(CARD);
 export const size = OG_SIZE;
 export const contentType = OG_CONTENT_TYPE;
 
-/** OG card for the /work index. */
-export default function OG() {
-  return renderOg({
-    eyebrow: formatOgEyebrow("Selected Work"),
-    title: "Four shipped AI systems — how each one is built.",
-    subtitle: "DBWhisper · TradePulse · CrownWager · LLM Studio. Deep case studies with decisions, failures, and methods.",
-    footerRight: "/work",
-  });
+export default function Image() {
+  return renderOg(CARD);
 }

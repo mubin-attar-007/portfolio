@@ -4,7 +4,8 @@ import { Container } from "./container";
 /**
  * Section — the vertical-rhythm primitive.
  *
- * `space` picks the band's padding. Pick per section so two ADJACENT bands don't
+ * `space` picks the band's padding; `head` is the page-header band (96/64px,
+ * 64/48 on phones) that holds a `PageHeader`. Pick per section so two ADJACENT bands don't
  * both spend `lg` and stack into a dead screen: `lg` is for a page's bookends
  * (hero, closing CTA), `md` is the body default, `sm` joins two bands that
  * belong together, `xs` is half a header seam.
@@ -28,7 +29,8 @@ import { Container } from "./container";
  * hairlines; the one ambient-light treatment belongs to the three motif
  * surfaces, which own it themselves.
  */
-const SPACE: Record<"xs" | "sm" | "md" | "lg", string> = {
+const SPACE: Record<"xs" | "sm" | "md" | "lg" | "head", string> = {
+  head: "pt-[var(--space-head-top)] pb-[var(--space-head-bottom)]",
   xs: "pt-[var(--space-section-xs)] pb-[var(--space-section-xs)]",
   sm: "pt-[var(--space-section-sm)] pb-[var(--space-section-md)]",
   md: "pt-[var(--space-section-md)] pb-[var(--space-section-md-end)]",
@@ -51,7 +53,7 @@ export function Section({
   className = "",
   children,
 }: {
-  space?: "xs" | "sm" | "md" | "lg";
+  space?: "xs" | "sm" | "md" | "lg" | "head";
   tone?: "page" | "subtle" | "invert";
   bleed?: boolean;
   id?: string;

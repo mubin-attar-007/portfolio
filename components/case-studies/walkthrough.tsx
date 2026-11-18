@@ -4,7 +4,7 @@ import { useCallback, useEffect, useRef, useState } from "react";
 import Link from "next/link";
 import { ArrowRight, Check, ChevronRight, CircleCheck, Pause, Play, RotateCcw, X } from "lucide-react";
 import { useReducedMotion } from "@/lib/use-reduced-motion";
-import { EyebrowChip } from "@/components/ui/eyebrow-chip";
+import { Kicker } from "@/components/ui/kicker";
 import { buttonVariants } from "@/components/ui/button";
 import styles from "./walkthrough.module.css";
 
@@ -180,8 +180,8 @@ export function FlagshipWalkthrough(props: WalkthroughProps) {
     <div className={styles.layout} ref={rootRef}>
       {/* ---- rail ---- */}
       <div className={styles.rail}>
-        <EyebrowChip>{props.eyebrow}</EyebrowChip>
-        <h2 id="walkthrough-title" className="mt-4 text-balance text-section font-bold text-ink">
+        <Kicker>{props.eyebrow}</Kicker>
+        <h2 id="walkthrough-title" className="mt-4 text-balance text-section text-ink">
           {props.title}
         </h2>
         <p className="mt-3 max-w-[42ch] text-pretty text-base text-ink-secondary">{props.body}</p>

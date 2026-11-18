@@ -80,7 +80,7 @@ test("the raster icons were rendered from the current icon.svg", () => {
 
 test("browser chrome and the manifest use each theme's ground", () => {
   assert.equal(BROWSER_CHROME.light, token("--color-bg"));
-  assert.equal(BROWSER_CHROME.dark, token("--dark-bg"));
+  assert.equal(BROWSER_CHROME.dark, token("--color-plate-deep"));
   const m = manifest();
   assert.equal(m.theme_color, BROWSER_CHROME.light);
   assert.equal(m.background_color, BROWSER_CHROME.light);
