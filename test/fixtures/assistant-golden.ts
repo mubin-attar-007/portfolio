@@ -131,7 +131,7 @@ export const GOLDEN: readonly GoldenItem[] = [
     turns: ["How many people use Bench Discovery?"],
     expect: "live",
     paths: ["/work/bench-discovery"],
-    facts: [BENCH_USERS, /desktop app and the web platform/i],
+    facts: [BENCH_USERS, /web platform and the desktop app|desktop app and the web platform/i],
   },
   {
     id: "bd-role",

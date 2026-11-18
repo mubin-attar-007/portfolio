@@ -25,9 +25,10 @@ const ACTIVE_BAND = "-45% 0px -50% 0px";
  * Props: `steps` (title, body, media), `label` (names the list), `titleAs`
  * (`h3` default), `className`.
  *
- * Layout: from 1000px, steps left and a sticky frame right (`--sticky-top`
- * under the nav); below, each step's media sits under its text and there is no
- * frame. Each step's media is rendered twice (inline and in the frame), and CSS
+ * Layout: from 1000px, steps left and a sticky frame right, held in the middle
+ * of the room below the chrome (`--sticky-top`, which clears the work sub-nav
+ * too) so it sits level with the active step; below, each step's media sits
+ * under its text and there is no frame. Each step's media is rendered twice (inline and in the frame), and CSS
  * shows one per breakpoint, so pass light media (images lazy-load; videos stay
  * `preload="none"`).
  *
@@ -101,12 +102,14 @@ export function StickySteps({
         ))}
       </ol>
       <div className={styles.stage} aria-hidden="true" inert>
-        <div className={styles.frame}>
-          {steps.map((step, i) => (
-            <div key={step.id ?? i} className={styles.pane} data-active={i === active ? "" : undefined}>
-              {step.media}
-            </div>
-          ))}
+        <div className={styles.holder}>
+          <div className={styles.frame}>
+            {steps.map((step, i) => (
+              <div key={step.id ?? i} className={styles.pane} data-active={i === active ? "" : undefined}>
+                {step.media}
+              </div>
+            ))}
+          </div>
         </div>
       </div>
     </div>

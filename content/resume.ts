@@ -168,7 +168,7 @@ export const resume = {
     source: "source",
     method: "method",
   },
-  summary: `Applied AI Engineer with 3.5+ years in software engineering: LLM applications, RAG, agents, evals and guardrails. Sole engineer of Bench Discovery (${USAGE["bench-discovery"].sentence}): a Windows app and an AWS web platform. Lead engineer for CareLTC (${USAGE.careltc.short}): iOS and Android apps, NestJS API on AWS.`,
+  summary: `Applied AI Engineer with 3.5+ years in software engineering: LLM applications, RAG, agents, evals and guardrails. Sole engineer of Bench Discovery (${USAGE["bench-discovery"].sentence}): an AWS web platform and a Windows app. Lead engineer for CareLTC (${USAGE.careltc.short}): iOS and Android apps, NestJS API on AWS.`,
   /**
    * Six groups, one line each in the PDF (AI engineering two), of the terms
    * AI Engineer postings search for. "LLM applications" and "guardrails" lead
@@ -194,7 +194,7 @@ export const resume = {
       period: "2024 – present",
       place: "Ahmedabad",
       points: [
-        "Designed, built and maintain Bench Discovery for legal document review: a Windows app (C#, .NET, WPF) that triages and redacts on the PC, and a multi-tenant web platform on AWS (Next.js, FastAPI, PostgreSQL).",
+        "Designed, built and maintain Bench Discovery for legal document review: a multi-tenant web platform on AWS (Next.js, FastAPI, PostgreSQL), and a Windows app (C#, .NET, WPF) that triages and redacts on the PC.",
         "Built the web platform's RAG assistant (Claude, pgvector): grounded answers cite the page, row or paragraph and every quote is verified; a person confirms each action; a spend cap gates every call.",
         `Lead engineer for CareLTC (${USAGE.careltc.short}), NFC room rounds for long-term care: iOS and Android apps (React Native), a NestJS API on AWS and an admin portal, working directly with care staff and admins.`,
         "Made check-ins require a physical NFC tap, built the alerting pipeline (grouped push, reminders, escalation) and shipped App Store and Google Play releases, keeping older builds working.",

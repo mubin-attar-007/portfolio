@@ -91,10 +91,21 @@
     .inlineMedia {
       display: none;
     }
+    /* The stage runs the full height of the steps; inside it the frame sticks
+       in the middle of the room below the chrome, level with the band that
+       makes a step active (ACTIVE_BAND, 45–50% down). The room is capped at
+       the stage, so a short list never grows; a frame taller than the room
+       sits at its top (`safe`), never cut off. */
     .stage {
+      display: block;
+      align-self: stretch;
+    }
+    .holder {
       position: sticky;
       top: var(--sticky-top);
-      display: block;
+      display: grid;
+      align-content: safe center;
+      height: min(100%, calc(100dvh - var(--sticky-top) - 24px));
     }
     .frame {
       position: relative;

@@ -44,7 +44,7 @@ export const SHOWCASE = {
   assistant: {
     question: `What has Mubin built at ${EMPLOYER}?`,
     answer:
-      "Two products in use: Bench Discovery, document triage and verified redaction on the PC and the web, and CareLTC, NFC room rounds for long-term care.",
+      "Two products in use: Bench Discovery, document review with cited answers on the web and verified redaction on the PC, and CareLTC, NFC room rounds for long-term care.",
     cites: ["Bench Discovery case study", "CareLTC case study"],
   },
   sample: "Illustrative sample · synthetic data",
@@ -58,7 +58,7 @@ export const SHOWCASE = {
   },
   /** What each flagship panel shows, for the panel's caption. */
   captions: {
-    benchDiscovery: "The desktop app after a run, and the web platform's review queue",
+    benchDiscovery: "The web platform's review queue, and the desktop app after a run",
     careltc: "The admin portal's live floor status, and a floor phone",
   },
 } as const;

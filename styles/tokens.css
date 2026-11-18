@@ -258,8 +258,10 @@
 
   /* ---- layout --------------------------------------------------------------
      Content is 1200px wide; at 1440 it starts at x=120. The floating nav is
-     1232px. `--nav-offset` is where the stuck nav ends: sticky things sit
-     below it (`--sticky-top` adds a breath for sidebars). */
+     1232px. `--nav-offset` is where the stuck nav ends; `--chrome-offset` is
+     where all the stuck chrome ends (the nav, plus the work sub-nav on a page
+     that has one: see below), and sticky things sit below it (`--sticky-top`
+     adds a breath). Anchors stop there too (globals.css). */
   --width-content: 1200px;
   --gutter: clamp(1rem, 3vw, 1.5rem);
   --width-container: calc(var(--width-content) + 2 * var(--gutter));
@@ -271,7 +273,8 @@
   --nav-top: 8px;
   --nav-h: 44px;
   --nav-offset: calc(var(--nav-top) + var(--nav-h));
-  --sticky-top: calc(var(--nav-offset) + 24px);
+  --chrome-offset: var(--nav-offset);
+  --sticky-top: calc(var(--chrome-offset) + 24px);
   --subnav-h: 36px;
   --subnav-tuck: 12px;
   --notch: 44px;
@@ -313,6 +316,14 @@
   :root {
     --notch: 26px;
   }
+}
+
+/* A page with the work sub-nav: its tray hangs under the nav and sticks with
+   it, so the chrome ends `--subnav-h` lower. Every sticky panel and every
+   anchor on the page clears both, through `--sticky-top`; measured from the
+   chrome, not the nav, a sticky frame used to tuck its top under the tray. */
+:root:has([data-subnav]) {
+  --chrome-offset: calc(var(--nav-offset) + var(--subnav-h));
 }
 
 /* Geist Mono stays out of the first paint. The boot script in app/layout.tsx

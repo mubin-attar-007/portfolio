@@ -66,10 +66,11 @@ test("a usage figure is one the owner approved, in his words", () => {
 });
 
 test("the credit is the owner's own sentence, and no one else is credited", () => {
-  // The owner's words (17 Nov 2026). Work is never attributed by git history, and no
+  // The owner's words (17 Nov 2026; Bench Discovery's web platform named first at the
+  // owner's request, 18 Nov 2026). Work is never attributed by git history, and no
   // colleague is named or described: not beside the credit, not on an excerpt.
   const approved: Record<string, string> = {
-    "bench-discovery": "I designed, built and maintain both the desktop app and the web platform.",
+    "bench-discovery": "I designed, built and maintain both the web platform and the desktop app.",
     careltc: "I lead CareLTC and did the main engineering work, and I still maintain it and ship new features.",
   };
   for (const flagship of flagships) {

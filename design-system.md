@@ -150,9 +150,12 @@ x=120. The gutter is `--gutter` `clamp(1rem, 3vw, 1.5rem)` (16 → 24px), and
 `--width-frame-narrow` 592px. Breakpoints are Tailwind's defaults.
 
 **The nav and sticky things.** The nav sits `--nav-top` 8px from the top and is
-`--nav-h` 44px tall; `--nav-offset` is where it ends, and `--sticky-top` adds 24px for
-sticky sidebars. Anchors scroll clear of it (`scroll-padding-top`). The work sub-nav
-is `--subnav-h` 36px; on a case study, anchors scroll clear of it too (§8).
+`--nav-h` 44px tall; `--nav-offset` is where it ends. The work sub-nav is `--subnav-h`
+36px; its `data-subnav` moves `--chrome-offset` (where all stuck chrome ends) below it.
+`--sticky-top` is `--chrome-offset` plus 24px: every sticky panel sits there and every
+anchor stops there (`scroll-padding-top`), so nothing tucks under the tray (§8). Never
+hard-code a sticky `top`. A sticky media frame beside steps (StickySteps) is centred in
+the room below the chrome, level with the active step, and top-aligned when taller.
 
 **Section rhythm** (`Section space=…`):
 

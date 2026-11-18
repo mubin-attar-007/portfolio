@@ -15,13 +15,15 @@ import styles from "./work-subnav.module.css";
  *
  * Props: `current` — the slug of the page shown (e.g. "careltc",
  * "dbwhisper"); any other value marks nothing current.
- * Place it as the first child of the page, before the hero.
+ * Place it as the first child of the page, before the hero. Its `data-subnav`
+ * moves `--chrome-offset` below the tray (tokens.css), so the page's sticky
+ * panels and anchors clear it.
  * A11y: `<nav aria-label="Work">`; the current item is `aria-current="page"`
  * (darker, heavier, underlined — never colour alone).
  */
 export function WorkSubnav({ current }: { current: string }) {
   return (
-    <div className={styles.wrap} data-chrome="">
+    <div className={styles.wrap} data-chrome="" data-subnav="">
       <nav aria-label="Work" className={styles.tray}>
         <SubnavScroller className={styles.scroller}>
           <ul className={styles.list}>

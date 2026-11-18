@@ -2,11 +2,10 @@
    Tokens only; motion is transform/opacity (plus a stroke on small SVGs), and
    the global reduced-motion rule makes every state change instant. */
 
-/* The work sub-nav hangs under the floating nav on this page, so a jump to an
-   anchor, and the control Tab brings into view, stop below both (WCAG 2.4.11). */
-:global(html):has(.hero) {
-  scroll-padding-top: calc(var(--nav-offset) + var(--subnav-h) + 12px);
-}
+/* The work sub-nav hangs under the floating nav on this page; its
+   `data-subnav` moves `--chrome-offset` below it (tokens.css), so anchors, the
+   control Tab brings into view (WCAG 2.4.11) and every sticky panel here clear
+   both. */
 
 /* ---- hero ------------------------------------------------------------------ */
 .hero {

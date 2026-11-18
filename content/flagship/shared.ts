@@ -4,16 +4,17 @@ import type { AwsService } from "./types";
 export const EMPLOYER = "Sevina Technologies";
 
 /**
- * The usage figures, in the exact wording the owner approved (17 Nov 2026).
- * Every page, card, llms.txt and the assistant read them from here; nothing
- * restates them. `figure` + `label` read as one sentence: "5–10" "users
- * across the desktop app and the web platform".
+ * The usage figures, in the exact wording the owner approved (17 Nov 2026;
+ * Bench Discovery's two surfaces named web platform first at the owner's
+ * request, 18 Nov 2026). Every page, card, llms.txt and the assistant read
+ * them from here; nothing restates them. `figure` + `label` read as one
+ * sentence: "5–10" "users across the web platform and the desktop app".
  */
 export const USAGE = {
   "bench-discovery": {
     figure: "5–10",
-    label: "users across the desktop app and the web platform",
-    sentence: "5–10 users across the desktop app and the web platform",
+    label: "users across the web platform and the desktop app",
+    sentence: "5–10 users across the web platform and the desktop app",
   },
   careltc: {
     figure: "200+",

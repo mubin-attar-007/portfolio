@@ -429,8 +429,8 @@ function flagshipPassages(flagship: Flagship): Passage[] {
         flagship.constraintsNote,
       ),
     ),
-    // What he built, one passage per surface (the desktop app, the web
-    // platform, the API…): each is a short list a question can find on its
+    // What he built, one passage per surface (the web platform, the
+    // desktop app, the API…): each is a short list a question can find on its
     // own. His role on the whole product is in the overview.
     ...flagship.built.map((group) =>
       section(

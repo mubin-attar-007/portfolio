@@ -130,7 +130,7 @@ jobs:
       - name: Lighthouse budgets and social-preview gate
         if: github.event_name == 'push' || github.base_ref == 'main'
         env:
-          LIGHTHOUSE_RUNS: "3"
+          LIGHTHOUSE_RUNS: "5"
         run: npm run test:lighthouse
 
       - name: Upload diagnostics
