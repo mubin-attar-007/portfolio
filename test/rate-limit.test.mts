@@ -8,6 +8,7 @@ import assert from "node:assert/strict";
 
 import {
   CLIENT_DAILY_LIVE_ANSWERS,
+  clientAddress,
   GEMINI_DAILY_BUDGET,
   checkRateLimit,
   clientDailyLimit,
@@ -72,4 +73,15 @@ test("the per-client allowance: 30 in production, lifted for next dev, set by AS
   assert.equal(clientDailyLimit("200", "production"), 200);
   assert.equal(clientDailyLimit(" 5 ", "development"), 5);
   for (const bad of ["", "0", "-3", "2.5", "lots", "20001"]) assert.equal(clientDailyLimit(bad, "production"), 30, bad);
+});
+
+test("on Cloudflare Workers the key is cf-connecting-ip, and a sent x-real-ip is ignored", () => {
+  const headers = new Headers({ "cf-connecting-ip": "203.0.113.7", "x-real-ip": "198.51.100.1" });
+  assert.equal(clientAddress(headers, true), "203.0.113.7");
+  assert.equal(clientAddress(new Headers({ "x-real-ip": "198.51.100.1" }), true), "unknown");
+});
+
+test("off Cloudflare a forged cf-connecting-ip is ignored", () => {
+  const headers = new Headers({ "cf-connecting-ip": "203.0.113.7", "x-real-ip": "198.51.100.1" });
+  assert.equal(clientAddress(headers, false), "198.51.100.1");
 });

@@ -5,7 +5,7 @@
   "scripts": {
     "dev": "next dev",
     "build": "next build",
-    "build:sites": "npm run build && opennextjs-cloudflare build --skipNextBuild && node scripts/stage-sites-build.mjs",
+    "build:sites": "npm run build && opennextjs-cloudflare build --skipNextBuild && node --disable-warning=MODULE_TYPELESS_PACKAGE_JSON scripts/stage-sites-build.mjs",
     "build:resume": "node --disable-warning=MODULE_TYPELESS_PACKAGE_JSON --import ./test/alias-loader.mjs scripts/build-resume-pdf.mts",
     "build:icons": "node scripts/build-icons.mjs",
     "start": "next start",
