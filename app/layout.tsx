@@ -8,6 +8,7 @@ import { OG_LOCALE, SITE_FEED, TITLE_SUFFIX } from "@/lib/seo";
 import { AnnouncementBar } from "@/components/layout/announcement-bar";
 import { AskLauncher } from "@/components/layout/ask-launcher";
 import { Header } from "@/components/layout/header";
+import { NavigationFeedback } from "@/components/layout/navigation-feedback";
 import { Footer } from "@/components/layout/footer";
 import { JsonLd } from "@/components/seo/json-ld";
 
@@ -101,6 +102,7 @@ export default function RootLayout({ children }: Readonly<{ children: React.Reac
         </main>
         <Footer year={year} />
         <AskLauncher label={ASK_AI.label} name={ASK_AI.launcherName} />
+        <NavigationFeedback />
         {/* The local production server does not expose Vercel's analytics
             endpoint. Rendering the client there creates a guaranteed 404 and a
             MIME-type console error; Vercel sets this build-time flag on the
