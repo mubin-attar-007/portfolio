@@ -2,8 +2,10 @@
 
 import { useEffect, useId, useRef, useState, type CSSProperties, type KeyboardEvent, type ReactNode } from "react";
 import { flushSync } from "react-dom";
+import { FadeScroller } from "@/components/layout/fade-scroller";
 import { cx } from "@/components/ui/cx";
 import { REVEAL_EVENT } from "@/components/work/reveal";
+import { centreInScroller } from "@/lib/use-edge-fade";
 import styles from "./gallery.module.css";
 
 /** One item of a gallery: its list title, its caption, and its content (rendered on the server). */
@@ -103,7 +105,10 @@ export function MediaGallery({
   const selectShot = (t: number, index: number, focus: boolean) => {
     setAnimate(true);
     setChosen((current) => current.map((value, i) => (i === t ? index : value)));
-    if (focus) shotRefs.current[t]?.[index]?.focus();
+    const shot = shotRefs.current[t]?.[index] ?? null;
+    if (focus) shot?.focus();
+    // On a phone the list is a sideways row: the chosen chip comes to its middle.
+    centreInScroller(shot?.parentElement ?? null, shot, !matchMedia("(prefers-reduced-motion: reduce)").matches);
   };
 
   const onTabKey = (event: KeyboardEvent<HTMLButtonElement>, index: number) => {
@@ -183,7 +188,7 @@ export function MediaGallery({
             data-tabs={hasTabs ? "" : undefined}
           >
             {hasList ? (
-              <div className={styles.list} role="tablist" aria-label={`${listLabel}: ${item.label}`} aria-orientation="vertical">
+              <FadeScroller className={styles.list} role="tablist" aria-label={`${listLabel}: ${item.label}`} aria-orientation="vertical">
                 {item.shots.map((shot, s) => (
                   <button
                     key={shot.id}
@@ -206,7 +211,7 @@ export function MediaGallery({
                     {shot.title}
                   </button>
                 ))}
-              </div>
+              </FadeScroller>
             ) : null}
 
             <div className={styles.viewer}>

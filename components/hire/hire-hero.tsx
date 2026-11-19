@@ -69,7 +69,7 @@ export function HireHero() {
       <div className={styles.stage} aria-hidden="true">
         <div className={styles.glow} />
         <Guides />
-        <PulseRings size={MARK_SIZE} radius={MARK_RADIUS} />
+        <PulseRings size={MARK_SIZE} radius={MARK_RADIUS} className={styles.rings} />
         <Float className={styles.glass}>
           <span>{SITE.monogram}</span>
         </Float>

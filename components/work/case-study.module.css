@@ -253,7 +253,7 @@ a.watchPill {
 .flowEdge,
 .flowFocusSub {
   font-family: var(--font-mono);
-  font-size: 0.6875rem;
+  font-size: var(--text-label);
   letter-spacing: 0.02em;
   color: var(--color-ink-tertiary);
 }
@@ -371,7 +371,7 @@ a.watchPill {
 /* ---- key decisions --------------------------------------------------------------- */
 .decisionNode {
   font-family: var(--font-mono);
-  font-size: 0.6875rem;
+  font-size: var(--text-label);
   letter-spacing: 0.06em;
   text-transform: uppercase;
   color: var(--color-ink-tertiary);
@@ -520,7 +520,7 @@ a.watchPill {
 .resultFacts dt,
 .resultNoteTitle {
   font-family: var(--font-mono);
-  font-size: 0.6875rem;
+  font-size: var(--text-label);
   letter-spacing: 0.1em;
   text-transform: uppercase;
   color: var(--color-ink-tertiary);

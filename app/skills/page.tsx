@@ -165,7 +165,7 @@ export default function SkillsPage() {
         />
         <ScrollRegion
           label={TABLE.scroller}
-          className="mt-10 rounded-[var(--radius-xl)] bg-surface shadow-[var(--shadow-card)]"
+          className={cx(styles.matrix, "mt-10 rounded-[var(--radius-xl)] bg-surface shadow-[var(--shadow-card)]")}
         >
           <table className="w-full border-separate border-spacing-0 text-left text-sm">
             <caption className="sr-only">{TABLE.caption}</caption>

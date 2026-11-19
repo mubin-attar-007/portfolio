@@ -131,7 +131,7 @@ line, where a swap between two monospace faces is hard to see. See
 | `page-lead` | `clamp(1.0625rem, 1.45vw, 1.25rem)` — 17 → 20px | 1.45 | the lead under a page title |
 | `lead` | 1.0625rem — 17px | 1.6 | the lead under a section title |
 | `kicker` | 0.875rem — 14px | 1.4 · 500 | the violet line above a title |
-| `label` | 0.6875rem — 11px | 1.82 · 0.1em · 500, mono, uppercase | mono tags; used sparingly |
+| `label` | 0.6875rem — 11px (12px under 640px) | 1.82 · 0.1em · 500, mono, uppercase | mono tags; used sparingly. Small labels in modules use `var(--text-label)`, never a literal 11px, so they all step up on a phone |
 
 The fixed steps `xs` (12) to `5xl` (48) remain for body, list rows (15/500) and
 legacy call sites. Body text is 16–17px at 1.6. Headings, block quotes and the h1–h4
@@ -161,11 +161,17 @@ the room below the chrome, level with the active step, and top-aligned when tall
 
 | `space` | Top → bottom |
 |---|---|
-| `head` | 64 → 96px, then 48 → 64px (a page-header band) |
-| `xs` | 32 → 44px both |
-| `sm` | 48 → 72px, then the `md` bottom |
-| `md` (default) | 88 → 120px both |
-| `lg` | 96 → 128px, then 104 → 144px |
+| `head` | 48 → 96px, then 40 → 64px (a page-header band) |
+| `xs` | 28 → 44px both |
+| `sm` | 40 → 72px, then the `md` bottom |
+| `md` (default) | 64 → 120px both |
+| `lg` | 72 → 128px, then 80 → 144px |
+
+The first figure is the phone floor; the band grows with the viewport and reaches the
+desktop figure by about 1050px, so desktop is unchanged by the floor. The floors were
+88/96px until the phone review of 19 Nov 2026: two adjacent bands then spent ~180px of
+a 390px screen on nothing. On phones a card's art is also capped (196px, raised per card
+with `--card-art-cap`), and a stack of figures reads as rows (value beside label).
 
 **Radius.** `xs 4` tags and inline code · `sm 6` small controls · `control 7` /
 `control-lg 9` buttons · `md 8` nav items, menu rows, inputs · `lg 12` the nav pill,
@@ -233,7 +239,16 @@ marked *client*.
 - `ScrollRegion({ label, className })` (*client*, `components/layout/`) — the sideways
   scroller around a wide table. While its content overflows it is a region named
   `label` with a tab stop and carries `data-overflows` (a pinned column draws its edge
-  from it); while the content fits it is a plain box (§8).
+  from it); while the content fits it is a plain box (§8). It also marks a right edge
+  that hides columns (`data-fade-end`) for a "more this way" shade.
+- **The edge fade** (`.edge-fade`, globals.css; `useEdgeFade` and `centreInScroller`
+  in `lib/use-edge-fade.ts`; `FadeScroller`, *client*, `components/layout/`) — every
+  sideways row (the work sub-nav, the home showcase's product tabs on a phone, a
+  tour's screen chips, the /uses and /privacy jump bars) fades only an end that hides
+  more, so a cut item reads as "scroll for more", and scrolls the selected item to its
+  middle without moving the page. A row that fits shows no fade. A wide table on a
+  phone is better as cards: the /evals leaderboard lays each row out as a card below
+  760px, keeping its table roles.
 - `Plate({ notch = true, grid = true, contained = true, as, id, labelledBy, label })` —
   the notched dark plate. Children turn dark automatically (§2).
 - `Bento({ columns: 2 | 3 })`, `Card({ as, span: 1 | 2, hover = true })`,
@@ -578,7 +593,9 @@ contracts.
 - **Scrollable regions** (the sub-nav, wide tables, the assistant transcript) have a tab
   stop and a name. A wide table scrolls in a `ScrollRegion`, which becomes a named
   region with a tab stop only while the table is wider than its column (the /evals
-  leaderboard, the /skills matrix).
+  leaderboard on tablets, the /skills matrix). Below 760px the /evals rows are cards
+  with explicit `role="table"`/`row`/`cell`, since a table re-laid with CSS loses its
+  semantics in some browsers.
 - **No horizontal document overflow** at any tested viewport.
 - **Touch targets.** axe checks the 24×24px minimum; aim for 44px on anything people tap
   (use the `lg` button) and review by hand.

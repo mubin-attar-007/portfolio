@@ -83,6 +83,9 @@
   /* ---- the mini illustrations ------------------------------------------- */
   .sheet {
     width: 100%;
+    /* A grid item's automatic minimum is its content: without this the rows
+       would not ellipsize and the sheet ran past a phone-sized cover. */
+    min-width: 0;
     padding: 2cqi 3cqi;
     border-radius: 10px;
     background: var(--color-surface);
@@ -147,5 +150,24 @@
     width: 46%;
     height: auto;
     color: var(--color-ink);
+  }
+
+  /* A phone-sized cover (one column): the art takes a little more of the
+     width and the title a little less, so a mono row keeps its words. */
+  @container (max-width: 480px) {
+    .title {
+      max-width: 38%;
+      font-size: 5.4cqi;
+    }
+    .art {
+      right: 4cqi;
+      width: 51%;
+    }
+    .sheet {
+      padding: 1.6cqi 2.4cqi;
+    }
+    .row {
+      gap: 6px;
+    }
   }
 }

@@ -70,12 +70,12 @@
 
   @media (max-width: 640px) {
     .mark {
-      width: 168px;
-      height: 168px;
-      border-radius: 46px;
+      width: 136px;
+      height: 136px;
+      border-radius: 38px;
     }
     .mark span {
-      font-size: 72px;
+      font-size: 58px;
     }
   }
 }

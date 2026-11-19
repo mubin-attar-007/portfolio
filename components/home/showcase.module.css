@@ -28,10 +28,9 @@
   background: #f1f1f3;
   box-shadow: inset 0 0 0 1px rgba(19, 19, 22, 0.03);
   pointer-events: none;
-  transition:
-    transform 500ms var(--spring-soft),
-    width 500ms var(--spring-soft),
-    height 500ms var(--spring-soft);
+  /* Transform alone (the motion law): on a phone the tabs differ in width, and
+     the pill takes the new width at once while it springs across. */
+  transition: transform 500ms var(--spring-soft);
 }
 .noAnim {
   transition: none;
@@ -370,30 +369,41 @@
     width: 28%;
   }
 }
-@media (max-width: 640px) {
+/* Tablets and phones: five products on one row. With room the tabs share it;
+   without, it scrolls sideways (`.edge-fade` fades the end that hides tabs)
+   and the selected tab is scrolled to the middle. A five-column grid wrapped
+   long names onto two lines on a tablet, and a two-column grid spent three
+   rows of the first phone screen on tabs. */
+@media (max-width: 1000px) {
   .tabs {
-    grid-template-columns: repeat(2, minmax(0, 1fr));
-  }
-  /* Five products: the last spans the row instead of sitting alone. */
-  .tab:last-child:nth-child(odd) {
-    grid-column: 1 / -1;
+    display: flex;
+    gap: 2px;
   }
   .tab {
-    justify-content: flex-start;
+    flex: 1 0 auto;
+    white-space: nowrap;
+  }
+}
+@media (max-width: 640px) {
+  .tab {
+    gap: 8px;
+    padding: 9px 12px;
     font-size: 0.875rem;
   }
+  /* 460px is the tallest card a visitor can try ("Ask about my work"); the
+     two-window captures sit a little lower and larger to fill it evenly. */
   .stage {
-    height: 500px;
+    height: 460px;
   }
   .mainRight {
-    left: 16%;
-    top: 40px;
-    width: 82%;
+    left: 13%;
+    top: 58px;
+    width: 85%;
   }
   .sideLeft {
-    left: 4%;
-    top: 170px;
-    width: 76%;
+    left: 3%;
+    top: 196px;
+    width: 80%;
   }
   .mainLeft {
     left: 4%;
@@ -547,6 +557,26 @@
 .choice input:focus-visible + span {
   outline: 2px solid var(--color-accent);
   outline-offset: 2px;
+}
+/* Phones: a product's screens stay on one pill row down to 360px, and the
+   narrowest screens give the stage the height its longest card needs. */
+@media (max-width: 640px) {
+  .pillBar {
+    padding: 12px 10px;
+  }
+  .pills {
+    flex-wrap: nowrap;
+    gap: 0;
+  }
+  .pill {
+    gap: 6px;
+    padding: 0 10px;
+  }
+}
+@media (max-width: 380px) {
+  .stage {
+    height: 500px;
+  }
 }
 /* Three cases share one row down to 360px (after the rules above, so it wins). */
 @media (max-width: 640px) {

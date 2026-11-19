@@ -279,15 +279,18 @@
   --subnav-tuck: 12px;
   --notch: 44px;
 
-  /* Section rhythm (the `Section` primitive). `head` is a page header band. */
-  --space-section-xs: clamp(2rem, 3.2vw, 2.75rem);         /* 32 → 44  */
-  --space-section-sm: clamp(3rem, 5vw, 4.5rem);            /* 48 → 72  */
-  --space-section-md: clamp(5.5rem, 8.4vw, 7.5rem);        /* 88 → 120 */
-  --space-section-md-end: clamp(5.5rem, 8.4vw, 7.5rem);
-  --space-section-lg: clamp(6rem, 8.9vw, 8rem);            /* 96 → 128 */
-  --space-section-lg-end: clamp(6.5rem, 10vw, 9rem);       /* 104 → 144 */
-  --space-head-top: clamp(4rem, 6.7vw, 6rem);              /* 64 → 96  */
-  --space-head-bottom: clamp(3rem, 4.5vw, 4rem);           /* 48 → 64  */
+  /* Section rhythm (the `Section` primitive). `head` is a page header band.
+     The floors are the phone rhythm: a 390px screen spends 64px between body
+     bands, not 88 (two bands then stacked into a blank screen on a phone).
+     From about 1050px up the vw term rules, so desktop is unchanged. */
+  --space-section-xs: clamp(1.75rem, 3.2vw, 2.75rem);      /* 28 → 44  */
+  --space-section-sm: clamp(2.5rem, 5vw, 4.5rem);          /* 40 → 72  */
+  --space-section-md: clamp(4rem, 8.4vw, 7.5rem);          /* 64 → 120 */
+  --space-section-md-end: clamp(4rem, 8.4vw, 7.5rem);
+  --space-section-lg: clamp(4.5rem, 8.9vw, 8rem);          /* 72 → 128 */
+  --space-section-lg-end: clamp(5rem, 10vw, 9rem);         /* 80 → 144 */
+  --space-head-top: clamp(3rem, 6.7vw, 6rem);              /* 48 → 96  */
+  --space-head-bottom: clamp(2.5rem, 4.5vw, 4rem);         /* 40 → 64  */
 
   /* ---- devices -------------------------------------------------------------- */
   --stripe-width: 3px;     /* the accent rule on callouts and pull quotes */
@@ -315,6 +318,9 @@
 @media (max-width: 640px) {
   :root {
     --notch: 26px;
+    /* Small mono and caps labels read at 12px on a phone held at arm's
+       length; 11px is a desktop size. */
+    --text-label: 0.75rem;
   }
 }
 

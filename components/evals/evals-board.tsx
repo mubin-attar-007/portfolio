@@ -11,6 +11,8 @@ import styles from "./evals.module.css";
 type StatusFilter = (typeof evalsPage.board.statuses)[number]["value"];
 const ALL = "all";
 const { board } = evalsPage;
+/** The table's columns, in order (their names are `board.columns`). */
+const COLUMNS = ["rank", "project", "metric", "result", "scope", "method", "date", "status"] as const;
 
 function matchesStatus(row: BoardRow, status: StatusFilter): boolean {
   if (status === "all") return true;
@@ -89,23 +91,20 @@ export function EvalsBoard({ rows, projects }: { rows: BoardRow[]; projects: Pro
       </div>
 
       <ScrollRegion label={board.scroller} className={styles.scroller}>
-        <table className={styles.table}>
+        {/* Explicit roles keep the table a table to assistive technology on
+            phones, where its rows are laid out as cards (evals.module.css). */}
+        <table role="table" className={styles.table}>
           <caption className="sr-only">{board.caption}</caption>
-          <thead>
-            <tr>
-              <th scope="col" className={styles.rankCol}>
-                {board.columns.rank}
-              </th>
-              <th scope="col">{board.columns.project}</th>
-              <th scope="col">{board.columns.metric}</th>
-              <th scope="col">{board.columns.result}</th>
-              <th scope="col">{board.columns.scope}</th>
-              <th scope="col">{board.columns.method}</th>
-              <th scope="col">{board.columns.date}</th>
-              <th scope="col">{board.columns.status}</th>
+          <thead role="rowgroup">
+            <tr role="row">
+              {COLUMNS.map((key) => (
+                <th key={key} scope="col" role="columnheader" className={cx(key === "rank" && styles.rankCol)}>
+                  {board.columns[key]}
+                </th>
+              ))}
             </tr>
           </thead>
-          <tbody>
+          <tbody role="rowgroup">
             {shown.map((row, i) => (
               <BoardRowView key={row.anchor} row={row} rank={i + 1} />
             ))}
@@ -119,23 +118,27 @@ export function EvalsBoard({ rows, projects }: { rows: BoardRow[]; projects: Pro
 
 function BoardRowView({ row, rank }: { row: BoardRow; rank: number }) {
   return (
-    <tr className={cx(row.retired && styles.retiredRow)}>
-      <td className={styles.rank}>{String(rank).padStart(2, "0")}</td>
-      <th scope="row" className={styles.projectCell}>
+    <tr role="row" className={cx(row.retired && styles.retiredRow)}>
+      <td role="cell" className={styles.rank}>
+        {String(rank).padStart(2, "0")}
+      </td>
+      <th scope="row" role="rowheader" className={styles.projectCell}>
         <span className={styles.tile} aria-hidden="true">
           {row.system.charAt(0)}
         </span>
         <span className={styles.system}>{row.system}</span>
       </th>
-      <td className={styles.metric}>
+      <td role="cell" className={styles.metric}>
         {row.metric}
         {row.retiredReason ? <span className={styles.reason}>{row.retiredReason}</span> : null}
       </td>
-      <td>
+      <td role="cell" className={styles.resultCell}>
         <span className={cx(styles.score, styles[row.tone])}>{row.result}</span>
       </td>
-      <td className={styles.scope}>{row.benchmark}</td>
-      <td>
+      <td role="cell" className={styles.scope} data-label={board.columns.scope}>
+        {row.benchmark}
+      </td>
+      <td role="cell" className={styles.methodCell}>
         <a
           href={`#${row.anchor}`}
           className={styles.methodLink}
@@ -144,10 +147,10 @@ function BoardRowView({ row, rank }: { row: BoardRow; rank: number }) {
           {board.method}
         </a>
       </td>
-      <td className={styles.date}>
+      <td role="cell" className={styles.date}>
         {row.date ? <time dateTime={row.date}>{row.dateLabel}</time> : "—"}
       </td>
-      <td>
+      <td role="cell" className={styles.statusCell}>
         {row.retired ? (
           <StatusPill status="retired" />
         ) : (

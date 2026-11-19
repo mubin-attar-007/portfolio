@@ -2,6 +2,7 @@
 
 import { useEffect, useRef, useState, type ReactNode } from "react";
 import { cx } from "@/components/ui/cx";
+import { useEdgeFade } from "@/lib/use-edge-fade";
 
 /**
  * ScrollRegion — the sideways scroller around content wider than its column (a
@@ -9,7 +10,8 @@ import { cx } from "@/components/ui/cx";
  * is a named region with a tab stop, so the keyboard can reach and scroll it
  * (design-system.md §8), and it carries `data-overflows` for styles that only
  * make sense while it scrolls (a pinned column's edge). While the content fits
- * it is neither, and costs no extra Tab.
+ * it is neither, and costs no extra Tab. It also marks an end that hides
+ * columns (`data-fade-end`, `useEdgeFade`) for a "more this way" hint.
  *
  * Only the measurement runs on the client: server-rendered children pass
  * straight through.
@@ -30,6 +32,7 @@ export function ScrollRegion({
 }) {
   const ref = useRef<HTMLDivElement>(null);
   const [overflows, setOverflows] = useState(false);
+  useEdgeFade(ref);
 
   useEffect(() => {
     const el = ref.current;

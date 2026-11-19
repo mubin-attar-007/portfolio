@@ -210,6 +210,13 @@
   .pageChip:hover {
     box-shadow: inset 0 0 0 1px var(--color-plate-border-strong);
   }
+  /* A touch target of at least 24px on a phone (WCAG 2.5.8). */
+  @media (max-width: 640px) {
+    .pageChip {
+      padding: 4px 9px;
+      font-size: var(--text-label);
+    }
+  }
 
   /* What the AI reads: six cells joined by dashed hairlines. */
   .reads {

@@ -91,6 +91,27 @@
       grid-column: 1 / -1;
     }
   }
+  /* Touch: each link is a 36px row (the gap moves into the link), so a thumb
+     always lands on one, and the footer starts closer to the page's end. */
+  @media (max-width: 1000px) {
+    .footer {
+      padding-top: 56px;
+    }
+    .list {
+      gap: 0;
+    }
+    .link {
+      display: inline-flex;
+      align-items: center;
+      min-height: 36px;
+    }
+    .heading {
+      margin-bottom: 8px;
+    }
+    .base {
+      margin-top: 40px;
+    }
+  }
   @media (max-width: 640px) {
     .base {
       flex-direction: column;
