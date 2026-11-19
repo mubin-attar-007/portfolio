@@ -13,7 +13,7 @@ export const contactPage = {
   header: {
     kicker: "Contact",
     title: "Let's talk about what you're building",
-    lede: "Hiring for an Applied AI Engineer role, or need an AI system shipped inside a customer's rules? Share the problem, the team and what the system must do.",
+    lede: "Hiring for an Applied AI Engineer role, or need an AI system shipped inside your rules? Share the problem, the team and what the system must do.",
   },
   label: "Ways to reach me",
   hiring: {
@@ -25,6 +25,13 @@ export const contactPage = {
     title: "Freelance projects",
     /** The sentence around the inline address: before it, then after it. */
     body: ["Fixed-scope AI work. Book a 30-minute call, or email", "directly."],
+    action: { label: "Book a call", href: INTEGRATIONS.calUrl },
+  },
+  /** Where every "Request a walkthrough" button lands (`#walkthrough`). */
+  walkthrough: {
+    id: "walkthrough",
+    title: "Product walkthrough",
+    body: "The three products' code stays private. I'll walk you through any of them on a call, on dummy data.",
     action: { label: "Book a call", href: INTEGRATIONS.calUrl },
   },
   assistant: {

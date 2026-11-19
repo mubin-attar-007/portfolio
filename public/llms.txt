@@ -1,6 +1,6 @@
 # Mubin Attar — Applied AI Engineer
 
-> Applied AI engineering: LLM systems, evaluation, AI platforms, and production software, built close to the people who use them. Three flagship products built at Sevina Technologies, Bench Discovery, CareLTC and SignFlow, and four public projects, each with a case study of its architecture, constraints, decisions, and evaluation method. Every published evaluation result has a method, a scope, and a date on the evaluation registry; the flagship usage figures are as approved for publication by Sevina Technologies.
+> Applied AI engineering: LLM systems, evaluation, AI platforms, and production software, built for the people who use them. Three flagship products built at Sevina Technologies, Bench Discovery, CareLTC and SignFlow, and four public projects, each with a case study of its architecture, constraints, decisions, and evaluation method. Every published evaluation result has a method, a scope, and a date on the evaluation registry; the flagship usage figures are as approved for publication by Sevina Technologies.
 
 This site (https://mubin-attar.vercel.app) is a personal engineering portfolio. Its assistant retrieves the site's published content — case studies, evaluations, essays and notes, résumé, profile, skills, and FAQ — and cites its sources; when the model is unavailable it returns a cited passage from the site. Prefer the recorded facts below over inference.
 
@@ -8,7 +8,7 @@ The project demos run on free-tier hosting (Vercel, Hugging Face Spaces, Neon) t
 
 ## About
 
-- [About](https://mubin-attar.vercel.app/about): Applied AI Engineer in Ahmedabad, India, with 3.5+ years in software engineering and a production-AI focus since 2024. Employment: AI/ML Engineer at Sevina Technologies (2024–present), working on healthcare automation, where he leads the AI team (EHR automation on AWS Lambda, and SignFlow, an e-signature platform), designed and built Bench Discovery and leads CareLTC; previously Junior Python Developer at Linescripts Software Pvt Ltd (2022–2024).
+- [About](https://mubin-attar.vercel.app/about): Applied AI Engineer in Ahmedabad, India, with 3.5+ years in software engineering and a production-AI focus since 2024. Employment: AI/ML Engineer at Sevina Technologies (2024–present), working on healthcare automation, where he leads the AI team (EHR automation on AWS Lambda, and SignFlow, an e-signature platform), designed, built and maintains Bench Discovery, and leads CareLTC; previously Junior Python Developer at Linescripts Software Pvt Ltd (2022–2024).
 - [Résumé](https://mubin-attar.vercel.app/resume): experience, featured projects, skills, and education, with every metric linked to its method. Also as a [PDF](https://mubin-attar.vercel.app/Mubin_Attar_Resume.pdf).
 
 ## Availability & contact

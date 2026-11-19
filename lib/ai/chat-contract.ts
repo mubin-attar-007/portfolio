@@ -13,6 +13,12 @@ export const MAX_MESSAGE_CHARS = 1000;
 
 /** Max turns of history the route keeps (bounds prompt size and cost). */
 export const MAX_HISTORY_TURNS = 8;
+/**
+ * The largest request body the route parses. An honest body is at most
+ * MAX_HISTORY_TURNS short turns (a few KB); anything far past that is refused
+ * with 413 before it is parsed, so a huge body cannot buy CPU time.
+ */
+export const MAX_REQUEST_BYTES = 64 * 1024;
 
 /**
  * Max characters kept from each assistant turn a client sends back. Those turns

@@ -195,7 +195,7 @@ export const resume = {
       place: "Ahmedabad",
       points: [
         "Designed, built and maintain Bench Discovery for legal document review: a multi-tenant web platform on AWS (Next.js, FastAPI, PostgreSQL), and a Windows app (C#, .NET, WPF) that triages and redacts on the PC.",
-        "Built the web platform's RAG assistant (Claude, pgvector): grounded answers cite the page, row or paragraph and every quote is verified; a person confirms each action; a spend cap gates every call.",
+        "Built the web platform's RAG assistant (Claude, pgvector): grounded answers cite the page, row or paragraph, a sentence without a source is marked, AI findings stay labelled, and a spend cap gates every call.",
         `Lead engineer for CareLTC (${USAGE.careltc.short}), NFC room rounds for long-term care: iOS and Android apps (React Native), a NestJS API on AWS and an admin portal, working directly with care staff and admins.`,
         "Made check-ins require a physical NFC tap, built the alerting pipeline (grouped push, reminders, escalation) and shipped App Store and Google Play releases, keeping older builds working.",
         `Lead the AI team: EHR automation (45 Playwright tasks on AWS Lambda; I built its Word clinical reports) and SignFlow (${USAGE.signflow.sentence}), e-signatures with PKI-signed, timestamped PDFs and encrypted patient data.`,

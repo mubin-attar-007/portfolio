@@ -48,7 +48,7 @@ async function withPage(opts, fn) {
 
 // ---------------------------------------------------------------- routes
 const ROUTES = [
-  { path: "/", must: /I ship AI and software inside the customer.s rules/i, name: "homepage" },
+  { path: "/", must: /I ship AI and software that stays inside the rules/i, name: "homepage" },
   { path: "/work", must: /Work/i, name: "work" },
   { path: "/work/dbwhisper", must: /DBWhisper/i, name: "DBWhisper case study" },
   { path: "/evals", must: /eval/i, name: "evals" },

@@ -10,6 +10,14 @@ import type { Flagship, Screenshot } from "./types";
  * the apps on 17 Nov 2026, and the capture manifest. Nothing from the
  * dossier's owner-only appendix is used, and no security incident is told.
  *
+ * Desktop screens: the owner's captures of the running 5.20 app (19 Nov 2026,
+ * replacing the 17 Nov set). They show each module before a run, so their
+ * captions say only what is on screen. The Settings screen is left out: it
+ * shows the machine's licence support code and the customer's keyword list.
+ * The web app's claims follow its 12 Nov 2026 status: Ask Bench's current
+ * engine maps citations onto the Matter's sources (the old quote checker is a
+ * rollback switch), and the Redaction Center is hidden, so neither is claimed.
+ *
  * Claims discipline: the desktop app's only network use is the licence check
  * (never "fully offline"); confidence ranks, it is not a probability; answers
  * about a whole Matter cite their source (not every answer is cited); no
@@ -19,31 +27,31 @@ import type { Flagship, Screenshot } from "./types";
 const DIR = "/showcase/bench-discovery";
 
 const DESKTOP = {
-  runComplete: {
-    src: `${DIR}/desk-run-complete.webp`,
-    width: 1440,
-    height: 900,
-    alt: "Bench Discovery's Classify by Content screen after a run: 37 of 37 documents processed in 6 seconds, under the notice that documents stay on this computer.",
-    title: "A run, on the PC",
-    proves: "37 dummy documents classified on the PC in 6 seconds. The banner states the rule: every file is read here, none is uploaded, and only the licence check goes over the network.",
+  classifyContent: {
+    src: `${DIR}/desk-classify-content.webp`,
+    width: 1448,
+    height: 1086,
+    alt: "Bench Discovery's Classify by Content screen: a drop zone for a folder, the classification rules, the notice that documents stay on this computer, and the last run of four dummy documents.",
+    title: "Documents stay on this computer",
+    proves: "The screen states the privacy design before any run: every document is read on this computer, and the only thing sent over the network is the licence check. The last run, four dummy documents, is listed with its outcome.",
     frame: "window",
   },
-  results: {
-    src: `${DIR}/desk-results.webp`,
-    width: 1440,
-    height: 900,
-    alt: "The results grid: each dummy file with its category (Error, Other or Needs Review), confidence, pages read and keyword findings.",
-    title: "Every flag explained",
-    proves: "Each file lands in Needs Review, Other or Error with its confidence, the pages read and the keyword findings behind it. Confidence ranks the documents; it is not a probability.",
+  classifyExtension: {
+    src: `${DIR}/desk-classify-extension.webp`,
+    width: 1448,
+    height: 1086,
+    alt: "Classify by Extension: choose the folders, then the file types by extension or by family (email, documents, spreadsheets, presentations, text and data, images, audio and video).",
+    title: "Any file type, read on the PC",
+    proves: "Email, spreadsheets, text, recordings: pick the types by extension or by family, and the files that mention your keywords are flagged. A file not listed is still read by looking at its bytes.",
     frame: "window",
   },
-  verifiedRedaction: {
-    src: `${DIR}/desk-verified-redaction.webp`,
-    width: 1440,
-    height: 900,
-    alt: "File Redaction results for three dummy forms: two Redacted and Verified, one Redacted with fields to check, each with its findings and the verification result Checked and passed.",
-    title: "Redaction, then verification",
-    proves: "Three dummy forms redacted and then checked: two Redacted and Verified, one with fields to check, every copy checked and passed. Anything uncertain is held for review.",
+  redaction: {
+    src: `${DIR}/desk-redaction.webp`,
+    width: 1448,
+    height: 1086,
+    alt: "File Redaction: source and output folders, the file types to open, and the active rule set's five fields (date of birth, diagnosis code, Medicare identifier, procedure code, Social Security number), each redacted and held for review.",
+    title: "Redaction with the rules in view",
+    proves: "The rule set's fields are listed before a run, and every redacted copy is verified after it. Originals are never modified: copies go to a separate folder.",
     frame: "window",
   },
   redactedCopy: {
@@ -57,20 +65,29 @@ const DESKTOP = {
   },
   fileSearch: {
     src: `${DIR}/desk-file-search.webp`,
-    width: 1440,
-    height: 900,
-    alt: "File Search: a folder of 24 dummy files indexed by name and path, and the matches for the query 'invoice'.",
+    width: 1484,
+    height: 1060,
+    alt: "File Search: choose a folder and index it, with the notice that the index holds file names and paths, not contents.",
     title: "Names, never contents",
-    proves: "A local index of file names and paths only: 24 dummy files indexed and 3 matches for 'invoice'. No file is opened to search it.",
+    proves: "A local index of file names and paths only, for a large folder tree. No file is opened, read or uploaded to search it.",
     frame: "window",
   },
-  classifySetup: {
-    src: `${DIR}/desk-classify-setup.webp`,
-    width: 1600,
-    height: 1135,
-    alt: "Classify by Content before a run: a drop zone for a folder, the classification rules, and the notice that documents stay on this computer.",
-    title: "Documents stay on this computer",
-    proves: "The setup screen states the privacy design before any run: every document is read on this computer, and the only thing sent over the network is the licence check.",
+  fileTransfer: {
+    src: `${DIR}/desk-file-transfer.webp`,
+    width: 1448,
+    height: 1086,
+    alt: "File Transfer: the folder to copy from and the folder to copy to, the rule for a file that already exists, and the options to include subfolders and verify every copy.",
+    title: "Copies, each one verified",
+    proves: "Files are copied on the PC and every copy is verified. The source is never moved, changed or deleted, and a preview shows what a copy would do before it writes anything.",
+    frame: "window",
+  },
+  speechToText: {
+    src: `${DIR}/desk-speech-to-text.webp`,
+    width: 1448,
+    height: 1086,
+    alt: "Speech to Text: a folder of recordings, timestamped transcripts, and the installed model, an English-only model running on this computer.",
+    title: "Transcripts without uploading audio",
+    proves: "Recordings are transcribed by a model running on the PC, and no audio leaves it. The screen says what the installed model can and cannot do: English only, no speaker labels in this build.",
     frame: "window",
   },
 } satisfies Record<string, Screenshot>;
@@ -204,8 +221,8 @@ export const benchDiscovery: Flagship = {
       icon: "cloud",
       items: [
         "Matters with documents in every common format, a reading status that says what was not read, search and a review queue.",
-        "Ask Bench: retrieval over the Matter, answers that cite the page, row or paragraph, and every quotation checked against its excerpt.",
-        "Prepared actions: the model proposes a redaction or a mask, and a person confirms it on a card naming every document.",
+        "Ask Bench: hybrid retrieval over the Matter, answers that cite the page, row or paragraph, and a reference that cannot be mapped to a source left as plain text, never a link.",
+        "Findings: facts saved by hand or from an answer, labelled AI-generated, on a timeline and exported as CSV with the review decisions.",
         "Sessions, tenancy enforced in PostgreSQL row-level security, and AI spend admitted against a cap before each call.",
         "The licensing authority the desktop app trusts, signing through AWS KMS.",
         "Hosting on AWS: Amazon ECS on AWS Fargate, Amazon RDS for PostgreSQL and Amazon S3.",
@@ -284,7 +301,7 @@ export const benchDiscovery: Flagship = {
     },
     {
       title: "Ask Bench answers with the page it cites",
-      body: "Retrieval runs over the Matter's own evidence, embedded by a private encoder inside the platform. The answer cites the page, row or paragraph, and each quotation is checked against its excerpt.",
+      body: "Retrieval fuses a word index with dense vectors from a private encoder inside the platform, and the model can search the Matter again with read-only tools. Citations are mapped onto the Matter's own sources: one that cannot be mapped stays plain text, and a sentence without a source is marked.",
       focus: { zone: 1, node: 1 },
     },
     {
@@ -293,8 +310,8 @@ export const benchDiscovery: Flagship = {
       focus: { zone: 2, node: 0, crossing: 1 },
     },
     {
-      title: "The model proposes; a person confirms",
-      body: "A suggested redaction or mask is recorded as an intention only. A person confirms it on a card naming every document, and the server re-reads its own record before a worker runs it.",
+      title: "A person stays in charge of the findings",
+      body: "An answer saved as a finding is labelled AI-generated, and marked edited once a person rewrites it. A Matter can export only the findings a person reviewed.",
       focus: { zone: 1, node: 2 },
     },
   ],
@@ -457,7 +474,7 @@ export const benchDiscovery: Flagship = {
     {
       id: "cited-answers",
       title: "Answers that cite the page",
-      body: "Ask Bench answers from the Matter's evidence and cites the page, row or paragraph. Each quotation is checked against the excerpt it cites, with one bounded repair, and when nothing supports an answer it says so.",
+      body: "Ask Bench answers from the Matter's evidence and cites the page, row or paragraph. A reference that cannot be mapped to a source stays plain text, never a link, and a sentence without a source is marked.",
       art: {
         kind: "reply",
         question: "Who was told about the fall?",
@@ -467,10 +484,10 @@ export const benchDiscovery: Flagship = {
       wide: true,
     },
     {
-      id: "confirmed-actions",
-      title: "The model proposes, a person decides",
-      body: "A prepared action records an intention only. A person confirms it, and the server re-reads its own record before a worker runs it.",
-      art: { kind: "flow", nodes: ["Proposal", "Person confirms", "Worker"], hot: 1 },
+      id: "labelled-findings",
+      title: "AI findings stay labelled",
+      body: "An answer saved as a finding is labelled AI-generated until a person rewrites it, and a Matter can export only the findings a person reviewed.",
+      art: { kind: "flow", nodes: ["Answer", "AI-generated finding", "Person reviews"], hot: 1 },
     },
     {
       id: "tenancy",
@@ -721,8 +738,8 @@ public void RaiseFloorTo(DateTime utc)
   ],
   hero: {
     primary: WEB.review,
-    secondary: DESKTOP.runComplete,
-    caption: "The web platform's review queue and the desktop app after a run, both on dummy data.",
+    secondary: DESKTOP.classifyContent,
+    caption: "The web platform's review queue, and the desktop app's Classify by Content screen, both on dummy data.",
   },
   gallery: [
     {
@@ -734,12 +751,13 @@ public void RaiseFloorTo(DateTime utc)
       id: "desktop",
       label: "Desktop",
       shots: [
-        DESKTOP.runComplete,
-        DESKTOP.results,
-        DESKTOP.verifiedRedaction,
+        DESKTOP.classifyContent,
+        DESKTOP.classifyExtension,
+        DESKTOP.redaction,
         DESKTOP.redactedCopy,
         DESKTOP.fileSearch,
-        DESKTOP.classifySetup,
+        DESKTOP.fileTransfer,
+        DESKTOP.speechToText,
       ],
     },
   ],

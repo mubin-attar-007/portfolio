@@ -23,14 +23,14 @@ export const hirePage = {
       "Open to Applied AI Engineer roles and freelance AI projects. How I work, and the roles I'm open to.",
   },
   hero: {
-    title: "I turn customer problems into running systems",
+    title: "I turn users' problems into running systems",
     accent: "inside their rules.",
     cta: { label: "See roles I'm open to", href: "#roles" },
   },
   letter: {
     title: "A note to hiring teams",
     intro:
-      "Most AI projects stall between the demo and the customer's real environment. That gap is where I've worked since 2024, and it's mostly made of questions like these:",
+      "Most AI projects stall between the demo and the place people actually use them. Since 2024 I've built products that care staff and legal teams use every day, and the hard part is questions like these:",
     qa: [
       { q: "Records can't leave the PC?", a: "Tests over the compiled code prove they don't." },
       { q: "Staff share phones on the floor?", a: "Floor-phone accounts, and lock screens that show room numbers only." },
@@ -47,7 +47,7 @@ export const hirePage = {
   },
   glance: {
     label: "At a glance",
-    title: "Production work, in the field and in public",
+    title: "Production work, in use and in public",
     body: `${FLAGSHIP_NAMES}, three products from my work at ${EMPLOYER}, are in use. Four public AI systems come with source, recordings and the method behind every result.`,
     stats: [
       { label: "In software engineering", value: "3.5+ yrs", source: { label: "Résumé", href: "/resume" } },
@@ -61,7 +61,7 @@ export const hirePage = {
     title: "Constraints written down, releases gated, and evidence you can check.",
     cta: { label: "Start a conversation", href: "/contact" },
     items: [
-      { icon: "route", title: "On site when it matters", body: "Comfortable travelling to customer sites. Remote, or hybrid and on-site in India." },
+      { icon: "route", title: "Open to on-site work", body: "Comfortable travelling to customer sites. Remote, or hybrid and on-site in India." },
       { icon: "list", title: "Constraints first", body: "Before I build, I write down what the system must never do and how each rule is checked." },
       { icon: "shield", title: "Gated releases", body: "Desktop releases pass the full test suite before they ship; mobile builds pass store review." },
       { icon: "cpu", title: "AI agents, directed", body: "I set the architecture, gates and invariants, review every change and own the release." },

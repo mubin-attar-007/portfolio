@@ -42,6 +42,12 @@
 .productSide:is([data-kind="window"], [data-kind="browser"]) {
   width: 46%;
 }
+/* The primary capture leads: a second window sits behind it (Bench
+   Discovery's web platform before its desktop app). A phone stays in front,
+   being far smaller than the portal it pairs with. */
+.productMain:has(+ .productSide:is([data-kind="window"], [data-kind="browser"])) {
+  z-index: 1;
+}
 .productSide[data-kind="phone"] {
   top: 44px;
   right: 10%;

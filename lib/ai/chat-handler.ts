@@ -38,6 +38,7 @@
 import { GEMINI_MODEL } from "@/lib/env";
 import { chooseActions } from "./actions";
 import type { ActionKind, AnswerMode, AnswerNote, AssistantAction, CitationLink, StreamEvent } from "./chat-contract";
+import { MAX_REQUEST_BYTES } from "./chat-contract";
 import { citedPages, isSitePath } from "./citation-links";
 import { HIRING_FACTS, HIRING_PASSAGE } from "./corpus";
 import { chooseFollowUps, topicOf, type FollowUpTopic } from "./follow-ups";
@@ -343,9 +344,14 @@ export async function handleChat(request: Request, options: HandlerOptions = {})
       });
     }
 
+    // Refused before parsing: the declared size first, then the bytes read
+    // (a chunked body declares none).
+    if (Number(request.headers.get("content-length") ?? 0) > MAX_REQUEST_BYTES) return rejection(413, "too_large");
     let input: unknown;
     try {
-      input = await request.json();
+      const raw = await request.text();
+      if (raw.length > MAX_REQUEST_BYTES) return rejection(413, "too_large");
+      input = JSON.parse(raw);
     } catch {
       return rejection(400, "bad_request");
     }

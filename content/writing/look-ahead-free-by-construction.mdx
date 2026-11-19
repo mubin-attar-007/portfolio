@@ -14,7 +14,7 @@ You can try to test for look-ahead after the fact. It's better to make it struct
 
 In TradePulse the engine is event-driven and the rule is mechanical: a decision made on bar `i` can only be filled at the open of bar `i+1`. The strategy never sees a bar it wouldn't have had. This isn't a convention you have to remember — it's how the event loop is wired, so a strategy *can't* accidentally peek even if the author wants to.
 
-To keep it honest as the code changes, there's a canary: a test that deliberately constructs a strategy which would profit only from look-ahead, and asserts it does *not* profit. If someone later refactors the fill logic and reintroduces the bug, that test goes red and the build fails. The property is enforced, not documented.
+To keep it honest as the code changes, there's a canary: a test that multiplies every *future* bar by three and asserts the equity curve up to the cut is byte-identical. A strategy that could see ahead would change it. If someone later refactors the fill logic and reintroduces the bug, that test goes red and the build fails. The property is enforced, not documented.
 
 ## Costs are not optional
 

@@ -1,4 +1,4 @@
-import { Code, FileText, Sparkles } from "lucide-react";
+import { Code, FileText, MonitorPlay, Sparkles } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { ArrowOut, CaretLink } from "@/components/ui/caret-link";
 import { DottedGuides, DottedRule } from "@/components/ui/dotted-guides";
@@ -17,7 +17,7 @@ const ICON_SIZE = 16;
  * A11y: a labelled section; h2 per route, h3 per sub-card.
  */
 export function ContactCard() {
-  const { label, hiring, freelance, assistant, resume, source, foot } = contactPage;
+  const { label, hiring, freelance, walkthrough, assistant, resume, source, foot } = contactPage;
   return (
     <section className={styles.stage} aria-label={label}>
       <Container className={styles.grid}>
@@ -48,6 +48,16 @@ export function ContactCard() {
             </div>
           </div>
           <ul className={styles.subcards}>
+            <li id={walkthrough.id} className={styles.subcard}>
+              <h3>
+                <MonitorPlay size={ICON_SIZE} aria-hidden="true" />
+                {walkthrough.title}
+              </h3>
+              <p>{walkthrough.body}</p>
+              <CaretLink href={walkthrough.action.href} newTab>
+                {walkthrough.action.label}
+              </CaretLink>
+            </li>
             <li className={styles.subcard}>
               <h3>
                 <Sparkles size={ICON_SIZE} aria-hidden="true" />
