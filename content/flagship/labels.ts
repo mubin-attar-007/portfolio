@@ -6,7 +6,7 @@
 export const FLAGSHIP_LABELS = {
   kicker: "Flagship case study",
   pills: { employer: "Built at Sevina Technologies" },
-  cta: { walkthrough: "Request a walkthrough", watch: "Watch the demo", href: "/contact" },
+  cta: { walkthrough: "Request a walkthrough", watch: "Watch the recording", href: "/contact#walkthrough" },
   /** The hero's two labelled lines: the owner's credit, then how he builds with AI agents. */
   credit: { role: "My role", agents: "How I build" },
   figures: {

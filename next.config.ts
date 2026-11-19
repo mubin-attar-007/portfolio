@@ -3,7 +3,6 @@ import type { NextConfig } from "next";
 const isDev = process.env.NODE_ENV === "development";
 
 // Live backends this site talks to from the browser.
-const DBWHISPER = "https://heisenbergblue-dbwhisper.hf.space";
 
 // Content-Security-Policy. No nonces — a nonce must be minted per request, which
 // would opt every route out of static rendering, so 'unsafe-inline' is the price
@@ -12,16 +11,15 @@ const DBWHISPER = "https://heisenbergblue-dbwhisper.hf.space";
 //               there is no pre-paint theme script any more).
 //   style-src:  React `style={{…}}` attributes — hero animation delays and the
 //               computed SVG geometry in components/diagrams/system-diagram.tsx.
-// connect-src: 'self' covers the site's own fetches (including /api/chat). The
-// dbwhisper backend origin predates the redesign; no page calls it now, so it
-// can go the next time this policy changes.
+// connect-src: 'self' covers the site's own fetches (including /api/chat); no
+// page calls another origin.
 const csp = [
   "default-src 'self'",
   `script-src 'self' 'unsafe-inline'${isDev ? " 'unsafe-eval'" : ""}`,
   "style-src 'self' 'unsafe-inline'",
   "img-src 'self' blob: data:",
   "font-src 'self' data:",
-  `connect-src 'self' ${DBWHISPER}${isDev ? " ws:" : ""}`,
+  `connect-src 'self'${isDev ? " ws:" : ""}`,
   "object-src 'none'",
   "base-uri 'self'",
   "form-action 'self' https://buttondown.com",
@@ -40,7 +38,7 @@ const securityHeaders = [
   { key: "X-Frame-Options", value: "DENY" },
   { key: "Referrer-Policy", value: "strict-origin-when-cross-origin" },
   { key: "Cross-Origin-Resource-Policy", value: "same-origin" },
-  { key: "Permissions-Policy", value: "camera=(), microphone=(), geolocation=()" },
+  { key: "Permissions-Policy", value: "camera=(), microphone=(), geolocation=(), payment=(), usb=(), browsing-topics=()" },
   ...(
     process.env.VERCEL
       ? [{ key: "Strict-Transport-Security", value: "max-age=63072000; includeSubDomains; preload" }]

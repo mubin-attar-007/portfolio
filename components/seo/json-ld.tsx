@@ -5,11 +5,17 @@ type ProjectLinkMap = {
   repo?: string;
 };
 
+/**
+ * JSON for an inline <script>: `<` is escaped, so no string in the graph (a
+ * title from frontmatter, say) can close the script element early.
+ */
+function inlineJson(data: unknown): string {
+  return JSON.stringify(data).replace(/</g, "\u003c");
+}
+
 /** Serialize a JSON-LD graph into an inert <script>. */
 function LdScript({ data }: { data: unknown }) {
-  return (
-    <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: JSON.stringify(data) }} />
-  );
+  return <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: inlineJson(data) }} />;
 }
 
 function yearFromTimeline(timeline: string): string | undefined {
@@ -186,7 +192,7 @@ export function JsonLd() {
     <script
       type="application/ld+json"
       // Structured data is inert; JSON is serialized, not user input.
-      dangerouslySetInnerHTML={{ __html: JSON.stringify(graph) }}
+      dangerouslySetInnerHTML={{ __html: inlineJson(graph) }}
     />
   );
 }

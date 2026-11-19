@@ -99,7 +99,7 @@ export const evaluatePage = {
       "Ask this site's own assistant instead, and your question is used to write one answer. This site doesn't store it.",
       "The assistant never guesses at what the site doesn't publish, like a salary: it tells you to ask me directly.",
     ],
-    more: { label: "How the assistant works", href: "/privacy" },
+    more: { label: "How the assistant works", href: "/privacy#assistant" },
   },
   cta: {
     title: "Rather ask here?",

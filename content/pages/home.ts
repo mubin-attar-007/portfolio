@@ -43,7 +43,7 @@ export const AGENT_PROMPT = {
 } as const;
 
 export const HERO = {
-  title: "I ship AI and software inside the customer's rules",
+  title: "I ship AI and software that stays inside the rules",
   sub: `Applied AI Engineer. At ${EMPLOYER} I built Bench Discovery (${USAGE["bench-discovery"].sentence}) and lead CareLTC (${USAGE.careltc.short}).`,
 } as const;
 
@@ -73,20 +73,20 @@ export const SHOWCASE = {
       {
         id: "review",
         label: "Review",
-        caption: "The web platform's review queue, and the desktop app after a run",
-        captures: ["web-review", "desk-run-complete"],
+        caption: "The web platform's review queue, in front of a search across a Matter",
+        captures: ["web-search", "web-review"],
       },
       {
         id: "answers",
         label: "Citations",
-        caption: "An answer that cites the page it came from, and a Matter's documents with what was read",
-        captures: ["web-ask-citations", "web-documents"],
+        caption: "An answer that cites the page it came from, in front of a Matter's documents with what was read",
+        captures: ["web-documents", "web-ask-citations"],
       },
       {
         id: "desktop",
         label: "Desktop app",
-        caption: "The desktop app's results with every flag explained, and redactions checked after they were written",
-        captures: ["desk-results", "desk-verified-redaction"],
+        caption: "The desktop app's redaction rules in view, in front of Classify by Content",
+        captures: ["desk-classify-content", "desk-redaction"],
       },
     ],
     careltc: [
@@ -270,7 +270,7 @@ export const FACTS = {
       { value: "3 products", note: `in use, built at ${EMPLOYER}` },
       { value: `${USAGE.signflow.figure} users`, note: "SignFlow, in-house e-signatures" },
       { value: `${BD_WEB_TESTS.value} tests`, note: "Bench Discovery's web platform, last full run" },
-      { value: "PAdES B-T", note: "SignFlow's sealed PDFs, checked with pyHanko" },
+      { value: "PAdES B-T", note: "SignFlow's sealed PDFs, checked with pyHanko on test runs" },
       { value: DBWHISPER_EVIDENCE.policy.ratio.replace("/", " of "), note: "unsafe SQL runs denied by DBWhisper's policy" },
     ],
   ],
@@ -280,7 +280,7 @@ export const FLAGSHIP = {
   kicker: "Flagship work",
   title: `Three products in use, built at ${EMPLOYER}`,
   lead: "The real apps, shown on dummy data. Each case study covers the problem, the architecture on AWS, the code and the decisions behind it.",
-  more: { label: "Request a walkthrough", href: "/contact" },
+  more: { label: "Request a walkthrough", href: "/contact#walkthrough" },
   caseStudy: "Read the case study",
   inUse: "In use",
   cards: {
@@ -456,7 +456,7 @@ export const AGENT = {
     privacy: {
       title: "Private by default",
       body: "Your question is used to write one answer. This site doesn't store it.",
-      action: { label: "How it works", href: "/privacy" },
+      action: { label: "How it works", href: "/privacy#assistant" },
     },
   },
 } as const;
@@ -464,7 +464,7 @@ export const AGENT = {
 export const HOW = {
   kicker: "How I work",
   title: "Most of a deployment happens away from the editor",
-  lead: "How I take a system from a customer's problem to something their staff rely on.",
+  lead: "How I take a product from its users' problem to something they rely on.",
   steps: [
     { title: "Start from the operator's day", body: "Who uses it, on what device, in which shift, and what a mistake costs.", link: { label: "CareLTC", href: FLAGSHIP_PAGES.careltc } },
     { title: "Write the constraints down", body: "Each one names what it forces and how it is checked.", link: { label: "Bench Discovery", href: `${FLAGSHIP_PAGES.benchDiscovery}#constraints` } },
@@ -489,7 +489,7 @@ export const WRITING = {
 } as const;
 
 export const CTA = {
-  title: "Need an engineer who ships inside your customer's rules?",
+  title: "Need an engineer who ships AI that stays inside the rules?",
   lead: "Tell me who will use the system, where it has to run, and what it must never do. I'll reply with a first version and how we'd know it works.",
   primary: { label: "Get in touch", href: "/contact" },
   secondary: { label: "View résumé", href: "/resume" },

@@ -96,7 +96,9 @@ export function sanitizeMessages(input: unknown): SanitizeResult {
   let latestUserNormalizedLen = 0;
 
   const cleaned: ChatMessage[] = [];
-  for (const m of raw) {
+  // Only the tail can be kept, so only the tail is read: a body padded with
+  // thousands of entries costs no more than an honest one.
+  for (const m of raw.slice(-MAX_HISTORY_TURNS * 4)) {
     if (!m || typeof m !== "object") continue;
     const role = (m as { role?: unknown }).role;
     const content = (m as { content?: unknown }).content;

@@ -20,7 +20,7 @@ export const workIndexPage = {
     kicker: "Flagship work",
     title: "Three products in use, built at Sevina Technologies",
     lead: "The real apps, shown on dummy data. Each case study covers the problem, the architecture on AWS, the code and the decisions behind it. The repositories stay private.",
-    cta: { label: "Request a walkthrough", href: "/contact" },
+    cta: { label: "Request a walkthrough", href: "/contact#walkthrough" },
     readCaseStudy: "Read the case study",
     employer: "Built at Sevina Technologies",
   },

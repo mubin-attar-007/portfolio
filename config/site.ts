@@ -79,7 +79,7 @@ export const STATUS = {
  * needs a linked method.
  */
 export const FOOTER = {
-  positioning: "Applied AI Engineer. I ship AI and software inside the customer's rules.",
+  positioning: "Applied AI Engineer. I ship AI and software that stays inside the rules.",
   invite: "I answer every email myself.",
 } as const;
 
