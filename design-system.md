@@ -491,6 +491,12 @@ grid tracks. **Three recorded exceptions**, each instant under reduced motion:
 A new exception must be as small and as contained as 2 and 3 — no layout shift outside
 the element — and is recorded here.
 
+**The navigation bar** (`NavigationFeedback`) is feedback, not ambience: a 2px accent
+line on the top edge, shown only when a click to another page has not landed within
+120ms, running most of the width and slowing until the page arrives, then filling
+and fading. Under reduced motion it appears at a fixed length and leaves without
+travelling.
+
 ### Reduced motion
 
 One blanket rule in `styles/globals.css`: under `prefers-reduced-motion: reduce` every

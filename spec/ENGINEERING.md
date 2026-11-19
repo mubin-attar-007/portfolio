@@ -164,9 +164,15 @@ Heavy things are lazy by rule: the assistant panel, diagrams below the fold, dem
 (no video bytes until played), and below-fold images. Static generation for all content
 routes; no client data fetching for content.
 
-Prefetch is opt-in, never by viewport: every `next/link` sets `prefetch={false}`
-(`TextLink` included), and only the primary nav prefetches, on hover or focus
-(`components/layout/nav-link.tsx`). A viewport prefetch downloads each linked route
+Prefetch is on intent, never by viewport: every `next/link` sets `prefetch={false}`
+(`TextLink` included), the primary nav prefetches on hover or focus
+(`components/layout/nav-link.tsx`), and `NavigationFeedback`
+(`components/layout/navigation-feedback.tsx`, in the root layout) prefetches any
+other in-app route when a pointer rests on its link, a finger touches it or focus
+reaches it. If a click has not landed after 120ms it shows a 2px accent bar on the
+top edge until the page arrives: measured on 19 Nov 2026, a click to a case study
+took 0.4–0.9s live and about 3s on a 3G profile with nothing on screen changing,
+which read as a dead link. A viewport prefetch downloads each linked route
 and preloads its stylesheet; on /about that was 13 background requests and a Chrome
 warning about the unused CSS. ESLint fails a `<Link>` without a `prefetch` prop
 (`eslint.config.mjs`), and the smoke test fails on any console warning.
