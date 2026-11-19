@@ -54,7 +54,7 @@
 
 .stageN {
   font-family: var(--font-mono);
-  font-size: 0.6875rem;
+  font-size: var(--text-label);
   color: var(--color-ink-tertiary);
   width: 1.25rem;
   flex: none;
@@ -237,7 +237,7 @@
 
 .transportStep {
   font-family: var(--font-mono);
-  font-size: 0.6875rem;
+  font-size: var(--text-label);
   font-variant-numeric: tabular-nums;
   color: var(--color-ink-tertiary);
 }
@@ -257,7 +257,7 @@
   border-bottom: 1px solid var(--color-border);
   background: var(--color-bg-subtle);
   font-family: var(--font-mono);
-  font-size: 0.6875rem;
+  font-size: var(--text-label);
   letter-spacing: 0.05em;
   text-transform: uppercase;
   color: var(--color-ink-tertiary);
@@ -322,7 +322,7 @@
 .specMeta {
   margin-left: auto;
   font-family: var(--font-mono);
-  font-size: 0.6875rem;
+  font-size: var(--text-label);
   color: var(--color-ink-tertiary);
   white-space: nowrap;
 }
@@ -346,6 +346,13 @@
   white-space: pre;
   color: var(--color-ink-secondary);
 }
+/* A phone wraps the trace instead of hiding its end behind a sideways scroll. */
+@media (max-width: 640px) {
+  .specWell {
+    white-space: pre-wrap;
+    overflow-wrap: anywhere;
+  }
+}
 
 .chips {
   display: flex;
@@ -362,7 +369,7 @@
   background: var(--color-surface);
   padding: 0.1875rem 0.625rem;
   font-family: var(--font-mono);
-  font-size: 0.6875rem;
+  font-size: var(--text-label);
   color: var(--color-ink-secondary);
   white-space: nowrap;
 }
@@ -395,7 +402,7 @@
 .refusalReason {
   margin-top: 0.25rem;
   font-family: var(--font-mono);
-  font-size: 0.6875rem;
+  font-size: var(--text-label);
   color: var(--color-ink-tertiary);
 }
 .refusalMark {

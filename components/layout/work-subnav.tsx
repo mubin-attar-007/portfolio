@@ -25,7 +25,7 @@ export function WorkSubnav({ current }: { current: string }) {
   return (
     <div className={styles.wrap} data-chrome="" data-subnav="">
       <nav aria-label="Work" className={styles.tray}>
-        <SubnavScroller className={styles.scroller}>
+        <SubnavScroller className={`edge-fade ${styles.scroller}`}>
           <ul className={styles.list}>
             {WORK_ITEMS.map((item) => (
               <li key={item.slug}>

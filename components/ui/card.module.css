@@ -79,4 +79,15 @@
       grid-column: auto;
     }
   }
+  /* A phone card is one column wide: its illustration is capped (a card may
+     raise `--card-art-cap`), so a stack of cards reads as cards, not as a
+     column of pictures with captions. */
+  @media (max-width: 640px) {
+    .art {
+      height: min(var(--card-art-h), var(--card-art-cap, 196px));
+    }
+    .body {
+      padding: 18px 20px 20px;
+    }
+  }
 }

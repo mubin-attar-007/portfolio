@@ -1,6 +1,7 @@
 "use client";
 
 import { useCallback, useEffect, useLayoutEffect, useRef, useState, type KeyboardEvent, type ReactNode } from "react";
+import { centreInScroller, useEdgeFade } from "@/lib/use-edge-fade";
 import styles from "./showcase.module.css";
 
 /** One screen of a product: a pill under the stage names it. */
@@ -103,11 +104,16 @@ export function ShowcaseTabs({ label, items }: { label: string; items: readonly 
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [place]);
 
-  // The product tab's pill follows the selection.
+  // On a phone the tabs scroll sideways: an edge that hides tabs fades.
+  useEdgeFade(tablist);
+
+  // The product tab's pill follows the selection, and a tab row that scrolls
+  // brings the selected tab to its middle (never moving the page).
   useEffect(() => {
     if (previous.current === selected) return;
     previous.current = selected;
     place(selected, !reducedMotion());
+    centreInScroller(tablist.current, tabRefs.current[selected] ?? null, !reducedMotion());
   }, [selected, place]);
 
   // Animate a change of screen: a new product moves its whole panel, a new
@@ -171,7 +177,7 @@ export function ShowcaseTabs({ label, items }: { label: string; items: readonly 
 
   return (
     <div className={styles.show}>
-      <div ref={tablist} className={styles.tabs} role="tablist" aria-label={label}>
+      <div ref={tablist} className={`edge-fade ${styles.tabs}`} role="tablist" aria-label={label}>
         <span ref={indicator} className={styles.indicator} aria-hidden="true" />
         {items.map((entry, i) => (
           <button

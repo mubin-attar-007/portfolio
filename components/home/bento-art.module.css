@@ -682,3 +682,9 @@
     width: 24%;
   }
 }
+/* The product captures keep a taller stage than other art on a phone. */
+@media (max-width: 640px) {
+  .productCard {
+    --card-art-cap: 216px;
+  }
+}

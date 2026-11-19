@@ -153,6 +153,24 @@
   line-height: 1.45;
   color: var(--color-ink-secondary);
 }
+/* Phones: each figure is one row, its value beside its label, so the three
+   read as a compact list instead of three tall centred blocks. */
+@media (max-width: 759px) {
+  .figures {
+    margin-top: 32px;
+  }
+  .figure {
+    grid-template-columns: minmax(4.5rem, auto) minmax(0, 1fr);
+    gap: 16px;
+    align-items: center;
+    justify-items: start;
+    padding: 14px 4px;
+    text-align: left;
+  }
+  .figureValue {
+    font-size: 1.75rem;
+  }
+}
 .figuresNote {
   max-width: 900px;
   margin: 12px auto 0;
@@ -320,6 +338,13 @@
   padding-top: 40px;
   border-top: 1px solid var(--color-border);
 }
+@media (max-width: 759px) {
+  .built {
+    gap: 28px;
+    margin-top: 20px;
+    padding-top: 28px;
+  }
+}
 @media (min-width: 760px) {
   .built {
     grid-template-columns: repeat(2, minmax(0, 1fr));
@@ -448,7 +473,7 @@
   gap: 28px;
 }
 .subTitle {
-  margin-top: 56px;
+  margin-top: clamp(40px, 6vw, 56px);
   font-size: var(--text-title);
   font-weight: 700;
   letter-spacing: -0.015em;
@@ -475,7 +500,7 @@
 }
 .table thead th {
   font-family: var(--font-mono);
-  font-size: 0.6875rem;
+  font-size: var(--text-label);
   font-weight: 500;
   letter-spacing: 0.08em;
   text-transform: uppercase;
@@ -533,7 +558,7 @@
     content: attr(data-label);
     display: block;
     font-family: var(--font-mono);
-    font-size: 0.6875rem;
+    font-size: var(--text-label);
     letter-spacing: 0.08em;
     text-transform: uppercase;
     color: var(--color-ink-tertiary);
@@ -668,7 +693,7 @@
   display: block;
   margin-bottom: 2px;
   font-family: var(--font-mono);
-  font-size: 0.6875rem;
+  font-size: var(--text-label);
   font-weight: 500;
   letter-spacing: 0.08em;
   text-transform: uppercase;
@@ -701,7 +726,7 @@
 }
 .headCell {
   font-family: var(--font-mono);
-  font-size: 0.6875rem;
+  font-size: var(--text-label);
   font-weight: 500;
   letter-spacing: 0.08em;
   text-transform: uppercase;
@@ -818,7 +843,7 @@
   align-items: center;
   gap: 6px;
   font-family: var(--font-mono);
-  font-size: 0.6875rem;
+  font-size: var(--text-label);
   font-weight: 500;
   letter-spacing: 0.08em;
   text-transform: uppercase;
@@ -891,7 +916,7 @@
 }
 .facts dt {
   font-family: var(--font-mono);
-  font-size: 0.6875rem;
+  font-size: var(--text-label);
   font-weight: 500;
   letter-spacing: 0.08em;
   text-transform: uppercase;

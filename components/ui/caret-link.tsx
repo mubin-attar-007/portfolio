@@ -3,6 +3,9 @@ import { cx } from "./cx";
 import { SmartLink, isWebLink, opensOutside } from "./smart-link";
 import styles from "./caret-link.module.css";
 
+/** U+2060: no line break may fall on either side of it. */
+const WORD_JOINER = String.fromCharCode(0x2060);
+
 /**
  * Caret — the arrow-swap glyph: two masked triangles in a clipped 10×8 box. When
  * the nearest link or button is hovered or focused, the first slides out to the
@@ -26,7 +29,10 @@ export function Caret({ className }: { className?: string }) {
  * mailto address carries the meaning. Reduced motion: the swap is instant.
  */
 export function ArrowOut({ inline = false, className }: { inline?: boolean; className?: string }) {
-  return <span aria-hidden="true" className={cx("arrow-out", inline && "arrow-out-inline", className)} />;
+  const arrow = <span aria-hidden="true" className={cx("arrow-out", inline && "arrow-out-inline", className)} />;
+  // Inside a sentence a word joiner keeps the arrow on its word's line: a
+  // narrow column used to wrap the ↗ alone onto the next line.
+  return inline ? <>{WORD_JOINER}{arrow}</> : arrow;
 }
 
 export type CaretLinkProps = {

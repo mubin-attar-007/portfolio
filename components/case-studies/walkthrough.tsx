@@ -406,7 +406,7 @@ function Specimen(props: WalkthroughProps & { stageId: WalkthroughStage["id"] })
                     <th
                       key={c}
                       scope="col"
-                      className="border-b border-border bg-bg-subtle px-3 py-2 text-left font-mono text-[0.6875rem] font-medium uppercase tracking-[0.05em] text-ink-tertiary last:text-right"
+                      className="border-b border-border bg-bg-subtle px-3 py-2 text-left font-mono text-[length:var(--text-label)] font-medium uppercase tracking-[0.05em] text-ink-tertiary last:text-right"
                     >
                       {c}
                     </th>
@@ -431,7 +431,7 @@ function Specimen(props: WalkthroughProps & { stageId: WalkthroughStage["id"] })
               </tbody>
             </table>
           </div>
-          <p className="mt-3 flex items-center gap-2 font-mono text-[0.6875rem] text-ink-tertiary">
+          <p className="mt-3 flex items-center gap-2 font-mono text-[length:var(--text-label)] text-ink-tertiary">
             <Check size={12} strokeWidth={3} aria-hidden className="text-positive" />
             {props.verdict} · {props.sampleLabel}
           </p>

@@ -24,26 +24,10 @@
     color: var(--color-ink);
     pointer-events: auto;
   }
+  /* Scrolls sideways with faded edges (`.edge-fade`, globals.css). */
   .scroller {
     flex: 1;
     min-width: 0;
-    overflow-x: auto;
-    scrollbar-width: none;
-  }
-  .scroller::-webkit-scrollbar {
-    display: none;
-  }
-  .scroller[data-fade-start] {
-    -webkit-mask-image: linear-gradient(90deg, transparent, #000 28px);
-    mask-image: linear-gradient(90deg, transparent, #000 28px);
-  }
-  .scroller[data-fade-end] {
-    -webkit-mask-image: linear-gradient(90deg, #000 calc(100% - 28px), transparent);
-    mask-image: linear-gradient(90deg, #000 calc(100% - 28px), transparent);
-  }
-  .scroller[data-fade-start][data-fade-end] {
-    -webkit-mask-image: linear-gradient(90deg, transparent, #000 28px, #000 calc(100% - 28px), transparent);
-    mask-image: linear-gradient(90deg, transparent, #000 28px, #000 calc(100% - 28px), transparent);
   }
   .list {
     display: flex;

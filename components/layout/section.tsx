@@ -5,7 +5,7 @@ import { Container } from "./container";
  * Section — the vertical-rhythm primitive.
  *
  * `space` picks the band's padding; `head` is the page-header band (96/64px,
- * 64/48 on phones) that holds a `PageHeader`. Pick per section so two ADJACENT bands don't
+ * 48/40 on phones) that holds a `PageHeader`. Pick per section so two ADJACENT bands don't
  * both spend `lg` and stack into a dead screen: `lg` is for a page's bookends
  * (hero, closing CTA), `md` is the body default, `sm` joins two bands that
  * belong together, `xs` is half a header seam.
