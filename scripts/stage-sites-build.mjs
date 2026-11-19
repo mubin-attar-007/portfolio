@@ -1,5 +1,7 @@
 import { cp, mkdir, readFile, readdir, rm, writeFile } from "node:fs/promises";
 import { join } from "node:path";
+// Erasable TypeScript, loaded by Node directly: the same headers Vercel serves.
+import { securityHeaders } from "../config/security-headers.ts";
 
 const root = process.cwd();
 const openNext = join(root, ".open-next");
@@ -38,9 +40,15 @@ for (const file of cacheFiles) {
   await writeFile(output, cached.html, "utf8");
 }
 
+// The Worker serves the static files with the site's security headers (the
+// Next config's headers() does not run here), and adds the trailing slash a
+// directory route needs.
+const HEADERS = Object.fromEntries(securityHeaders({ https: true }).map(({ key, value }) => [key, value]));
+
 await writeFile(
   join(server, "index.js"),
   [
+    `const HEADERS = ${JSON.stringify(HEADERS)};`,
     "export default {",
     "  async fetch(request, env) {",
     "    const url = new URL(request.url);",
@@ -48,7 +56,10 @@ await writeFile(
     "      url.pathname += '/';",
     "      return Response.redirect(url, 308);",
     "    }",
-    "    return env.ASSETS.fetch(new Request(url, request));",
+    "    const asset = await env.ASSETS.fetch(new Request(url, request));",
+    "    const response = new Response(asset.body, asset);",
+    "    for (const [name, value] of Object.entries(HEADERS)) response.headers.set(name, value);",
+    "    return response;",
     "  },",
     "};",
     "",

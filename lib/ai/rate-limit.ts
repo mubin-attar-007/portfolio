@@ -87,12 +87,24 @@ function hashClient(address: string): string {
  *   3. LAST hop of `x-forwarded-for` — the entry appended by the trusted proxy
  *      nearest us, not the spoofable leftmost one.
  *   4. "unknown"                 — dev / direct; a shared key.
+ *
+ * On Cloudflare Workers (the OpenNext build in wrangler.jsonc) none of these
+ * is set by the platform, so a client could send its own `x-real-ip` on every
+ * request and get a fresh bucket each time. There `cf-connecting-ip`, which
+ * Cloudflare always sets and a client cannot override, is read instead. The
+ * runtime is told by `navigator.userAgent`, which only Workers report as
+ * "Cloudflare-Workers": on Vercel a forged `cf-connecting-ip` is ignored.
  */
 export function clientKeyFromHeaders(headers: Headers): string {
   return hashClient(clientAddress(headers));
 }
 
-function clientAddress(headers: Headers): string {
+const ON_CLOUDFLARE = typeof navigator !== "undefined" && navigator.userAgent === "Cloudflare-Workers";
+
+/** The client address the rate limit keys on (exported for tests). */
+export function clientAddress(headers: Headers, onCloudflare = ON_CLOUDFLARE): string {
+  if (onCloudflare) return headers.get("cf-connecting-ip")?.trim() || "unknown";
+
   const real = headers.get("x-real-ip")?.trim();
   if (real) return real;
 
