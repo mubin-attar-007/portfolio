@@ -1,6 +1,6 @@
 import { INTEGRATIONS, SITE } from "@/config/site";
 import { boundaryCases } from "@/content/dbwhisper-boundary";
-import { CROWNWAGER_EVIDENCE, DBWHISPER_EVIDENCE, requireCompleteEval } from "@/content/evals";
+import { DBWHISPER_EVIDENCE, requireCompleteEval } from "@/content/evals";
 import { flagshipHref } from "@/content/flagship";
 import { benchDiscovery } from "@/content/flagship/bench-discovery";
 import { EMPLOYER, USAGE } from "@/content/flagship/shared";
@@ -264,7 +264,7 @@ export const FACTS = {
       { value: `${USAGE.careltc.figure} users`, note: `CareLTC, ${USAGE.careltc.label.replace(/^users /, "")}` },
       { value: `${USAGE["bench-discovery"].figure} users`, note: `Bench Discovery, ${USAGE["bench-discovery"].label.replace(/^users /, "")}` },
       { value: "iOS and Android", note: "shipped through store review" },
-      { value: "4 public systems", note: "with source and methods" },
+      { value: "Since 2024", note: "building AI that runs in production" },
     ],
     [
       { value: "3 products", note: `in use, built at ${EMPLOYER}` },
@@ -353,7 +353,7 @@ export const FLAGSHIP = {
  * where the case study has something to use in the page — a link straight to it.
  */
 export type PublicCard = {
-  slug: "dbwhisper" | "tradepulse" | "crownwager" | "llm-studio";
+  slug: "dbwhisper" | "tradepulse";
   body: string;
   metric: { value: string; method: string; href: string };
   tryIt?: { label: string; href: string };
@@ -361,13 +361,12 @@ export type PublicCard = {
 
 export const PUBLIC = {
   kicker: "Public work",
-  title: "Four AI systems you can inspect today",
-  lead: "Source, recordings and the method behind every result.",
+  title: "Public systems you can inspect",
+  lead: "Source, recordings and the method behind every result. TradePulse is archived: its code and write-up stay public, and it is no longer maintained.",
   more: { label: "All case studies", href: "/work" },
   caseStudy: "Case study",
   source: "Source",
   methodLink: "Method",
-  illustrativePick: "Illustrative pick",
   cards: [
     {
       slug: "dbwhisper",
@@ -389,24 +388,6 @@ export const PUBLIC = {
         value: "Look-ahead can't be written",
         method: "Strategies read closed bars only, and a canary test proves it",
         href: TRADEPULSE.anchor,
-      },
-    },
-    {
-      slug: "crownwager",
-      body: "NBA predictions from an XGBoost model, graded publicly against final scores.",
-      metric: {
-        value: `${CROWNWAGER_EVIDENCE.cv.mean} accuracy`,
-        method: `${CROWNWAGER_EVIDENCE.cv.folds}-fold stratified cross-validation, against a ${CROWNWAGER_EVIDENCE.baseRate} home-win base rate`,
-        href: CROWNWAGER_EVIDENCE.anchor,
-      },
-    },
-    {
-      slug: "llm-studio",
-      body: "A multi-user AI chat platform with accounts, streaming and six model providers behind one interface.",
-      metric: {
-        value: "Tenancy on every query",
-        method: "Enforced once, in the repository layer, not in each route",
-        href: "/notes/tenancy-in-the-repository-layer",
       },
     },
   ] satisfies readonly PublicCard[],

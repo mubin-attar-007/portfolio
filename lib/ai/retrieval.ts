@@ -92,7 +92,7 @@ const RESULTS_BOOST = 1.5;
 
 /**
  * Multiplier for project overviews when a question asks whether a project can
- * be seen or tried ("Is TradePulse live?", "Does CrownWager have a demo?") or
+ * be seen or tried ("Is TradePulse live?", "Does DBWhisper have a demo?") or
  * how many people use it: the overview is the passage that states the demo
  * link, or that none is published, the source, and a flagship's approved
  * usage. When the question names the project, the overview also takes
@@ -260,7 +260,7 @@ const RESULT_TERMS: ReadonlySet<string> = new Set(
 /**
  * Topic terms that ask what a project's overview states: whether it can be
  * seen or tried (its demo and source), how many people use it, and his role on
- * it. Not "repository": LLM Studio's "repository layer" is code.
+ * it. Not "repository": a "repository layer" is code.
  */
 const OVERVIEW_TERMS: ReadonlySet<string> = new Set(
   tokenize("demo live try available link source repo status offline users usage role credit"),

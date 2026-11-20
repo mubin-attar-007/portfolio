@@ -44,9 +44,9 @@ function describeFailures(scores: readonly ItemScore[]): string[] {
 test("the golden set is the size and shape the brief sets", () => {
   const byArea = (area: string) => GOLDEN.filter((item) => item.area === area).length;
   assert.equal(byArea("flagship"), 20);
-  assert.equal(byArea("public"), 8);
+  assert.equal(byArea("public"), 4);
   assert.equal(byArea("hiring"), 11);
-  assert.equal(byArea("skills"), 6);
+  assert.equal(byArea("skills"), 5);
   assert.equal(byArea("writing-evals"), 5);
   assert.equal(byArea("off-topic"), 4);
   assert.equal(byArea("injection"), 4);

@@ -132,7 +132,7 @@ export const uses = {
   // services it runs on (content/flagship), each public project its free-tier
   // deploy (content/projects).
   intro:
-    "The tools behind the case studies, from model integration to deployment. The three flagship products run on AWS; the four public projects run on free tiers, which makes quotas, storage limits and cold starts explicit design constraints.",
+    "The tools behind the case studies, from model integration to deployment. The three flagship products run on AWS; the public projects run on free tiers, which makes quotas, storage limits and cold starts explicit design constraints.",
   /**
    * How the "$0" claim is actually met. The public case studies and the
    * writing call that hosting a "$0 stack", so this page states the method —
@@ -186,7 +186,7 @@ export const trust = {
   signals: [
     {
       label: "Shipped",
-      value: "Four public projects with case studies, source code, and deployment links.",
+      value: "Public projects with case studies, source code, and their evaluation methods.",
       href: "/work",
     },
     {

@@ -297,7 +297,9 @@ marked *client*.
 - `Timeline({ label? })` and `TimelineEntry({ date, dateTime, title?, titleAs?, tags?,
   id? })` — the changelog's date rail with a dot per entry.
 - `StatusPill({ status: "verified" | "retired" | "draft" | "not-claimed" | "in-use" |
-  "pilot" | "deployed-demo" })` — labels from `STATUS_PILL` in `config/site.ts`.
+  "pilot" | "deployed-demo" | "archived" })` — labels from `STATUS_PILL` in
+  `config/site.ts`. "Archived" marks a public project kept for its code and write-up but
+  no longer maintained (TradePulse); it shares Retired's neutral grey.
 - `Chip({ variant: "outline" | "raised" | "soft", size, mono?, dot?, icon?, as? })`.
 - `StatsRow({ stats: { label, value, source? }[], align? })` — a figure with a
   `source` links to its method.
@@ -545,7 +547,7 @@ in `content/pages/<page>.ts` (spec/CONTENT_MODEL.md §5).
   project carries "Deployed demo" and links a demo only while it is up; nothing calls a
   project "live".
 - **One source per figure.** Every figure is written once in `content/evals.ts`; pages
-  read it through `DBWHISPER_EVIDENCE`, `CROWNWAGER_EVIDENCE` or `requireEval()`, and
+  read it through `DBWHISPER_EVIDENCE` or `requireEval()`, and
   `test/evidence.test.mts` fails on a retyped or retired figure. A deterministic policy
   test is never presented as model accuracy.
 - **Retired, not deleted.** A published result that turns out not to hold keeps its

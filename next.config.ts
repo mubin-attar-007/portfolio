@@ -56,6 +56,9 @@ const nextConfig: NextConfig = {
   // The anonymous field-report drafts became the named flagship case studies:
   //   /work/field/records-triage  → /work/bench-discovery
   //   /work/field/nfc-room-rounds → /work/careltc
+  // Side projects retired on 2026-11-20 (ADR-021) send their old links home:
+  //   /work/crownwager, /work/llm-studio → /work
+  //   /notes/grade-picks-against-the-final-score → /notes
   async redirects() {
     return [
       { source: "/talks", destination: "/about", permanent: true },
@@ -64,6 +67,9 @@ const nextConfig: NextConfig = {
       { source: "/cv", destination: "/resume", permanent: true },
       { source: "/work/field/records-triage", destination: "/work/bench-discovery", permanent: true },
       { source: "/work/field/nfc-room-rounds", destination: "/work/careltc", permanent: true },
+      { source: "/work/crownwager", destination: "/work", permanent: true },
+      { source: "/work/llm-studio", destination: "/work", permanent: true },
+      { source: "/notes/grade-picks-against-the-final-score", destination: "/notes", permanent: true },
     ];
   },
 };

@@ -165,13 +165,12 @@ test("the facts are the approved ones, in the owner's words", () => {
 });
 
 test("every figure is named by how it was measured", () => {
-  // "Accuracy" appears only as the cross-validated mean it is, or in the
-  // policy line's "not model accuracy"; never alone, live or as a return.
+  // "Accuracy" appears only in the policy line's "not model accuracy"; never
+  // alone, live or as a return.
   for (const { index } of text.matchAll(/accuracy/gi)) {
     const before = text.slice(0, index);
-    assert.ok(/(?:mean \d+-fold stratified cross-validation|not model) $/.test(before), `an unscoped accuracy: "…${before.slice(-40)}accuracy"`);
+    assert.ok(/not model $/.test(before), `an unscoped accuracy: "…${before.slice(-40)}accuracy"`);
   }
-  assert.match(text, /mean \d+-fold stratified cross-validation accuracy on [\d,]+ (?:NBA )?games vs a [\d.]+% home-win base rate/);
   assert.match(text, /deterministic policy test, not model accuracy/);
   // The Spider sample's scope needs more than a line; /evals carries it in full.
   assert.doesNotMatch(text, /Spider/);

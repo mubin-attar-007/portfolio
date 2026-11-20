@@ -13,12 +13,13 @@ const TONE: Record<PillStatus, Tone> = {
   pilot: "caution",
   draft: "caution",
   retired: "neutral",
+  archived: "neutral",
   "not-claimed": "outline",
 };
 
 /**
  * StatusPill — a status in the site's closed vocabulary: Verified, In use,
- * Deployed demo, Pilot, Draft, Retired, Not claimed (`STATUS_PILL`,
+ * Deployed demo, Pilot, Draft, Retired, Archived, Not claimed (`STATUS_PILL`,
  * config/site.ts). The status fixes the colour; `children` may extend the label
  * ("Draft for owner review") but never change its meaning.
  *

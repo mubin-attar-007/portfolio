@@ -9,12 +9,12 @@ export const workIndexPage = {
   meta: {
     title: "Work",
     description:
-      "Bench Discovery, CareLTC and SignFlow, three products in use built at Sevina Technologies, and four public AI systems with source, recordings and methods.",
+      "Bench Discovery, CareLTC and SignFlow, three products in use built at Sevina Technologies, and public AI systems with source, recordings and methods.",
   },
   hero: {
     kicker: "Work",
     title: "Systems I've shipped",
-    lede: "Three products in use, built at Sevina Technologies, and four public AI systems you can inspect today: source, recordings and the method behind every result.",
+    lede: "Three products in use, built at Sevina Technologies, and public AI systems you can inspect: source, recordings and the method behind every result.",
   },
   flagship: {
     kicker: "Flagship work",
@@ -26,8 +26,8 @@ export const workIndexPage = {
   },
   public: {
     kicker: "Public work",
-    title: "Four AI systems you can inspect today",
-    lead: "Each one has its source, a recording or capture, and the method behind every figure it publishes.",
+    title: "Public systems you can inspect",
+    lead: "Each one has its source, a recording or capture, and the method behind every figure it publishes. TradePulse is archived: its code and write-up stay public, and it is no longer maintained.",
     more: { label: "How each was measured", href: "/evals" },
     caseStudy: "Case study",
     // Never "live": the demos run on free tiers that sleep (design-system §7.2).
@@ -132,6 +132,4 @@ export const caseStudyPage = {
  */
 export const CASE_STUDY_STEPS: Record<string, readonly string[]> = {
   tradepulse: ["builder", "api", "spec", "engine", "risk", "result", "worker"],
-  crownwager: ["web", "django", "ml", "registry", "xgb", "ev", "record"],
-  "llm-studio": ["spa", "auth", "quota", "chat", "router", "repo", "db"],
 };

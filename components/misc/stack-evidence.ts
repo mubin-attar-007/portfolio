@@ -23,8 +23,6 @@ const ALIASES: Record<string, readonly string[]> = {
   "django / drf": ["django", "drf"],
   "django/drf": ["django", "drf"],
   "node.js": ["node"],
-  // LLM Studio's front end is "Vanilla JS": JavaScript with no framework.
-  javascript: ["vanilla js"],
 };
 
 /** The short names an AWS service also goes by ("Amazon ECS" is "ECS"). */

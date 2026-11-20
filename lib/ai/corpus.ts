@@ -580,7 +580,9 @@ function projectPassages(): Passage[] {
       ? `Live demo: ${project.links.live} — a deployed demo on ${PROJECT_LINKS.captionWake}.`
       : project.status === "deployed-demo"
         ? `Live demo: none published while the hosted demo is offline${project.recording ? "; the case study has a recorded product tour" : ""}.`
-        : null;
+        : project.status === "archived"
+          ? `Live demo: none. The project is archived: its source and case study stay public, and it is no longer maintained${project.recording ? "; the case study has a recorded product tour" : ""}.`
+          : null;
     return {
       id: `project-${project.slug}`,
       text: lines(

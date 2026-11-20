@@ -8,7 +8,7 @@ import styles from "./work-subnav.module.css";
 /**
  * WorkSubnav — the work switcher under the nav on every case study, flagship
  * and public (the Clerk product sub-nav): a tray tucked under the floating pill,
- * sticky with it, listing the two flagship products, then the four public
+ * sticky with it, listing the two flagship products, then the public
  * systems (`WORK_ITEMS`, config/nav.ts) and "All work" at the right. On phones
  * the list scrolls sideways with faded edges, the current item scrolled into
  * view.

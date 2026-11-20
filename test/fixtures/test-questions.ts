@@ -44,7 +44,7 @@ export const TEST_QUESTIONS: TestQuestion[] = [
     // content/projects.ts, with the approved usage wording.
     question: "What has Mubin actually shipped in production?",
     expectedSource: "Work — flagship products and public projects",
-    mustMention: ["Bench Discovery", "CareLTC", "DBWhisper", "LLM Studio", "TradePulse", "CrownWager"],
+    mustMention: ["Bench Discovery", "CareLTC", "DBWhisper", "TradePulse"],
   },
   {
     question: "How does Bench Discovery prove that document content never leaves the PC?",
@@ -79,17 +79,12 @@ export const TEST_QUESTIONS: TestQuestion[] = [
   {
     question: "How does he make sure the metrics his products show are real and not faked?",
     expectedSource: "FAQ",
-    mustMention: ["look-ahead", "cross-validation"],
+    mustMention: ["look-ahead", "retired"],
   },
   {
     question: "Why should we hire him — what shows senior engineering judgment?",
     expectedSource: "FAQ",
     mustMention: ["Bench Discovery", "fails closed", "trade-off"],
-  },
-  {
-    question: "What machine learning and data science work has he done with XGBoost beyond LLMs?",
-    expectedSource: "FAQ",
-    mustMention: ["XGBoost", "cross-validation", "Kelly"],
   },
   {
     question: "What is his experience with LLM agents and multi-provider routing across vendors?",
@@ -116,14 +111,9 @@ export const TEST_QUESTIONS: TestQuestion[] = [
     rank: "retrieved",
   },
   {
-    question: "What went wrong in LLM Studio in production and how was it fixed?",
-    expectedSource: "LLM Studio",
-    mustMention: ["epoch"],
-  },
-  {
-    question: "How does CrownWager avoid overfitting its NBA betting model?",
-    expectedSource: "CrownWager",
-    mustMention: ["xgboost", "cross-validation"],
+    question: "Why did NFC scans fail on iPhones in CareLTC, and how was it fixed?",
+    expectedSource: "CareLTC",
+    mustMention: ["inactive"],
   },
   {
     question: "Why did he build DBWhisper on LangGraph and how is the agent structured?",
@@ -143,11 +133,6 @@ export const TEST_QUESTIONS: TestQuestion[] = [
     expectedSource: "DBWhisper case study",
     mustMention: ["postgres", "fastapi"],
   },
-  {
-    question: "How does LLM Studio keep one user from reading another user's chats?",
-    expectedSource: "LLM Studio",
-    mustMention: ["llm studio"],
-  },
 ];
 
 export const SHORT_QUESTIONS: TestQuestion[] = [
@@ -159,8 +144,6 @@ export const SHORT_QUESTIONS: TestQuestion[] = [
   { question: "What is DBWhisper?", expectedSource: "DBWhisper — project overview", mustMention: ["natural-language-to-SQL"] },
   { question: "What does DBWhisper do?", expectedSource: "DBWhisper — project overview", mustMention: ["validation"] },
   { question: "What is TradePulse?", expectedSource: "TradePulse — project overview", mustMention: ["backtesting"] },
-  { question: "What is CrownWager?", expectedSource: "CrownWager — project overview", mustMention: ["XGBoost"] },
-  { question: "What is LLM Studio?", expectedSource: "LLM Studio — project overview", mustMention: ["multi-user"] },
   { question: "Who is Mubin?", expectedSource: "About — profile", mustMention: ["Sevina Technologies", "Bench Discovery"] },
   { question: "What does he do?", expectedSource: "About — profile", mustMention: ["AI"] },
   { question: "Where does he work?", expectedSource: "About", mustMention: ["Sevina Technologies"] },
@@ -186,16 +169,12 @@ export const SHORT_QUESTIONS: TestQuestion[] = [
   { question: "How accurate is DBWhisper?", expectedSource: "Evaluation — DBWhisper", mustMention: ["Result:"] },
   { question: "What is the Spider score?", expectedSource: "Evaluation — DBWhisper · Spider", mustMention: ["Result:"] },
   { question: "Is the DBWhisper demo live?", expectedSource: "DBWhisper — project overview", mustMention: ["Live demo:"] },
-  { question: "Is CrownWager live?", expectedSource: "CrownWager — project overview", mustMention: ["Live demo:"] },
   // Answered from a different project's passages before 2026-11-16: a rarer
   // word ("act", "handle", "try", "live") filtered out the named project's
   // own record, or a case-study section outranked the overview that states
   // the demo's status.
   { question: "Does LangGraph act as the orchestrator in DBWhisper?", expectedSource: "FAQ — DBWhisper", mustMention: ["LangGraph"] },
   { question: "How many tables can DBWhisper handle?", expectedSource: "DBWhisper", mustMention: ["16 tables"] },
-  { question: "Can I try LLM Studio?", expectedSource: "LLM Studio — project overview", mustMention: ["Live demo:"] },
-  { question: "Is LLM Studio live right now?", expectedSource: "LLM Studio — project overview", mustMention: ["Live demo:"] },
-  { question: "Does CrownWager have a demo?", expectedSource: "CrownWager — project overview", mustMention: ["Live demo:"] },
   { question: "Is TradePulse live?", expectedSource: "TradePulse — project overview", mustMention: ["Live demo:"] },
   // The retired golden-set row used to lead the first (as if fail-closed had
   // been withdrawn) and to lose the second to the Spider row.

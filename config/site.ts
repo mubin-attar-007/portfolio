@@ -109,6 +109,7 @@ export const STATUS_PILL = {
   "in-use": "In use",
   pilot: "Pilot",
   "deployed-demo": "Deployed demo",
+  archived: "Archived",
 } as const;
 
 export type PillStatus = keyof typeof STATUS_PILL;

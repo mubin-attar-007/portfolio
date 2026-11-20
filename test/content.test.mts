@@ -20,8 +20,9 @@ const isHttps = (url: string | undefined): boolean => {
   }
 };
 
-test("there are exactly 4 projects", () => {
-  assert.equal(projects.length, 4);
+test("there are exactly 2 projects: DBWhisper and the archived TradePulse", () => {
+  assert.equal(projects.length, 2);
+  assert.equal(projects.find((p) => p.slug === "tradepulse")?.status, "archived");
 });
 
 test("every project has non-empty required text fields", () => {

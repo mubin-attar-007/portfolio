@@ -46,7 +46,7 @@ export const contactPage = {
   },
   source: {
     title: "Source code",
-    body: "The four public systems, with tests and their evaluation methods.",
+    body: "The public systems, with tests and their evaluation methods.",
     action: { label: "Open GitHub", href: SITE.socials.github },
   },
   foot: `${FOOTER.invite} ${SITE.location}, on IST (UTC+5:30).`,

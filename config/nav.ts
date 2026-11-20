@@ -53,8 +53,6 @@ export type NavLink = {
 const PUBLIC_WORK_COPY = {
   dbwhisper: { description: "Plain-English questions, validated SQL", icon: "database" },
   tradepulse: { description: "Backtests that can only read closed bars", icon: "chart" },
-  crownwager: { description: "NBA picks graded against final scores", icon: "trophy" },
-  "llm-studio": { description: "Multi-user chat, six model providers", icon: "messages" },
 } as const satisfies Record<string, { description: string; icon: NavIconName }>;
 
 /**
@@ -69,7 +67,7 @@ const FLAGSHIP_COPY = {
 
 export type PublicWorkSlug = keyof typeof PUBLIC_WORK_COPY;
 export type { FlagshipSlug };
-/** Every work page: the three flagship case studies and the four public ones. */
+/** Every work page: the three flagship case studies and the public ones. */
 export type WorkSlug = FlagshipSlug | PublicWorkSlug;
 
 export type WorkItem = NavLink & { slug: WorkSlug; icon: NavIconName; description: string };

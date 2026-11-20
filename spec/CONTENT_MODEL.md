@@ -13,7 +13,7 @@ validates.
 
 ## 1. Projects and case studies (the heart of the site)
 
-Seven case studies: the three flagship products (§1.5) and four public projects (§1.1–§1.3).
+Five case studies: the three flagship products (§1.5) and two public projects (§1.1–§1.3; TradePulse archived).
 
 ### 1.1 Project record — `content/projects.ts` (`ProjectSchema`)
 
@@ -54,8 +54,9 @@ Seven case studies: the three flagship products (§1.5) and four public projects
 }
 ```
 
-There are four projects (asserted by `test/content.test.mts`): DBWhisper (featured),
-TradePulse, CrownWager, and LLM Studio.
+There are two projects (asserted by `test/content.test.mts`): DBWhisper (featured) and
+TradePulse (`archived`). CrownWager and LLM Studio were retired on 2026-11-20
+(`spec/decisions/ADR-021-retire-side-projects.md`).
 
 `status` says what a project is, not whether its host is awake. `deployed-demo`
 (label "Deployed demo", `PROJECT_STATUS_LABEL` in `content/article.ts`) is a public
@@ -256,9 +257,7 @@ feeds, the sitemap, and generated routes in production, and keeps it previewable
     `passed/scored` counts (schema-checked).
   - Surfaces read figures through `DBWHISPER_EVIDENCE` (the policy-corpus and
     Spider results with their scope labels — the homepage evidence line, the
-    walkthrough, the résumé), `CROWNWAGER_EVIDENCE` (cross-validation and hold-out
-    figures — the project card, case study, diagram, résumé), or
-    `requireCompleteEval()`; `requireEval()` and these throw at module load if a row
+    walkthrough, the résumé) or `requireCompleteEval()`; `requireEval()` and these throw at module load if a row
     they cite is renamed, removed, or no longer complete. `evalAnchor()` builds
     `/evals` anchors.
   - **A result that does not hold is retired, not deleted.** The row keeps its
@@ -307,9 +306,8 @@ feeds, the sitemap, and generated routes in production, and keeps it previewable
   - **The flagships lead.** The summary and the first experience bullets name Bench
     Discovery and CareLTC with their `USAGE` figures, each linked to its case study in
     the PDF; the header carries the notice period (`STATUS.noticePeriod`).
-  - **Projects.** Three featured projects, DBWhisper, TradePulse and CrownWager, each
-    with a registry figure; LLM Studio keeps its case study and source on `/work` but
-    is not on the résumé. DBWhisper's line quotes the policy-corpus result only: its
+  - **Projects.** Two projects, DBWhisper and TradePulse (archived), each with a
+    registry figure. DBWhisper's line quotes the policy-corpus result only: its
     Spider result needs more scope than a résumé line holds, so `/evals` keeps it in
     full. A project may carry a `detail` line, how it is built, stated only where its
     public repository shows it at the audited commit; `/resume` and the PDF both show
@@ -340,15 +338,14 @@ feeds, the sitemap, and generated routes in production, and keeps it previewable
 - `config/nav.ts` — the header (the Work and About menus, the plain links, the
   Contact and Hire me pills), the mobile menu, the footer map, and `WORK_ITEMS`, the
   work sub-nav's order (the three flagship case studies from `content/flagship`, then
-  the four public systems from the registry). The Work menu shows the same two groups,
+  the public systems from the registry). The Work menu shows the same two groups,
   flagships first.
 - `content/pages/<page>.ts` — **one module per page for the copy that page alone
   shows**: `home`, `about`, `hire`, `contact`, `work` (the index and the case-study
   frame), `writing` (the index and the article frame), `evals`, `resume`, `now`,
   `trust` and `uses`. A page's sections import their words from here, never from a
   `copy.ts` beside the components. Figures are never typed into these files: they
-  import from `content/evals.ts` (`DBWHISPER_EVIDENCE`, `CROWNWAGER_EVIDENCE`,
-  `requireEval()`) and addresses from `config/site.ts`.
+  import from `content/evals.ts` (`DBWHISPER_EVIDENCE`, `requireEval()`) and addresses from `config/site.ts`.
 - `content/site.ts` — copy that more than one route reads: the index-page and 404
   frames (`pages`), the principles (`home.principles`: /about and the assistant),
   `/about`'s social-card title (`about`), `/now`'s frame (`nowPage`), `/uses`'s stack
@@ -374,7 +371,7 @@ services, each service also under its short name — "Amazon ECS" is "ECS" — a
 AWS-hosted product under "AWS") and the `stack` frontmatter of each
 `content/projects/<slug>.mdx` (its languages first, as the project's public repository
 reports them, then its frameworks and services), with a small alias table (e.g.
-`postgresql` ↔ `postgres`, and `javascript` for LLM Studio's "Vanilla JS"). Compound
+`postgresql` ↔ `postgres`). Compound
 entries count for each tool they join ("C# on .NET 10",
 "PostgreSQL 17 with pgvector"). The flagships come first, in the site's order of
 work. If a case study does not list the tool, no "Used in" link is drawn; a link is

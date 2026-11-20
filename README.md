@@ -43,7 +43,7 @@ grounded site-search answers — the best passage, verbatim, with its source. A
 | `config/site.ts`, `config/nav.ts` | Identity, the availability line and notice period, integrations, navigation |
 | `constants/` | Shared class strings, search-result limits (`seo.ts`), browser-chrome colours (`theme.ts`) |
 | `content/flagship/*.ts` | The three flagship case studies (Bench Discovery, CareLTC, SignFlow): one record each, the approved wording they share (`USAGE`, the employer, the private-repository notice), the template's labels and anchors, and a plain-text reader (`sections.ts`) |
-| `content/projects.ts` | Canonical records and card content for the four public projects |
+| `content/projects.ts` | Canonical records and card content for the public projects (DBWhisper; TradePulse, archived) |
 | `content/resume.ts` | Canonical résumé, used by pages, retrieval, and the PDF |
 | `content/evals.ts`, `content/schema.ts` | Evaluation registry and the Zod content schemas |
 | `content/pages/*.ts` | One copy module per page (home, about, hire, contact, work, writing, evals, résumé, now, trust, uses) |
@@ -134,7 +134,7 @@ quotes a figure that disagrees with `content/evals.ts`.
 | Route | Page |
 | --- | --- |
 | `/` | Home |
-| `/work`, `/work/bench-discovery`, `/work/careltc`, `/work/signflow`, `/work/[slug]` | The work overview, the three flagship case studies (static routes of their own) and the four public case studies (DBWhisper, TradePulse, CrownWager, LLM Studio; `/work/[slug]`). The old field-report URLs, `/work/field/records-triage` and `/work/field/nfc-room-rounds`, redirect (308) to the flagships |
+| `/work`, `/work/bench-discovery`, `/work/careltc`, `/work/signflow`, `/work/[slug]` | The work overview, the three flagship case studies (static routes of their own) and the public case studies (DBWhisper, and TradePulse, archived; `/work/[slug]`). The old field-report URLs, `/work/field/records-triage` and `/work/field/nfc-room-rounds`, redirect (308) to the flagships; the retired `/work/crownwager`, `/work/llm-studio` and the CrownWager note redirect (308) to `/work` and `/notes` (ADR-021) |
 | `/evals` | The evaluation registry |
 | `/writing`, `/writing/[slug]`, `/notes`, `/notes/[slug]` | Essays, guides and notes; `/notes` is the writing index with Notes selected |
 | `/about`, `/hire`, `/contact` | About, the careers-style hire page, and the contact funnel |

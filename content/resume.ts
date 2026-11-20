@@ -1,5 +1,5 @@
 import { formatDate } from "@/lib/format";
-import { CROWNWAGER_EVIDENCE, DBWHISPER_EVIDENCE, requireCompleteEval } from "./evals";
+import { DBWHISPER_EVIDENCE, requireCompleteEval } from "./evals";
 import { AWS, USAGE } from "./flagship/shared";
 import { projectBySlug } from "./projects";
 
@@ -28,7 +28,6 @@ export type ResumeMetric = {
 };
 
 const { policy } = DBWHISPER_EVIDENCE;
-const cw = CROWNWAGER_EVIDENCE;
 const tradepulseCanary = requireCompleteEval("TradePulse", "Look-ahead canary + parity suite");
 
 /** A featured project as the résumé words it; its project record supplies the rest. */
@@ -50,10 +49,12 @@ type ResumeProjectEntry = {
  * read from the eval registry with its scope and date (content/evals.ts); none
  * is typed here.
  *
- * Three projects, each with a registry figure, so the résumé stays one page;
- * LLM Studio (a test count, its demo offline) keeps its case study and source
- * on /work. The PDF sets a tagline on the project's name line, beside its
- * links, so a tagline stays one phrase of about 70 characters.
+ * Two projects, each with a registry figure, so the résumé stays one page.
+ * CrownWager and LLM Studio were retired from the portfolio on 2026-11-20
+ * (spec/decisions/ADR-021); TradePulse stays as an archived project until a
+ * newer public project replaces it. The PDF sets a tagline on the project's
+ * name line, beside its links, so a tagline stays one phrase of about 70
+ * characters.
  *
  * DBWhisper quotes only the policy corpus. The Spider sample's honest scope (a
  * historical run of the generation model alone, with sampled questions
@@ -92,21 +93,6 @@ const PROJECTS = [
       },
     ],
     stack: "FastAPI · Next.js · TimescaleDB · Redis",
-  },
-  {
-    slug: "crownwager",
-    tagline: "Sports analytics platform built on an XGBoost model of NBA games",
-    metrics: [
-      {
-        // Named by how it was measured (the mean across stratified folds), never
-        // as "accuracy" alone or as a live, forecasting or betting result. The
-        // spread across folds does not fit the line; /evals shows it.
-        text: `${cw.cv.mean} mean ${cw.cv.folds}-fold stratified cross-validation accuracy on ${cw.games} games vs a ${cw.baseRate} home-win base rate (${formatDate(cw.date)})`,
-        method: cw.anchor,
-        topic: "cross-validation accuracy",
-      },
-    ],
-    stack: "Django REST Framework · FastAPI · XGBoost · Next.js",
   },
 ] as const satisfies readonly ResumeProjectEntry[];
 

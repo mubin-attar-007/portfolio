@@ -25,7 +25,7 @@ export const metadata: Metadata = pageMetadata({
 /**
  * /work — the product overview: the three flagship products built at Sevina
  * Technologies on a dark plate (the real app in frames, the approved usage
- * figure, a link to each case study), the four public systems with their
+ * figure, a link to each case study), the public systems with their
  * real captures and one method-linked figure each, what each system runs on,
  * and the walkthrough CTA. Section ids `flagship` and `public` are link
  * targets (the footer, the nav and /hire point at them).

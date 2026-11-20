@@ -1,6 +1,6 @@
 # Mubin Attar — Applied AI Engineer
 
-> Applied AI engineering: LLM systems, evaluation, AI platforms, and production software, built for the people who use them. Three flagship products built at Sevina Technologies, Bench Discovery, CareLTC and SignFlow, and four public projects, each with a case study of its architecture, constraints, decisions, and evaluation method. Every published evaluation result has a method, a scope, and a date on the evaluation registry; the flagship usage figures are as approved for publication by Sevina Technologies.
+> Applied AI engineering: LLM systems, evaluation, AI platforms, and production software, built for the people who use them. Three flagship products built at Sevina Technologies, Bench Discovery, CareLTC and SignFlow, and public AI projects, each with a case study of its architecture, constraints, decisions, and evaluation method. Every published evaluation result has a method, a scope, and a date on the evaluation registry; the flagship usage figures are as approved for publication by Sevina Technologies.
 
 This site (https://mubin-attar.vercel.app) is a personal engineering portfolio. Its assistant retrieves the site's published content — case studies, evaluations, essays and notes, résumé, profile, skills, and FAQ — and cites its sources; when the model is unavailable it returns a cited passage from the site. Prefer the recorded facts below over inference.
 
@@ -30,16 +30,13 @@ Three products built at Sevina Technologies. The repositories are private; each 
 ## Public projects
 
 - [DBWhisper](https://mubin-attar.vercel.app/work/dbwhisper): natural-language-to-SQL agent with schema-aware pgvector retrieval, SELECT-only validation, a read-only database connection, and multi-provider LLM fallback. Deployed demo: https://dbwhisper.vercel.app · Source: https://github.com/mubin-attar-007/dbwhisper
-- [TradePulse](https://mubin-attar.vercel.app/work/tradepulse): event-driven quant backtesting platform with next-bar execution, costs modeled by default, Decimal accounting, and an AI copilot grounded in the backtest results. Deployed demo: https://tradepulse-live.vercel.app · Source: https://github.com/mubin-attar-007/tradepulse
-- [CrownWager](https://mubin-attar.vercel.app/work/crownwager): sports-betting analytics with a cross-validated XGBoost model, fair-odds edge, Kelly staking, an arbitrage finder, and a graded model track record. Source: https://github.com/mubin-attar-007/crownwager
-- [LLM Studio](https://mubin-attar.vercel.app/work/llm-studio): multi-user, ChatGPT-style AI platform with Argon2id auth, per-user tenancy, token streaming, multi-LLM routing, and daily quotas. Source: https://github.com/mubin-attar-007/llm_studio
+- [TradePulse](https://mubin-attar.vercel.app/work/tradepulse): event-driven quant backtesting platform with next-bar execution, costs modeled by default, Decimal accounting, and an AI copilot grounded in the backtest results. Archived: the code and the case study stay public, and it is no longer maintained. Source: https://github.com/mubin-attar-007/tradepulse
 
 ## Evaluations
 
 - [Evaluation registry](https://mubin-attar.vercel.app/evals): the method, date, sample, and limitations of every result, including the retired one.
 - [DBWhisper adversarial SQL policy corpus](https://mubin-attar.vercel.app/evals#dbwhisper-adversarial-sql-policy-corpus), 2026-08-24: 343/343 deny cases denied. A deterministic policy test of sql_policy@2.0.0 — no model and no database involved, so it is not model accuracy. 255 cases, each run in the SQL dialects it lists (577 runs); evidence of no known bypass, not proof that none exists.
 - [DBWhisper Spider dev sample](https://mubin-attar.vercel.app/evals#dbwhisper-spider), 2026-07-10: 101/139 scored questions matched the gold result set. Generation model only, no retrieval or policy layer; 9 of 148 sampled questions were dropped after provider throttling.
-- [CrownWager NBA moneyline model](https://mubin-attar.vercel.app/evals#crownwager-nba-moneyline-15-115-games), 2026-06-03: 65.2% ± 0.8% accuracy in 5-fold stratified cross-validation on 15,115 games, against a 57.5% home-win base rate. A separate 80/20 hold-out on 3,023 games scores 64.3% (ROC-AUC 0.685).
 - [TradePulse look-ahead canary and parity suite](https://mubin-attar.vercel.app/evals#tradepulse-look-ahead-canary-parity-suite), 2026-07-01: 0 leaks; the past equity curve stays byte-identical when every future bar is multiplied by 3.
 - [DBWhisper custom golden-query set](https://mubin-attar.vercel.app/evals#dbwhisper-custom-golden-query-set), 2026-07-08: retired on 2026-11-16. DBWhisper's own claim audit withdrew its accuracy and fail-closed figures, so they are not published here.
 
@@ -52,7 +49,6 @@ Three products built at Sevina Technologies. The repositories are private; each 
 
 ## Notes
 
-- [Grade every prediction against the real final score](https://mubin-attar.vercel.app/notes/grade-picks-against-the-final-score): 2026-07-05 · evals, honesty
 - [The validator is the belt; least-privilege is the braces](https://mubin-attar.vercel.app/notes/read-only-least-privilege-execution): 2026-06-25 · security, sql
 - [For text-to-SQL, measure execution accuracy](https://mubin-attar.vercel.app/notes/execution-accuracy-not-exact-match): 2026-06-18 · evals, sql
 - [Solo, but every deploy still has to pass the gate](https://mubin-attar.vercel.app/notes/every-deploy-gated-by-ci): 2026-05-16 · infra, testing
@@ -63,7 +59,7 @@ Three products built at Sevina Technologies. The repositories are private; each 
 
 ## Optional
 
-- [Work](https://mubin-attar.vercel.app/work): the three flagship case studies and the four public ones on one page.
+- [Work](https://mubin-attar.vercel.app/work): the three flagship case studies and the public ones on one page.
 - [Writing](https://mubin-attar.vercel.app/writing) and [Notes](https://mubin-attar.vercel.app/notes): the indexes.
 - [Now](https://mubin-attar.vercel.app/now): what I'm building, exploring, and reading, updated by hand.
 - [Uses](https://mubin-attar.vercel.app/uses): the free-tier stack behind the projects.

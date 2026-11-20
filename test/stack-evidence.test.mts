@@ -32,17 +32,13 @@ test("a compound stack entry counts for each tool it names, versions ignored", (
   assert.ok(slugs("React Native").includes("careltc"), "React Native 0.86");
 });
 
-test("a public case study's languages are its evidence, and Vanilla JS counts as JavaScript", () => {
+test("a public case study's languages are its evidence", () => {
   // /skills' Languages row once marked only the flagships: the public stacks
   // listed frameworks but no language, as if DBWhisper used no Python.
-  for (const slug of ["dbwhisper", "tradepulse", "crownwager", "llm-studio"]) {
+  for (const slug of ["dbwhisper", "tradepulse"]) {
     assert.ok(slugs("Python").includes(slug), `${slug}: "Python"`);
-  }
-  for (const slug of ["dbwhisper", "tradepulse", "crownwager"]) {
     assert.ok(slugs("TypeScript").includes(slug), `${slug}: "TypeScript"`);
   }
-  assert.ok(slugs("JavaScript").includes("llm-studio"), 'LLM Studio lists "Vanilla JS"');
-  assert.ok(!slugs("TypeScript").includes("llm-studio"), "LLM Studio's front end is plain JavaScript");
 });
 
 test("a tool no case study lists links nowhere", () => {
