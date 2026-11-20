@@ -28,7 +28,7 @@ export const SITE = {
   socials: {
     github: "https://github.com/mubin-attar-007",
     linkedin: "https://www.linkedin.com/in/mubin-attar-53223716a",
-    huggingface: "https://huggingface.co/heisenbergblue",
+    huggingface: "https://huggingface.co/mubin-attar",
   },
 } as const;
 
