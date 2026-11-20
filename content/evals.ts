@@ -10,9 +10,9 @@ import { EvalSchema, type EvalRow, type EvalScore } from "./schema";
  *
  * Every figure is written down once, as the recorded value of its run (the
  * constants below), and every string a page shows is formatted from it here.
- * Pages read the derived strings through `DBWHISPER_EVIDENCE`,
- * `CROWNWAGER_EVIDENCE`, or `requireEval`; `test/evidence.test.mts` fails if a
- * page types one of these figures by hand or quotes a retired one.
+ * Pages read the derived strings through `DBWHISPER_EVIDENCE` or
+ * `requireEval`; `test/evidence.test.mts` fails if a page types one of these
+ * figures by hand or quotes a retired one.
  *
  * Before (re)publishing a project's figure, re-read that project's README and
  * claim audit at the commit the row cites (spec/CONTENT_MODEL.md §4).
@@ -63,15 +63,6 @@ export const formatShare = (score: EvalScore): string =>
 export const excludedCount = (score: EvalScore): number =>
   (score.sampled ?? score.scored) - score.scored;
 
-/** A recorded fraction as a one-decimal percentage: 0.6524 → "65.2%". */
-const percent = (fraction: number): string => `${(100 * fraction).toFixed(1)}%`;
-
-/** A recorded score to three decimals: 0.6847 → "0.685". */
-const threeDecimals = (value: number): string => value.toFixed(3);
-
-/** 15115 → "15,115", independent of the build machine's locale. */
-const thousands = (n: number): string => n.toLocaleString("en-US");
-
 /* ---------------------------------------------------------------------------
  * The recorded runs. Values are copied from the project's own records, at the
  * commit linked beside them, and nowhere else.
@@ -106,38 +97,6 @@ const POLICY_CORPUS_SCORE = { passed: POLICY_CORPUS.runs.deny, scored: POLICY_CO
  * 148 questions drawn, 139 scored, 101 matched the gold result set.
  */
 const SPIDER_SCORE = { passed: 101, scored: 139, sampled: 148 } as const;
-
-/**
- * CrownWager's repository at the commit that last changed its model manifest
- * (000651f, 4 Jun 2026). The metrics file beside it was written by the
- * training run committed in ac0b2fa (3 Jun 2026), its only commit: it is
- * identical here and at the repository's head, so the row is dated by that run.
- */
-const CROWNWAGER_AT_METRICS =
-  "https://github.com/mubin-attar-007/crownwager/blob/000651fb177a7eeb8667b79248a04fca8ed07ffe";
-
-/**
- * CrownWager's model as `ai/models/xgboost_nba_ml.metrics.json` records it,
- * with the base rate from `model_manifest.yaml`. Two separate evaluations of
- * one model (`ai/train/train_nba_ml.py`): 5-fold stratified cross-validation
- * over every game (shuffled, seed 42), and an 80/20 stratified hold-out (seed
- * 42) that also yields ROC-AUC and log-loss.
- */
-const CROWNWAGER_MODEL = {
-  games: 15_115,
-  baseRate: 0.575,
-  cv: { folds: 5, mean: 0.6523982798544492, sd: 0.008136266828788985 },
-  holdout: {
-    games: 3_023,
-    accuracy: 0.643069798213695,
-    rocAuc: 0.684708937577615,
-    logLoss: 0.6280937790870667,
-  },
-} as const;
-const CROWNWAGER_BENCHMARK = `NBA moneyline · ${thousands(CROWNWAGER_MODEL.games)} games`;
-/** Points of accuracy above always picking the home team, rounded. */
-const CROWNWAGER_EDGE = Math.round(100 * (CROWNWAGER_MODEL.cv.mean - CROWNWAGER_MODEL.baseRate));
-const CROWNWAGER_CV_RESULT = `${percent(CROWNWAGER_MODEL.cv.mean)} ± ${percent(CROWNWAGER_MODEL.cv.sd)}`;
 
 const RAW = [
   {
@@ -175,16 +134,6 @@ const RAW = [
       reason: "DBWhisper’s own claim audit (24 August 2026) withdrew both figures. The run cannot be reproduced from a clean checkout: its harness and questions were not in the repository when the figures were published, and they depend on a local database and API that are not part of it. It used a prompt that was retired on 21 August 2026; its set-based comparison was looser than the exact result-set match it reported; and none of its unsafe prompts reached the validator, because the model declined first, so it never measured fail-closed refusal.",
       link: `${DBWHISPER_AT_AUDIT}/docs/v2/CLAIM_AUDIT.md#44-not-publishable--metrics-that-must-not-appear-until-re-run`,
     },
-  },
-  {
-    system: "CrownWager",
-    benchmark: CROWNWAGER_BENCHMARK,
-    metric: "Model accuracy (cross-validated)",
-    result: CROWNWAGER_CV_RESULT,
-    status: "complete",
-    date: "2026-06-03",
-    note: `${CROWNWAGER_MODEL.cv.folds}-fold stratified cross-validation (fixed seed) on ${thousands(CROWNWAGER_MODEL.games)} NBA games (recorded in commit ac0b2fa) — the mean accuracy across the folds, ± their standard deviation — replacing an earlier post-hoc “best of 300 random splits” 68%. The base home-win rate is ${percent(CROWNWAGER_MODEL.baseRate)}, so this is a real ~${CROWNWAGER_EDGE}-point edge. A separate 80/20 hold-out on ${thousands(CROWNWAGER_MODEL.holdout.games)} games scores ${percent(CROWNWAGER_MODEL.holdout.accuracy)} (ROC-AUC ${threeDecimals(CROWNWAGER_MODEL.holdout.rocAuc)}, log-loss ${threeDecimals(CROWNWAGER_MODEL.holdout.logLoss)}). Published picks are then graded against the real final score, and the track record is flagged “insufficient” below 20 settled picks.`,
-    link: `${CROWNWAGER_AT_METRICS}/ai/models/model_manifest.yaml`,
   },
   {
     system: "TradePulse",
@@ -261,7 +210,6 @@ function requireScoredEval(system: string, benchmark: string) {
 
 const POLICY = requireScoredEval("DBWhisper", "Adversarial SQL policy corpus");
 const SPIDER = requireScoredEval("DBWhisper", "Spider");
-const CROWNWAGER = requireCompleteEval("CrownWager", CROWNWAGER_BENCHMARK);
 
 /**
  * DBWhisper's two published results, as every surface that quotes them needs
@@ -298,36 +246,3 @@ export const DBWHISPER_EVIDENCE = {
   },
 } as const;
 
-/**
- * CrownWager's model figures, formatted once for every surface that quotes
- * them: the project card, the case study, its diagram, and the résumé. The
- * cross-validated accuracy is the registry row's result; the hold-out figures
- * come from the same metrics file and belong to the hold-out only.
- */
-export const CROWNWAGER_EVIDENCE = {
-  anchor: CROWNWAGER.anchor,
-  date: CROWNWAGER.date,
-  /** "15,115" — every game in the dataset. */
-  games: thousands(CROWNWAGER_MODEL.games),
-  /** "57.5%" — the home team's win rate, the bar the model has to beat. */
-  baseRate: percent(CROWNWAGER_MODEL.baseRate),
-  /** 8 — points of accuracy above the base rate. */
-  edge: CROWNWAGER_EDGE,
-  cv: {
-    folds: CROWNWAGER_MODEL.cv.folds,
-    /** "65.2% ± 0.8%" — the registry row's result. */
-    result: CROWNWAGER.row.result,
-    /** "65.2%" */
-    mean: percent(CROWNWAGER_MODEL.cv.mean),
-  },
-  holdout: {
-    /** "3,023" */
-    games: thousands(CROWNWAGER_MODEL.holdout.games),
-    /** "64.3%" */
-    accuracy: percent(CROWNWAGER_MODEL.holdout.accuracy),
-    /** "0.685" */
-    rocAuc: threeDecimals(CROWNWAGER_MODEL.holdout.rocAuc),
-    /** "0.628" */
-    logLoss: threeDecimals(CROWNWAGER_MODEL.holdout.logLoss),
-  },
-} as const;

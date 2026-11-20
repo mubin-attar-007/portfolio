@@ -17,7 +17,7 @@
 // -----------------------------------------------------------------------------
 
 import { INTEGRATIONS, SITE, STATUS } from "../../config/site.ts";
-import { CROWNWAGER_EVIDENCE, DBWHISPER_EVIDENCE } from "../../content/evals.ts";
+import { DBWHISPER_EVIDENCE } from "../../content/evals.ts";
 import { USAGE } from "../../content/flagship/shared.ts";
 
 /** How a turn was answered, as a visitor would tell it apart. */
@@ -283,7 +283,7 @@ export const GOLDEN: readonly GoldenItem[] = [
     facts: [/(?:iOS|iPhone|link|history|demo|feed|store)/i],
   },
 
-  // ---- Public projects (8) ----------------------------------------------------
+  // ---- Public projects (4) ----------------------------------------------------
   {
     id: "dbw-safe",
     area: "public",
@@ -309,44 +309,12 @@ export const GOLDEN: readonly GoldenItem[] = [
     facts: [/next bar/i, /closed bar/i],
   },
   {
-    id: "cw-accuracy",
-    area: "public",
-    turns: ["How accurate is CrownWager's model?"],
-    expect: "live",
-    paths: ["/evals", "/work/crownwager"],
-    facts: [CROWNWAGER_EVIDENCE.cv.mean, /cross-validation/i],
-  },
-  {
-    id: "llm-tenancy",
-    area: "public",
-    turns: ["How does LLM Studio keep one user from reading another user's chats?"],
-    expect: "live",
-    paths: ["/work/llm-studio"],
-    facts: [/(?:repository layer|tenan|owner)/i],
-  },
-  {
-    id: "llm-bug",
-    area: "public",
-    turns: ["What production bug did he fix in LLM Studio?"],
-    expect: "live",
-    paths: ["/work/llm-studio"],
-    facts: [/(?:epoch|32-bit|INT4|BigInteger)/i],
-  },
-  {
     id: "tp-live",
     area: "public",
     turns: ["Is TradePulse live?"],
     expect: "live",
     paths: ["/work/tradepulse"],
-    facts: [/demo/i],
-  },
-  {
-    id: "cw-demo",
-    area: "public",
-    turns: ["Can I try CrownWager?"],
-    expect: "live",
-    paths: ["/work/crownwager"],
-    facts: [/(?:offline|no live demo|not published|none published|recording|paused)/i],
+    facts: [/(?:archived|no longer maintained)/i],
   },
 
   // ---- Hiring, availability, contact (11) -------------------------------------
@@ -449,7 +417,7 @@ export const GOLDEN: readonly GoldenItem[] = [
     actions: ["resume-pdf", "resume"],
   },
 
-  // ---- Skills, AWS, stack (6) -------------------------------------------------
+  // ---- Skills, AWS, stack (5) -------------------------------------------------
   {
     id: "aws",
     area: "skills",
@@ -487,16 +455,8 @@ export const GOLDEN: readonly GoldenItem[] = [
     area: "skills",
     turns: ["What hosting do his public projects use?"],
     expect: "live",
-    paths: ["/uses", "/work/dbwhisper", "/work/llm-studio", "/work/tradepulse", "/work/crownwager"],
+    paths: ["/uses", "/work/dbwhisper", "/work/tradepulse"],
     facts: [/(?:Vercel|Hugging Face|Neon)/],
-  },
-  {
-    id: "ml",
-    area: "skills",
-    turns: ["What machine learning work has he done beyond LLMs?"],
-    expect: "live",
-    paths: ["/work/crownwager"],
-    facts: [/XGBoost/],
   },
 
   // ---- Writing and evaluations (5) --------------------------------------------
@@ -538,7 +498,7 @@ export const GOLDEN: readonly GoldenItem[] = [
     turns: ["What is he working on now?"],
     expect: "live",
     paths: ["/now"],
-    facts: [/(?:DBWhisper|Spider|this site|four public projects)/i],
+    facts: [/(?:DBWhisper|Spider|this site|public projects)/i],
   },
 
   // ---- Off-topic (4) ----------------------------------------------------------

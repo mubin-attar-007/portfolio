@@ -1,4 +1,3 @@
-import { CROWNWAGER_EVIDENCE } from "./evals";
 import { ProjectSchema, type Project } from "./schema";
 
 /**
@@ -8,7 +7,6 @@ import { ProjectSchema, type Project } from "./schema";
  * card and /evals cannot disagree. Exactly one project is `featured` (the
  * flagship). To hand the flagship to a future project, flip `featured`.
  */
-const cw = CROWNWAGER_EVIDENCE;
 const RAW = [
   {
     slug: "dbwhisper",
@@ -53,9 +51,9 @@ const RAW = [
     title: "TradePulse",
     summary:
       "An honest quant backtesting platform — a look-ahead-free event-driven engine, costs modeled by default, and a grounded NL→strategy AI copilot.",
-    status: "deployed-demo",
+    status: "archived",
     role: "Designed and built (solo)",
-    timeline: "2025 – present",
+    timeline: "2025 – 2026",
     featured: false,
     order: 2,
     systems: ["event-driven backtest engine", "cost + slippage model", "grounded AI copilot"],
@@ -71,7 +69,9 @@ const RAW = [
       alt: "TradePulse's website introducing the backtesting engine and offering a real backtest.",
       caption: "TradePulse · product website",
     },
-    links: { live: "https://tradepulse-live.vercel.app", repo: "https://github.com/mubin-attar-007/tradepulse" },
+    // Archived on 2026-11-20: the code and the write-up stay public; the hosted
+    // demo is no longer maintained, so the case study links no demo.
+    links: { repo: "https://github.com/mubin-attar-007/tradepulse" },
     diagram: "tradepulse",
     recording: {
       alt: "Recorded scroll through the TradePulse product website.",
@@ -85,92 +85,6 @@ const RAW = [
       { date: "2026-07-01", summary: "Credible backtest report: an underwater drawdown curve and full trade CSV export." },
       { date: "2026-06-04", summary: "Free-tier cloud deploy (Docker on Hugging Face Spaces + Neon) running on real live market data." },
       { date: "2026-06-03", summary: "First build — a look-ahead-safe, cost-aware backtest engine with a grounded NL→strategy copilot." },
-    ],
-  },
-  {
-    slug: "crownwager",
-    title: "CrownWager",
-    summary:
-      "+EV sports-betting analytics — a validated XGBoost model turned into fair-odds edge, Kelly staking, an arbitrage finder, and a graded model track-record.",
-    status: "deployed-demo",
-    role: "Designed and built (solo)",
-    timeline: "2025 – present",
-    featured: false,
-    order: 3,
-    systems: ["XGBoost model", "fair-odds edge + Kelly staking", "graded model track-record"],
-    metrics: [
-      { label: "model accuracy", value: cw.cv.result, method: `${cw.cv.folds}-fold stratified cross-validation (fixed seed) on ${cw.games} NBA games against a ${cw.baseRate} home-win base rate, so a real ~${cw.edge}-point edge. A separate 80/20 hold-out on ${cw.holdout.games} games scores ${cw.holdout.accuracy} (ROC-AUC ${cw.holdout.rocAuc}, log-loss ${cw.holdout.logLoss}).` },
-      { label: "track-record", value: "graded vs finals", method: "Every published pick is settled against the real final score; the record is flagged 'insufficient' below 20 settled picks." },
-    ],
-    card: {
-      definition: "Turn a validated model into odds, edge, and a graded record.",
-      category: "Predictive ML · model evaluation",
-      decision: { title: "Make the model evaluation repeatable.", showResult: true },
-      shot: { src: "/demos/crownwager.webp", width: 1280, height: 760 },
-      alt: "CrownWager's website introducing its sports analytics, beside an illustrative betting-odds panel.",
-      caption: "CrownWager · product website",
-    },
-    // No live link while the hosted demo is down: its backend Space is paused,
-    // so the app cannot load data (Space stage PAUSED and health check 503 on
-    // 2026-11-16). The case study keeps the recording and the source. Restore
-    // `live: "https://crownwager.vercel.app"` once the Space is running again.
-    links: { repo: "https://github.com/mubin-attar-007/crownwager" },
-    diagram: "crownwager",
-    recording: {
-      alt: "Recorded scroll through the CrownWager product website.",
-      caption: `Product website recording. The on-screen training count differs from the current ${cw.cv.folds}-fold evaluation on ${cw.games} games documented below.`,
-      width: 1280,
-      height: 760,
-    },
-    changelog: [
-      { date: "2026-07-02", summary: "A verifiable model track-record and prediction confidence grades; cut a cherry-picked split in a reality pass." },
-      { date: "2026-07-01", summary: "Best-bets credibility layer — fair odds, confidence grades, and filters." },
-      { date: "2026-06-08", summary: "Security hardening: admin 2FA, cookie-JWT auth, a circuit breaker on the AI client, and blocking CI gates." },
-      { date: "2026-06-04", summary: "Card-free free-tier deploy (Hugging Face Space + Vercel), bankroll ROI/P&L tracking, and launch hardening." },
-      { date: "2026-06-03", summary: "First build — a validated XGBoost NBA moneyline model served behind the analytics platform." },
-    ],
-  },
-  {
-    slug: "llm-studio",
-    title: "LLM Studio",
-    summary:
-      "A multi-user, ChatGPT-style AI platform — per-user tenancy, token streaming, multi-LLM routing, and daily quotas, Dockerized and CI'd.",
-    status: "deployed-demo",
-    role: "Designed and built (solo)",
-    timeline: "2025 – present",
-    featured: false,
-    order: 4,
-    systems: ["Argon2 auth + sessions", "per-user tenancy", "multi-LLM routing"],
-    metrics: [
-      { label: "tenancy isolation", value: "per-user", method: "Queries for chats and history are scoped to the authenticated owner in the repository layer, alongside route-level authentication." },
-      { label: "LLM routing", value: "cloud + local", method: "Hosted models and a local option are routed behind one interface, with per-provider rate-limit and quota errors surfaced cleanly to the user instead of failing the request." },
-    ],
-    card: {
-      definition: "A multi-user LLM platform with tenancy enforced below the route.",
-      category: "Applied LLM · multi-tenant SaaS",
-      decision: { title: "Enforce ownership in the data layer." },
-      shot: { src: "/demos/llm-studio.webp", width: 1280, height: 720 },
-      alt: "The LLM Studio chat interface with a conversation sidebar and a model selector.",
-      caption: "LLM Studio · chat interface",
-    },
-    // No live link while the hosted demo is offline: the free Hugging Face tier
-    // runs three Spaces at a time, and the other three demos hold those slots.
-    // Restoring `live` brings back the card link, "Open demo", the caption link
-    // and the résumé link.
-    links: { repo: "https://github.com/mubin-attar-007/llm_studio" },
-    diagram: "llm-studio",
-    // Auth-gated, so the tour is signed into a real account (the chat UI,
-    // streaming and model switching), not a login screen.
-    recording: {
-      alt: "Recorded LLM Studio chat interface with conversation history and model selection.",
-      caption: "Application recording — a multi-model chat workspace with per-user history and model switching.",
-      width: 1280,
-      height: 720,
-    },
-    changelog: [
-      { date: "2026-07-02", summary: "End-to-end account flows (change/forgot password, delete account) and SEO/PWA metadata." },
-      { date: "2026-07-01", summary: "A ChatGPT-parity UI overhaul and clearer provider rate-limit / quota error handling." },
-      { date: "2026-06-30", summary: "Rebuilt a single-user chat app into a multi-user SaaS — per-user auth + history, Dockerized, CI/CD, hardened." },
     ],
   },
 ] as const;

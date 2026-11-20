@@ -43,3 +43,13 @@ prerendered HTML (a gap, then a swap), so it was reverted.
   signal to cut first-load script, not to raise the limit again.
 - CI takes about two minutes longer.
 - Raising the limit past 2.7 s needs a new record.
+
+## Amendment, 20 November 2026: one re-measurement before a failure
+
+A pull request that changed only a URL string failed on the writing page at 2806 ms;
+the re-run of the same commit read 2194 ms. The median of five runs had still lost
+to a slow runner. A route over any budget is now measured once more, with a fresh set
+of five runs, and fails the build only if the second set fails too
+(`scripts/lighthouse-budget.mjs`). The limits are unchanged, and a real regression
+fails both sets. The re-measurement prints a CI warning naming the route, so a page
+that keeps needing it is visible.

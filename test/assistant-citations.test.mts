@@ -52,9 +52,9 @@ test("every product and project in the registries is linkable from a source labe
 });
 
 test("FAQ sources resolve to the pages they name, and nothing else", () => {
-  assert.deepEqual(citationLinks("FAQ — TradePulse — ai/service.py; CrownWager — assistant/services.py"), [
+  assert.deepEqual(citationLinks("FAQ — TradePulse — ai/service.py; DBWhisper validator"), [
+    { label: "DBWhisper", href: "/work/dbwhisper" },
     { label: "TradePulse", href: "/work/tradepulse" },
-    { label: "CrownWager", href: "/work/crownwager" },
   ]);
   assert.deepEqual(citationLinks("Résumé — Sevina Technologies (AI/ML Engineer)"), [{ label: "Résumé", href: "/resume" }]);
   assert.deepEqual(citationLinks("privacy · assistant"), [{ label: "Privacy", href: "/privacy" }]);

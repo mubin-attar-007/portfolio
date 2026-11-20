@@ -48,7 +48,7 @@ export const hirePage = {
   glance: {
     label: "At a glance",
     title: "Production work, in use and in public",
-    body: `${FLAGSHIP_NAMES}, three products from my work at ${EMPLOYER}, are in use. Four public AI systems come with source, recordings and the method behind every result.`,
+    body: `${FLAGSHIP_NAMES}, three products from my work at ${EMPLOYER}, are in use. The public AI systems come with source, recordings and the method behind every result.`,
     stats: [
       { label: "In software engineering", value: "3.5+ yrs", source: { label: "Résumé", href: "/resume" } },
       { label: "Products in use", value: String(flagships.length), source: { label: "The products", href: "/work#flagship" } },

@@ -418,8 +418,6 @@ test("a misspelt product or project name finds that product (Damerau–Levenshte
     ["tell me about the bench discvery app", "bench-discovery"],
     ["What is Bench Dicsovery?", "bench-discovery"],
     ["What is Tradepluse?", "tradepulse"],
-    ["Is crownwagr live?", "crownwager"],
-    ["What is LLM Studoi?", "llm-studio"],
   ];
   for (const [question, slug] of misspellings) {
     const search = searchSite(question);
@@ -506,9 +504,6 @@ test("a question naming a project is answered and cited from that project", () =
   for (const [question, slug] of [
     ["Does LangGraph act as the orchestrator in DBWhisper?", "dbwhisper"],
     ["How many tables can DBWhisper handle?", "dbwhisper"],
-    ["Can I try LLM Studio?", "llm-studio"],
-    ["Is LLM Studio live right now?", "llm-studio"],
-    ["Does CrownWager have a demo?", "crownwager"],
     ["Is TradePulse live?", "tradepulse"],
     ["What broke in CareLTC?", "careltc"],
     ["How does Bench Discovery verify a redaction?", "bench-discovery"],
@@ -541,7 +536,7 @@ test("a withdrawn result leads only a question about itself", () => {
 test("a follow-up searches the question it refers back to", () => {
   const cases: [latest: string, previous: string, slug: string][] = [
     ["How was it deployed?", "What is DBWhisper?", "dbwhisper"],
-    ["Tell me more about that.", "What is CrownWager?", "crownwager"],
+    ["Tell me more about that.", "What is TradePulse?", "tradepulse"],
     ["Is it open source?", "What is TradePulse?", "tradepulse"],
     ["How many people use it?", "What is CareLTC?", "careltc"],
     ["Which AWS services does it use?", "Tell me about Bench Discovery.", "bench-discovery"],
@@ -631,8 +626,6 @@ test("every follow-up grounds on its topic's pages", () => {
     signflow: ["/work/signflow"],
     dbwhisper: ["/work/dbwhisper", "/evals"],
     tradepulse: ["/work/tradepulse"],
-    crownwager: ["/work/crownwager", "/evals"],
-    "llm-studio": ["/work/llm-studio"],
     hiring: ["/hire", "/contact"],
     resume: ["/resume", "/about"],
     skills: ["/skills", "/uses"],

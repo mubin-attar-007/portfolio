@@ -16,17 +16,13 @@ import { StickySteps } from "@/components/ui/sticky-steps";
 import { Timeline, TimelineEntry } from "@/components/ui/timeline";
 import { BreadcrumbJsonLd, ProjectJsonLd } from "@/components/seo/json-ld";
 import { BoundaryInspector } from "@/components/case-studies/boundary-inspector";
-import { CROWNWAGER_SECTIONS, CrownWagerBody } from "@/components/case-studies/crownwager";
 import { DBWHISPER_SECTIONS, DBWhisperBody } from "@/components/case-studies/dbwhisper";
 import { GENERIC_CASE_STUDY_SECTIONS, GenericBody } from "@/components/case-studies/generic";
-import { LLM_STUDIO_SECTIONS, LlmStudioBody } from "@/components/case-studies/llm-studio";
 import { TRADEPULSE_SECTIONS, TradePulseBody } from "@/components/case-studies/tradepulse";
 import { CaseStudyReadingOutline } from "@/components/case-studies/reading-outline";
 import { FlagshipWalkthroughSection } from "@/components/case-studies/request-walkthrough";
 import type { CaseStudySection } from "@/components/case-studies/section";
-import { crownwagerDiagram } from "@/components/diagrams/data/crownwager";
 import { dbwhisperDiagram } from "@/components/diagrams/data/dbwhisper";
-import { llmStudioDiagram } from "@/components/diagrams/data/llm-studio";
 import { tradepulseDiagram } from "@/components/diagrams/data/tradepulse";
 import type { DiagramSpec } from "@/components/diagrams/types";
 import { AskAiButton, AskAiQuestions } from "@/components/work/ask-ai";
@@ -88,8 +84,6 @@ type CaseStudyTemplate = {
 const TEMPLATES: Record<string, CaseStudyTemplate> = {
   dbwhisper: { Body: DBWhisperBody, sections: DBWHISPER_SECTIONS, diagram: dbwhisperDiagram },
   tradepulse: { Body: TradePulseBody, sections: TRADEPULSE_SECTIONS, diagram: tradepulseDiagram },
-  crownwager: { Body: CrownWagerBody, sections: CROWNWAGER_SECTIONS, diagram: crownwagerDiagram },
-  "llm-studio": { Body: LlmStudioBody, sections: LLM_STUDIO_SECTIONS, diagram: llmStudioDiagram },
 };
 
 /** The demo's hostname for the frame's URL pill, or the project name when there is no demo. */

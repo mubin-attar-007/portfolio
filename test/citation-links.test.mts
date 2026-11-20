@@ -12,16 +12,16 @@ test("case-study citations lead to the named product or project", () => {
 });
 
 test("a source that cites two projects exposes both, not an arbitrary first match", () => {
-  assert.deepEqual(citationLinks("FAQ — TradePulse — ai/service.py; CrownWager — assistant/services.py"), [
+  assert.deepEqual(citationLinks("FAQ — TradePulse — ai/service.py; DBWhisper validator"), [
+    { label: "DBWhisper", href: "/work/dbwhisper" },
     { label: "TradePulse", href: "/work/tradepulse" },
-    { label: "CrownWager", href: "/work/crownwager" },
   ]);
 });
 
 test("career, skills, work and privacy sources point to their published pages", () => {
   assert.deepEqual(citationLinks("Résumé — Sevina Technologies (AI/ML Engineer)"), [{ label: "Résumé", href: "/resume" }]);
   assert.deepEqual(citationLinks("Skills — LLMs & agents"), [{ label: "Skills", href: "/skills" }]);
-  assert.deepEqual(citationLinks("projects (all four)"), [{ label: "Work", href: "/work" }]);
+  assert.deepEqual(citationLinks("public projects"), [{ label: "Work", href: "/work" }]);
   assert.deepEqual(citationLinks("privacy · assistant"), [{ label: "Privacy", href: "/privacy" }]);
 });
 

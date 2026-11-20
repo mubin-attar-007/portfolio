@@ -19,8 +19,6 @@ export type FollowUpTopic =
   | "signflow"
   | "dbwhisper"
   | "tradepulse"
-  | "crownwager"
-  | "llm-studio"
   | "hiring"
   | "resume"
   | "skills"
@@ -53,13 +51,7 @@ export const FOLLOW_UPS: Readonly<Record<FollowUpTopic, readonly string[]>> = {
     "What is DBWhisper's Spider score?",
     "How was DBWhisper deployed?",
   ],
-  tradepulse: ["How does TradePulse avoid look-ahead bias?", "Is TradePulse live?", "What is TradePulse's stack?"],
-  crownwager: ["How accurate is CrownWager's model?", "Can I try CrownWager?", "How does CrownWager avoid overfitting?"],
-  "llm-studio": [
-    "How does LLM Studio keep one user from reading another user's chats?",
-    "What production bug did he fix in LLM Studio?",
-    "Can I try LLM Studio?",
-  ],
+  tradepulse: ["How does TradePulse avoid look-ahead bias?", "Is TradePulse still maintained?", "What is TradePulse's stack?"],
   hiring: ["What roles is Mubin open to?", "Can he work remotely or on-site?", "How can I contact him?"],
   resume: ["Summarise his experience", "What did he do at Linescripts?", "What did he study?"],
   skills: ["Does Mubin have AWS experience?", "What's his tech stack?", "Has he used LangGraph?"],

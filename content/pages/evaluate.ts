@@ -83,7 +83,7 @@ export const evaluatePage = {
     lead: "Everything is a public page. Nothing needs a key or an account.",
     items: [
       { title: "llms.txt", body: "A plain summary of my work written for machines, linking every page it draws on." },
-      { title: "Case studies", body: "Three products in use and four public systems: the problem, the architecture, the code and the decisions." },
+      { title: "Case studies", body: "Three products in use and the public systems: the problem, the architecture, the code and the decisions." },
       { title: "Evaluations", body: "Each result with its method, sample and date. Retired results stay listed, with the reason." },
       { title: "Résumé", body: "Roles, dates and skills, as a page and as a PDF." },
       { title: "Writing", body: "Essays and notes on validators, retrieval, evaluation and the trade-offs behind each project." },

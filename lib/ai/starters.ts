@@ -49,19 +49,7 @@ export const CASE_STUDY_STARTERS: Readonly<Record<string, readonly string[]>> = 
     "What is TradePulse?",
     "How does TradePulse avoid look-ahead bias?",
     "How does TradePulse guarantee backtest and paper trading match?",
-    "Is TradePulse live?",
-  ],
-  crownwager: [
-    "What is CrownWager?",
-    "How accurate is CrownWager's model?",
-    "How does CrownWager avoid overfitting?",
-    "Can I try CrownWager?",
-  ],
-  "llm-studio": [
-    "What is LLM Studio?",
-    "How does LLM Studio keep one user from reading another user's chats?",
-    "What production bug did he fix in LLM Studio?",
-    "Can I try LLM Studio?",
+    "Is TradePulse still maintained?",
   ],
 };
 

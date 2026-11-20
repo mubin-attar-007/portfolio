@@ -15,7 +15,6 @@ import { extname, join, relative } from "node:path";
 import { fileURLToPath } from "node:url";
 
 import {
-  CROWNWAGER_EVIDENCE,
   DBWHISPER_EVIDENCE,
   evals,
   formatRatio,
@@ -112,12 +111,6 @@ const REGISTRY_FIGURES = [
   DBWHISPER_EVIDENCE.policy.ratio,
   DBWHISPER_EVIDENCE.spider.ratio,
   DBWHISPER_EVIDENCE.spider.share,
-  CROWNWAGER_EVIDENCE.cv.result,
-  CROWNWAGER_EVIDENCE.cv.mean,
-  CROWNWAGER_EVIDENCE.baseRate,
-  CROWNWAGER_EVIDENCE.holdout.accuracy,
-  CROWNWAGER_EVIDENCE.holdout.rocAuc,
-  CROWNWAGER_EVIDENCE.holdout.logLoss,
 ];
 
 test("code reads evaluation figures from the registry instead of retyping them", () => {

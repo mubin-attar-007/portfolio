@@ -12,9 +12,7 @@ const PROJECTS = [
   { name: "CareLTC", slug: "careltc" },
   { name: "SignFlow", slug: "signflow" },
   { name: "DBWhisper", slug: "dbwhisper" },
-  { name: "LLM Studio", slug: "llm-studio" },
   { name: "TradePulse", slug: "tradepulse" },
-  { name: "CrownWager", slug: "crownwager" },
 ] as const;
 
 /**
@@ -55,7 +53,7 @@ export function citationLinks(source: string): CitationLink[] {
       links.push({ label: project.name, href: `/work/${project.slug}` });
     }
   }
-  if (/projects \(all four\)/i.test(source)) {
+  if (/\bpublic projects\b/i.test(source)) {
     links.push({ label: "Work", href: "/work" });
   }
   if (/résumé|resume|education|sevina|linescripts|roles?\b/i.test(source)) {

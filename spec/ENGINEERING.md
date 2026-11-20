@@ -321,7 +321,7 @@ grouped pull request a month); npm dependencies are upgraded deliberately, not b
 Privacy-first analytics: `@vercel/analytics`, rendered only on Vercel deployments
 (`VERCEL=1`); no cookies, no consent banner. Custom events, sent through
 `lib/analytics.ts`: `case_study_read_depth` (25/50/75/100, from the reading outline of
-the four public case studies; the flagship case studies have no outline and send none)
+the public case studies; the flagship case studies have no outline and send none)
 and `resume_downloaded`. Error tracking: none beyond the platform's logs. The assistant
 route logs one JSON line per answered turn — mode, note, how the passages were found and
 their content ids, the routing call's result and tokens, the actions offered, whether a

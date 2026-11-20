@@ -4,14 +4,14 @@ import { Bento, Card, CardArt, CardBody } from "@/components/ui/card";
 import { CaretLink } from "@/components/ui/caret-link";
 import { SectionHeader } from "@/components/ui/section-header";
 import { SmartLink } from "@/components/ui/smart-link";
+import { StatusPill } from "@/components/ui/status-pill";
 import { cx } from "@/components/ui/cx";
 import { projectBySlug } from "@/content/projects";
 import { PUBLIC, type PublicCard } from "@/content/pages/home";
 import art from "./bento-art.module.css";
 import styles from "./sections.module.css";
 
-/* Each card's mini-UI. Illustrations only: the CrownWager split is labelled an
-   illustrative pick, and none of them is a result. */
+/* Each card's mini-UI. Illustrations only: none of them is a result. */
 const CHART = "M0 110 L30 100 L60 104 L90 86 L120 90 L150 70 L180 76 L210 56 L240 62 L270 40 L300 46 L320 30";
 
 const ART: Record<PublicCard["slug"], ReactNode> = {
@@ -38,33 +38,10 @@ const ART: Record<PublicCard["slug"], ReactNode> = {
       <span className={art.chartPill}>✓ closed bars only</span>
     </>
   ),
-  crownwager: (
-    <div className={cx(art.mini, art.pick)}>
-      <p className={art.q}>Model pick, graded after the final score</p>
-      <div className={art.odds}>
-        <span>
-          62%<small>home</small>
-        </span>
-        <span className={art.oddsAway}>
-          38%<small>away</small>
-        </span>
-      </div>
-      <div className={art.prob}>
-        <i />
-      </div>
-      <span className={art.sample}>{PUBLIC.illustrativePick}</span>
-    </div>
-  ),
-  "llm-studio": (
-    <div className={art.mini}>
-      <p className={art.bubbleQ}>Summarise my last chat</p>
-      <p className={art.bubbleA}>Only your own conversations are visible to you.</p>
-    </div>
-  ),
 };
 
 /**
- * PublicWork — the four public systems as light cards: a mini-UI that plays
+ * PublicWork — the public systems as light cards: a mini-UI that plays
  * its moment on hover, a one-line description, the one result each leads
  * with (read from the eval registry, with its method and a link to it), and
  * the case-study and source links — plus, where the case study has something
@@ -86,6 +63,8 @@ export function PublicWork() {
             <Card key={card.slug}>
               <CardArt>{ART[card.slug]}</CardArt>
               <CardBody className="mt-0">
+                {/* An archived system keeps its card, its code and its write-up, and says so. */}
+                {project.status === "archived" ? <StatusPill status="archived" /> : null}
                 <h3>{project.title}</h3>
                 <p>{card.body}</p>
                 <p className={styles.metric}>

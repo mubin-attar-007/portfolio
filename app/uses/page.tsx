@@ -15,7 +15,7 @@ export const metadata: Metadata = pageMetadata({
   path: "/uses",
   title: "Uses",
   description:
-    "The tools I build with, from model APIs to deployment, and the case studies that list them: four public projects on free tiers, three flagship products on AWS.",
+    "The tools I build with, from model APIs to deployment, and the case studies that list them: public projects on free tiers, three flagship products on AWS.",
 });
 
 /** A stable anchor for a category title ("AI / ML" → "ai-ml"). */
