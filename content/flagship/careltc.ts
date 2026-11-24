@@ -758,7 +758,7 @@ async createEscalations(escalationMinutes: number, now = new Date()) {
       },
       {
         label: "Portal",
-        items: ["React", "Vite", "TanStack Router and Query", "Tailwind CSS 4", "Recharts", "ExcelJS", "jsPDF", "Playwright"],
+        items: ["React", "Vite", "TanStack Router and Query", "Tailwind CSS", "Recharts", "ExcelJS", "jsPDF", "Playwright"],
       },
     ],
     aws: [AWS.ecs, AWS.fargate, AWS.ecr, AWS.alb, AWS.rds, AWS.s3, AWS.cloudfront, AWS.cognito, AWS.secrets, AWS.cloudwatch, AWS.cloudformation, AWS.vpc, AWS.iam],

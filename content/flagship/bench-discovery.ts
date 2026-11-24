@@ -818,7 +818,7 @@ public void RaiseFloorTo(DateTime utc)
           "Next.js",
           "React",
           "TypeScript",
-          "Tailwind CSS 4",
+          "Tailwind CSS",
           "Python",
           "FastAPI",
           "SQLAlchemy",
