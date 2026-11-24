@@ -678,6 +678,14 @@ for (const via of ["the shortcut", "the menu's Ask row"]) {
       await page.locator("main").evaluate((el) => el.inert || el.closest("[inert]") !== null));
     await page.keyboard.press("Escape");
     await assistant.waitFor({ state: "detached" });
+    // Focus comes back over animation frames once the page leaves its inert
+    // state, within the panel's restore budget (FOCUS_RESTORE_BUDGET_MS, 1 s in
+    // components/features/assistant.tsx). The menu's Ask row unmounted with the
+    // menu, so that path falls back to a launcher and can take a few frames on
+    // a busy runner: wait for it, as the starters check below does.
+    await page.waitForFunction(
+      () => document.activeElement !== null && document.activeElement !== document.body, null, { timeout: 1500 },
+    ).catch(() => {});
     const focused = await page.evaluate(() => document.activeElement?.getAttribute("aria-label") ?? document.activeElement?.tagName);
     check(`assistant from ${via}: focus returns to a live control`,
       focused !== "BODY" && focused !== undefined, focused ?? "none");
