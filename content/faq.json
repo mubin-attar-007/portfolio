@@ -67,7 +67,7 @@
     },
     {
       "question": "Does this assistant store my question? What happens to what I type?",
-      "answer": "Your question is used to write one answer, and this site doesn't store it: there is no transcript, and the one log line kept per answer records how it was answered, its timings and token counts — never the question, the answer or your address. To write a live answer, the question and the recent conversation are sent to Google's Gemini API. The conversation lives only in the open tab and is gone when it closes or reloads.",
+      "answer": "Your question is used to write one answer, and this site doesn't store it: there is no transcript, and the one log line kept per answer records how it was answered, its timings and token counts — never the question, the answer or your address. To write a live answer, the question and the recent conversation are sent to Google's Gemini API. The site uses Gemini's free tier, on which Google may use what is sent to improve its products and people at Google may review it, so don't type anything confidential. In the European Economic Area, Switzerland and the UK, where Google's terms don't allow the free tier, answers come from site search alone and nothing is sent to Gemini. The conversation lives only in the open tab and is gone when it closes or reloads.",
       "source": "privacy · assistant"
     },
     {

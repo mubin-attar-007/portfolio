@@ -973,6 +973,26 @@ export function corpusSize(): number {
   return CORPUS.length;
 }
 
+/**
+ * A short fingerprint of the corpus (32-bit FNV-1a over every passage's id and
+ * text): which version of the site's content an answer was searched in, so a
+ * log line can be tied to it. It changes whenever any passage does.
+ */
+const CORPUS_VERSION = (() => {
+  let hash = 0x811c9dc5;
+  for (const passage of CORPUS) {
+    for (const char of `${passage.id}\n${passage.text}\n`) {
+      hash = Math.imul(hash ^ char.codePointAt(0)!, 0x01000193) >>> 0;
+    }
+  }
+  return hash.toString(16).padStart(8, "0");
+})();
+
+/** The corpus's fingerprint (see CORPUS_VERSION). */
+export function corpusVersion(): string {
+  return CORPUS_VERSION;
+}
+
 /** All passages (read-only) — for the grounding test, the router's index and diagnostics. */
 export function allPassages(): readonly Passage[] {
   return CORPUS;

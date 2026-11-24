@@ -19,6 +19,7 @@ import {
 import { GeminiError, type StreamArgs, type StreamOutcome } from "../lib/ai/gemini.ts";
 import { INJECTION_REFUSAL } from "../lib/ai/guard.ts";
 import { readIntent } from "../lib/ai/intent.ts";
+import { SYSTEM_PROMPT_VERSION } from "../lib/ai/system-prompt.ts";
 import { resume } from "../content/resume.ts";
 import { CLIENT_DAILY_LIVE_ANSWERS, clientKeyFromHeaders, reserveLiveAnswer } from "../lib/ai/rate-limit.ts";
 import { parseRoute, ROUTER_INDEX, ROUTER_TIMEOUT_MS, type Router } from "../lib/ai/router.ts";
@@ -260,6 +261,34 @@ test("a greeting is greeted, not searched: no model, no budget, questions to ask
   assert.doesNotMatch(textOf(list), /couldn't find/);
   assert.ok((dataOf(list, "followups")!.questions as string[]).length > 0);
   assert.equal(logs[0]!.model, undefined);
+});
+
+test("on the free tier, a visitor in the EEA, Switzerland or the UK gets site search, and nothing is sent to Gemini", async () => {
+  // A live key and a model are available; Google's terms for the free tier still rule them out.
+  for (const country of ["DE", "GB", "CH"]) {
+    const { body, logs } = await run(ask("What is DBWhisper?", {}, { "x-vercel-ip-country": country }), {
+      stream: never,
+      route: noRoute,
+    });
+    const list = body as Event[];
+    assert.deepEqual(list[0]!.data, { mode: "fallback", note: "live-unavailable" }, country);
+    assert.ok(textOf(list).length > 0, `${country}: the site-search answer is served`);
+    assert.equal(logs[0]!.failure, "region", country);
+    assert.equal(logs[0]!.model, undefined, country);
+    // The log line says why, never where.
+    assert.doesNotMatch(JSON.stringify(logs[0]), new RegExp(`"${country}"`), country);
+  }
+  // Elsewhere the same question is answered live.
+  const { body } = await run(ask("What is DBWhisper?", {}, { "x-vercel-ip-country": "IN" }), { stream: live });
+  assert.deepEqual((body as Event[])[0]!.data, { mode: "live", note: null });
+});
+
+test("every log line names the prompt version and the content it searched", async () => {
+  for (const question of ["Hi", "What is DBWhisper?", "What's the weather?"]) {
+    const { logs } = await run(ask(question), { stream: live });
+    assert.equal(logs[0]!.prompt, SYSTEM_PROMPT_VERSION, question);
+    assert.match(logs[0]!.knowledge, /^[0-9a-f]{8}$/, question);
+  }
 });
 
 test("a goodbye is answered with the ways to reach him, and nothing more to ask", async () => {

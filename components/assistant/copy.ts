@@ -9,6 +9,8 @@
  * `scripts/interaction-audit.mjs`, `scripts/smoke.mjs`). Renaming one needs the
  * gate updated in the same change.
  */
+import { GEMINI_TIER } from "@/lib/ai/provider-terms";
+
 export const ASSISTANT_COPY = {
   /** GATE: the launcher's accessible name must start with this. */
   trigger: "Ask this site",
@@ -63,6 +65,13 @@ export const ASSISTANT_COPY = {
   send: "Ask",
   /** The answers are a model's: say so, and point at the check. */
   disclosure: "AI-generated from this site's pages; check the sources.",
-  /** Matches what /privacy says about assistant messages. */
-  privacy: "Your question is used for one answer. This site doesn't store it.",
+  /**
+   * Matches what /privacy says about assistant messages, for the Gemini tier the
+   * key runs on (lib/ai/provider-terms.ts): on the free tier Google may use what
+   * is sent, and "this site doesn't store it" alone would hide that.
+   */
+  privacy:
+    GEMINI_TIER === "free"
+      ? "This site doesn't store your question, but Google may use it to improve Gemini, so don't share anything private."
+      : "Your question is used for one answer. This site doesn't store it.",
 } as const;
