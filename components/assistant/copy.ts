@@ -22,7 +22,7 @@ export const ASSISTANT_COPY = {
   description:
     "Ask about Mubin's projects, experience and writing. Answers link the pages they come from. Press Escape to close.",
   intro:
-    "Ask about Mubin's products, projects, experience and writing, or how to hire him. Answers can be imperfect, so check the page each one cites.",
+    "Ask about Mubin's products, projects, experience and writing, or paste a job description to see what his work shows against it. Answers can be imperfect, so check the page each one cites.",
   /** The intro on a case study or an article: its starters are that page's. */
   introOnPage:
     "Ask about this page, or anything else on Mubin's site. Answers can be imperfect, so check the page each one cites.",
@@ -60,7 +60,8 @@ export const ASSISTANT_COPY = {
   formLabel: "Ask this site a question",
   /** GATE */
   fieldLabel: "Your question",
-  placeholder: "Ask about a project or a decision…",
+  /** Short enough for the phone sheet's field (no wider than the old "Ask about a project or a decision…"). */
+  placeholder: "Ask a question or paste a job post…",
   /** GATE: the submit button's exact name. */
   send: "Ask",
   /** The answers are a model's: say so, and point at the check. */

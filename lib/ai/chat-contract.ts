@@ -8,15 +8,20 @@
 // function only — nothing that reads content or the network.
 // -----------------------------------------------------------------------------
 
-/** Max characters in one question. The panel's field and the route share it. */
-export const MAX_MESSAGE_CHARS = 1000;
+/**
+ * Max characters in one message. The panel's field and the route share it.
+ * Room for a pasted job description (most run 1,500–4,000 characters), which
+ * the assistant compares with his work requirement by requirement.
+ */
+export const MAX_MESSAGE_CHARS = 4000;
 
 /** Max turns of history the route keeps (bounds prompt size and cost). */
 export const MAX_HISTORY_TURNS = 8;
 /**
  * The largest request body the route parses. An honest body is at most
- * MAX_HISTORY_TURNS short turns (a few KB); anything far past that is refused
- * with 413 before it is parsed, so a huge body cannot buy CPU time.
+ * MAX_HISTORY_TURNS turns (about 20 KB even with pasted job descriptions);
+ * anything far past that is refused with 413 before it is parsed, so a huge
+ * body cannot buy CPU time.
  */
 export const MAX_REQUEST_BYTES = 64 * 1024;
 

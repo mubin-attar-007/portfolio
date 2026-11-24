@@ -53,6 +53,7 @@ test("the golden set is the size and shape the brief sets", () => {
   assert.equal(byArea("robustness"), 6);
   assert.equal(byArea("chain"), 5);
   assert.equal(byArea("premise"), 2);
+  assert.equal(byArea("role-fit"), 1);
   assert.equal(new Set(GOLDEN.map((item) => item.id)).size, GOLDEN.length, "ids are unique");
 });
 

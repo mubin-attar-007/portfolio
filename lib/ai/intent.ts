@@ -27,6 +27,11 @@ export type Intent = {
   resume: boolean;
   /** A hiring term the site does not cover, or null. */
   gap: HiringGap | null;
+  /**
+   * A pasted job description or a role's list of requirements: compared with
+   * his published work requirement by requirement, never scored.
+   */
+  roleFit: boolean;
 };
 
 /**
@@ -90,9 +95,33 @@ function normalize(question: string): string {
     .replace(/\s+/g, " ");
 }
 
+/** The shortest message read as a job description: shorter is a question about one. */
+const MIN_ROLE_DESCRIPTION_CHARS = 280;
+
+/**
+ * The headings and phrases job descriptions are written in. Two different ones
+ * in a long message make it a description; one alone ("his experience with
+ * NestJS") does not.
+ */
+const ROLE_MARKERS =
+  /\b(?:job description|responsibilities|requirements|qualifications|must[- ]haves?|nice[- ]to[- ]haves?|what you(?:'ll| will) do|who you are|you will|we(?:'re| are) looking for|about the role|the role|preferred|bonus points|years of experience|experience with|proficien(?:t|cy) in|familiarity with|strong understanding)\b/g;
+
+/** True when a message is a pasted job description or a role's list of requirements. */
+export function isRoleDescription(question: string): boolean {
+  const text = normalize(question);
+  if (text.length < MIN_ROLE_DESCRIPTION_CHARS) return false;
+  return new Set(text.match(ROLE_MARKERS) ?? []).size >= 2;
+}
+
 /** Read what a question asks for. */
 export function readIntent(question: string): Intent {
   const text = normalize(question);
+  // A job description states the employer's terms ("competitive salary",
+  // "visa sponsorship", "relocation support"): they are not questions about
+  // his, so none of the fixed replies applies. It ends with the ways to reach him.
+  if (isRoleDescription(question)) {
+    return { personal: false, contact: true, privateContact: false, resume: false, gap: null, roleFit: true };
+  }
   const gap = GAPS.find(([, pattern]) => pattern.test(text))?.[0] ?? null;
   return {
     personal: PERSONAL.test(text),
@@ -100,5 +129,6 @@ export function readIntent(question: string): Intent {
     privateContact: PRIVATE_CONTACT.test(text),
     resume: RESUME.test(text),
     gap,
+    roleFit: false,
   };
 }
