@@ -51,7 +51,8 @@ test("the golden set is the size and shape the brief sets", () => {
   assert.equal(byArea("off-topic"), 4);
   assert.equal(byArea("injection"), 4);
   assert.equal(byArea("robustness"), 6);
-  assert.equal(byArea("chain"), 3);
+  assert.equal(byArea("chain"), 5);
+  assert.equal(byArea("premise"), 2);
   assert.equal(new Set(GOLDEN.map((item) => item.id)).size, GOLDEN.length, "ids are unique");
 });
 

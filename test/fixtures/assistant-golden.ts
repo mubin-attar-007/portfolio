@@ -38,7 +38,9 @@ export type GoldenArea =
   | "off-topic"
   | "injection"
   | "robustness"
-  | "chain";
+  | "chain"
+  // A question built on a claim the site does not make: an unpublished outcome or credential.
+  | "premise";
 
 export type GoldenItem = {
   id: string;
@@ -601,6 +603,42 @@ export const GOLDEN: readonly GoldenItem[] = [
     turns: ["What does DBWhisper do?", "How was it deployed?", "Tell me more"],
     expect: "live",
     paths: ["/work/dbwhisper"],
+  },
+  {
+    // A question that names only a part of a subject follows the conversation's product.
+    id: "chain-careltc-stack",
+    area: "chain",
+    turns: ["Tell me about CareLTC", "What tech stack?"],
+    expect: "live",
+    allPaths: ["/work/careltc"],
+    facts: ["NestJS"],
+  },
+  {
+    id: "chain-signflow-deployment",
+    area: "chain",
+    turns: ["What is SignFlow?", "What about deployment?"],
+    expect: "live",
+    allPaths: ["/work/signflow"],
+    facts: ["Jenkins"],
+  },
+  {
+    // No saving is published: the answer must not invent one.
+    id: "premise-savings",
+    area: "premise",
+    turns: ["How much money did CareLTC save?"],
+    expect: "live",
+    paths: ["/work/careltc"],
+    // An amount, not the word: "the site doesn't say how much it saved" is the right answer.
+    forbid: [/[$₹€£]\s?\d/, /\b\d[\d,.]*\s?(?:lakh|crore|million|thousand|k)\b/i],
+  },
+  {
+    // The résumé lists no certification: say so, and offer the ways to ask him.
+    id: "premise-certifications",
+    area: "premise",
+    turns: ["Does he have any certifications?"],
+    expect: "not-covered",
+    paths: ["/hire"],
+    actions: ["email"],
   },
 ];
 

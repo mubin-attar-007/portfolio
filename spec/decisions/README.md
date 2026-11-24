@@ -20,6 +20,7 @@ refines an earlier one, both are kept and the status line says what changed.
 | [ADR-019](ADR-019-named-flagship-case-studies.md) | Named flagship case studies (Bench Discovery, CareLTC), approved by the employer: approved figures word for word, captures and recordings on dummy data, curated code excerpts; production repositories, URLs and client or facility names stay private; credit never by git history; "In use", never a frequency; a local denylist scanned before every change and on the built output. |
 | [ADR-020](ADR-020-lcp-gate-tolerance.md) | The LCP gate: 2.5 s stays the target (a CI warning above it), the gate fails above 2.7 s, and Lighthouse takes the median of five runs; performance ≥ 95, CLS and TBT unchanged. Amended 20 Nov 2026: a route over budget is measured once more before it fails the build. |
 | [ADR-021](ADR-021-retire-side-projects.md) | CrownWager and LLM Studio leave the site (redirects to `/work` and `/notes`); TradePulse stays as an archived project with an "Archived" pill; DBWhisper stays featured; the repositories are marked or made private on GitHub. |
+| [ADR-022](ADR-022-gemini-free-tier-terms.md) | The assistant follows the Gemini API's free-tier terms: no model call for visitors in the EEA, Switzerland or the UK (they get site search), and the privacy page, panel footer and FAQ say Google may use what is sent. The paid tier (billing enabled) lifts both. |
 
 Superseded records were removed on 2026-11-13: ADR-010 (the "ember console"
 identity, never implemented) and ADR-011 (the "evidence paths" identity). They remain

@@ -300,8 +300,12 @@ server. Limits and wire shapes shared with the panel live in `lib/ai/chat-contra
 6. **Retrieval** (§2), with `page` as a prior. Nothing found → the routing call when it may run
    (§2) → still nothing → "not covered" (contact actions too when the question was about
    contacting or hiring him).
-7. **No key** → the grounded fallback, `note: "live-unavailable"`, logged `not-configured`;
-   **no allowance is reserved**, since no model call can happen.
+7. **No key, or a visitor the Gemini tier may not serve** → the grounded fallback,
+   `note: "live-unavailable"`, logged `not-configured` or `region`. **No allowance is reserved**,
+   since no model call can happen. On the free tier (`GEMINI_TIER` in
+   `lib/ai/provider-terms.ts`, ADR-022), Google's terms rule out visitors in the EEA,
+   Switzerland and the UK. The route reads Vercel's `x-vercel-ip-country` and skips both the
+   routing call and the answer for them.
 8. **Live-answer reservation** (`reserveLiveAnswer`): the per-client allowance (30 a UTC day in
    production; `ASSISTANT_CLIENT_DAILY_LIMIT` overrides it, and under `next dev` it is lifted
    to the instance budget so local review is never blocked) and `ASSISTANT_DAILY_CAP` (500) per
@@ -443,16 +447,21 @@ the dialog's name starts "Ask about" ("Ask about Mubin's work").
 ## 6. Privacy
 
 The route stores no conversation; the transcript lives only in the open tab's memory. It logs
-one JSON line per answered turn — mode, note, how the passages were found (`retrieval`:
+one JSON line per answered turn — the prompt version and the content fingerprint (`prompt`, `knowledge`: which release wrote it), mode, note, how the passages were found (`retrieval`:
 lexical, fuzzy, router or none), the routing call's result and tokens, the ids of the passages
 used (content ids), the actions offered (kinds), whether a page was sent (`page: true`, not
 which), latency, time to first token, finish reason, failure reason (`not-configured` without a
-key), whether a hedged second call ran (`hedged`, `hedgeWon`), token counts and the model — and
+key, `region` for a visitor the tier may not serve; never the country itself), whether a hedged second call ran (`hedged`, `hedgeWon`), token counts and the model — and
 never the question, the answer, the key or the client's address. The rate limiter keeps salted
 hashes of client addresses, timestamps and daily counters in memory. `/privacy` says that Ask
 this site sends the question and the recent conversation (up to `MAX_HISTORY_TURNS`) to Google's
 Gemini API to find the pages that answer it and to write the answer (the routing call sends the
-latest question only), and what the log line holds.
+latest question only), and what the log line holds. It also says what the Gemini tier means
+(ADR-022). On the free tier, Google may use what is sent to improve its products and people may
+review it, so don't type anything confidential; visitors in the EEA, Switzerland and the UK get
+site search alone. The panel's footer and the FAQ's privacy answer say the same, and
+`test/provider-terms.test.mts` holds them to `GEMINI_TIER`. "This site doesn't store it" is
+true of the site, not of the provider, and is never the whole answer.
 
 ## 7. Tests (CI-gated, no model quota)
 
@@ -491,9 +500,11 @@ latest question only), and what the log line holds.
 
 ## 8. Evaluation
 
-**The golden set** (`test/fixtures/assistant-golden.ts`, 67 items): flagships 20, public projects
-8, hiring/availability/contact 11, skills/AWS/stack 6, writing and evaluations 5, off-topic 4,
-injection 4, misspellings/paraphrase/Hinglish 6, multi-turn chains 3. Each names its expected
+**The golden set** (`test/fixtures/assistant-golden.ts`, 66 items): flagships 20, public projects
+4, hiring/availability/contact 11, skills/AWS/stack 5, writing and evaluations 5, off-topic 4,
+injection 4, misspellings/paraphrase/Hinglish 6, multi-turn chains 5 (a subject-less follow-up
+among them: "What tech stack?" after CareLTC), and false premises 2 (an unpublished saving that
+must not be invented; certifications the résumé does not list). Each names its expected
 outcome (live, declined or not covered; an answerable item comes back `fallback` without a key),
 the pages it must cite, the facts a correct answer states (strings or patterns; figures read from
 their sources), and strings it must never contain — on top of a global list (the retired role

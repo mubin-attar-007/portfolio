@@ -149,15 +149,15 @@ spending ceiling. Set the real ceilings outside the function:
 ### Logs
 
 The route writes one JSON line per answered turn, shaped like
-`{"evt":"assistant","retrieval":"lexical","mode":"live","note":null,"hits":4,"passages":["<content id>",…],"actions":["case-study"],"latencyMs":<ms>,"model":"gemini-3.5-flash-lite","firstTokenMs":<ms>,"finish":"stop","promptTokens":<n>,"outputTokens":<n>}`.
-It records the mode and the note; how the passages were found (`retrieval`:
+`{"evt":"assistant","prompt":"2026-11-24.1","knowledge":"<8 hex>","retrieval":"lexical","mode":"live","note":null,"hits":4,"passages":["<content id>",…],"actions":["case-study"],"latencyMs":<ms>,"model":"gemini-3.5-flash-lite","firstTokenMs":<ms>,"finish":"stop","promptTokens":<n>,"outputTokens":<n>}`.
+It records the system prompt's version (`prompt`) and a fingerprint of the site content the question was searched in (`knowledge`), so a line can be tied to the release that wrote it; the mode and the note; how the passages were found (`retrieval`:
 `lexical`, `fuzzy` after a spelling correction, `router`, or `none`) and, when a
 routing call ran, its result (`router`) and tokens (`routerTokens`); the ids of the
 passages used (content ids, never visitor text); the kinds of actions offered;
 `page: true` when the request named a page (not which page); timings; the finish or
 failure reason; `hedged` and `hedgeWon` when a second call ran; and token counts —
 never the question, the answer, the key or the visitor's address. Without a key
-every turn logs `"failure":"not-configured"`; an
+every turn logs `"failure":"not-configured"`, and a visitor the Gemini tier may not serve logs `"failure":"region"` (never the country); an
 `upstream-<status>` failure is a status Gemini actually returned. It also warns with the model id and HTTP status when Gemini
 rejects a request (check this after changing `GEMINI_MODEL`), and warns
 `[assistant] content/<dir> is not readable` if a content collection is missing
@@ -166,6 +166,33 @@ from the deployed function.
 So if you deploy **without** `GEMINI_API_KEY` (or the free quota runs out), the
 assistant still answers from the site's content — it just won't do live LLM
 synthesis.
+
+### Kill switch
+
+To stop every model call at once:
+1. Delete `GEMINI_API_KEY` in Vercel → Settings → Environment Variables.
+2. Redeploy.
+
+The assistant then answers from site search alone, with "live answers unavailable — site
+search only". Every page, citation, résumé and contact action keeps working. Add the key back
+and redeploy to undo.
+
+### The Gemini tier and the regions it may serve (ADR-022)
+
+The key runs on the Gemini API's **free tier** (`GEMINI_TIER` in
+`lib/ai/provider-terms.ts`). Google's terms set two conditions:
+- The free tier may not serve users in the EEA, Switzerland or the UK. Visitors there get
+  site-search answers, and the log line says `"failure":"region"`.
+- On the free tier, Google may use what is sent to improve its products. The privacy page,
+  the panel's footer and the FAQ say so.
+
+**The paid tier** (not in use: on 24 Nov 2026 the owner chose to stay on the free tier, ADR-022) lifts both conditions, and at portfolio traffic
+Flash-Lite costs very little; the site's daily caps and the project quota (§2, step 4) still
+bound it.
+1. Owner: enable billing on the key's Google Cloud project, and set a budget alert.
+2. In a PR, set `GEMINI_TIER` to `"paid"` and remove the free-tier sentences from the privacy
+   answer in `content/faq.json`. `test/provider-terms.test.mts` fails until both match.
+3. Merge, then recheck Google's terms and record the check in ADR-022.
 
 The panel itself is **code-split** (`React.lazy` + `Suspense` in
 `components/features/assistant.tsx`) so none of the chat/streaming code ships in

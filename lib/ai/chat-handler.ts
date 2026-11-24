@@ -54,11 +54,13 @@ import {
 import { INJECTION_REFUSAL, sanitizeMessages, screenConversation, screenRequest, type ChatMessage } from "./guard";
 import { GAP_OPENING } from "./hiring-gaps";
 import { readIntent, type Intent } from "./intent";
+import { liveAllowed } from "./provider-terms";
 import { checkRateLimit, clientKeyFromHeaders, reserveLiveAnswer, type LiveAnswerReservation } from "./rate-limit";
 import { SMALL_TALK_REPLY, smallTalk } from "./small-talk";
 import {
   backgroundProfile,
   chooseFallback,
+  corpusVersion,
   passagesById,
   searchSite,
   tokenize,
@@ -66,7 +68,7 @@ import {
   type SiteSearch,
 } from "./retrieval";
 import { ROUTER_TIMEOUT_MS, routeWithGemini, type RouteResult, type Router } from "./router";
-import { buildSystemInstruction } from "./system-prompt";
+import { buildSystemInstruction, SYSTEM_PROMPT_VERSION } from "./system-prompt";
 
 /**
  * Give up on the model when no text has arrived after this long, counted from
@@ -157,6 +159,10 @@ export type RetrievalPath = "lexical" | "fuzzy" | "router" | "none";
 /** One line per answered turn. No question, answer, key or address. */
 export type TurnLog = {
   evt: "assistant";
+  /** The system prompt's version (SYSTEM_PROMPT_VERSION): a prompt change is a behaviour change. */
+  prompt: string;
+  /** The site content the question was searched in: the corpus's fingerprint (`corpusVersion`). */
+  knowledge: string;
   mode: AnswerMode;
   note: AnswerNote | null;
   /** Passages the answer was written from. */
@@ -449,7 +455,12 @@ export async function handleChat(request: Request, options: HandlerOptions = {})
       return rejection(400, "bad_request");
     }
     const page = pageOf(input);
-    const base = { evt: "assistant" as const, ...(page ? { page: true as const } : {}) };
+    const base = {
+      evt: "assistant" as const,
+      prompt: SYSTEM_PROMPT_VERSION,
+      knowledge: corpusVersion(),
+      ...(page ? { page: true as const } : {}),
+    };
     const logStatic = (mode: AnswerMode, note: AnswerNote, entry: Partial<TurnLog> = {}) =>
       log({ ...base, mode, note, hits: 0, passages: [], retrieval: "none", actions: [], latencyMs: Date.now() - started, ...entry });
 
@@ -512,7 +523,12 @@ export async function handleChat(request: Request, options: HandlerOptions = {})
     const search = searchSite(latest, earlier, { page });
     let passages = search.passages;
     let retrieval: RetrievalPath = passages.length === 0 ? "none" : search.corrected ? "fuzzy" : "lexical";
-    const live = options.live ?? isLiveConfigured();
+    // Google's terms for the key's tier decide whether this visitor may get a
+    // model answer at all (lib/ai/provider-terms.ts, ADR-022): on the free tier,
+    // not in the EEA, Switzerland or the UK. Then no routing call or answer is
+    // made, and the visitor gets site search, as when no key is set.
+    const permitted = liveAllowed(request.headers);
+    const live = (options.live ?? isLiveConfigured()) && permitted;
     const routing: Pick<TurnLog, "router" | "routerTokens"> = {};
 
     // Second chance: one routing call, only when it can run and has something to route.
@@ -555,8 +571,8 @@ export async function handleChat(request: Request, options: HandlerOptions = {})
       return staticAnswer("fallback", note, fallback.text, fallback.extras);
     };
 
-    // No key: no model call can happen, so none is reserved.
-    if (!live) return served("live-unavailable", { failure: "not-configured" });
+    // No key, or a visitor the tier may not serve: no model call can happen, so none is reserved.
+    if (!live) return served("live-unavailable", { failure: permitted ? "not-configured" : "region" });
 
     const reservation = reserveLiveAnswer(client);
     if (reservation !== "ok") return served(reservation);
@@ -592,7 +608,7 @@ type LiveContext = {
   log: (entry: TurnLog) => void;
   started: number;
   /** What the log line already knows: how the passages were found, the page, the routing call. */
-  entry: Pick<TurnLog, "evt" | "page" | "retrieval" | "router" | "routerTokens">;
+  entry: Pick<TurnLog, "evt" | "prompt" | "knowledge" | "page" | "retrieval" | "router" | "routerTokens">;
 };
 
 /** One model call of an answer: its stream, the abort that stops only it, and its pending step. */

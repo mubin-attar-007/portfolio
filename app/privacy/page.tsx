@@ -10,10 +10,11 @@ import { JumpBar } from "@/components/misc/jump-bar";
 import { NEWSLETTER_ENABLED } from "@/components/features/newsletter-form";
 import styles from "@/components/misc/misc.module.css";
 import { SITE } from "@/config/site";
+import { GEMINI_TIER } from "@/lib/ai/provider-terms";
 import { pageMetadata } from "@/lib/seo";
 
 /** When this policy last changed: the date the page shows, and its machine-readable form. */
-const LAST_UPDATED = { label: "November 17, 2026", iso: "2026-11-17" } as const;
+const LAST_UPDATED = { label: "November 24, 2026", iso: "2026-11-24" } as const;
 
 export const metadata: Metadata = {
   ...pageMetadata({
@@ -131,6 +132,20 @@ export default function PrivacyPage() {
                 site&apos;s pages it used, whether a second request was needed, timings and token counts —
                 never the question, the answer or your address.
               </p>
+              {GEMINI_TIER === "free" ? (
+                <p>
+                  The site uses the free tier of the Gemini API. On it, Google may use what is sent to improve
+                  its products, and people at Google may review it, so please don&apos;t type anything
+                  confidential. Google&apos;s terms allow the free tier only outside the European Economic
+                  Area, Switzerland and the United Kingdom, so visitors there get answers from site search
+                  alone, and nothing they type is sent to Gemini.
+                </p>
+              ) : (
+                <p>
+                  The site uses the paid tier of the Gemini API, under which Google doesn&apos;t use what is
+                  sent to improve its products.
+                </p>
+              )}
               <h3 id="scheduling">{SCHEDULING_LABEL}</h3>
               <p>
                 The &ldquo;Book a call&rdquo; links open Cal.com in a new tab. Nothing from Cal.com loads on
@@ -179,6 +194,11 @@ export default function PrivacyPage() {
               <h2 id="changes">Change log</h2>
               <p>
                 Last updated: <time dateTime={LAST_UPDATED.iso}>{LAST_UPDATED.label}</time>
+              </p>
+              <p>
+                November 24, 2026: <a href="#assistant">Ask this site</a> now says what the Gemini API&apos;s free
+                tier means for your question, and that visitors in the European Economic Area, Switzerland and
+                the United Kingdom get answers from site search alone.
               </p>
               <p>This page may be revised to reflect updated integrations or hosting policy.</p>
             </section>
