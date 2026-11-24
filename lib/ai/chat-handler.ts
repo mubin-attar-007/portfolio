@@ -804,7 +804,9 @@ function liveAnswer({ request, client, messages, passages, anchor, intent, asked
         entry.finish = outcome.finish;
         entry.promptTokens = outcome.promptTokens;
         entry.outputTokens = outcome.outputTokens;
-        const incomplete = outcome.finish === "max-tokens" || outcome.finish === "blocked" || outcome.finish === "other";
+        // Only an explicit stop is a finished answer. A stream that ended with no
+        // finish reason ("unknown") was cut off on the way, and says so.
+        const incomplete = outcome.finish !== "stop";
         if (incomplete) entry.incomplete = true;
         for (const event of extrasEvents(extras, incomplete)) send(event);
       } catch (error) {

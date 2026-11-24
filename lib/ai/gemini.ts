@@ -206,39 +206,81 @@ export async function* streamGemini(args: StreamArgs): AsyncGenerator<string, St
   let finishReason: string | undefined;
   let promptTokens: number | undefined;
   let outputTokens: number | undefined;
+  const outcome = (): StreamOutcome => ({ finish: classify(finishReason), promptTokens, outputTokens });
+
+  // The data lines of the event being read. An event's payload is usually one
+  // `data:` line of JSON, but SSE lets it span several (joined with "\n"), so a
+  // line that does not parse alone waits for the rest of its event.
+  let pending: string[] = [];
+
+  /** The chunk the pending data lines make, "done", or null while they are still partial. */
+  const takePending = (final: boolean): Chunk | "done" | null => {
+    if (pending.length === 0) return null;
+    const payload = pending.join("\n");
+    if (payload === "[DONE]") {
+      pending = [];
+      return "done";
+    }
+    const chunk = parseChunk(payload);
+    if (chunk || final) {
+      pending = [];
+      return chunk;
+    }
+    // A complete event after a stray partial line: read it, and drop the stray.
+    const alone = pending.length > 1 ? parseChunk(pending[pending.length - 1]!) : null;
+    if (alone) pending = [];
+    return alone;
+  };
+
+  /** One chunk's text, after recording its finish reason and token counts. */
+  function* consume(chunk: Chunk): Generator<string> {
+    // A blocked prompt arrives as feedback with no candidates at all.
+    if (chunk.promptFeedback?.blockReason) throw new GeminiError("Prompt blocked.", 502);
+    const candidate = chunk.candidates?.[0];
+    if (candidate?.finishReason) finishReason = candidate.finishReason;
+    if (chunk.usageMetadata) {
+      promptTokens = chunk.usageMetadata.promptTokenCount ?? promptTokens;
+      outputTokens = chunk.usageMetadata.candidatesTokenCount ?? outputTokens;
+    }
+    const text = textOf(chunk);
+    if (text) yield text;
+  }
 
   try {
-    while (true) {
+    for (;;) {
       const { done, value } = await reader.read();
-      if (done) break;
-      buffer += decoder.decode(value, { stream: true });
+      buffer += done ? decoder.decode() : decoder.decode(value, { stream: true });
 
-      // SSE frames are separated by blank lines; each "data:" line is JSON.
+      // Every complete line, and once the stream has ended, the last one too:
+      // the final event (often the rest of the answer and its finish reason)
+      // may arrive without a closing newline, and dropping it would cut the
+      // answer short while it still looked complete.
       let idx: number;
-      while ((idx = buffer.indexOf("\n")) !== -1) {
-        const line = buffer.slice(0, idx).trim();
-        buffer = buffer.slice(idx + 1);
-        if (!line.startsWith("data:")) continue;
-        const payload = line.slice(5).trim();
-        if (payload === "[DONE]") return { finish: classify(finishReason), promptTokens, outputTokens };
-        const chunk = parseChunk(payload);
-        if (!chunk) continue; // keep-alive or partial frame
-        // A blocked prompt arrives as feedback with no candidates at all.
-        if (chunk.promptFeedback?.blockReason) throw new GeminiError("Prompt blocked.", 502);
-        const candidate = chunk.candidates?.[0];
-        if (candidate?.finishReason) finishReason = candidate.finishReason;
-        if (chunk.usageMetadata) {
-          promptTokens = chunk.usageMetadata.promptTokenCount ?? promptTokens;
-          outputTokens = chunk.usageMetadata.candidatesTokenCount ?? outputTokens;
+      while ((idx = buffer.indexOf("\n")) !== -1 || (done && buffer.length > 0)) {
+        const end = idx === -1 ? buffer.length : idx;
+        const line = buffer.slice(0, end).replace(/\r$/, "");
+        buffer = buffer.slice(end + 1);
+        // A blank line ends an event; other fields (`event:`, `id:`, comments) carry nothing here.
+        if (line.trim() === "") {
+          const chunk = takePending(true);
+          if (chunk === "done") return outcome();
+          if (chunk) yield* consume(chunk);
+          continue;
         }
-        const text = textOf(chunk);
-        if (text) yield text;
+        if (!line.startsWith("data:")) continue;
+        pending.push(line.slice(5).trim());
+        const chunk = takePending(false);
+        if (chunk === "done") return outcome();
+        if (chunk) yield* consume(chunk);
       }
+      if (done) break;
     }
+    const last = takePending(true);
+    if (last && last !== "done") yield* consume(last);
   } finally {
     reader.releaseLock();
   }
-  return { finish: classify(finishReason), promptTokens, outputTokens };
+  return outcome();
 }
 
 export type JsonArgs = {
