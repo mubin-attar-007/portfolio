@@ -40,7 +40,7 @@ import { chooseActions } from "./actions";
 import type { ActionKind, AnswerMode, AnswerNote, AssistantAction, CitationLink, StreamEvent } from "./chat-contract";
 import { MAX_REQUEST_BYTES } from "./chat-contract";
 import { citedPages, isSitePath } from "./citation-links";
-import { HIRING_FACTS, HIRING_PASSAGE } from "./corpus";
+import { HIRING_FACTS, HIRING_PASSAGE, ROLE_FIT_PASSAGES } from "./corpus";
 import { chooseFollowUps, topicOf, type FollowUpTopic } from "./follow-ups";
 import {
   GeminiError,
@@ -53,7 +53,7 @@ import {
 } from "./gemini";
 import { INJECTION_REFUSAL, sanitizeMessages, screenConversation, screenRequest, type ChatMessage } from "./guard";
 import { GAP_OPENING } from "./hiring-gaps";
-import { readIntent, type Intent } from "./intent";
+import { isRoleDescription, readIntent, type Intent } from "./intent";
 import { liveAllowed } from "./provider-terms";
 import { checkRateLimit, clientKeyFromHeaders, reserveLiveAnswer, type LiveAnswerReservation } from "./rate-limit";
 import { SMALL_TALK_REPLY, smallTalk } from "./small-talk";
@@ -143,7 +143,7 @@ const TASK_REQUEST =
   /^(?:please |pls |can you |could you |would you )?(?:write|compose|generate|draft|translate|solve|calculate|code|debug|tell me a (?:joke|story|poem))\b/i;
 
 /** To reach him, and nothing else: the actions a visitor leaving, or asking what only he can answer, gets. */
-const CONTACT_ONLY: Intent = { personal: false, contact: true, privateContact: false, resume: false, gap: null };
+const CONTACT_ONLY: Intent = { personal: false, contact: true, privateContact: false, resume: false, gap: null, roleFit: false };
 
 /** A contact or hiring question the site has no page for. */
 const CONTACT_GAP = "That isn't on the site — ask Mubin directly.";
@@ -154,7 +154,8 @@ const PRIVATE_CONTACT =
   "and the quickest ways to reach him are email or a booked call.";
 
 /** How the passages behind a turn were found. */
-export type RetrievalPath = "lexical" | "fuzzy" | "router" | "none";
+/** …or the fixed evidence a pasted job description is compared with (ROLE_FIT_PASSAGES). */
+export type RetrievalPath = "lexical" | "fuzzy" | "router" | "none" | "role-fit";
 
 /** One line per answered turn. No question, answer, key or address. */
 export type TurnLog = {
@@ -479,8 +480,14 @@ export async function handleChat(request: Request, options: HandlerOptions = {})
 
     const { messages } = screened;
     const latest = messages[messages.length - 1]!.content;
-    const earlier = messages.slice(0, -1).filter((m) => m.role === "user").map((m) => m.content);
-    const asked = [...earlier, latest];
+    // A pasted job description is answered once; as context for later questions
+    // its thousands of words would swamp the follow-up rules and the "already
+    // asked" check, so they see only the visitor's questions.
+    const earlier = messages
+      .slice(0, -1)
+      .filter((m) => m.role === "user" && !isRoleDescription(m.content))
+      .map((m) => m.content);
+    const asked = isRoleDescription(latest) ? earlier : [...earlier, latest];
 
     // "Hi", "how are you", "thanks", "bye", "who are you": nothing to search, so
     // answer in kind rather than "I couldn't find that". A visitor leaving gets
@@ -520,9 +527,18 @@ export async function handleChat(request: Request, options: HandlerOptions = {})
       return staticAnswer("fallback", "not-covered", PERSONAL_GAP, { ...NO_EXTRAS, followups });
     }
 
-    const search = searchSite(latest, earlier, { page });
+    // A pasted job description is compared with the fixed evidence, not searched on its wording.
+    const search: SiteSearch = intent.roleFit
+      ? { passages: passagesById(ROLE_FIT_PASSAGES), corrected: false, anchor: null, topical: true, person: true }
+      : searchSite(latest, earlier, { page });
     let passages = search.passages;
-    let retrieval: RetrievalPath = passages.length === 0 ? "none" : search.corrected ? "fuzzy" : "lexical";
+    let retrieval: RetrievalPath = intent.roleFit
+      ? "role-fit"
+      : passages.length === 0
+        ? "none"
+        : search.corrected
+          ? "fuzzy"
+          : "lexical";
     // Google's terms for the key's tier decide whether this visitor may get a
     // model answer at all (lib/ai/provider-terms.ts, ADR-022): on the free tier,
     // not in the EEA, Switzerland or the UK. Then no routing call or answer is
@@ -740,7 +756,7 @@ function liveAnswer({ request, client, messages, passages, anchor, intent, asked
         model: GEMINI_MODEL,
       };
       let produced = false;
-      const systemInstruction = buildSystemInstruction(passages, backgroundProfile());
+      const systemInstruction = buildSystemInstruction(passages, backgroundProfile(), intent.roleFit ? "role-fit" : null);
       // Each call has its own abort, so the loser of a hedged race can be
       // stopped alone; every call stops when the answer does.
       const start = (): Attempt => {

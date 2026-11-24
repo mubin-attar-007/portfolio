@@ -40,7 +40,9 @@ export type GoldenArea =
   | "robustness"
   | "chain"
   // A question built on a claim the site does not make: an unpublished outcome or credential.
-  | "premise";
+  | "premise"
+  // A pasted job description, compared with his work requirement by requirement.
+  | "role-fit";
 
 export type GoldenItem = {
   id: string;
@@ -630,6 +632,23 @@ export const GOLDEN: readonly GoldenItem[] = [
     paths: ["/work/careltc"],
     // An amount, not the word: "the site doesn't say how much it saved" is the right answer.
     forbid: [/[$₹€£]\s?\d/, /\b\d[\d,.]*\s?(?:lakh|crore|million|thousand|k)\b/i],
+  },
+  {
+    // Compared from the fixed evidence (ROLE_FIT_PASSAGES), never scored; its salary
+    // and visa lines are the employer's terms, not hiring gaps.
+    id: "role-fit-job-description",
+    area: "role-fit",
+    turns: [
+      "Applied AI Engineer. About the role: we're looking for an engineer to ship LLM features to customers. " +
+        "Responsibilities: build and deploy RAG systems and evaluation pipelines in production on AWS. " +
+        "Requirements: 3+ years of experience with Python or TypeScript; experience with LLM APIs; familiarity " +
+        "with Kubernetes. We offer a competitive salary and visa sponsorship.",
+    ],
+    expect: "live",
+    allPaths: ["/resume", "/work/bench-discovery"],
+    facts: ["3.5+ years", "Bench Discovery"],
+    forbid: [/\b\d{1,3}\s?%\s*(?:match|fit)/i, /\bmatch score\b/i],
+    actions: ["email"],
   },
   {
     // The résumé lists no certification: say so, and offer the ways to ask him.
