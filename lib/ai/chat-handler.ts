@@ -111,15 +111,12 @@ export const HEDGE_AFTER_MS = 3_500;
 export const ROLE_FIT_MAX_OUTPUT_TOKENS = 2_048;
 
 /**
- * How long a job-description comparison may think before its first words.
- * With room to finish, it thought past the ordinary 12 s watchdog on
- * 2026-11-24 and fell back to site search. 20 s still nests: it leaves 5 s of
- * ANSWER_TIMEOUT_MS to stream eight bullets, inside `maxDuration` and the
- * panel's wait, and the panel says the answer is slow from SLOW_AFTER_MS.
- * A comparison is never hedged: a second call would think as long, at
- * twice the quota.
+ * How long one attempt at a job-description comparison may take, start to
+ * finish. With the matching done in code it answers in 2–3 s; two attempts
+ * (a retry after a cut-off one, `roleFitAnswer`) still end inside
+ * ANSWER_TIMEOUT_MS, `maxDuration` and the panel's wait.
  */
-export const ROLE_FIT_FIRST_TOKEN_TIMEOUT_MS = 20_000;
+export const ROLE_FIT_ATTEMPT_MS = 11_000;
 
 /** Most pages one answer cites. */
 const MAX_CITED_PAGES = 5;
@@ -207,6 +204,8 @@ export type TurnLog = {
   finish?: FinishReason;
   /** Why the model call failed: a timeout, an upstream status, an empty or blocked reply, no key. */
   failure?: string;
+  /** A cut-off comparison was asked for once more (`roleFitAnswer`). */
+  retried?: true;
   /** A hedged second call started (HEDGE_AFTER_MS). */
   hedged?: true;
   /** …and it wrote the answer. */
@@ -273,7 +272,7 @@ function extrasEvents(extras: Extras, incomplete = false): StreamEvent[] {
 }
 
 /** A complete answer in one stream: meta, the text, then what follows it. */
-function staticAnswer(mode: AnswerMode, note: AnswerNote, text: string, extras: Extras = NO_EXTRAS): Response {
+function staticAnswer(mode: AnswerMode, note: AnswerNote | null, text: string, extras: Extras = NO_EXTRAS): Response {
   const body = new ReadableStream<Uint8Array>({
     start(controller) {
       controller.enqueue(frame({ event: "meta", data: { mode, note } }));
@@ -623,7 +622,7 @@ export async function handleChat(request: Request, options: HandlerOptions = {})
     const reservation = reserveLiveAnswer(client);
     if (reservation !== "ok") return served(reservation);
 
-    return liveAnswer({
+    const context: LiveContext = {
       request,
       client,
       messages,
@@ -636,7 +635,8 @@ export async function handleChat(request: Request, options: HandlerOptions = {})
       log,
       started,
       entry: { ...base, ...routing, retrieval },
-    });
+    };
+    return roleFit.length > 0 ? await roleFitAnswer(context) : liveAnswer(context);
   } catch {
     return rejection(503, "unavailable");
   }
@@ -745,6 +745,96 @@ async function firstText(
   }
 }
 
+/** What one attempt at a comparison produced: its text and how it ended, or why it failed. */
+type ComparisonAttempt = { text: string; outcome: StreamOutcome | null; failure?: string };
+
+/**
+ * A job-description comparison, written whole before it is sent.
+ *
+ * About one live comparison in two stopped mid-sentence after about 2 s with
+ * a non-stop finish, as Google's recitation filter does when an answer
+ * restates published text (the site is public; 2026-11-24). Streamed, the
+ * visitor would already be reading the fragment. So the answer is collected
+ * first; a cut-off one is asked for once more (a second live call, reserved
+ * like any other); and if that is cut off too, the visitor gets each
+ * requirement with its closest page from site search, complete, never a
+ * fragment. Each attempt has ROLE_FIT_ATTEMPT_MS.
+ */
+async function roleFitAnswer({
+  request,
+  client,
+  messages,
+  passages,
+  intent,
+  asked,
+  roleFit,
+  options,
+  log,
+  started,
+  entry: known,
+}: LiveContext): Promise<Response> {
+  const stream = options.stream ?? streamGemini;
+  const systemInstruction = buildSystemInstruction(passages, backgroundProfile(), { kind: "role-fit", items: roleFit });
+  const extras = extrasFor(intent, passages, asked);
+  const entry: TurnLog = {
+    ...known,
+    mode: "live",
+    note: null,
+    hits: passages.length,
+    passages: passages.map((p) => p.id),
+    actions: extras.actions.map((a) => a.kind),
+    latencyMs: 0,
+    model: GEMINI_MODEL,
+  };
+
+  const attempt = async (): Promise<ComparisonAttempt> => {
+    const stop = new AbortController();
+    let timedOut = false;
+    const timer = setTimeout(() => {
+      timedOut = true;
+      stop.abort();
+    }, options.totalMs ?? ROLE_FIT_ATTEMPT_MS);
+    const onClientGone = () => stop.abort();
+    request.signal.addEventListener("abort", onClientGone, { once: true });
+    let text = "";
+    try {
+      const generator = stream({ systemInstruction, messages, signal: stop.signal, maxOutputTokens: ROLE_FIT_MAX_OUTPUT_TOKENS });
+      for (;;) {
+        const step = await generator.next();
+        if (step.done) return { text, outcome: step.value };
+        if (step.value && entry.firstTokenMs === undefined) entry.firstTokenMs = Date.now() - started;
+        text += step.value;
+      }
+    } catch (error) {
+      return { text, outcome: null, failure: describeFailure(error, timedOut ? "timeout" : null) };
+    } finally {
+      clearTimeout(timer);
+      request.signal.removeEventListener("abort", onClientGone);
+    }
+  };
+
+  const finished = (result: ComparisonAttempt) => result.outcome?.finish === "stop" && result.text.trim() !== "";
+  let result = await attempt();
+  if (!finished(result) && !request.signal.aborted && reserveLiveAnswer(client) === "ok") {
+    entry.retried = true;
+    result = await attempt();
+  }
+  entry.finish = result.outcome?.finish;
+  entry.promptTokens = result.outcome?.promptTokens;
+  entry.outputTokens = result.outcome?.outputTokens;
+  entry.thinkingTokens = result.outcome?.thinkingTokens;
+  entry.latencyMs = Date.now() - started;
+  if (finished(result)) {
+    log(entry);
+    return staticAnswer("live", null, result.text, extras);
+  }
+  entry.mode = "fallback";
+  entry.note = "live-unavailable";
+  entry.failure = result.failure ?? `finish-${result.outcome?.finish ?? "none"}`;
+  log(entry);
+  return staticAnswer("fallback", "live-unavailable", roleFitFallback(roleFit), extras);
+}
+
 /** Stream a live answer, falling back to site search if the model fails first. */
 function liveAnswer({
   request,
@@ -754,14 +844,11 @@ function liveAnswer({
   anchor,
   intent,
   asked,
-  roleFit,
   options,
   log,
   started,
   entry: known,
 }: LiveContext): Response {
-  // A comparison: more room and time to think, and never hedged (ROLE_FIT_* above).
-  const comparing = roleFit.length > 0;
   const stream = options.stream ?? streamGemini;
   const upstream = new AbortController();
   let reason: string | null = null;
@@ -788,7 +875,7 @@ function liveAnswer({
       if (request.signal.aborted) onClientGone();
       let watchdog: ReturnType<typeof setTimeout> | undefined = setTimeout(
         () => abort("first-token-timeout"),
-        options.firstTokenMs ?? (comparing ? ROLE_FIT_FIRST_TOKEN_TIMEOUT_MS : FIRST_TOKEN_TIMEOUT_MS),
+        options.firstTokenMs ?? FIRST_TOKEN_TIMEOUT_MS,
       );
       const deadline = setTimeout(() => abort("timeout"), options.totalMs ?? ANSWER_TIMEOUT_MS);
 
@@ -804,18 +891,13 @@ function liveAnswer({
         model: GEMINI_MODEL,
       };
       let produced = false;
-      const systemInstruction = buildSystemInstruction(
-        passages,
-        backgroundProfile(),
-        comparing ? { kind: "role-fit", items: roleFit } : null,
-      );
+      const systemInstruction = buildSystemInstruction(passages, backgroundProfile());
       // Each call has its own abort, so the loser of a hedged race can be
       // stopped alone; every call stops when the answer does.
       const start = (): Attempt => {
         const stop = new AbortController();
         upstream.signal.addEventListener("abort", () => stop.abort(), { once: true });
-        const maxOutputTokens = comparing ? ROLE_FIT_MAX_OUTPUT_TOKENS : undefined;
-        const attempt = { generator: stream({ systemInstruction, messages, signal: stop.signal, maxOutputTokens }), stop } as Attempt;
+        const attempt = { generator: stream({ systemInstruction, messages, signal: stop.signal }), stop } as Attempt;
         attempt.next = stepOf(attempt);
         return attempt;
       };
@@ -824,7 +906,7 @@ function liveAnswer({
         const race = await firstText(
           start,
           upstream.signal,
-          options.hedgeMs !== undefined ? options.hedgeMs : comparing ? null : HEDGE_AFTER_MS,
+          options.hedgeMs === undefined ? HEDGE_AFTER_MS : options.hedgeMs,
           () => reserveLiveAnswer(client) === "ok",
         );
         if (race.hedged) entry.hedged = true;
@@ -868,7 +950,7 @@ function liveAnswer({
         entry.failure = describeFailure(error, reason);
         if (reason === "client-gone" || request.signal.aborted) return; // nobody to answer
         if (!produced) {
-          const fallback = fallbackFor(passages, anchor, intent, asked, roleFit);
+          const fallback = fallbackFor(passages, anchor, intent, asked);
           entry.mode = "fallback";
           entry.note = "live-unavailable";
           entry.hits = fallback.served.length;

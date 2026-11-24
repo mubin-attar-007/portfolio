@@ -12,7 +12,7 @@ import {
   ANSWER_TIMEOUT_MS,
   FIRST_TOKEN_TIMEOUT_MS,
   HEDGE_AFTER_MS,
-  ROLE_FIT_FIRST_TOKEN_TIMEOUT_MS,
+  ROLE_FIT_ATTEMPT_MS,
   ROLE_FIT_MAX_OUTPUT_TOKENS,
   handleChat,
   type HandlerOptions,
@@ -340,6 +340,43 @@ test("a pasted job description is compared requirement by requirement, each with
   // An ordinary answer keeps the measured default ceiling.
   await run(ask("What is DBWhisper?"), { stream: capture });
   assert.equal(ceiling, undefined);
+});
+
+test("a comparison is sent whole: a cut-off one is asked for once more, and never shown as a fragment", async () => {
+  const full = "- **RAG in production**: **Shown**, by DBWhisper.\n\nHe can be asked directly about anything not shown.";
+  /** A model whose calls end with these finish reasons in turn, each after some text. */
+  const sequence = (...finishes: ("stop" | "blocked")[]) => {
+    let calls = 0;
+    const stream: Fake = async function* () {
+      const finish = finishes[Math.min(calls++, finishes.length - 1)]!;
+      yield finish === "stop" ? full : "- **RAG in production**: **Shown**, wi";
+      return { finish };
+    };
+    return { stream, calls: () => calls };
+  };
+  // Finished first time: sent as it is, one call.
+  const once = sequence("stop");
+  const first = await run(ask(JOB_DESCRIPTION), { stream: once.stream });
+  assert.deepEqual((first.body as Event[])[0]!.data, { mode: "live", note: null });
+  assert.equal(textOf(first.body as Event[]), full);
+  assert.equal(once.calls(), 1);
+  assert.equal(first.logs[0]!.retried, undefined);
+  // Cut off, then finished: only the finished answer reaches the visitor.
+  const retried = sequence("blocked", "stop");
+  const second = await run(ask(JOB_DESCRIPTION), { stream: retried.stream });
+  assert.deepEqual((second.body as Event[])[0]!.data, { mode: "live", note: null });
+  assert.equal(textOf(second.body as Event[]), full);
+  assert.equal(retried.calls(), 2);
+  assert.equal(second.logs[0]!.retried, true);
+  assert.equal(second.logs[0]!.finish, "stop");
+  // Cut off twice: the complete site-search comparison, never the fragment.
+  const twice = sequence("blocked", "blocked");
+  const third = await run(ask(JOB_DESCRIPTION), { stream: twice.stream });
+  const list = third.body as Event[];
+  assert.deepEqual(list[0]!.data, { mode: "fallback", note: "live-unavailable" });
+  assert.match(textOf(list), /^Live answers aren't available right now/);
+  assert.doesNotMatch(textOf(list), /\*\*Shown\*\*, wi/);
+  assert.equal(third.logs[0]!.failure, "finish-blocked");
 });
 
 test("without a model, a job description gets each requirement with its closest page, said to be site search", async () => {
@@ -801,10 +838,7 @@ test("the timeouts nest: hedge, slow cue and first token, then the answer, the p
   assert.ok(ANSWER_TIMEOUT_MS - FIRST_TOKEN_TIMEOUT_MS >= 12_000, "room to stream a full answer after a late first token");
   assert.ok(ROUTER_TIMEOUT_MS + ANSWER_TIMEOUT_MS + 1_000 <= maxDuration * 1000, "a routing call and the answer end inside the platform's limit");
   assert.ok(CLIENT_TIMEOUT_MS > maxDuration * 1000, "the panel never gives up on an answer the server can still send");
-  assert.ok(
-    FIRST_TOKEN_TIMEOUT_MS < ROLE_FIT_FIRST_TOKEN_TIMEOUT_MS && ROLE_FIT_FIRST_TOKEN_TIMEOUT_MS + 4_000 <= ANSWER_TIMEOUT_MS,
-    "a comparison waits longer for its first words and still has room to stream eight bullets",
-  );
+  assert.ok(2 * ROLE_FIT_ATTEMPT_MS + 1_000 <= ANSWER_TIMEOUT_MS, "a comparison and its one retry end inside the answer's budget");
 });
 
 // ---- Timings at their real values, on a mocked clock --------------------------------
@@ -869,19 +903,16 @@ test("a first token after 12 s falls back to site search", async (t) => {
   assert.ok(logs[0]!.latencyMs >= FIRST_TOKEN_TIMEOUT_MS && logs[0]!.latencyMs < FIRST_TOKEN_TIMEOUT_MS + 1_000);
 });
 
-test("a job-description comparison may think for 20 s before its first words, and is never hedged", async (t) => {
-  // At 12.5 s an ordinary answer has already fallen back (above); a comparison is still served live.
-  const model = timedModel(() => 15_000);
+test("a comparison that never finishes is tried twice, each for ROLE_FIT_ATTEMPT_MS, then answered from site search", async (t) => {
+  const model = timedModel(() => null);
   const { body, logs } = await runOnClock(t, JOB_DESCRIPTION, model.stream);
   const list = body as Event[];
-  assert.deepEqual(list[0]!.data, { mode: "live", note: null });
-  assert.equal(logs[0]!.firstTokenMs, 15_000);
-  assert.equal(logs[0]!.hedged, undefined, "no second call");
-  assert.equal(model.calls(), 1);
-  // Past its own window, it falls back like any answer.
-  const late = await runOnClock(t, JOB_DESCRIPTION, timedModel(() => ROLE_FIT_FIRST_TOKEN_TIMEOUT_MS + 500).stream);
-  assert.deepEqual((late.body as Event[])[0]!.data, { mode: "fallback", note: "live-unavailable" });
-  assert.equal(late.logs[0]!.failure, "first-token-timeout");
+  assert.deepEqual(list[0]!.data, { mode: "fallback", note: "live-unavailable" });
+  assert.match(textOf(list), /^Live answers aren't available right now/);
+  assert.equal(model.calls(), 2);
+  assert.equal(logs[0]!.retried, true);
+  assert.equal(logs[0]!.failure, "timeout");
+  assert.ok(logs[0]!.latencyMs >= 2 * ROLE_FIT_ATTEMPT_MS && logs[0]!.latencyMs < 2 * ROLE_FIT_ATTEMPT_MS + 1_000);
 });
 
 test("a hedged call has the rest of the same 12 s: in time it answers, too late it falls back", async (t) => {
