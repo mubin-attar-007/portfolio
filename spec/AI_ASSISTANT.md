@@ -355,7 +355,10 @@ server. Limits and wire shapes shared with the panel live in `lib/ai/chat-contra
 11. **Fallback:** a failure before the first text — an error, a timeout, a blocked or empty
     reply — streams the best passage verbatim with its page, its actions and follow-ups,
     `mode: "fallback"`, `note: "live-unavailable"`. A failure after it, or a reply cut off by
-    the token limit or a filter, ends with `done { incomplete: true }`.
+    the token limit or a filter, or one whose stream ends with no finish reason (only an explicit
+    stop is finished), ends with `done { incomplete: true }`. The stream reader joins an event's
+    data lines and reads a last event that arrives without a closing newline, so no answer is
+    cut short while it looks complete.
 
 Small talk (`lib/ai/small-talk.ts`) is answered before any search, with `mode: "fallback"`,
 `note: "small-talk"`, no model call and no budget:

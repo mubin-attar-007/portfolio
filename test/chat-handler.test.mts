@@ -203,7 +203,12 @@ test("an answer cut off by the token limit, or failing part-way, ends marked inc
     yield "Part of an answer";
     throw new Error("connection reset");
   };
-  for (const stream of [cut, broken]) {
+  // A stream that ends with no finish reason was cut off on the way: only an explicit stop is finished.
+  const unfinished: Fake = async function* () {
+    yield "Part of an answer";
+    return { finish: "unknown" };
+  };
+  for (const stream of [cut, broken, unfinished]) {
     const { body, logs } = await run(ask("What is DBWhisper?"), { stream });
     const list = body as Event[];
     assert.equal(list[0]!.data.mode, "live");
