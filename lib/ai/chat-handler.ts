@@ -100,6 +100,15 @@ export const ANSWER_TIMEOUT_MS = 25_000;
  */
 export const HEDGE_AFTER_MS = 3_500;
 
+/**
+ * The output ceiling of a job-description comparison. Thinking counts against
+ * it, and comparing up to eight requirements with a dozen passages makes the
+ * model think far more than an ordinary answer does: at the ordinary 800 the
+ * live answer stopped after about 300 characters (2026-11-24). The ceiling is
+ * room, not length: rule 12 keeps the answer to eight bullets.
+ */
+export const ROLE_FIT_MAX_OUTPUT_TOKENS = 2_048;
+
 /** Most pages one answer cites. */
 const MAX_CITED_PAGES = 5;
 
@@ -193,6 +202,8 @@ export type TurnLog = {
   incomplete?: true;
   promptTokens?: number;
   outputTokens?: number;
+  /** Thinking tokens, which share the output ceiling: a cut-off answer with many of them ran out of room. */
+  thinkingTokens?: number;
 };
 
 export type HandlerOptions = {
@@ -762,7 +773,8 @@ function liveAnswer({ request, client, messages, passages, anchor, intent, asked
       const start = (): Attempt => {
         const stop = new AbortController();
         upstream.signal.addEventListener("abort", () => stop.abort(), { once: true });
-        const attempt = { generator: stream({ systemInstruction, messages, signal: stop.signal }), stop } as Attempt;
+        const maxOutputTokens = intent.roleFit ? ROLE_FIT_MAX_OUTPUT_TOKENS : undefined;
+        const attempt = { generator: stream({ systemInstruction, messages, signal: stop.signal, maxOutputTokens }), stop } as Attempt;
         attempt.next = stepOf(attempt);
         return attempt;
       };
@@ -781,6 +793,7 @@ function liveAnswer({ request, client, messages, passages, anchor, intent, asked
             entry.finish = race.ended.finish;
             entry.promptTokens = race.ended.promptTokens;
             entry.outputTokens = race.ended.outputTokens;
+            entry.thinkingTokens = race.ended.thinkingTokens;
           }
           throw race.failure ?? new Error(race.ended?.finish === "blocked" ? "blocked" : "empty");
         }
@@ -804,6 +817,7 @@ function liveAnswer({ request, client, messages, passages, anchor, intent, asked
         entry.finish = outcome.finish;
         entry.promptTokens = outcome.promptTokens;
         entry.outputTokens = outcome.outputTokens;
+        entry.thinkingTokens = outcome.thinkingTokens;
         // Only an explicit stop is a finished answer. A stream that ended with no
         // finish reason ("unknown") was cut off on the way, and says so.
         const incomplete = outcome.finish !== "stop";
