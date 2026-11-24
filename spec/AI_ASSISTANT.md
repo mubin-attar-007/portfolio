@@ -254,6 +254,9 @@ Without a key, paraphrases and other languages that lexical search misses are "n
 
     No score, percentage, ranking or verdict, and none of the employer's own terms. When the
     route recognises a description, the content block opens with a `TASK:` line naming rule 12.
+    Also in this version, rule 10: asked whether a question is stored, shared or private, the
+    answer gives both halves, what this site keeps and what happens to it at Google. A live
+    answer had given only the first ("this site doesn't store your question").
 - The rules (prompt v2): answer only from the content, and say what it does not cover; copy
   every figure character for character (the usage figures are built into the rule from
   `USAGE`) and state only the figures the question needs; name the flagships first for a
