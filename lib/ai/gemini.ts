@@ -72,7 +72,15 @@ export type StreamArgs = {
   systemInstruction: string;
   messages: readonly ChatMessage[];
   signal?: AbortSignal;
+  /**
+   * The output ceiling, thinking included (DEFAULT_MAX_OUTPUT_TOKENS unless a
+   * task needs more room: see ROLE_FIT_MAX_OUTPUT_TOKENS in the route).
+   */
+  maxOutputTokens?: number;
 };
+
+/** The output ceiling of an ordinary answer: measured on 2026-11-17 (spec/AI_ASSISTANT.md §8). */
+export const DEFAULT_MAX_OUTPUT_TOKENS = 800;
 
 /**
  * How a stream ended. `stop` is a finished answer; `max-tokens` was cut off
@@ -86,6 +94,8 @@ export type StreamOutcome = {
   finish: FinishReason;
   promptTokens?: number;
   outputTokens?: number;
+  /** Thinking tokens: they count against maxOutputTokens, so they explain a cut-off answer. */
+  thinkingTokens?: number;
 };
 
 /** Gemini's finish reasons that mean a filter stopped the answer. */
@@ -105,7 +115,7 @@ type Chunk = {
     finishReason?: string;
   }[];
   promptFeedback?: { blockReason?: string };
-  usageMetadata?: { promptTokenCount?: number; candidatesTokenCount?: number };
+  usageMetadata?: { promptTokenCount?: number; candidatesTokenCount?: number; thoughtsTokenCount?: number };
 };
 
 /** One `data:` payload as JSON, or null for a keep-alive or partial frame. */
@@ -194,7 +204,7 @@ export async function* streamGemini(args: StreamArgs): AsyncGenerator<string, St
     {
       systemInstruction: { parts: [{ text: args.systemInstruction }] },
       contents: toContents(args.messages),
-      generationConfig: { maxOutputTokens: 800, thinkingConfig: THINKING },
+      generationConfig: { maxOutputTokens: args.maxOutputTokens ?? DEFAULT_MAX_OUTPUT_TOKENS, thinkingConfig: THINKING },
       // Keep safety at defaults; content is professional Q&A about a portfolio.
     },
     args.signal,
@@ -206,7 +216,8 @@ export async function* streamGemini(args: StreamArgs): AsyncGenerator<string, St
   let finishReason: string | undefined;
   let promptTokens: number | undefined;
   let outputTokens: number | undefined;
-  const outcome = (): StreamOutcome => ({ finish: classify(finishReason), promptTokens, outputTokens });
+  let thinkingTokens: number | undefined;
+  const outcome = (): StreamOutcome => ({ finish: classify(finishReason), promptTokens, outputTokens, thinkingTokens });
 
   // The data lines of the event being read. An event's payload is usually one
   // `data:` line of JSON, but SSE lets it span several (joined with "\n"), so a
@@ -241,6 +252,7 @@ export async function* streamGemini(args: StreamArgs): AsyncGenerator<string, St
     if (chunk.usageMetadata) {
       promptTokens = chunk.usageMetadata.promptTokenCount ?? promptTokens;
       outputTokens = chunk.usageMetadata.candidatesTokenCount ?? outputTokens;
+      thinkingTokens = chunk.usageMetadata.thoughtsTokenCount ?? thinkingTokens;
     }
     const text = textOf(chunk);
     if (text) yield text;

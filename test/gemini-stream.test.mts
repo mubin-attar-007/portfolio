@@ -5,7 +5,7 @@
 import test, { after, before } from "node:test";
 import assert from "node:assert/strict";
 
-import { streamGemini, type StreamOutcome } from "../lib/ai/gemini.ts";
+import { DEFAULT_MAX_OUTPUT_TOKENS, streamGemini, type StreamOutcome } from "../lib/ai/gemini.ts";
 
 const realFetch = globalThis.fetch;
 const realKey = process.env.GEMINI_API_KEY;
@@ -19,9 +19,13 @@ after(() => {
   else process.env.GEMINI_API_KEY = realKey;
 });
 
+/** The last request body sent, parsed. */
+let lastBody: { generationConfig?: { maxOutputTokens?: number } } = {};
+
 /** fetch answering with these byte chunks as the response body. */
 function serve(chunks: readonly string[]): void {
-  globalThis.fetch = (async () => {
+  globalThis.fetch = (async (_url: unknown, init?: { body?: string }) => {
+    lastBody = JSON.parse(init?.body ?? "{}");
     const encoder = new TextEncoder();
     const body = new ReadableStream<Uint8Array>({
       start(controller) {
@@ -68,10 +72,28 @@ test("an event whose JSON spans several data lines, or several network chunks, i
   const json = event("Joined text.", "STOP");
   const middle = Math.floor(json.length / 2);
   serve([`data: ${json.slice(0, middle)}\n`, `data: ${json.slice(middle)}\n\n`]);
-  assert.deepEqual(await read(), { text: "Joined text.", outcome: { finish: "stop", promptTokens: undefined, outputTokens: undefined } });
+  assert.deepEqual(await read(), {
+    text: "Joined text.",
+    outcome: { finish: "stop", promptTokens: undefined, outputTokens: undefined, thinkingTokens: undefined },
+  });
   // Split mid-line across reads, and mid-character for a multi-byte letter.
   serve([`data: ${event("Résumé")}`.slice(0, 30), `data: ${event("Résumé", "STOP")}`.slice(30) + "\n\n"]);
   assert.equal((await read()).text, "Résumé");
+});
+
+test("the output ceiling is the measured default unless a call asks for more; thinking tokens are reported", async () => {
+  const usage = JSON.stringify({
+    candidates: [{ content: { parts: [{ text: "Done." }] }, finishReason: "MAX_TOKENS" }],
+    usageMetadata: { promptTokenCount: 900, candidatesTokenCount: 40, thoughtsTokenCount: 760 },
+  });
+  serve([`data: ${usage}\r\n\r\n`]);
+  const { outcome } = await read();
+  assert.equal(lastBody.generationConfig?.maxOutputTokens, DEFAULT_MAX_OUTPUT_TOKENS);
+  assert.deepEqual(outcome, { finish: "max-tokens", promptTokens: 900, outputTokens: 40, thinkingTokens: 760 });
+  serve([`data: ${event("Done.", "STOP")}\r\n\r\n`]);
+  const generator = streamGemini({ systemInstruction: "rules", messages: [{ role: "user", content: "q" }], maxOutputTokens: 2048 });
+  while (!(await generator.next()).done);
+  assert.equal(lastBody.generationConfig?.maxOutputTokens, 2048);
 });
 
 test("a stream that ends with no finish reason reports it as unknown", async () => {

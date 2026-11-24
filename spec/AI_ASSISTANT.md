@@ -232,7 +232,7 @@ Without a key, paraphrases and other languages that lexical search misses are "n
 
 - `lib/ai/gemini.ts` calls the Gemini REST API directly (no SDK): `gemini-3.5-flash-lite`
   unless `GEMINI_MODEL` (parsed in `lib/env.ts`) names another Gemini 3 or later model,
-  `streamGenerateContent?alt=sse` for answers (`maxOutputTokens` 800) and one small
+  `streamGenerateContent?alt=sse` for answers (`maxOutputTokens` 800, or 2,048 for a job-description comparison: thinking shares the ceiling, and at 800 that answer stopped after about 300 characters; the log line records `thinkingTokens`) and one small
   `generateContent` with `responseMimeType: application/json` and a schema for the router;
   thinking level `MINIMAL` (measured against `LOW` and `gemini-3.5-flash`, §8), no
   `temperature` or `topP`. The key travels in the

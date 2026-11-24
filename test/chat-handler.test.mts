@@ -12,6 +12,7 @@ import {
   ANSWER_TIMEOUT_MS,
   FIRST_TOKEN_TIMEOUT_MS,
   HEDGE_AFTER_MS,
+  ROLE_FIT_MAX_OUTPUT_TOKENS,
   handleChat,
   type HandlerOptions,
   type TurnLog,
@@ -306,12 +307,16 @@ const JOB_DESCRIPTION = [
 test("a pasted job description is compared with his work from the fixed evidence, by rule 12, never as a hiring gap", async () => {
   assert.ok(isRoleDescription(JOB_DESCRIPTION));
   let instruction = "";
-  const capture: Fake = async function* ({ systemInstruction }) {
+  let ceiling: number | undefined;
+  const capture: Fake = async function* ({ systemInstruction, maxOutputTokens }) {
     instruction = systemInstruction;
+    ceiling = maxOutputTokens;
     yield "- **RAG in production**: Shown by Bench Discovery.";
     return { finish: "stop" };
   };
   const { body, logs } = await run(ask(JOB_DESCRIPTION), { stream: capture, route: noRoute });
+  // The comparison gets room to think and still finish (an ordinary answer's default: below).
+  assert.equal(ceiling, ROLE_FIT_MAX_OUTPUT_TOKENS);
   const list = body as Event[];
   assert.deepEqual(list[0]!.data, { mode: "live", note: null });
   // Its salary, visa and relocation lines are the employer's terms: no fixed gap reply.
@@ -329,6 +334,9 @@ test("a pasted job description is compared with his work from the fixed evidence
   assert.deepEqual(actions, ["email", "book", "contact"]);
   // Every evidence passage exists.
   assert.equal(passagesById(ROLE_FIT_PASSAGES).length, ROLE_FIT_PASSAGES.length);
+  // An ordinary answer keeps the measured default ceiling.
+  await run(ask("What is DBWhisper?"), { stream: capture });
+  assert.equal(ceiling, undefined);
 });
 
 test("an instruction hidden in a job description is refused, and a description never swamps the next question", async () => {
