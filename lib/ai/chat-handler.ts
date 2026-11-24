@@ -40,7 +40,7 @@ import { chooseActions } from "./actions";
 import type { ActionKind, AnswerMode, AnswerNote, AssistantAction, CitationLink, StreamEvent } from "./chat-contract";
 import { MAX_REQUEST_BYTES } from "./chat-contract";
 import { citedPages, isSitePath } from "./citation-links";
-import { HIRING_FACTS, HIRING_PASSAGE, ROLE_FIT_PASSAGES } from "./corpus";
+import { HIRING_FACTS, HIRING_PASSAGE } from "./corpus";
 import { chooseFollowUps, topicOf, type FollowUpTopic } from "./follow-ups";
 import {
   GeminiError,
@@ -55,6 +55,7 @@ import { INJECTION_REFUSAL, sanitizeMessages, screenConversation, screenRequest,
 import { GAP_OPENING } from "./hiring-gaps";
 import { isRoleDescription, readIntent, type Intent } from "./intent";
 import { liveAllowed } from "./provider-terms";
+import { evidencePassages, matchRequirements, requirementsOf, roleFitFallback, type RequirementEvidence } from "./role-fit";
 import { checkRateLimit, clientKeyFromHeaders, reserveLiveAnswer, type LiveAnswerReservation } from "./rate-limit";
 import { SMALL_TALK_REPLY, smallTalk } from "./small-talk";
 import {
@@ -174,7 +175,7 @@ const PRIVATE_CONTACT =
   "and the quickest ways to reach him are email or a booked call.";
 
 /** How the passages behind a turn were found. */
-/** …or the fixed evidence a pasted job description is compared with (ROLE_FIT_PASSAGES). */
+/** …or a pasted job description's requirements, each matched to the passage closest to it (lib/ai/role-fit.ts). */
 export type RetrievalPath = "lexical" | "fuzzy" | "router" | "none" | "role-fit";
 
 /** One line per answered turn. No question, answer, key or address. */
@@ -383,7 +384,12 @@ function fallbackFor(
   anchor: string | null,
   intent: Intent,
   asked: readonly string[],
+  roleFit: readonly RequirementEvidence[] = [],
 ): { text: string; extras: Extras; served: string[] } {
+  // A comparison falls back to each requirement with its closest page, said to be site search.
+  if (roleFit.length > 0) {
+    return { text: roleFitFallback(roleFit), extras: extrasFor(intent, passages, asked), served: passages.map((p) => p.id) };
+  }
   const chosen = chooseFallback(passages, anchor);
   // retrieve() never returns passages without a cited one, so this is a guard.
   if (!chosen) return { text: NOT_COVERED, extras: { ...NO_EXTRAS, followups: nextQuestions("profile", asked) }, served: [] };
@@ -550,11 +556,13 @@ export async function handleChat(request: Request, options: HandlerOptions = {})
     }
 
     // A pasted job description is compared with the fixed evidence, not searched on its wording.
-    const search: SiteSearch = intent.roleFit
-      ? { passages: passagesById(ROLE_FIT_PASSAGES), corrected: false, anchor: null, topical: true, person: true }
-      : searchSite(latest, earlier, { page });
+    const roleFit = intent.roleFit ? matchRequirements(requirementsOf(latest)) : [];
+    const search: SiteSearch =
+      roleFit.length > 0
+        ? { passages: evidencePassages(roleFit), corrected: false, anchor: null, topical: true, person: true }
+        : searchSite(latest, earlier, { page });
     let passages = search.passages;
-    let retrieval: RetrievalPath = intent.roleFit
+    let retrieval: RetrievalPath = roleFit.length > 0
       ? "role-fit"
       : passages.length === 0
         ? "none"
@@ -597,7 +605,7 @@ export async function handleChat(request: Request, options: HandlerOptions = {})
     }
 
     const served = (note: AnswerNote, entry: Partial<TurnLog> = {}) => {
-      const fallback = fallbackFor(passages, search.anchor, intent, asked);
+      const fallback = fallbackFor(passages, search.anchor, intent, asked, roleFit);
       logStatic("fallback", note, {
         ...routing,
         hits: fallback.served.length,
@@ -623,6 +631,7 @@ export async function handleChat(request: Request, options: HandlerOptions = {})
       anchor: search.anchor,
       intent,
       asked,
+      roleFit,
       options,
       log,
       started,
@@ -642,6 +651,8 @@ type LiveContext = {
   anchor: string | null;
   intent: Intent;
   asked: readonly string[];
+  /** A pasted job description's requirements, each with its closest passage; empty for any other question. */
+  roleFit: readonly RequirementEvidence[];
   options: HandlerOptions;
   log: (entry: TurnLog) => void;
   started: number;
@@ -735,7 +746,22 @@ async function firstText(
 }
 
 /** Stream a live answer, falling back to site search if the model fails first. */
-function liveAnswer({ request, client, messages, passages, anchor, intent, asked, options, log, started, entry: known }: LiveContext): Response {
+function liveAnswer({
+  request,
+  client,
+  messages,
+  passages,
+  anchor,
+  intent,
+  asked,
+  roleFit,
+  options,
+  log,
+  started,
+  entry: known,
+}: LiveContext): Response {
+  // A comparison: more room and time to think, and never hedged (ROLE_FIT_* above).
+  const comparing = roleFit.length > 0;
   const stream = options.stream ?? streamGemini;
   const upstream = new AbortController();
   let reason: string | null = null;
@@ -762,7 +788,7 @@ function liveAnswer({ request, client, messages, passages, anchor, intent, asked
       if (request.signal.aborted) onClientGone();
       let watchdog: ReturnType<typeof setTimeout> | undefined = setTimeout(
         () => abort("first-token-timeout"),
-        options.firstTokenMs ?? (intent.roleFit ? ROLE_FIT_FIRST_TOKEN_TIMEOUT_MS : FIRST_TOKEN_TIMEOUT_MS),
+        options.firstTokenMs ?? (comparing ? ROLE_FIT_FIRST_TOKEN_TIMEOUT_MS : FIRST_TOKEN_TIMEOUT_MS),
       );
       const deadline = setTimeout(() => abort("timeout"), options.totalMs ?? ANSWER_TIMEOUT_MS);
 
@@ -778,13 +804,17 @@ function liveAnswer({ request, client, messages, passages, anchor, intent, asked
         model: GEMINI_MODEL,
       };
       let produced = false;
-      const systemInstruction = buildSystemInstruction(passages, backgroundProfile(), intent.roleFit ? "role-fit" : null);
+      const systemInstruction = buildSystemInstruction(
+        passages,
+        backgroundProfile(),
+        comparing ? { kind: "role-fit", items: roleFit } : null,
+      );
       // Each call has its own abort, so the loser of a hedged race can be
       // stopped alone; every call stops when the answer does.
       const start = (): Attempt => {
         const stop = new AbortController();
         upstream.signal.addEventListener("abort", () => stop.abort(), { once: true });
-        const maxOutputTokens = intent.roleFit ? ROLE_FIT_MAX_OUTPUT_TOKENS : undefined;
+        const maxOutputTokens = comparing ? ROLE_FIT_MAX_OUTPUT_TOKENS : undefined;
         const attempt = { generator: stream({ systemInstruction, messages, signal: stop.signal, maxOutputTokens }), stop } as Attempt;
         attempt.next = stepOf(attempt);
         return attempt;
@@ -794,7 +824,7 @@ function liveAnswer({ request, client, messages, passages, anchor, intent, asked
         const race = await firstText(
           start,
           upstream.signal,
-          options.hedgeMs !== undefined ? options.hedgeMs : intent.roleFit ? null : HEDGE_AFTER_MS,
+          options.hedgeMs !== undefined ? options.hedgeMs : comparing ? null : HEDGE_AFTER_MS,
           () => reserveLiveAnswer(client) === "ok",
         );
         if (race.hedged) entry.hedged = true;
@@ -838,7 +868,7 @@ function liveAnswer({ request, client, messages, passages, anchor, intent, asked
         entry.failure = describeFailure(error, reason);
         if (reason === "client-gone" || request.signal.aborted) return; // nobody to answer
         if (!produced) {
-          const fallback = fallbackFor(passages, anchor, intent, asked);
+          const fallback = fallbackFor(passages, anchor, intent, asked, roleFit);
           entry.mode = "fallback";
           entry.note = "live-unavailable";
           entry.hits = fallback.served.length;
