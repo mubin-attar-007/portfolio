@@ -36,8 +36,11 @@ changes in the index with it. Nothing is written for the assistant except the FA
 (`content/faq.json`) and the public case-study write-ups (`content/projects/*.mdx`).
 
 - **FAQ** — one passage per Q&A (16), including two about the assistant itself (what it
-  does with a question; where answers come from), which cite `/privacy`. A FAQ answer never
-  restates a usage figure: figures have one source.
+  does with a question; where answers come from), which cite `/privacy`. Those two are found
+  by their question and words about the assistant and privacy (`ABOUT_THE_ASSISTANT`), not
+  by their answers: an answer that lists "the hiring and contact pages" once put a Privacy
+  citation on every hiring answer. A FAQ answer never restates a usage figure: figures have
+  one source.
 - **Work index** — what he has shipped, flagships first with their usage in the approved
   wording (`USAGE`), then the public projects; found by what it is ("what has he
   shipped/built"), not by the names it lists.
