@@ -241,7 +241,7 @@ Without a key, paraphrases and other languages that lexical search misses are "n
 - The system instruction is `SYSTEM_PROMPT` and then the content: **BACKGROUND** (his profile
   passage, on every live answer, so a general question never dead-ends) and **CONTEXT** (the
   passages retrieved for the question, each as "Passage from <source>:" — unnumbered, so the
-  model has no index to cite as "[1]"). Bump `SYSTEM_PROMPT_VERSION` (now `2026-11-24.3`) on
+  model has no index to cite as "[1]"). Bump `SYSTEM_PROMPT_VERSION` (now `2026-11-24.4`) on
   any behavioural change. Recent versions:
   - `2026-11-24.1`: backticks are for code identifiers only, and an email or web address is
     plain text (live answers had set the email and the booking link as code; the Email and
@@ -261,6 +261,10 @@ Without a key, paraphrases and other languages that lexical search misses are "n
     requirement with its closest passage or none (§4), in place of a `CONTEXT` list. When
     the model had to match up to eight requirements against a dozen passages itself, the live
     answer stalled: first words at 6.8 s, then nothing until the 25 s budget ran out.
+  - `2026-11-24.4`: rule 12 says why in the model's own words, never the passage's sentences,
+    and each requirement's passage excerpt is at most 360 characters. A live comparison that
+    restated site text stopped mid-sentence after about 2 s, about one run in two. That fits
+    Google's recitation filter: the site is public, so its text is published.
 - The rules (prompt v2): answer only from the content, and say what it does not cover; copy
   every figure character for character (the usage figures are built into the rule from
   `USAGE`) and state only the figures the question needs; name the flagships first for a
