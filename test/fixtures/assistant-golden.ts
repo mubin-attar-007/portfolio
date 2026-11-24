@@ -634,7 +634,7 @@ export const GOLDEN: readonly GoldenItem[] = [
     forbid: [/[$₹€£]\s?\d/, /\b\d[\d,.]*\s?(?:lakh|crore|million|thousand|k)\b/i],
   },
   {
-    // Compared from the fixed evidence (ROLE_FIT_PASSAGES), never scored; its salary
+    // Each requirement matched to its closest passage (lib/ai/role-fit.ts), never scored; its salary
     // and visa lines are the employer's terms, not hiring gaps.
     id: "role-fit-job-description",
     area: "role-fit",

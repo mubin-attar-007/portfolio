@@ -22,8 +22,6 @@ import { GeminiError, type StreamArgs, type StreamOutcome } from "../lib/ai/gemi
 import { INJECTION_REFUSAL } from "../lib/ai/guard.ts";
 import { isRoleDescription, readIntent } from "../lib/ai/intent.ts";
 import { MAX_MESSAGE_CHARS } from "../lib/ai/chat-contract.ts";
-import { ROLE_FIT_PASSAGES } from "../lib/ai/corpus.ts";
-import { passagesById } from "../lib/ai/retrieval.ts";
 import { SYSTEM_PROMPT_VERSION } from "../lib/ai/system-prompt.ts";
 import { resume } from "../content/resume.ts";
 import { CLIENT_DAILY_LIVE_ANSWERS, clientKeyFromHeaders, reserveLiveAnswer } from "../lib/ai/rate-limit.ts";
@@ -305,7 +303,7 @@ const JOB_DESCRIPTION = [
   "We offer a competitive salary, visa sponsorship and relocation support.",
 ].join("\n");
 
-test("a pasted job description is compared with his work from the fixed evidence, by rule 12, never as a hiring gap", async () => {
+test("a pasted job description is compared requirement by requirement, each with its closest passage, never as a hiring gap", async () => {
   assert.ok(isRoleDescription(JOB_DESCRIPTION));
   let instruction = "";
   let ceiling: number | undefined;
@@ -322,22 +320,43 @@ test("a pasted job description is compared with his work from the fixed evidence
   assert.deepEqual(list[0]!.data, { mode: "live", note: null });
   // Its salary, visa and relocation lines are the employer's terms: no fixed gap reply.
   assert.doesNotMatch(textOf(list), /aren't on the site|isn't covered on the site/);
-  // The model is told the task, and sees the evidence a role is compared with.
+  // The model is told the task, and gets each requirement with its closest passage, not a CONTEXT list.
   assert.match(instruction, /TASK: The visitor's latest message is a job description/);
   assert.match(instruction, /12\. A pasted job description/);
+  assert.match(instruction, /REQUIREMENTS \(from the visitor's job description; answer by rule 12\):\n1\. design, build and deploy RAG systems/);
+  assert.match(instruction, /\d\. familiarity with Kubernetes and Terraform\n {3}No passage on the site matches it\./);
+  assert.doesNotMatch(instruction, /CONTEXT \(the site's passages/);
+  // The employer's terms are not requirements.
+  const requirementsBlock = instruction.slice(instruction.indexOf("REQUIREMENTS ("));
+  assert.doesNotMatch(requirementsBlock, /salary|sponsorship|relocation/i);
   assert.equal(logs[0]!.retrieval, "role-fit");
-  for (const id of ["resume-document", "project-bench-discovery", "project-careltc", "project-signflow", "skills-ai-engineering"]) {
-    assert.ok(logs[0]!.passages.includes(id), id);
-  }
+  assert.ok(logs[0]!.passages.includes("resume-document"), logs[0]!.passages.join(", "));
+  // The résumé leads the cited pages, then the matched ones (at most five in all).
   const cited = (dataOf(list, "sources")!.citations as { href: string }[]).map((c) => c.href);
-  assert.ok(cited.includes("/resume") && cited.includes("/work/bench-discovery"), cited.join(", "));
+  assert.equal(cited[0], "/resume", cited.join(", "));
+  assert.ok(cited.length > 1 && cited.length <= 5, cited.join(", "));
   const actions = (dataOf(list, "actions")!.actions as { kind: string }[]).map((a) => a.kind);
   assert.deepEqual(actions, ["email", "book", "contact"]);
-  // Every evidence passage exists.
-  assert.equal(passagesById(ROLE_FIT_PASSAGES).length, ROLE_FIT_PASSAGES.length);
   // An ordinary answer keeps the measured default ceiling.
   await run(ask("What is DBWhisper?"), { stream: capture });
   assert.equal(ceiling, undefined);
+});
+
+test("without a model, a job description gets each requirement with its closest page, said to be site search", async () => {
+  for (const options of [{ live: false }, {}] as HandlerOptions[]) {
+    // No key, and a visitor the free tier may not serve: the same honest comparison.
+    const headers: Record<string, string> = options.live === false ? {} : { "x-vercel-ip-country": "DE" };
+    const { body, logs } = await run(ask(JOB_DESCRIPTION, {}, headers), { stream: never, route: noRoute, ...options });
+    const list = body as Event[];
+    assert.deepEqual(list[0]!.data, { mode: "fallback", note: "live-unavailable" });
+    const text = textOf(list);
+    assert.match(text, /^Live answers aren't available right now, so here is each requirement with the page of this site closest to it/);
+    assert.match(text, /not a judgement of fit/);
+    assert.match(text, /- familiarity with Kubernetes and Terraform: not on the site/);
+    assert.match(text, /- strong understanding of PostgreSQL: closest page, Skills/);
+    assert.doesNotMatch(text, /salary|sponsorship/i);
+    assert.equal(logs[0]!.retrieval, "role-fit");
+  }
 });
 
 test("an instruction hidden in a job description is refused, and a description never swamps the next question", async () => {

@@ -703,29 +703,6 @@ export const HIRING_FACTS = lines(`He is open to: ${OPEN_ROLES.join("; ")}.`, LO
 export const HIRING_PASSAGE = "hire-roles";
 
 /**
- * What a pasted job description is compared with, whatever its wording: his
- * résumé and current role, his skills, the products he built and the roles he
- * is open to. A search on a description's own words would find whichever
- * passages share its vocabulary, not the evidence a recruiter needs. The
- * résumé and products come first, so they lead the cited pages.
- */
-export const ROLE_FIT_PASSAGES: readonly string[] = [
-  "resume-document",
-  "resume-sevina-technologies",
-  "skills-ai-engineering",
-  "project-bench-discovery",
-  "project-careltc",
-  "project-signflow",
-  "project-dbwhisper",
-  "skills-languages",
-  "skills-frameworks",
-  "skills-cloud-aws",
-  "skills-data-and-ml",
-  "skills-devops-ci-cd-and-testing",
-  HIRING_PASSAGE,
-];
-
-/**
  * Who Mubin is, compactly: role, experience, the flagship work with its usage,
  * the public projects, what he is open to, where he is and how to reach him.
  *

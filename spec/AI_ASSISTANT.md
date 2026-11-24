@@ -241,7 +241,7 @@ Without a key, paraphrases and other languages that lexical search misses are "n
 - The system instruction is `SYSTEM_PROMPT` and then the content: **BACKGROUND** (his profile
   passage, on every live answer, so a general question never dead-ends) and **CONTEXT** (the
   passages retrieved for the question, each as "Passage from <source>:" — unnumbered, so the
-  model has no index to cite as "[1]"). Bump `SYSTEM_PROMPT_VERSION` (now `2026-11-24.2`) on
+  model has no index to cite as "[1]"). Bump `SYSTEM_PROMPT_VERSION` (now `2026-11-24.3`) on
   any behavioural change. Recent versions:
   - `2026-11-24.1`: backticks are for code identifiers only, and an email or web address is
     plain text (live answers had set the email and the booking link as code; the Email and
@@ -257,6 +257,10 @@ Without a key, paraphrases and other languages that lexical search misses are "n
     Also in this version, rule 10: asked whether a question is stored, shared or private, the
     answer gives both halves, what this site keeps and what happens to it at Google. A live
     answer had given only the first ("this site doesn't store your question").
+  - `2026-11-24.3`: rule 12 judges pairs the route has matched. `REQUIREMENTS` lists each
+    requirement with its closest passage or none (§4), in place of a `CONTEXT` list. When
+    the model had to match up to eight requirements against a dozen passages itself, the live
+    answer stalled: first words at 6.8 s, then nothing until the 25 s budget ran out.
 - The rules (prompt v2): answer only from the content, and say what it does not cover; copy
   every figure character for character (the usage figures are built into the rule from
   `USAGE`) and state only the figures the question needs; name the flagships first for a
@@ -316,9 +320,23 @@ server. Limits and wire shapes shared with the panel live in `lib/ai/chat-contra
    - **A pasted job description** is not searched. `isRoleDescription` reads one as at least
      280 characters with two job-description markers ("Responsibilities", "Requirements",
      "experience with"…).
-   - It is compared with fixed evidence (`ROLE_FIT_PASSAGES`: the résumé and current role, the
-     products, the skills, the roles he is open to), logged `retrieval: "role-fit"`, and
-     answered by rule 12 with the contact actions.
+   - Its requirements (at most eight, `requirementsOf` in `lib/ai/role-fit.ts`) are read from
+     its list items, or from its clauses and sentences. The guard flattens every message to one
+     line, so the splitter puts bullets, headings ("Requirements:") and the company's own
+     sentences ("We offer…") back on lines of their own. Titles, the company's voice and the
+     employer's terms are not requirements.
+   - Each requirement is matched to its closest passage by the site search, in lenient mode:
+     - its filler is stripped ("strong understanding of", "3+ years of experience with");
+     - words the site never uses are ignored rather than ending the search;
+     - a passage needs 30% of the topic weight (`LENIENT_COVERAGE`), not 50%;
+     - retired results are left out before ranking (`withoutRetired`).
+
+     A requirement none of whose words is on the site ("Kubernetes") has no passage.
+   - The model gets the numbered requirements and their passages (`REQUIREMENTS`), judges each
+     by rule 12, and the answer carries the contact actions. It is logged
+     `retrieval: "role-fit"`. The résumé leads the cited pages, then each matched page once.
+   - Without a model (no key, or a visitor the tier may not serve), the answer is each
+     requirement with its closest page, said to be site search and "not a judgement of fit".
    - Its salary, visa and relocation lines are the employer's terms, so no hiring-gap reply
      applies. An instruction hidden in it is screened like any other.
    - A description is left out of later questions' follow-up threads and the "already asked"

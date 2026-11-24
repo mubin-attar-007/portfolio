@@ -62,6 +62,14 @@ const DEFAULT_K = 5;
 /** A passage must match at least this share of the question's topic weight itself. */
 const MIN_COVERAGE = 0.5;
 
+/**
+ * …or this share, in a lenient search. A job description's requirement packs
+ * several concepts ("evaluation pipelines and guardrails"), and a passage
+ * that shows one of them is still the closest page: the model then says
+ * "Partly".
+ */
+const LENIENT_COVERAGE = 0.3;
+
 /** A passage must score at least this share of the best passage's score. */
 const RELATIVE_FLOOR = 0.6;
 
@@ -736,10 +744,25 @@ export type SearchOptions = {
   k?: number;
   /** The site page the assistant was opened on (already validated), for the page prior. */
   page?: string | null;
+  /**
+   * Match on the words the site uses and ignore the rest, instead of reading a
+   * word it never uses as a topic it does not cover. For a job description's
+   * requirement ("strong understanding of SQL"), whose filler words are not
+   * the topic; a question keeps the strict rule.
+   */
+  lenient?: boolean;
+  /**
+   * Leave out retired results before ranking, so one cannot set the score
+   * floor either: for evidence of a skill, a withdrawn result is not one.
+   */
+  withoutRetired?: boolean;
 };
 
 /** Retrieval for one reading of a question. */
-function retrieveReading(q: Reading, { k = DEFAULT_K, page = null }: SearchOptions): RetrievedPassage[] {
+function retrieveReading(
+  q: Reading,
+  { k = DEFAULT_K, page = null, lenient = false, withoutRetired = false }: SearchOptions,
+): RetrievedPassage[] {
   const pagePath = page ? pathOf(page) : null;
 
   // The summary of the named projects: their overviews and the openings of their case studies.
@@ -763,7 +786,7 @@ function retrieveReading(q: Reading, { k = DEFAULT_K, page = null }: SearchOptio
   // 2) Coverage: a topic word the site never uses is the most specific word
   //    in the question, so unless a project's name anchors it, the question is
   //    about something the site does not cover.
-  if (q.projects.length === 0 && q.unknown.length > 0) return [];
+  if (!lenient && q.projects.length === 0 && q.unknown.length > 0) return [];
   const topic = q.content;
   const known = topic.reduce((sum, term) => sum + idf(DOCUMENT_FREQUENCY.get(term)!), 0);
 
@@ -781,7 +804,9 @@ function retrieveReading(q: Reading, { k = DEFAULT_K, page = null }: SearchOptio
     .map((score, index) => ({ score, index }))
     .filter(
       ({ index, score }) =>
-        score > 0 && (isRecordOf(CORPUS[index]!, q) || matchedWeight(index, topic) >= MIN_COVERAGE * known),
+        score > 0 &&
+        !(withoutRetired && CORPUS[index]!.retired) &&
+        (isRecordOf(CORPUS[index]!, q) || matchedWeight(index, topic) >= (lenient ? LENIENT_COVERAGE : MIN_COVERAGE) * known),
     )
     .sort((a, b) => b.score - a.score || a.index - b.index);
   const best = ranked[0]?.score ?? 0;
