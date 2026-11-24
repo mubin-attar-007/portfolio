@@ -12,6 +12,7 @@ import {
   ANSWER_TIMEOUT_MS,
   FIRST_TOKEN_TIMEOUT_MS,
   HEDGE_AFTER_MS,
+  ROLE_FIT_FIRST_TOKEN_TIMEOUT_MS,
   ROLE_FIT_MAX_OUTPUT_TOKENS,
   handleChat,
   type HandlerOptions,
@@ -781,6 +782,10 @@ test("the timeouts nest: hedge, slow cue and first token, then the answer, the p
   assert.ok(ANSWER_TIMEOUT_MS - FIRST_TOKEN_TIMEOUT_MS >= 12_000, "room to stream a full answer after a late first token");
   assert.ok(ROUTER_TIMEOUT_MS + ANSWER_TIMEOUT_MS + 1_000 <= maxDuration * 1000, "a routing call and the answer end inside the platform's limit");
   assert.ok(CLIENT_TIMEOUT_MS > maxDuration * 1000, "the panel never gives up on an answer the server can still send");
+  assert.ok(
+    FIRST_TOKEN_TIMEOUT_MS < ROLE_FIT_FIRST_TOKEN_TIMEOUT_MS && ROLE_FIT_FIRST_TOKEN_TIMEOUT_MS + 4_000 <= ANSWER_TIMEOUT_MS,
+    "a comparison waits longer for its first words and still has room to stream eight bullets",
+  );
 });
 
 // ---- Timings at their real values, on a mocked clock --------------------------------
@@ -843,6 +848,21 @@ test("a first token after 12 s falls back to site search", async (t) => {
   assert.equal(logs[0]!.failure, "first-token-timeout");
   assert.equal(logs[0]!.hedged, true);
   assert.ok(logs[0]!.latencyMs >= FIRST_TOKEN_TIMEOUT_MS && logs[0]!.latencyMs < FIRST_TOKEN_TIMEOUT_MS + 1_000);
+});
+
+test("a job-description comparison may think for 20 s before its first words, and is never hedged", async (t) => {
+  // At 12.5 s an ordinary answer has already fallen back (above); a comparison is still served live.
+  const model = timedModel(() => 15_000);
+  const { body, logs } = await runOnClock(t, JOB_DESCRIPTION, model.stream);
+  const list = body as Event[];
+  assert.deepEqual(list[0]!.data, { mode: "live", note: null });
+  assert.equal(logs[0]!.firstTokenMs, 15_000);
+  assert.equal(logs[0]!.hedged, undefined, "no second call");
+  assert.equal(model.calls(), 1);
+  // Past its own window, it falls back like any answer.
+  const late = await runOnClock(t, JOB_DESCRIPTION, timedModel(() => ROLE_FIT_FIRST_TOKEN_TIMEOUT_MS + 500).stream);
+  assert.deepEqual((late.body as Event[])[0]!.data, { mode: "fallback", note: "live-unavailable" });
+  assert.equal(late.logs[0]!.failure, "first-token-timeout");
 });
 
 test("a hedged call has the rest of the same 12 s: in time it answers, too late it falls back", async (t) => {

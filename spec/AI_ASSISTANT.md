@@ -341,6 +341,14 @@ server. Limits and wire shapes shared with the panel live in `lib/ai/chat-contra
    13 s to stream; a routing call (3.5 s) plus the answer ends 1.5 s inside `maxDuration`
    (30 s), so the fallback is always sent; and the panel waits 32 s (`CLIENT_TIMEOUT_MS`), so
    it never gives up on an answer the server can still send.
+   - **A job-description comparison** differs in three ways, measured live on 2026-11-24:
+     - its ceiling is 2,048 tokens (at 800, thinking left room for only about 300 characters);
+     - its first-word window is 20 s (`ROLE_FIT_FIRST_TOKEN_TIMEOUT_MS`), since with that room
+       it thought past 12 s;
+     - it is never hedged, because a second call would think as long at twice the quota.
+
+     20 s still leaves 5 s of the answer's 25 s to stream, and the panel says it is slow from
+     5 s. A test holds the nesting.
 10. **Response:** server-sent events in order — `meta { mode, note }`, `token { text }` chunks,
     `sources { citations: [{ label, href }] }` (each cited page once, at the first section the
     answer drew on, at most 5), then `actions { actions: [{ kind, label, href }] }` and

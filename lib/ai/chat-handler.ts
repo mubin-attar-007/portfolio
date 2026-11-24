@@ -109,6 +109,17 @@ export const HEDGE_AFTER_MS = 3_500;
  */
 export const ROLE_FIT_MAX_OUTPUT_TOKENS = 2_048;
 
+/**
+ * How long a job-description comparison may think before its first words.
+ * With room to finish, it thought past the ordinary 12 s watchdog on
+ * 2026-11-24 and fell back to site search. 20 s still nests: it leaves 5 s of
+ * ANSWER_TIMEOUT_MS to stream eight bullets, inside `maxDuration` and the
+ * panel's wait, and the panel says the answer is slow from SLOW_AFTER_MS.
+ * A comparison is never hedged: a second call would think as long, at
+ * twice the quota.
+ */
+export const ROLE_FIT_FIRST_TOKEN_TIMEOUT_MS = 20_000;
+
 /** Most pages one answer cites. */
 const MAX_CITED_PAGES = 5;
 
@@ -751,7 +762,7 @@ function liveAnswer({ request, client, messages, passages, anchor, intent, asked
       if (request.signal.aborted) onClientGone();
       let watchdog: ReturnType<typeof setTimeout> | undefined = setTimeout(
         () => abort("first-token-timeout"),
-        options.firstTokenMs ?? FIRST_TOKEN_TIMEOUT_MS,
+        options.firstTokenMs ?? (intent.roleFit ? ROLE_FIT_FIRST_TOKEN_TIMEOUT_MS : FIRST_TOKEN_TIMEOUT_MS),
       );
       const deadline = setTimeout(() => abort("timeout"), options.totalMs ?? ANSWER_TIMEOUT_MS);
 
@@ -783,7 +794,7 @@ function liveAnswer({ request, client, messages, passages, anchor, intent, asked
         const race = await firstText(
           start,
           upstream.signal,
-          options.hedgeMs === undefined ? HEDGE_AFTER_MS : options.hedgeMs,
+          options.hedgeMs !== undefined ? options.hedgeMs : intent.roleFit ? null : HEDGE_AFTER_MS,
           () => reserveLiveAnswer(client) === "ok",
         );
         if (race.hedged) entry.hedged = true;
