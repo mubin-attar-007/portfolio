@@ -605,6 +605,18 @@ test("on a case study, a first question that names no subject is about the page'
   assert.equal(searchSite("What tech stack?", [], { page: "/writing/trust-is-not-a-safety-model" }).passages[0]?.kind, "skills");
 });
 
+test("the FAQ about the assistant answers questions about the assistant, never a hiring question", () => {
+  // Its answer lists "the hiring and contact pages", which once put a Privacy
+  // citation on every hiring answer ("Can I hire him?").
+  const aboutAssistant = (id: string) => id === "faq-13" || id === "faq-14";
+  for (const question of ["Can I hire him?", "How do I hire Mubin?", "Is he available for hire?", "Why should we hire him?"]) {
+    assert.deepEqual(retrieveForQuestion(question).map((hit) => hit.id).filter(aboutAssistant), [], question);
+  }
+  for (const question of ["Does this assistant store my question?", "Do you save what I type?", "Is my data private?", "How does this assistant work?", "Where do your answers come from?"]) {
+    assert.ok(aboutAssistant(retrieveForQuestion(question)[0]?.id ?? ""), `${question} → ${retrieveForQuestion(question)[0]?.id}`);
+  }
+});
+
 test("a role title the site never gives him finds the roles he is open to, not a deployment section", () => {
   for (const question of ["Is he a forward deployed engineer?", "Is he an FDE?"]) {
     assert.equal(retrieveForQuestion(question)[0]?.id, "hire-roles", question);

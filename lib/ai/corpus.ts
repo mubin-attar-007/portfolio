@@ -341,11 +341,20 @@ const caseStudyLink = (slug: string, title: string, section?: string): CitationL
 // Passages, one builder per source
 // ---------------------------------------------------------------------------
 
+/**
+ * What an FAQ answer about the assistant itself is found by, beside its
+ * question: words a visitor uses about the assistant and their privacy. Its
+ * answer lists the pages the assistant reads ("the hiring and contact
+ * pages"), and matching those words made it an answer to "Can I hire him?".
+ */
+const ABOUT_THE_ASSISTANT = "assistant chatbot bot privacy private data stores saves logs transcript";
+
 /** The FAQ — written for the assistant. One passage per question. */
 function faqPassages(): Passage[] {
   return faqData.faq.map((item, i) => ({
     id: `faq-${i}`,
     text: `${item.question}\n${item.answer}`,
+    ...(/\bassistant\b/.test(item.source) ? { searchText: `${item.question}\n${ABOUT_THE_ASSISTANT}` } : {}),
     // The FAQ's source string is for the model and the maintainers; visitors
     // see only the pages it resolves to.
     source: `FAQ — ${item.source}`,
