@@ -45,6 +45,7 @@ export type AnswerNote =
   // sent by the route
   | "injection-screened" // refused without calling the model
   | "not-covered" // the site does not answer it; the model wrote nothing
+  | "small-talk" // a greeting, thanks, or "who are you": answered without search or the model
   | "too-long" // over MAX_MESSAGE_CHARS
   | "live-unavailable" // no key, upstream error, timeout, empty or blocked reply
   | "daily-budget-reached" // the instance's daily model budget is spent
@@ -135,6 +136,7 @@ export type ChatRequest = { messages: WireTurn[]; page?: string };
 const NOT_AN_ANSWER: ReadonlySet<AnswerNote> = new Set<AnswerNote>([
   "injection-screened",
   "not-covered",
+  "small-talk",
   "too-long",
   "rate-limited",
   "unavailable",

@@ -5,7 +5,7 @@
 // The route uses it twice. It chooses an answer's actions ("Email Mubin",
 // "Download résumé (PDF)") — never from model text — and it answers a hiring
 // term the site does not cover (a salary, relocation beyond India, a specific
-// start date, a visa) itself, without the model: "ask Mubin directly", with the
+// start date, a visa, a certification) itself, without the model: "ask Mubin directly", with the
 // ways to reach him and what the site does say about where he works. A model
 // asked those questions can only guess. His notice period is on the site
 // (STATUS.noticePeriod), so a question about it is a hiring question that
@@ -13,7 +13,7 @@
 // -----------------------------------------------------------------------------
 
 /** A hiring term the site deliberately does not publish. */
-export type HiringGap = "compensation" | "relocation" | "start-date" | "visa";
+export type HiringGap = "compensation" | "relocation" | "start-date" | "visa" | "certification";
 
 /** What a question asks for, beyond its topic. */
 export type Intent = {
@@ -21,6 +21,8 @@ export type Intent = {
   personal: boolean;
   /** To reach him, hire him, or ask about work with him. */
   contact: boolean;
+  /** His phone number or home address: private contact details, answered without a search. */
+  privateContact: boolean;
   /** His résumé or CV. */
   resume: boolean;
   /** A hiring term the site does not cover, or null. */
@@ -44,6 +46,12 @@ const GAPS: readonly (readonly [HiringGap, RegExp])[] = [
     /\bstart(?:ing)? date\b|\bjoining date\b|\b(?:when|how soon) (?:can|could|would|will) (?:he|mubin) (?:start|join|be available)\b|\b(?:when|how soon) is (?:he|mubin) available\b(?! for a (?:call|chat|meeting))|\bimmediate joiner\b|\b(?:join|start) immediately\b|\bearliest (?:start|joining)\b|\bkab (?:se )?(?:join|start)\b|\b(?:join|start) kab\b/,
   ],
   ["visa", /\bvisas?\b|\bwork permit\b|\bsponsorship\b|\bsponsor (?:him|a visa)\b|\bh-?1b\b|\bgreen card\b/],
+  [
+    // His own, in the same sentence as him. "Is SignFlow certified?" asks about a
+    // product, which its case study answers; "certificate" alone is SignFlow's PKI.
+    "certification",
+    /\b(?:he|his|him|mubin)\b[^?.!]*\b(?:certifications?|certified|certs|(?:any|his) certificates?)\b|\b(?:certifications?|certified|certs)\b[^?.!]*\b(?:he|his|him|mubin)\b/,
+  ],
 ];
 
 /** Wanting to reach him. */
@@ -64,7 +72,11 @@ const HIRING =
  * search would only find a coincidence ("how old" matching "old app builds").
  */
 const PERSONAL =
-  /\b(?:how old|his age|(?:date of|year of) birth|birthday|born in|married|marital|wife|husband|girlfriend|boyfriend|his kids|children|religion|religious|caste|his family|his parents|his height|his weight|how tall)\b/;
+  /\b(?:how old|his age|(?:date of|year of) birth|birthday|born in|married|marital|wife|husband|girlfriend|boyfriend|his kids|children|religion|religious|caste|his family|his parents|his height|his weight|how tall|hobby|hobbies|free time|spare time|(?:do|does) for fun)\b/;
+
+/** His phone number or home address. A search would only find coincidences ("a floor phone's home"). */
+const PRIVATE_CONTACT =
+  /\b(?:(?:phone|mobile|cell|contact|whatsapp|personal) (?:number|no)|phone no|(?:home|street|residential|postal|house|his) address|where (?:exactly )?(?:does he|do you) stay)\b/;
 
 /** Wanting his résumé. */
 const RESUME = /\b(?:resume|cv|curriculum vitae)\b/;
@@ -85,6 +97,7 @@ export function readIntent(question: string): Intent {
   return {
     personal: PERSONAL.test(text),
     contact: gap !== null || CONTACT.test(text) || HIRING.test(text),
+    privateContact: PRIVATE_CONTACT.test(text),
     resume: RESUME.test(text),
     gap,
   };

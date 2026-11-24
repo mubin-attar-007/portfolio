@@ -54,8 +54,17 @@ import {
 import { INJECTION_REFUSAL, sanitizeMessages, screenConversation, screenRequest, type ChatMessage } from "./guard";
 import { GAP_OPENING } from "./hiring-gaps";
 import { readIntent, type Intent } from "./intent";
-import { checkRateLimit, clientKeyFromHeaders, reserveLiveAnswer } from "./rate-limit";
-import { backgroundProfile, chooseFallback, passagesById, searchSite, tokenize, type RetrievedPassage } from "./retrieval";
+import { checkRateLimit, clientKeyFromHeaders, reserveLiveAnswer, type LiveAnswerReservation } from "./rate-limit";
+import { SMALL_TALK_REPLY, smallTalk } from "./small-talk";
+import {
+  backgroundProfile,
+  chooseFallback,
+  passagesById,
+  searchSite,
+  tokenize,
+  type RetrievedPassage,
+  type SiteSearch,
+} from "./retrieval";
 import { ROUTER_TIMEOUT_MS, routeWithGemini, type RouteResult, type Router } from "./router";
 import { buildSystemInstruction } from "./system-prompt";
 
@@ -101,8 +110,46 @@ const NOT_COVERED =
   "I couldn't find that on Mubin's site. I answer only from its pages — his case studies, writing, " +
   "evaluations, résumé and hiring details — and link the page each answer comes from.";
 
+// What the site does not answer is said for what was asked: something other
+// than his work, something about him the site leaves out, or a search that
+// could not finish. Each reply says what to do instead.
+
+/** Not about him or his work at all: the weather, a poem, someone else. */
+const OFF_TOPIC =
+  "I only answer questions about Mubin and his work, so that one is outside what I can help with. " +
+  "Here are some I can answer.";
+
+/** About him, but not on the site: his to answer, so the ways to ask him come with it. */
+const NOT_ON_SITE = "That isn't covered on the site, so ask Mubin directly, or ask me about his work.";
+
+/** His private life: never on the site. */
+const PERSONAL_GAP =
+  "The site covers Mubin's work, not his personal life, so I can't answer that. " +
+  "Ask me about his projects, his experience or how to reach him.";
+
+/** The routing call failed or was too slow: the site may well answer it. */
+const SEARCH_SLOW = "I couldn't search the site for that just now. Try again in a moment, or ask it another way.";
+
+/** Site search found nothing, and the allowance for a second search is spent (the label says so). */
+const SEARCH_NO_MATCH = "Site search couldn't find that. Try asking it another way, or pick one of these.";
+
+/** Nothing to search for at all ("tell me more" with nothing before it). */
+const NO_TOPIC = "Ask me anything about Mubin's work, or pick one of these.";
+
+/** A request for work of the assistant's own (a poem, code, a translation), not a question about his. */
+const TASK_REQUEST =
+  /^(?:please |pls |can you |could you |would you )?(?:write|compose|generate|draft|translate|solve|calculate|code|debug|tell me a (?:joke|story|poem))\b/i;
+
+/** To reach him, and nothing else: the actions a visitor leaving, or asking what only he can answer, gets. */
+const CONTACT_ONLY: Intent = { personal: false, contact: true, privateContact: false, resume: false, gap: null };
+
 /** A contact or hiring question the site has no page for. */
 const CONTACT_GAP = "That isn't on the site — ask Mubin directly.";
+
+/** His phone number or address: what the site publishes, and the ways to reach him. */
+const PRIVATE_CONTACT =
+  "His home address isn't published. His phone number is only on the downloadable résumé (the Résumé page), " +
+  "and the quickest ways to reach him are email or a booked call.";
 
 /** How the passages behind a turn were found. */
 export type RetrievalPath = "lexical" | "fuzzy" | "router" | "none";
@@ -242,6 +289,52 @@ function extrasFor(intent: Intent, passages: readonly RetrievedPassage[], asked:
   };
 }
 
+/** Why a live call could not be reserved. */
+type SpentAllowance = Exclude<LiveAnswerReservation, "ok">;
+
+/** What a reply that answers nothing from the site says, and what follows it. */
+type Unanswered = { note: AnswerNote; text: string; extras: Extras; passages: string[] };
+
+/**
+ * The reply when neither search found a page, chosen by what was asked: a way
+ * to reach him for a contact question; "try again" when the routing call failed
+ * or was too slow, since the site may well answer it; "try other words" when no
+ * second search could run today (the note's label says why); a prompt to ask
+ * something when nothing was asked; "ask Mubin" for a question about him the
+ * site leaves out; and "only his work" for anything else.
+ */
+function unanswered({
+  latest,
+  search,
+  intent,
+  asked,
+  router,
+  allowance,
+}: {
+  latest: string;
+  search: SiteSearch;
+  intent: Intent;
+  asked: readonly string[];
+  router: TurnLog["router"];
+  allowance: SpentAllowance | null;
+}): Unanswered {
+  if (intent.contact) {
+    return { note: "not-covered", text: `${CONTACT_GAP} ${HIRING_FACTS}`, extras: hiringExtras(intent, asked), passages: [HIRING_PASSAGE] };
+  }
+  const followups = nextQuestions("profile", asked);
+  const reply = (text: string, note: AnswerNote = "not-covered", actions: AssistantAction[] = []): Unanswered => ({
+    note,
+    text,
+    extras: { ...NO_EXTRAS, actions, followups },
+    passages: [],
+  });
+  if (router === "failed" || router === "timeout") return reply(SEARCH_SLOW);
+  if (allowance) return reply(SEARCH_NO_MATCH, allowance);
+  if (!search.topical) return reply(NO_TOPIC);
+  if (search.person && !TASK_REQUEST.test(latest.trim())) return reply(NOT_ON_SITE, "not-covered", chooseActions(CONTACT_ONLY, []));
+  return reply(OFF_TOPIC);
+}
+
 /**
  * What follows an answer that says a hiring question is not on the site: the
  * hiring passage's pages (where HIRING_FACTS comes from), the ways to reach
@@ -377,6 +470,20 @@ export async function handleChat(request: Request, options: HandlerOptions = {})
     const latest = messages[messages.length - 1]!.content;
     const earlier = messages.slice(0, -1).filter((m) => m.role === "user").map((m) => m.content);
     const asked = [...earlier, latest];
+
+    // "Hi", "how are you", "thanks", "bye", "who are you": nothing to search, so
+    // answer in kind rather than "I couldn't find that". A visitor leaving gets
+    // the ways to reach him; anyone else, questions the site answers.
+    const talk = smallTalk(latest);
+    if (talk) {
+      const extras: Extras =
+        talk === "farewell"
+          ? { ...NO_EXTRAS, actions: chooseActions(CONTACT_ONLY, []) }
+          : { ...NO_EXTRAS, followups: nextQuestions("profile", asked) };
+      logStatic("fallback", "small-talk", { actions: extras.actions.map((a) => a.kind) });
+      return staticAnswer("fallback", "small-talk", SMALL_TALK_REPLY[talk], extras);
+    }
+
     const intent = readIntent(latest);
 
     // A hiring term the site does not publish: say so, say what it does say,
@@ -387,11 +494,19 @@ export async function handleChat(request: Request, options: HandlerOptions = {})
       return staticAnswer("fallback", "not-covered", `${GAP_OPENING[intent.gap]} ${HIRING_FACTS}`, extras);
     }
 
+    // His phone number or address: say what the site publishes and how to reach him,
+    // without searching for a coincidence ("a floor phone's home").
+    if (intent.privateContact) {
+      const extras = hiringExtras(intent, asked);
+      logStatic("fallback", "not-covered", { passages: [HIRING_PASSAGE], actions: extras.actions.map((a) => a.kind) });
+      return staticAnswer("fallback", "not-covered", PRIVATE_CONTACT, extras);
+    }
+
     // His private life is not on the site: say so without searching for a coincidence.
     if (intent.personal) {
       const followups = nextQuestions("profile", asked);
       logStatic("fallback", "not-covered");
-      return staticAnswer("fallback", "not-covered", NOT_COVERED, { ...NO_EXTRAS, followups });
+      return staticAnswer("fallback", "not-covered", PERSONAL_GAP, { ...NO_EXTRAS, followups });
     }
 
     const search = searchSite(latest, earlier, { page });
@@ -402,9 +517,12 @@ export async function handleChat(request: Request, options: HandlerOptions = {})
 
     // Second chance: one routing call, only when it can run and has something to route.
     const router = options.route === undefined ? routeWithGemini : options.route;
+    let allowance: SpentAllowance | null = null;
     if (passages.length === 0 && live && router && search.topical) {
-      if (reserveLiveAnswer(client) !== "ok") {
+      const reservation = reserveLiveAnswer(client);
+      if (reservation !== "ok") {
         routing.router = "over-budget";
+        allowance = reservation;
       } else {
         const { result, outcome } = await routeOnce(router, latest, request, options.routeMs ?? ROUTER_TIMEOUT_MS);
         routing.router = outcome;
@@ -415,16 +533,13 @@ export async function handleChat(request: Request, options: HandlerOptions = {})
     }
 
     if (passages.length === 0) {
-      const text = intent.contact ? `${CONTACT_GAP} ${HIRING_FACTS}` : NOT_COVERED;
-      const extras: Extras = intent.contact
-        ? hiringExtras(intent, asked)
-        : { ...NO_EXTRAS, followups: nextQuestions("profile", asked) };
-      logStatic("fallback", "not-covered", {
+      const reply = unanswered({ latest, search, intent, asked, router: routing.router, allowance });
+      logStatic("fallback", reply.note, {
         ...routing,
-        passages: intent.contact ? [HIRING_PASSAGE] : [],
-        actions: extras.actions.map((a) => a.kind),
+        passages: reply.passages,
+        actions: reply.extras.actions.map((a) => a.kind),
       });
-      return staticAnswer("fallback", "not-covered", text, extras);
+      return staticAnswer("fallback", reply.note, reply.text, reply.extras);
     }
 
     const served = (note: AnswerNote, entry: Partial<TurnLog> = {}) => {
