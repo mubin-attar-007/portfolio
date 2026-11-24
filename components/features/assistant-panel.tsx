@@ -92,6 +92,7 @@ const MODES: readonly AnswerMode[] = ["live", "fallback", "refusal"];
 const NOTES: readonly AnswerNote[] = [
   "injection-screened",
   "not-covered",
+  "small-talk",
   "too-long",
   "live-unavailable",
   "daily-budget-reached",

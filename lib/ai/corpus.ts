@@ -361,13 +361,18 @@ const usageOf = (flagship: Flagship): string => USAGE[flagship.slug].sentence;
 /** A flagship's credit, verbatim and in his words: the approved wording is first person. */
 const creditOf = (flagship: Flagship): string => `His role, in his words: “${flagship.credit.role}”`;
 
-/** The flagship overview: what it is, who uses it, his role, its stack and where it runs. */
+/**
+ * The flagship overview: what it is, who uses it, his role, its stack and where
+ * it runs. The stack line says "tech stack" as a public project's overview
+ * does, so "What is CareLTC's tech stack?" finds CareLTC's record, not another
+ * product's that happens to use the word.
+ */
 function flagshipOverview(flagship: Flagship): Passage {
   const tested = flagship.figures.filter((f) => f.source === "verification").map((f) => `${f.value} (${f.label})`);
   return {
     id: `project-${flagship.slug}`,
     text: lines(
-      `${flagship.name} — flagship case study: what it is, who uses it, his role, what it is built with and where it runs`,
+      `${flagship.name} — flagship case study: what it is, who uses it, his role, its tech stack and where it runs`,
       `${flagship.name}: ${flagship.definition}`,
       flagship.summary,
       `${FLAGSHIP_LABELS.pills.employer}. Who it is for: ${sentence(flagship.domain)}`,
@@ -375,7 +380,7 @@ function flagshipOverview(flagship: Flagship): Passage {
       creditOf(flagship),
       `What it does: ${flagship.card.body}`,
       tested.length > 0 ? `Test figures on the page: ${tested.join("; ")}.` : null,
-      `Built with: ${flagship.stack.groups.map((g) => `${g.label}: ${g.items.join(", ")}`).join("; ")}.`,
+      `Tech stack (what it is built with): ${flagship.stack.groups.map((g) => `${g.label}: ${g.items.join(", ")}`).join("; ")}.`,
       flagship.stack.aws.length > 0 ? `Hosted on AWS: ${flagship.stack.aws.join(", ")}.` : null,
       `Source code: ${PRIVATE_NOTICE.toLowerCase()}. The case study shows screenshots and recordings of the real app (${REAL_APP.toLowerCase()}).`,
     ),

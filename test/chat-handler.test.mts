@@ -18,6 +18,8 @@ import {
 } from "../lib/ai/chat-handler.ts";
 import { GeminiError, type StreamArgs, type StreamOutcome } from "../lib/ai/gemini.ts";
 import { INJECTION_REFUSAL } from "../lib/ai/guard.ts";
+import { readIntent } from "../lib/ai/intent.ts";
+import { resume } from "../content/resume.ts";
 import { CLIENT_DAILY_LIVE_ANSWERS, clientKeyFromHeaders, reserveLiveAnswer } from "../lib/ai/rate-limit.ts";
 import { parseRoute, ROUTER_INDEX, ROUTER_TIMEOUT_MS, type Router } from "../lib/ai/router.ts";
 import { FOLLOW_UPS } from "../lib/ai/follow-ups.ts";
@@ -250,6 +252,68 @@ test("a question the site does not cover is answered without the model or its bu
   assert.equal(logs[0]!.retrieval, "none");
 });
 
+test("a greeting is greeted, not searched: no model, no budget, questions to ask next", async () => {
+  const { body, logs } = await run(ask("Hi"), { stream: never, route: noRoute });
+  const list = body as Event[];
+  assert.deepEqual(list[0]!.data, { mode: "fallback", note: "small-talk" });
+  assert.match(textOf(list), /^Hi! I'm the assistant on Mubin's site/);
+  assert.doesNotMatch(textOf(list), /couldn't find/);
+  assert.ok((dataOf(list, "followups")!.questions as string[]).length > 0);
+  assert.equal(logs[0]!.model, undefined);
+});
+
+test("a goodbye is answered with the ways to reach him, and nothing more to ask", async () => {
+  for (const question of ["bye", "Thanks, bye!", "good night"]) {
+    const { body, logs } = await run(ask(question), { stream: never, route: noRoute });
+    const list = body as Event[];
+    assert.deepEqual(list[0]!.data, { mode: "fallback", note: "small-talk" }, question);
+    assert.match(textOf(list), /^Thanks for stopping by/, question);
+    const actions = (dataOf(list, "actions")!.actions as { kind: string }[]).map((a) => a.kind);
+    assert.deepEqual(actions, ["email", "book", "contact"], question);
+    assert.equal(dataOf(list, "followups"), undefined, question);
+    assert.equal(logs[0]!.model, undefined, question);
+  }
+});
+
+test("what the site doesn't answer is said for what was asked", async () => {
+  const reply = async (question: string, options: HandlerOptions = {}) => {
+    const { body } = await run(ask(question), { stream: never, route: async () => ({ ids: [] }), ...options });
+    const list = body as Event[];
+    const actions = ((dataOf(list, "actions")?.actions ?? []) as { kind: string }[]).map((a) => a.kind);
+    return { note: (list[0]!.data as { note: string }).note, text: textOf(list), actions };
+  };
+  // Not about him or his work, and a request for work of the assistant's own.
+  for (const question of ["Who is the CEO of Google?", "What's the weather?", "Write a poem about Mubin"]) {
+    const { note, text, actions } = await reply(question);
+    assert.equal(note, "not-covered", question);
+    assert.match(text, /^I only answer questions about Mubin and his work/, question);
+    assert.deepEqual(actions, [], question);
+  }
+  // About him, but not on the site: his to answer, so the ways to ask him.
+  const unpublished = await reply("Does he play chess?");
+  assert.match(unpublished.text, /^That isn't covered on the site, so ask Mubin directly/);
+  assert.deepEqual(unpublished.actions, ["email", "book", "contact"]);
+  // His private life, hobbies included: "hobbies" would otherwise find Vercel's Hobby plan on /uses.
+  for (const question of ["How old is he?", "What are his hobbies?", "What does he do for fun?"]) {
+    assert.match((await reply(question)).text, /not his personal life/, question);
+  }
+  // A routing call that failed or was too slow: the site may answer it, so "try again".
+  const failed = await reply("Does he play chess?", { route: () => new Promise(() => {}), routeMs: 40 });
+  assert.match(failed.text, /^I couldn't search the site for that just now/);
+  // Nothing asked at all.
+  assert.match((await reply("tell me more")).text, /^Ask me anything about Mubin's work/);
+});
+
+test("a phone number or home address is answered honestly, with the ways to reach him, and never searched", async () => {
+  const { body, logs } = await run(ask("What is Mubin's phone number and home address?"), { stream: never, route: noRoute });
+  const list = body as Event[];
+  assert.deepEqual(list[0]!.data, { mode: "fallback", note: "not-covered" });
+  assert.match(textOf(list), /home address isn't published/);
+  const actions = (dataOf(list, "actions")!.actions as { kind: string }[]).map((a) => a.kind);
+  assert.ok(actions.includes("email"), actions.join(","));
+  assert.equal(logs[0]!.model, undefined);
+});
+
 /** A hiring gap's answer: what the site says, the ways to reach him, the hiring page cited, no model. */
 async function assertHiringGap(question: string): Promise<string> {
   const { body, logs } = await run(ask(question), { stream: never, route: noRoute });
@@ -268,6 +332,17 @@ async function assertHiringGap(question: string): Promise<string> {
 test("a hiring term the site does not publish says so, with what it does say and the ways to reach him", async () => {
   for (const question of ["What are his salary expectations?", "Would he relocate to Germany?"]) {
     assert.match(await assertHiringGap(question), /isn't on the site|aren't on the site|isn't covered on the site/, question);
+  }
+});
+
+test("his certifications are not on the site: said so, with the ways to ask him; a product's are searched", async () => {
+  // The reply is true only while the résumé lists none.
+  assert.doesNotMatch(JSON.stringify(resume), /certif/i, "content/resume.ts now lists a certification: update GAP_OPENING");
+  for (const question of ["Does he have any certifications?", "Is Mubin AWS certified?", "What certifications does he hold?"]) {
+    assert.match(await assertHiringGap(question), /^Certifications aren't on the site or his résumé/, question);
+  }
+  for (const question of ["Is SignFlow certified?", "How does SignFlow use certificates?", "Did he build SignFlow's certificate checks?"]) {
+    assert.equal(readIntent(question).gap, null, question);
   }
 });
 
@@ -390,8 +465,11 @@ test("the router never runs without a key, without a topic, after a refusal, or 
   const ip = "192.0.2.20";
   const key = clientKeyFromHeaders(new Headers({ "x-real-ip": ip }));
   while (reserveLiveAnswer(key) === "ok");
-  const { logs } = await run(ask("Who is the CEO of Google?", {}, { "x-real-ip": ip }), { stream: never, route: noRoute });
+  const { body, logs } = await run(ask("Who is the CEO of Google?", {}, { "x-real-ip": ip }), { stream: never, route: noRoute });
   assert.equal(logs[0]!.router, "over-budget");
+  // …and says only what it knows: site search found nothing; the note's label says live answers are paused.
+  assert.deepEqual((body as Event[])[0]!.data, { mode: "fallback", note: "client-allowance-reached" });
+  assert.match(textOf(body as Event[]), /^Site search couldn't find that/);
 });
 
 test("a routing call counts against the client's daily allowance", async () => {

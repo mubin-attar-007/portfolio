@@ -562,6 +562,63 @@ test("a chain of follow-ups keeps the topic the first question set", () => {
   assert.ok(changed[0] && !changed[0].projects.includes("dbwhisper"), `→ ${changed[0]?.id}`);
 });
 
+test("a question that names only a part of a subject asks about the conversation's product", () => {
+  // "What tech stack?" after CareLTC used to search his skills list ("stack" reads
+  // as skills when no product is named), and answered about him, not CareLTC.
+  const cases: [latest: string, previous: string[], slug: string][] = [
+    ["What tech stack?", ["Tell me about CareLTC"], "careltc"],
+    ["And the database?", ["What is SignFlow?"], "signflow"],
+    ["What about testing?", ["Tell me about Bench Discovery."], "bench-discovery"],
+    ["Which languages?", ["What does DBWhisper do?", "What tech stack?"], "dbwhisper"],
+  ];
+  for (const [latest, previous, slug] of cases) {
+    const search = searchSite(latest, previous);
+    const cited = search.passages.filter((hit) => hit.cited);
+    assert.ok(cited.length > 0, `"${latest}" after ${JSON.stringify(previous)} retrieves`);
+    assert.deepEqual(
+      cited.filter((hit) => !hit.projects.includes(slug)).map((hit) => hit.id),
+      [],
+      `"${latest}" after ${JSON.stringify(previous)}`,
+    );
+  }
+  // The anchor is one of the visitor's own words, read as being about the
+  // product, not "skill", the alias that reads "stack" as his skills list.
+  assert.match(searchSite("What tech stack?", ["Tell me about CareLTC"]).anchor ?? "", /^(?:tech|stack)$/);
+  // Its record leads: the stack line says "tech stack" as a public project's does.
+  assert.equal(searchSite("What tech stack?", ["Tell me about CareLTC"]).passages[0]?.id, "project-careltc");
+  // On its own, or about him, it is still his skills.
+  assert.equal(retrieveForQuestion("What tech stack?")[0]?.kind, "skills");
+  assert.equal(retrieveForQuestion("What's his tech stack?", ["Tell me about CareLTC"])[0]?.kind, "skills");
+  // A question with a subject of its own is not pulled back to the product.
+  const rag = retrieveForQuestion("What is RAG?", ["Tell me about CareLTC"]);
+  assert.ok(rag[0] && !rag[0].projects.includes("careltc"), `→ ${rag[0]?.id}`);
+});
+
+test("on a case study, a first question that names no subject is about the page's product", () => {
+  for (const flagship of flagships) {
+    const page = `/work/${flagship.slug}`;
+    const cited = searchSite("What tech stack?", [], { page }).passages.filter((hit) => hit.cited);
+    assert.ok(cited.length > 0, page);
+    assert.ok(cited.every((hit) => hit.projects.includes(flagship.slug)), `${page} → ${cited.map((hit) => hit.id)}`);
+  }
+  // On an essay, "What tech stack?" is not the essay's: it is his skills list.
+  assert.equal(searchSite("What tech stack?", [], { page: "/writing/trust-is-not-a-safety-model" }).passages[0]?.kind, "skills");
+});
+
+test("a role title the site never gives him finds the roles he is open to, not a deployment section", () => {
+  for (const question of ["Is he a forward deployed engineer?", "Is he an FDE?"]) {
+    assert.equal(retrieveForQuestion(question)[0]?.id, "hire-roles", question);
+  }
+});
+
+test("leadership finds the work he leads", () => {
+  for (const question of ["Does he have leadership experience?", "Which projects has he led?"]) {
+    const hits = retrieveForQuestion(question);
+    assert.ok(hits.length > 0, question);
+    assert.ok(hits.some((hit) => /\blead/i.test(hit.text)), `${question} → ${hits.map((hit) => hit.id)}`);
+  }
+});
+
 // ---- The page the panel is open on ---------------------------------------------
 
 test("on a case study, its own passages lead a question that names no other product", () => {

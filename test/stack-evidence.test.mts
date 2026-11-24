@@ -27,9 +27,19 @@ test("every AWS service a flagship runs on is its evidence, by its full and its 
 });
 
 test("a compound stack entry counts for each tool it names, versions ignored", () => {
-  assert.ok(slugs(".NET").includes("bench-discovery"), "C# on .NET 10");
-  assert.ok(slugs("pgvector").includes("bench-discovery"), "PostgreSQL 17 with pgvector");
-  assert.ok(slugs("React Native").includes("careltc"), "React Native 0.86");
+  assert.ok(slugs(".NET").includes("bench-discovery"), "C# on .NET");
+  assert.ok(slugs("pgvector").includes("bench-discovery"), "PostgreSQL with pgvector");
+  assert.ok(slugs("React Native").includes("careltc"), "React Native");
+});
+
+test("a private product's stack names its tools without versions", () => {
+  // An exact version tells an attacker which known flaws to try. The public
+  // projects keep theirs: their source is public anyway.
+  const VERSION = /\b(?:v?\d+(?:\.\d+)+|v\d+|(?:SDK|CSS|JS|Node|React|Python|PostgreSQL|Postgres|Expo|Next\.js|NET) \d+)\b/;
+  for (const flagship of flagships) {
+    const tools = [...flagship.stack.groups.flatMap((group) => group.items), ...flagship.stack.aws];
+    for (const tool of tools) assert.doesNotMatch(tool, VERSION, `${flagship.slug}: "${tool}"`);
+  }
 });
 
 test("a public case study's languages are its evidence", () => {

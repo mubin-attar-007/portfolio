@@ -15,8 +15,9 @@ report published evaluation results with their scope, and say when a result was 
 point to the page that covers the question; say plainly that something is not on the site
 and offer what is.
 CANNOT: general-purpose chat, opinions on other people or companies, coding help, his
-private life, or anything not grounded in site content. A hiring term the site does not
-publish — salary or rates, relocation, a specific start date, a visa — is answered "ask Mubin
+private life (hobbies included), or anything not grounded in site content. A hiring term the
+site does not publish — salary or rates, relocation, a specific start date, a visa, his
+certifications (the résumé lists none; a test fails if one is added) — is answered "ask Mubin
 directly", with what the site does say and the ways to reach him. His notice period is
 published (`STATUS.noticePeriod` in `config/site.ts`, the one value every page reads): it is
 answered like any hiring fact, and a start-date question gets it too ("His notice period is
@@ -126,8 +127,11 @@ b = 0.75.
     "Ask Bench" → Bench Discovery. The phrase then reads like the product's name;
   - what a word means here, replacing it when no product is named: "CV" → résumé,
     "tech stack"/"stack"/"technologies" → skills, "kaam" → work, "banaye" → built;
+    "forward deployed"/"FDE" → roles, customer sites (the site never gives him that title, so
+    the roles he is open to answer it, never a deployment section);
   - more words to search for: "available", "open to", "hire", "hiring" → availability,
-    hiring, roles; "remote" → hybrid, on-site; "his GitHub"/"his LinkedIn" → profiles; and,
+    hiring, roles; "remote" → hybrid, on-site; "leadership"/"led" → lead (his roles say "I
+    lead"); "his GitHub"/"his LinkedIn" → profiles; and,
     even when a product is named, "people use"/"user base" → users, usage; "video" →
     recording; "screenshots" → screens; "tap" → tag; "did he build", "his contribution" →
     role, owns.
@@ -168,15 +172,26 @@ Priors, each a multiplier:
 - **Page** ×1.3 for the passages of the page the panel is open on, when the question names
   no other product; ×2 when it points at the page ("this", "it").
   - The first question asked on a case study that points at the page ("How does it work?")
-    is about that product.
-  - On an essay or a note, it is answered from that piece only.
+    or names no subject ("What tech stack?") is about that product.
+  - On an essay or a note, a question that points at the page is answered from that piece
+    only.
   - Later in a conversation, "it" is the conversation's subject, not the page's.
 
-**Follow-ups** (`searchSite`): only the latest question is searched, unless it is a follow-up —
-it names no product and finds nothing on its own ("Tell me more") or points back ("How was it
-deployed?"). Then it is searched with the earlier questions it continues, back to the one that
-set the topic. A question with a topic word of its own that the site never uses ("What's the
-weather?") is never a follow-up.
+**Follow-ups** (`searchSite`): only the latest question is searched, unless it is a follow-up.
+A follow-up names no product and does one of three things:
+- finds nothing on its own ("Tell me more");
+- points back ("How was it deployed?");
+- names only a part of a subject, every topic word a product aspect (`ASPECT_TERMS`: stack,
+  deployment, database, users, testing…), as in "What tech stack?" or "And the database?".
+  Before this, the "stack → skills" alias sent "What tech stack?" after CareLTC to his
+  skills list. "What's his tech stack?" names him, so it is still his skills.
+
+A follow-up is searched with the earlier questions it continues, back to the one that set the
+topic, and its anchor is its own word read as being about that product. A question with a topic
+word of its own that the site never uses ("What's the weather?") is never a follow-up.
+
+Records say "tech stack" for every product, flagship or public: a flagship record that said only
+"Built with" lost "What is CareLTC's tech stack?" to the public projects' "Tech stack:" lines.
 
 **Fallback choice** (`chooseFallback`): the best cited passage, preferring one that contains the
 question's anchor (its rarest topic word, an alias's own words excluded), or an FAQ answer
@@ -309,8 +324,36 @@ server. Limits and wire shapes shared with the panel live in `lib/ai/chat-contra
     `mode: "fallback"`, `note: "live-unavailable"`. A failure after it, or a reply cut off by
     the token limit or a filter, ends with `done { incomplete: true }`.
 
-Notes the route sends: `injection-screened`, `not-covered`, `too-long`, `live-unavailable`,
-`daily-budget-reached`, `client-allowance-reached`. An unexpected handler error returns
+Small talk (`lib/ai/small-talk.ts`) is answered before any search, with `mode: "fallback"`,
+`note: "small-talk"`, no model call and no budget:
+- a greeting ("Hi"), a check-in ("How are you?"), thanks, or "who are you" gets a short reply
+  saying what the assistant answers from, with questions to ask next;
+- a goodbye ("bye", "thanks, bye", "good night") gets the ways to reach him (Email, Book a
+  call, Contact) and nothing more to ask.
+
+A message that also asks something ("Hi, what is CareLTC?") is searched as usual. Before this,
+"Hi" and "bye" got the not-covered reply, and "good night" found CareLTC's midnight round.
+
+**When neither search finds a page** (`unanswered` in `lib/ai/chat-handler.ts`), the reply
+depends on what was asked. None of them pretends a search ran that did not:
+- a contact or hiring question: "That isn't on the site — ask Mubin directly", with what the
+  site says and the ways to reach him;
+- a routing call that failed or timed out: "I couldn't search the site for that just now. Try
+  again in a moment…", since the site may well answer it;
+- no allowance left for the routing call: "Site search couldn't find that…", with the
+  allowance's note, whose label says live answers are paused;
+- nothing asked at all ("tell me more" as a first message): "Ask me anything about Mubin's
+  work…";
+- a question about him the site leaves out ("Does he play chess?"): "That isn't covered on the
+  site, so ask Mubin directly", with Email, Book a call and Contact;
+- anything else, including a request for the assistant's own work ("Write a poem…"): "I only
+  answer questions about Mubin and his work…", with questions it can answer.
+
+His private life (age, family, hobbies) gets "The site covers Mubin's work, not his personal
+life…".
+
+Notes the route sends: `injection-screened`, `not-covered`, `small-talk`, `too-long`,
+`live-unavailable`, `daily-budget-reached`, `client-allowance-reached`. An unexpected handler error returns
 `503 { error: "unavailable" }`. Other methods return `405` with `Allow: POST`. Every limit is per
 server instance and best-effort; the real ceilings are a quota on the key's Google Cloud project
 and a platform firewall rule (DEPLOY.md §3).

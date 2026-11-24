@@ -64,7 +64,7 @@ function readStack(slug: string): string[] {
 
 /**
  * The names one stack entry stands for: the entry, and each tool a compound
- * entry joins ("C# on .NET 10" → "C#", ".NET 10"; "PdfPig and PDFium";
+ * entry joins ("C# on .NET" → "C#", ".NET"; "PdfPig and PDFium";
  * "PostgreSQL 17 with pgvector" → "pgvector").
  */
 const entryNames = (entry: string): string[] => [entry, ...entry.split(/\s+(?:with|and|on)\s+/)];

@@ -269,6 +269,20 @@ const OVERVIEW_TERMS: ReadonlySet<string> = new Set(
 /** Topic terms that ask about a withdrawn result as such. */
 const RETIREMENT_TERMS: ReadonlySet<string> = new Set(tokenize("retired withdrawn audit"));
 
+/**
+ * Words for a part of a product rather than a subject of their own. A question
+ * made only of them names no subject ("What tech stack?", "And the
+ * database?"), so it asks about the product the conversation, or the case
+ * study it is asked on, is about.
+ */
+const ASPECT_TERMS: ReadonlySet<string> = new Set(
+  tokenize(
+    "stack tech technology technologies deploy deployed deployment hosting hosted infrastructure architecture " +
+      "database backend frontend api users usage scale team role testing tests security timeline challenges " +
+      "problem problems lessons demo source code repository languages frameworks",
+  ),
+);
+
 // ---------------------------------------------------------------------------
 // Index (built once, at module load)
 // ---------------------------------------------------------------------------
@@ -483,6 +497,11 @@ const ALIASES: readonly Alias[] = [
   { phrase: "hire", adds: "availability hiring" },
   { phrase: "hiring", adds: "availability roles" },
   { phrase: "remote", adds: "hybrid on-site" },
+  { phrase: "leadership", adds: "lead" },
+  { phrase: "led", adds: "lead" },
+  // A role title the site never gives him: the roles he is open to answer it.
+  { phrase: "forward deployed", means: "roles customer sites" },
+  { phrase: "fde", means: "roles customer sites" },
   { phrase: "his github", adds: "profiles" },
   { phrase: "mubin github", adds: "profiles" },
   { phrase: "github profile", adds: "profiles" },
@@ -546,6 +565,8 @@ type Reading = {
   person: boolean;
   /** It points back at an earlier question ("it", "that"). */
   refersBack: boolean;
+  /** It names no subject, only a part of one ("What tech stack?"): see ASPECT_TERMS. */
+  elliptical: boolean;
   /** It asks about measured results ("how accurate", "score"). */
   asksForResults: boolean;
   /** It asks what an overview states: a demo, the source, the usage. */
@@ -609,6 +630,8 @@ function read(question: string, implied: string | null = null): Reading {
     if (aliasWords.has(term)) continue;
     if (anchor === null || DOCUMENT_FREQUENCY.get(term)! < DOCUMENT_FREQUENCY.get(anchor)!) anchor = term;
   }
+  // The visitor's own words, before an alias reads "stack" as his skills list.
+  const visitorTerms = termsOf(all);
   return {
     content: known,
     unknown: content.filter((term) => !DOCUMENT_FREQUENCY.has(term) && !aliasWords.has(term)),
@@ -616,6 +639,8 @@ function read(question: string, implied: string | null = null): Reading {
     projects,
     person,
     refersBack: all.some((word) => REFERS_BACK.has(word)),
+    elliptical:
+      projects.length === 0 && !person && visitorTerms.length > 0 && visitorTerms.every((term) => ASPECT_TERMS.has(term)),
     asksForResults: content.some((term) => RESULT_TERMS.has(term)),
     // "Is he available?" is about hiring him, not about a project's demo.
     asksForOverview: content.some((term) => OVERVIEW_TERMS.has(term)) && !(person && projects.length === 0),
@@ -786,11 +811,12 @@ export function retrieve(question: string, options: SearchOptions = {}): Retriev
 
 /**
  * A question that continues an earlier one rather than starting a topic: it
- * names no project and either finds nothing on its own ("Tell me more") or
- * points back ("How was it deployed?").
+ * names no project and either finds nothing on its own ("Tell me more"),
+ * points back ("How was it deployed?"), or names only a part of a subject
+ * ("What tech stack?").
  */
 function isFollowUp(q: Reading, hits: readonly RetrievedPassage[]): boolean {
-  return q.projects.length === 0 && (hits.length === 0 || q.refersBack);
+  return q.projects.length === 0 && (hits.length === 0 || q.refersBack || q.elliptical);
 }
 
 /** The essay or note a page is, as its path, or null: "/writing/trust-is-not-a-safety-model". */
@@ -829,6 +855,8 @@ export type SiteSearch = {
   anchor: string | null;
   /** The question asks about something at all: a name, or a word that is not filler ("hi" does not). */
   topical: boolean;
+  /** It asks about him ("he", "his", his name): what the site doesn't cover is then his to answer. */
+  person: boolean;
 };
 
 /**
@@ -843,24 +871,27 @@ export type SiteSearch = {
  */
 export function searchSite(latest: string, earlier: readonly string[] = [], options: SearchOptions = {}): SiteSearch {
   let q = read(latest);
+  const person = q.person;
   // The first question asked on a case study that points at the page ("How
-  // does it work?") is about that product; later, "it" is the conversation's.
+  // does it work?") or names no subject ("What tech stack?") is about that
+  // product; later, "it" is the conversation's.
   const onPage = projectOfPage(options.page ?? null);
-  const pointsAtPage = earlier.length === 0 && q.projects.length === 0 && q.refersBack;
-  if (onPage && pointsAtPage) q = read(latest, onPage);
+  const first = earlier.length === 0 && q.projects.length === 0;
+  if (onPage && first && (q.refersBack || q.elliptical)) q = read(latest, onPage);
   // …and on an essay or a note, "this" is that piece.
-  const article = pointsAtPage ? articleOfPage(options.page ?? null) : null;
+  const article = first && q.refersBack ? articleOfPage(options.page ?? null) : null;
   if (article) {
-    return { passages: retrieveFromArticle(q, article, options.k ?? DEFAULT_K), corrected: q.corrected, anchor: q.anchor, topical: true };
+    const passages = retrieveFromArticle(q, article, options.k ?? DEFAULT_K);
+    return { passages, corrected: q.corrected, anchor: q.anchor, topical: true, person };
   }
   const hits = retrieveReading(q, options);
   // A question with a word of its own the site never uses ("What's the
   // weather?") is not a follow-up, whatever came before it.
   if (q.projects.length === 0 && q.unknown.length > 0) {
-    return { passages: [], corrected: q.corrected, anchor: q.anchor, topical: true };
+    return { passages: [], corrected: q.corrected, anchor: q.anchor, topical: true, person };
   }
   const topical = q.projects.length > 0 || q.content.length > 0 || q.unknown.length > 0 || q.person;
-  const own = { passages: hits, corrected: q.corrected, anchor: q.anchor, topical };
+  const own = { passages: hits, corrected: q.corrected, anchor: q.anchor, topical, person };
   if (!isFollowUp(q, hits)) return own;
   const thread: string[] = [];
   for (let i = earlier.length - 1; i >= 0; i--) {
@@ -873,7 +904,12 @@ export function searchSite(latest: string, earlier: readonly string[] = [], opti
   const combined = read([...thread, latest].join(" "));
   const passages = retrieveReading(combined, options);
   if (passages.length === 0) return own;
-  return { passages, corrected: q.corrected || combined.corrected, anchor: q.anchor ?? combined.anchor, topical };
+  // The latest question's own most specific word, read as being about the
+  // conversation's product: "stack" in "What tech stack?", not the skills list
+  // an alias reads it as on its own.
+  const implied = q.projects.length === 0 ? combined.projects[0] : undefined;
+  const anchor = (implied ? read(latest, implied).anchor : null) ?? q.anchor ?? combined.anchor;
+  return { passages, corrected: q.corrected || combined.corrected, anchor, topical, person: person || combined.person };
 }
 
 /** The passages for the latest question of a conversation (see `searchSite`). */
