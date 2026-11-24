@@ -241,7 +241,7 @@ Without a key, paraphrases and other languages that lexical search misses are "n
 - The system instruction is `SYSTEM_PROMPT` and then the content: **BACKGROUND** (his profile
   passage, on every live answer, so a general question never dead-ends) and **CONTEXT** (the
   passages retrieved for the question, each as "Passage from <source>:" — unnumbered, so the
-  model has no index to cite as "[1]"). Bump `SYSTEM_PROMPT_VERSION` (now `2026-11-24.4`) on
+  model has no index to cite as "[1]"). Bump `SYSTEM_PROMPT_VERSION` (now `2026-11-24.5`) on
   any behavioural change. Recent versions:
   - `2026-11-24.1`: backticks are for code identifiers only, and an email or web address is
     plain text (live answers had set the email and the booking link as code; the Email and
@@ -265,6 +265,9 @@ Without a key, paraphrases and other languages that lexical search misses are "n
     and each requirement's passage excerpt is at most 360 characters. A live comparison that
     restated site text stopped mid-sentence after about 2 s, about one run in two. That fits
     Google's recitation filter: the site is public, so its text is published.
+  - `2026-11-24.5`: rule 4 says his job title at Sevina Technologies is the one BACKGROUND
+    gives (AI/ML Engineer), never "Applied AI Engineer at Sevina". A live comparison had
+    written "his role as Applied AI Engineer at Sevina Technologies".
 - The rules (prompt v2): answer only from the content, and say what it does not cover; copy
   every figure character for character (the usage figures are built into the rule from
   `USAGE`) and state only the figures the question needs; name the flagships first for a
