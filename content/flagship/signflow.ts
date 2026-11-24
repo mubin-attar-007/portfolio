@@ -199,7 +199,7 @@ export const signflow: Flagship = {
       title: "API",
       icon: "api",
       items: [
-        "FastAPI with async SQLAlchemy 2 on PostgreSQL and Alembic migrations: envelopes, documents, recipients, fields, sending, signing, templates, tasks and compliance, in over 50 operations across 12 route modules.",
+        "FastAPI with async SQLAlchemy on PostgreSQL and Alembic migrations: envelopes, documents, recipients, fields, sending, signing, templates, tasks and compliance, in over 50 operations across 12 route modules.",
         "PDF sealing with pyHanko: the completed fields rendered into the PDF with PyMuPDF, then a PAdES signature (B-T with an RFC 3161 timestamp, B-B without) with the available validation data embedded. When the last signer finishes, one final document holds every signature.",
         "Signing order end to end: only the lowest pending order is emailed, the next is released on signing, and signing out of turn is refused.",
         "A hash-chained audit log of every step, written in strict order per envelope (a sequence number and a per-envelope lock), with the signer's IP address; the final document appends an audit-trail certificate page.",
@@ -750,11 +750,11 @@ class SearchableEncryptedString(TypeDecorator):
     groups: [
       {
         label: "API",
-        items: ["Python 3.13", "FastAPI", "SQLAlchemy 2 (async)", "PostgreSQL", "Alembic", "Pydantic 2", "pyHanko", "PyMuPDF", "Argon2", "PyOTP", "SlowAPI", "pytest"],
+        items: ["Python", "FastAPI", "SQLAlchemy (async)", "PostgreSQL", "Alembic", "Pydantic", "pyHanko", "PyMuPDF", "Argon2", "PyOTP", "SlowAPI", "pytest"],
       },
       {
         label: "Web app",
-        items: ["React 18", "TypeScript", "Vite", "Tailwind CSS", "shadcn/ui", "TanStack Query", "react-pdf", "Vitest"],
+        items: ["React", "TypeScript", "Vite", "Tailwind CSS", "shadcn/ui", "TanStack Query", "react-pdf", "Vitest"],
       },
       { label: "Delivery", items: ["Jenkins", "IIS"] },
     ],

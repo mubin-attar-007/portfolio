@@ -232,7 +232,7 @@ export const benchDiscovery: Flagship = {
       title: "Desktop app",
       icon: "desktop",
       items: [
-        "A self-contained .NET 10 and WPF app with seven modules: classify by content and by extension, verified redaction, file search, safe transfer, document analysis and local speech to text.",
+        "A self-contained .NET and WPF app with seven modules: classify by content and by extension, verified redaction, file search, safe transfer, document analysis and local speech to text.",
         "Local OCR behind a per-page text-quality gate, so a page nobody could read is reported, not treated as blank.",
         "Runs that resume after a cancel or a crash, with the output folder claimed for the whole run.",
         "Signed licences verified offline, against a clock that rewinding cannot fool.",
@@ -325,7 +325,7 @@ export const benchDiscovery: Flagship = {
   deployment: [
     {
       title: "Web: hosted on AWS",
-      body: "Containers on Amazon ECS with AWS Fargate behind an Application Load Balancer. Amazon RDS for PostgreSQL 17 with point-in-time recovery and a backup copy in a second region. Versioned Amazon S3 encrypted with an AWS KMS customer-managed key, secrets from Parameter Store, and AWS CloudTrail with Amazon CloudWatch alarms.",
+      body: "Containers on Amazon ECS with AWS Fargate behind an Application Load Balancer. Amazon RDS for PostgreSQL with point-in-time recovery and a backup copy in a second region. Versioned Amazon S3 encrypted with an AWS KMS customer-managed key, secrets from Parameter Store, and AWS CloudTrail with Amazon CloudWatch alarms.",
     },
     {
       title: "Desktop: a per-user installer",
@@ -815,14 +815,14 @@ public void RaiseFloorTo(DateTime utc)
       {
         label: "Web platform",
         items: [
-          "Next.js 16",
-          "React 19",
+          "Next.js",
+          "React",
           "TypeScript",
           "Tailwind CSS 4",
-          "Python 3.12",
+          "Python",
           "FastAPI",
-          "SQLAlchemy 2",
-          "PostgreSQL 17 with pgvector",
+          "SQLAlchemy",
+          "PostgreSQL with pgvector",
           "Claude models",
           "Playwright",
           "pytest",
@@ -830,13 +830,13 @@ public void RaiseFloorTo(DateTime utc)
       },
       {
         label: "Desktop app",
-        items: ["C# on .NET 10", "WPF", "PdfPig and PDFium", "Tesseract 5 OCR", "Whisper.net", "SQLite", "xUnit", "Inno Setup"],
+        items: ["C# on .NET", "WPF", "PdfPig and PDFium", "Tesseract OCR", "Whisper.net", "SQLite", "xUnit", "Inno Setup"],
       },
     ],
     aws: [AWS.ecs, AWS.fargate, AWS.ecr, AWS.alb, AWS.rds, AWS.s3, AWS.kms, AWS.parameters, AWS.cloudtrail, AWS.cloudwatch, AWS.iam, AWS.sts],
   },
   card: {
     body: "Lets a team review document sets on the web with answers that cite the page, and triages, redacts and searches them on the PC.",
-    tech: "Next.js · FastAPI · PostgreSQL · AWS: ECS on Fargate, RDS, S3, KMS · C# and .NET 10",
+    tech: "Next.js · FastAPI · PostgreSQL · AWS: ECS on Fargate, RDS, S3, KMS · C# and .NET",
   },
 };

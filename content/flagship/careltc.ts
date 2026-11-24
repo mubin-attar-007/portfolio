@@ -750,15 +750,15 @@ async createEscalations(escalationMinutes: number, now = new Date()) {
     groups: [
       {
         label: "Mobile app",
-        items: ["Expo SDK 57", "React Native 0.86", "Expo Router", "react-native-nfc-manager", "expo-notifications", "TypeScript", "Vitest", "EAS Build and Submit"],
+        items: ["Expo", "React Native", "Expo Router", "react-native-nfc-manager", "expo-notifications", "TypeScript", "Vitest", "EAS Build and Submit"],
       },
       {
         label: "API",
-        items: ["Node 24", "NestJS", "Prisma", "PostgreSQL 17", "class-validator", "Swagger", "Vitest", "Supertest"],
+        items: ["Node.js", "NestJS", "Prisma", "PostgreSQL", "class-validator", "Swagger", "Vitest", "Supertest"],
       },
       {
         label: "Portal",
-        items: ["React 19", "Vite", "TanStack Router and Query", "Tailwind CSS 4", "Recharts", "ExcelJS", "jsPDF", "Playwright"],
+        items: ["React", "Vite", "TanStack Router and Query", "Tailwind CSS 4", "Recharts", "ExcelJS", "jsPDF", "Playwright"],
       },
     ],
     aws: [AWS.ecs, AWS.fargate, AWS.ecr, AWS.alb, AWS.rds, AWS.s3, AWS.cloudfront, AWS.cognito, AWS.secrets, AWS.cloudwatch, AWS.cloudformation, AWS.vpc, AWS.iam],

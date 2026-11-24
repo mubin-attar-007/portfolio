@@ -27,9 +27,9 @@ test("every AWS service a flagship runs on is its evidence, by its full and its 
 });
 
 test("a compound stack entry counts for each tool it names, versions ignored", () => {
-  assert.ok(slugs(".NET").includes("bench-discovery"), "C# on .NET 10");
+  assert.ok(slugs(".NET").includes("bench-discovery"), "C# on .NET");
   assert.ok(slugs("pgvector").includes("bench-discovery"), "PostgreSQL 17 with pgvector");
-  assert.ok(slugs("React Native").includes("careltc"), "React Native 0.86");
+  assert.ok(slugs("React Native").includes("careltc"), "React Native");
 });
 
 test("a public case study's languages are its evidence", () => {

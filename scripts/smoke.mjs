@@ -237,6 +237,41 @@ for (const collection of ["work", "notes", "writing"]) {
   check(`/${collection}/${escape}/opengraph-image: 404`, traversal.status === 404, `status ${traversal.status}`);
 }
 
+// The vulnerability-report file (RFC 9116) is served.
+const securityTxt = await fetch(`${BASE}/.well-known/security.txt`);
+check(
+  "/.well-known/security.txt: 200 with a contact",
+  securityTxt.ok && /^Contact: mailto:/m.test(await securityTxt.text()),
+  `status ${securityTxt.status}`,
+);
+
+// The assistant answers from a real page. "Hi" is small talk, so this spends no
+// model call. On production, Vercel's bot protection challenges automated
+// clients such as this headless browser (real browsers pass it), so a
+// challenge is reported, not failed; a block of any other kind fails.
+{
+  const page = await browser.newPage();
+  await page.goto(`${BASE}/`, { waitUntil: "domcontentloaded" });
+  const reply = await page.evaluate(async () => {
+    const res = await fetch("/api/chat", {
+      method: "POST",
+      headers: { "content-type": "application/json" },
+      body: JSON.stringify({ messages: [{ role: "user", content: "Hi" }] }),
+    });
+    return { status: res.status, type: res.headers.get("content-type") ?? "", mitigated: res.headers.get("x-vercel-mitigated"), body: await res.text() };
+  });
+  if (reply.mitigated === "challenge") {
+    console.log("· POST /api/chat: challenged by Vercel bot protection (expected for a headless browser; not counted)");
+  } else {
+    check(
+      "POST /api/chat from the page: answered, not blocked",
+      reply.status === 200 && reply.type.startsWith("text/event-stream") && reply.body.includes("small-talk"),
+      `status ${reply.status}${reply.mitigated ? `, firewall ${reply.mitigated}` : ""}`,
+    );
+  }
+  await page.close();
+}
+
 await browser.close();
 
 const failed = results.filter((r) => !r.pass);

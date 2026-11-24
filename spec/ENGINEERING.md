@@ -281,6 +281,10 @@ warning about the unused CSS. ESLint fails a `<Link>` without a `prefetch` prop
   type-check → lint → test → build → copy gate → browser gates (a11y, interaction,
   motion, accent drift, print, internal links, metadata, smoke). Lighthouse budgets run on pushes
   to `main` and on pull requests that target `main`. Red CI = no merge, no exceptions.
+- `main` is protected on GitHub: the `build` and `audit` checks must pass before a merge,
+  the rule applies to admins too (so nothing reaches Vercel's production deploy without
+  CI), and force pushes and deletion are blocked. Secret scanning with push protection,
+  Dependabot vulnerability alerts and Dependabot security fixes are on (24 Nov 2026).
 
 ## 8. Definition of Ready (before coding any story)
 
@@ -314,7 +318,12 @@ Every new dependency needs: an ADR note (or falls under an existing ADR), a size
 (bundlephobia), maintenance check (commits in last 6 months), and a one-line justification
 in the PR. Prefer platform → stdlib → tiny lib → framework, in that order.
 GitHub Actions versions are kept current by Dependabot (`.github/dependabot.yml`, one
-grouped pull request a month); npm dependencies are upgraded deliberately, not by bot.
+grouped pull request a month); npm dependencies are upgraded deliberately, not by bot,
+except that Dependabot opens a security fix when an advisory affects one.
+
+`public/.well-known/security.txt` (RFC 9116) tells researchers how to report a
+vulnerability. `test/security-txt.test.mts` fails 30 days before its `Expires` date:
+renew it by moving `Expires` forward (at most a year).
 
 ## 11. Observability & analytics
 

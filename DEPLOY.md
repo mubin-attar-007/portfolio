@@ -136,7 +136,15 @@ spending ceiling. Set the real ceilings outside the function:
 
 - a quota or budget cap on the key's Google Cloud project (§2, step 4);
 - a **Vercel Firewall** rate-limit rule on `POST /api/chat` (Project → Firewall →
-  Rules), with a per-address window that suits the traffic you expect.
+  Rules), with a per-address window that suits the traffic you expect. Its action must
+  be **Rate Limit** (answering 429), not Deny: the panel calls the route with `fetch`.
+  The production rule is set this way (24 Nov 2026).
+- Vercel's own bot protection challenges automated clients on `/api/chat` (curl, Node
+  and headless browsers were challenged in a 24 Nov 2026 test; real browsers pass), and
+  its DDoS mitigation denies scanner probes such as `/wp-login.php`. So a script cannot
+  test the live assistant: `npm run test:smoke` posts "Hi" from a page (small talk, no
+  model call), fails on any block, and reports a bot-protection challenge without
+  failing.
 
 ### Logs
 
