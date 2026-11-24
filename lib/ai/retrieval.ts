@@ -502,6 +502,10 @@ const ALIASES: readonly Alias[] = [
   // A role title the site never gives him: the roles he is open to answer it.
   { phrase: "forward deployed", means: "roles customer sites" },
   { phrase: "fde", means: "roles customer sites" },
+  // The visitor's own data and words are the assistant's privacy answer, not a
+  // case study's "what stays private".
+  { phrase: "my data", means: "assistant privacy" },
+  { phrase: "what i type", means: "assistant stores" },
   { phrase: "his github", adds: "profiles" },
   { phrase: "mubin github", adds: "profiles" },
   { phrase: "github profile", adds: "profiles" },

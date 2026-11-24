@@ -131,7 +131,8 @@ b = 0.75.
   - what a word means here, replacing it when no product is named: "CV" → résumé,
     "tech stack"/"stack"/"technologies" → skills, "kaam" → work, "banaye" → built;
     "forward deployed"/"FDE" → roles, customer sites (the site never gives him that title, so
-    the roles he is open to answer it, never a deployment section);
+    the roles he is open to answer it, never a deployment section); "my data", "what I type" →
+    the assistant's privacy answer (not a case study's "what stays private");
   - more words to search for: "available", "open to", "hire", "hiring" → availability,
     hiring, roles; "remote" → hybrid, on-site; "leadership"/"led" → lead (his roles say "I
     lead"); "his GitHub"/"his LinkedIn" → profiles; and,
@@ -239,8 +240,10 @@ Without a key, paraphrases and other languages that lexical search misses are "n
 - The system instruction is `SYSTEM_PROMPT` and then the content: **BACKGROUND** (his profile
   passage, on every live answer, so a general question never dead-ends) and **CONTEXT** (the
   passages retrieved for the question, each as "Passage from <source>:" — unnumbered, so the
-  model has no index to cite as "[1]"). Bump `SYSTEM_PROMPT_VERSION` (now `2026-11-17.3`) on
-  any behavioural change.
+  model has no index to cite as "[1]"). Bump `SYSTEM_PROMPT_VERSION` (now `2026-11-24.1`) on
+  any behavioural change. `2026-11-24.1`: backticks are for code identifiers only, and an
+  email or web address is plain text (live answers had set the email and the booking link as
+  code; the Email and Book a call buttons are the links).
 - The rules (prompt v2): answer only from the content, and say what it does not cover; copy
   every figure character for character (the usage figures are built into the rule from
   `USAGE`) and state only the figures the question needs; name the flagships first for a

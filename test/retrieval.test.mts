@@ -615,6 +615,13 @@ test("the FAQ about the assistant answers questions about the assistant, never a
   for (const question of ["Does this assistant store my question?", "Do you save what I type?", "Is my data private?", "How does this assistant work?", "Where do your answers come from?"]) {
     assert.ok(aboutAssistant(retrieveForQuestion(question)[0]?.id ?? ""), `${question} → ${retrieveForQuestion(question)[0]?.id}`);
   }
+  // The visitor's own data is the assistant's privacy answer alone, not a case
+  // study's "what stays private" list; a product's data is still the product's.
+  for (const question of ["Is my data private?", "What happens to my data?", "Do you save what I type?"]) {
+    const ids = retrieveForQuestion(question).map((hit) => hit.id);
+    assert.ok(ids.length > 0 && ids.every(aboutAssistant), `${question} → ${ids.join(", ")}`);
+  }
+  assert.ok(retrieveForQuestion("Does Bench Discovery keep my data on my PC?")[0]?.projects.includes("bench-discovery"));
 });
 
 test("a role title the site never gives him finds the roles he is open to, not a deployment section", () => {
